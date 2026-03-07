@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,18 +15,18 @@
     @livewireStyles
 </head>
 
-<body>
+<body style="display: flex; flex-direction: column; min-height: 100vh;">
     @include('layouts.partials.sidebar')
 
     @include('layouts.partials.header')
 
-    <main class="nxl-container">
-        <div class="nxl-content">
-            
-            {{ $slot }} 
+    <main class="nxl-container" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="nxl-content" style="flex: 1;">
+
+            {{ $slot }}
 
         </div>
-        
+
         @include('layouts.partials.footer')
     </main>
 
@@ -35,7 +36,22 @@
     <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
-    
+<script>
+        document.addEventListener('livewire:navigated', () => {
+            if (typeof bootstrap !== 'undefined') {
+                const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+                dropdowns.forEach(dropdown => {
+                    new bootstrap.Dropdown(dropdown);
+                });
+            }
+            setTimeout(() => {
+                document.dispatchEvent(new Event('DOMContentLoaded'));
+                window.dispatchEvent(new Event('load'));
+            }, 100);
+        });
+    </script>
     @livewireScripts
+
 </body>
+
 </html>
