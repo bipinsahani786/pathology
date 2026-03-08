@@ -5,10 +5,14 @@ use App\Livewire\Admin\GlobalTestManager;
 use App\Livewire\Admin\PlanManager;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\RegisterCompany;
+use App\Livewire\Lab\BranchManager;
+use App\Livewire\Lab\CollectionCenterManager;
 use App\Livewire\Lab\Dashboard;
 use App\Livewire\Lab\LabTestManager;
 use App\Livewire\Lab\MarketingManager;
 use App\Livewire\Lab\PackageManager;
+use App\Livewire\Lab\PatientManager;
+use App\Livewire\Lab\PaymentModeManager;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -68,7 +72,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/test-packages',PackageManager::class)->name('packages');
         //membership and vouchers
         Route::get('/marketing', MarketingManager::class)->name('marketing');
-        
+        // Payment Modes
+        Route::get('/payment-modes',PaymentModeManager::class)->name('payment.modes');
+        //collection centers
+        Route::get('/collection-centers', CollectionCenterManager::class)->name('collection.centers');
+        //Branches
+        Route::get('/branches', BranchManager::class)->name('branches');
+
+        //patients
+        Route::get('/patients', PatientManager::class)->name('patients');
     });
 
 

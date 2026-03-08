@@ -93,4 +93,32 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\UserDetail::class, 'user_id');
     }
+
+    // ==========================================
+    // ROLE-BASED PROFILE RELATIONSHIPS
+    // ==========================================
+
+    /**
+     * Get the patient profile associated with the user.
+     */
+    public function patientProfile() 
+    {
+        return $this->hasOne(PatientProfile::class);
+    }
+
+    /**
+     * Get the doctor profile associated with the user.
+     */
+    public function doctorProfile() 
+    {
+        return $this->hasOne(DoctorProfile::class);
+    }
+
+    /**
+     * Get the agent profile associated with the user.
+     */
+    public function agentProfile() 
+    {
+        return $this->hasOne(AgentProfile::class);
+    }
 }
