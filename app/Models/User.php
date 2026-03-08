@@ -24,6 +24,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'remember_token',
+        'email_verified_at',
+        'company_id',
+        'branch_id',
     ];
 
     /**
@@ -59,7 +66,31 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Get the company (tenant) that owns the user.
+     */
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    /**
+     * Get the branch that owns the user.
+     */
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+    }
+
+    /**
+     * Get the user details record associated with this user.
+     */
+    public function details()
+    {
+        return $this->hasOne(\App\Models\UserDetail::class, 'user_id');
     }
 }

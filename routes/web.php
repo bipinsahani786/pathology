@@ -2,13 +2,24 @@
 
 use App\Livewire\Admin\AdminDashboard;
 use App\Livewire\Admin\GlobalTestManager;
+use App\Livewire\Admin\PlanManager;
 use App\Livewire\Auth\Login;
+use App\Livewire\Auth\RegisterCompany;
+use App\Livewire\Lab\Dashboard;
+use App\Livewire\Lab\LabTestManager;
+use App\Livewire\Lab\MarketingManager;
+use App\Livewire\Lab\PackageManager;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
 Route::get('/', function () {
     return view('welcome'); });
-Route::get('/login', Login::class)->name('login');
+
+Route::middleware(['guest'])->group(function () {
+    Route::get('/login', Login::class)->name('login');
+    
+    Route::get('/register-lab', RegisterCompany::class)->name('register.lab'); 
+});
 
 
 // ==========================================
@@ -26,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Future Routes  examples:
         Route::get('/global-tests', GlobalTestManager::class)->name('global-tests'); 
+        Route::get('/plans', PlanManager::class)->name('plans');
         // Route::get('/manage-labs', ManageLabs::class)->name('manage-labs');
         // Route::get('/subscriptions', ManageSubscriptions::class)->name('subscriptions');
     });
@@ -34,15 +46,29 @@ Route::middleware(['auth'])->group(function () {
     // ----------------------------------------------------
     // 2. LAB OWNER / TENANT ROUTES
     // ----------------------------------------------------
-    Route::middleware(['role:lab_admin'])->prefix('lab')->name('lab.')->group(function () {
+   // Apply the 'auth', 'role:lab_admin', and our new subscription check middleware
+    Route::middleware(['role:lab_admin', \App\Http\Middleware\CheckTenantSubscription::class])
+         ->prefix('lab')
+         ->name('lab.')
+         ->group(function () {
 
         // URL: /lab/dashboard  |  Route Name: lab.dashboard
-        Route::get('/dashboard', \App\Livewire\Lab\Dashboard::class)->name('dashboard');
+        Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-        // Future Routes ke examples:
-        // Route::get('/patients', PatientsList::class)->name('patients');
-        // Route::get('/billing', BillingCreate::class)->name('billing');
-        // Route::get('/reports', ReportsList::class)->name('reports');
+        // Billing & Upgrade Page (Users will be redirected here when their trial expires)
+        Route::get('/upgrade-plan', function() {
+            return "Your trial has expired. Please upgrade your plan to continue."; // Placeholder text for now
+        })->name('billing.upgrade'); 
+
+
+
+        // Lab Tests Management
+        Route::get('/lab-tests', LabTestManager::class)->name('tests');
+         // test packages and profiles
+        Route::get('/test-packages',PackageManager::class)->name('packages');
+        //membership and vouchers
+        Route::get('/marketing', MarketingManager::class)->name('marketing');
+        
     });
 
 
