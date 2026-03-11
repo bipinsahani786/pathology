@@ -80,7 +80,7 @@
                 </div>
 
                 <div class="mt-5 text-center">
-                    <p class="fs-13 text-muted">Don't have an account? <a href="#" class="fw-bold text-primary text-decoration-none">Create Account</a></p>
+                    <p class="fs-13 text-muted">Don't have an account? <a href="{{ route('register.lab') }}" wire:navigate class="fw-bold text-primary text-decoration-none">Create Account</a></p>
                 </div>
             </div>
         </div>
