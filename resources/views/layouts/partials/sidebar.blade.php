@@ -85,6 +85,13 @@
                         </a>
                     </li>
 
+                    <li class="nxl-item {{ request()->routeIs('lab.doctors') ? 'active' : '' }}">
+                        <a href="{{ route('lab.doctors') }}" class="nxl-link" wire:navigate>
+                            <span class="nxl-micon"><i class="feather-activity"></i></span>
+                            <span class="nxl-mtext">Referring Doctors</span>
+                        </a>
+                    </li>
+
                     <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
                         <a href="{{ route('lab.marketing') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-gift"></i></span>
