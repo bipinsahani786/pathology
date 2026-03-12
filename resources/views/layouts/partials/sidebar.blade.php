@@ -92,6 +92,13 @@
                         </a>
                     </li>
 
+                    <li class="nxl-item {{ request()->routeIs('lab.agents') ? 'active' : '' }}">
+                        <a href="{{ route('lab.agents') }}" class="nxl-link" wire:navigate>
+                            <span class="nxl-micon"><i class="feather-briefcase"></i></span>
+                            <span class="nxl-mtext">Referral Agents</span>
+                        </a>
+                    </li>
+
                     <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
                         <a href="{{ route('lab.marketing') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-gift"></i></span>
