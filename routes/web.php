@@ -5,9 +5,11 @@ use App\Livewire\Admin\GlobalTestManager;
 use App\Livewire\Admin\PlanManager;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\RegisterCompany;
+use App\Livewire\Lab\AgentManager;
 use App\Livewire\Lab\BranchManager;
 use App\Livewire\Lab\CollectionCenterManager;
 use App\Livewire\Lab\Dashboard;
+use App\Livewire\Lab\DoctorManager;
 use App\Livewire\Lab\LabTestManager;
 use App\Livewire\Lab\MarketingManager;
 use App\Livewire\Lab\PackageManager;
@@ -81,6 +83,12 @@ Route::middleware(['auth'])->group(function () {
 
         //patients
         Route::get('/patients', PatientManager::class)->name('patients');
+
+        // Doctors
+        Route::get('/doctors', DoctorManager::class)->name('doctors');
+
+        //Agent
+        Route::get('/agents', AgentManager::class)->name('agents');
     });
 
 

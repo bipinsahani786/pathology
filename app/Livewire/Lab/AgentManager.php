@@ -1,0 +1,195 @@
+<?php
+
+namespace App\Livewire\Lab;
+
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\User;
+use App\Models\AgentProfile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
+class AgentManager extends Component
+{
+    use WithPagination;
+    
+    protected $paginationTheme = 'bootstrap';
+
+    // State variables
+    public $searchTerm = '';
+    public $user_id = null; // Tracks the User ID for editing
+    
+    // User Table Fields
+    public $name;
+    public $phone;
+    public $email;
+    
+    // Agent Profile Fields
+    public $agency_name;
+    public $commission_percentage = 0;
+
+    public $isModalOpen = false;
+
+    /**
+     * Reset pagination when searching
+     */
+    public function updatingSearchTerm()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Open modal to create a new agent
+     */
+    public function create()
+    {
+        $this->resetFields();
+        $this->isModalOpen = true;
+    }
+
+    /**
+     * Load existing agent data and open modal for editing
+     */
+    public function edit($id)
+    {
+        $this->resetFields();
+        
+        // Eager load the profile to avoid N+1 query issues
+        $user = User::with('agentProfile')->findOrFail($id);
+        
+        $this->user_id = $user->id;
+        $this->name = $user->name;
+        $this->phone = $user->phone;
+        $this->email = $user->email;
+        
+        if ($user->agentProfile) {
+            $this->agency_name = $user->agentProfile->agency_name;
+            $this->commission_percentage = $user->agentProfile->commission_percentage;
+        }
+
+        $this->isModalOpen = true;
+    }
+
+    /**
+     * Validate and save the agent data to both tables
+     */
+    public function store()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'phone' => [
+                'required',
+                'numeric',
+                'digits:10',
+                Rule::unique('users', 'phone')->ignore($this->user_id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->user_id),
+            ],
+            'agency_name' => 'nullable|string|max:255',
+            'commission_percentage' => 'required|numeric|min:0|max:100',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
+
+            if ($this->user_id) {
+                // UPDATE EXISTING AGENT
+                $user = User::findOrFail($this->user_id);
+                $user->update([
+                    'name' => $this->name,
+                    'phone' => $this->phone,
+                    'email' => $this->email,
+                ]);
+
+                AgentProfile::where('user_id', $this->user_id)->update([
+                    'agency_name' => $this->agency_name,
+                    'commission_percentage' => $this->commission_percentage,
+                ]);
+
+                session()->flash('message', 'Agent details updated successfully.');
+            } else {
+                // CREATE NEW AGENT
+                
+                // 1. Create the base User record
+                $user = User::create([
+                    'name' => $this->name,
+                    'phone' => $this->phone,
+                    'email' => $this->email ?? $this->phone . '@agent.local', 
+                    'password' => Hash::make($this->phone), 
+                    'is_active' => true,
+                ]);
+
+                // 2. Create the Agent Profile record
+                AgentProfile::create([
+                    'company_id' => $companyId,
+                    'user_id' => $user->id,
+                    'agency_name' => $this->agency_name,
+                    'commission_percentage' => $this->commission_percentage,
+                ]);
+
+                // Optional: $user->assignRole('agent'); if using Spatie
+
+                session()->flash('message', 'New referral agent added successfully.');
+            }
+
+            DB::commit();
+            $this->closeModal();
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error saving agent: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete an agent (Will cascade delete their profile)
+     */
+    public function delete($id)
+    {
+        User::findOrFail($id)->delete();
+        session()->flash('message', 'Agent deleted successfully.');
+    }
+
+    /**
+     * Reset form fields
+     */
+    public function resetFields()
+    {
+        $this->reset(['user_id', 'name', 'phone', 'email', 'agency_name']);
+        $this->commission_percentage = 0;
+        $this->resetValidation();
+    }
+
+    public function closeModal()
+    {
+        $this->isModalOpen = false;
+        $this->resetFields();
+    }
+
+    public function render()
+    {
+        // Fetch only users who have an AgentProfile attached to the current company
+        $agents = User::whereHas('agentProfile', function($query) {
+                $query->where('company_id', auth()->user()->company_id);
+            })
+            ->with('agentProfile') 
+            ->where(function($q) {
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhereHas('agentProfile', function($query2) {
+                      $query2->where('agency_name', 'ilike', '%' . $this->searchTerm . '%');
+                  });
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return view('livewire.lab.agent-manager', [
+            'agents' => $agents
+        ])->layout('layouts.app', ['title' => 'Referral Agents']);
+    }
+}
