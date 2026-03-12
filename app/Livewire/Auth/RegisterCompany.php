@@ -5,7 +5,9 @@ namespace App\Livewire\Auth;
 use Livewire\Component;
 use App\Services\CompanyRegistrationService;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Title;
 
+#[Title('Create Workspace | Pathology Lab Management Software')]
 class RegisterCompany extends Component
 {
     public $lab_name, $owner_name, $email, $phone, $password, $password_confirmation;
