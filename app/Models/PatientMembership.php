@@ -11,18 +11,29 @@ class PatientMembership extends Model
     protected $table = 'patient_memberships';
 
     protected $fillable = [
+        'company_id',
         'patient_id',
-        'plan_id',
-        'start_date',
-        'end_date',
-        'status',
+        'membership_id',
+        'amount_paid',
+        'valid_from',
+        'valid_until',
+        'is_active',
     ];
 
-   
+    protected $casts = [
+        'amount_paid' => 'decimal:2',
+        'is_active' => 'boolean',
+        'valid_from' => 'date',
+        'valid_until' => 'date',
+    ];
 
-    public function plan()
+    public function patient()
     {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsTo(User::class, 'patient_id');
     }
-    
+
+    public function membership()
+    {
+        return $this->belongsTo(Membership::class);
+    }
 }

@@ -31,6 +31,7 @@ class User extends Authenticatable
         'email_verified_at',
         'company_id',
         'branch_id',
+        'is_active',
     ];
 
     /**
@@ -120,5 +121,13 @@ class User extends Authenticatable
     public function agentProfile() 
     {
         return $this->hasOne(AgentProfile::class);
+    }
+
+    /**
+     * Get the patient's membership records.
+     */
+    public function patientMemberships()
+    {
+        return $this->hasMany(PatientMembership::class, 'patient_id');
     }
 }

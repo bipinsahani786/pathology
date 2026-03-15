@@ -1,0 +1,166 @@
+/* ========= CUSTOM THEME OVERRIDES ========= */
+
+/* COLOR THEMES */
+html.theme-color-teal {
+    --bs-primary: #20c997;
+    --bs-primary-rgb: 32, 201, 151;
+}
+html.theme-color-purple {
+    --bs-primary: #6f42c1;
+    --bs-primary-rgb: 111, 66, 193;
+}
+html.theme-color-green {
+    --bs-primary: #198754;
+    --bs-primary-rgb: 25, 135, 84;
+}
+html.theme-color-orange {
+    --bs-primary: #fd7e14;
+    --bs-primary-rgb: 253, 126, 20;
+}
+html.theme-color-red {
+    --bs-primary: #dc3545;
+    --bs-primary-rgb: 220, 53, 69;
+}
+
+/* Force override of static bootstrap colors for primary subclasses when theme is set */
+html[class*="theme-color-"]:not(.theme-color-blue) .bg-primary { background-color: var(--bs-primary) !important; }
+html[class*="theme-color-"]:not(.theme-color-blue) .text-primary { color: var(--bs-primary) !important; }
+html[class*="theme-color-"]:not(.theme-color-blue) .border-primary { border-color: var(--bs-primary) !important; }
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-primary { 
+    background-color: var(--bs-primary) !important; 
+    border-color: var(--bs-primary) !important; 
+}
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary { 
+    color: var(--bs-primary) !important; 
+    border-color: var(--bs-primary) !important; 
+}
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary:hover { 
+    background-color: var(--bs-primary) !important; 
+    color: #fff !important;
+}
+
+/* FONT LISTING PROPER INCLUSIONS */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
+
+html.app-font-family-poppins { font-family: 'Poppins', sans-serif !important; --bs-body-font-family: 'Poppins', sans-serif; }
+html.app-font-family-montserrat { font-family: 'Montserrat', sans-serif !important; --bs-body-font-family: 'Montserrat', sans-serif; }
+html.app-font-family-roboto { font-family: 'Roboto', sans-serif !important; --bs-body-font-family: 'Roboto', sans-serif; }
+html.app-font-family-nunito { font-family: 'Nunito', sans-serif !important; --bs-body-font-family: 'Nunito', sans-serif; }
+
+/* ========================================= */
+/* DARK MODE OVERRIDES & FIXES */
+/* ========================================= */
+html.app-skin-dark {
+    --bs-body-bg: #1e1e2d;
+    --bs-body-color: #a1a5b7;
+    --bs-card-bg: #151521;
+    --bs-border-color: #323248;
+}
+
+html.app-skin-dark body {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+html.app-skin-dark .card,
+html.app-skin-dark .bg-white,
+html.app-skin-dark .dropdown-menu {
+    background-color: var(--bs-card-bg) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-body-color) !important;
+}
+
+html.app-skin-dark .form-control,
+html.app-skin-dark .form-select,
+html.app-skin-dark input,
+html.app-skin-dark textarea,
+html.app-skin-dark .select2-container .select2-selection--single,
+html.app-skin-dark .select2-container .select2-selection--multiple {
+    background-color: #1b1b29 !important;
+    border-color: #323248 !important;
+    color: #cdcdde !important;
+}
+
+html.app-skin-dark .form-control:focus,
+html.app-skin-dark .form-select:focus {
+    border-color: var(--bs-primary) !important;
+    box-shadow: none !important;
+}
+
+html.app-skin-dark label,
+html.app-skin-dark h1, html.app-skin-dark h2, html.app-skin-dark h3, html.app-skin-dark h4, html.app-skin-dark h5, html.app-skin-dark h6,
+html.app-skin-dark .text-dark,
+html.app-skin-dark p {
+    color: #e4e6ef !important;
+}
+
+html.app-skin-dark .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #cdcdde;
+    border-color: #323248 !important;
+}
+
+html.app-skin-dark .table th {
+    color: #e4e6ef !important;
+    background-color: #1b1b29 !important;
+}
+
+html.app-skin-dark .table td {
+    border-color: #323248 !important;
+}
+
+/* Modals */
+html.app-skin-dark .modal-content {
+    background-color: var(--bs-card-bg) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+html.app-skin-dark .modal-header,
+html.app-skin-dark .modal-footer {
+    border-color: #323248 !important;
+}
+
+/* Sidebar and Header */
+html.app-skin-dark .app-sidebar,
+html.app-skin-dark .app-header {
+    background-color: #151521 !important;
+    border-color: #323248 !important;
+}
+
+html.app-skin-dark .nav-link {
+    color: #a1a5b7;
+}
+
+html.app-skin-dark .nav-link:hover,
+html.app-skin-dark .nav-link.active {
+    color: var(--bs-primary);
+}
+
+/* Generic utility text/bg classes override for dark mode if unreadable */
+html.app-skin-dark .text-muted {
+    color: #5e6278 !important;
+}
+html.app-skin-dark .bg-light,
+html.app-skin-dark .bg-gray-50,
+html.app-skin-dark .bg-gray-100,
+html.app-skin-dark .bg-gray-200,
+html.app-skin-dark .bg-gray-300 {
+    background-color: #1b1b29 !important;
+    border-color: #323248 !important;
+    color: #e4e6ef !important;
+}
+
+/* Fix missing shadow/profession UI elements */
+.card {
+    box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+    border: 0;
+    margin-bottom: 30px;
+    border-radius: 0.5rem;
+}
+.btn {
+    border-radius: 0.35rem;
+    font-weight: 500;
+}

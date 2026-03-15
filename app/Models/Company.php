@@ -18,6 +18,9 @@ class Company extends Model
         'settings',
         'plan_id',
         'trial_ends_at',
+        'website',
+        'gst_number',
+        'tagline',
     ];
 
     protected $casts = [
