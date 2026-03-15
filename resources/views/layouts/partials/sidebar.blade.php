@@ -13,14 +13,12 @@
                     <li class="nxl-item nxl-caption">
                         <label>Super Admin Panel</label>
                     </li>
-
                     <li class="nxl-item">
                         <a href="{{ route('admin.dashboard') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
                             <span class="nxl-mtext">Dashboard</span>
                         </a>
                     </li>
-
                     <li class="nxl-item">
                         <a href="{{ route('admin.global-tests') }}" wire:navigate
                             class="nxl-link {{ request()->routeIs('admin.global-tests') ? 'active' : '' }}">
@@ -28,7 +26,6 @@
                             <span class="nxl-mtext">Global Tests</span>
                         </a>
                     </li>
-
                     <li class="nxl-item">
                         <a href="{{ route('admin.plans') }}" wire:navigate
                             class="nxl-link {{ request()->routeIs('admin.plans') ? 'active' : '' }}">
@@ -43,93 +40,93 @@
                     <li class="nxl-item nxl-caption">
                         <label>Pathology Lab</label>
                     </li>
-
-                    <li class="nxl-item">
-                        <a href="{{ route('lab.dashboard') }}" class="nxl-link">
+                    
+                    <li class="nxl-item {{ request()->routeIs('lab.dashboard') ? 'active' : '' }}">
+                        <a href="{{ route('lab.dashboard') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
                             <span class="nxl-mtext">Dashboard</span>
                         </a>
                     </li>
 
-                    {{-- <li class="nxl-item">
-                        <a href="#" class="nxl-link">
-                            <span class="nxl-micon"><i class="feather-users"></i></span>
-                            <span class="nxl-mtext">Patients</span>
+                    <li class="nxl-item {{ request()->routeIs('lab.pos') ? 'active' : '' }}">
+                        <a href="{{ route('lab.pos') }}" class="nxl-link text-primary fw-bold" wire:navigate>
+                            <span class="nxl-micon"><i class="feather-monitor"></i></span>
+                            <span class="nxl-mtext">POS / Billing</span>
                         </a>
                     </li>
 
-                    <li class="nxl-item">
-                        <a href="#" class="nxl-link">
+                    <li class="nxl-item {{ request()->routeIs('lab.invoices') ? 'active' : '' }}">
+                        <a href="{{ route('lab.invoices') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-file-text"></i></span>
-                            <span class="nxl-mtext">Test Reports</span>
-                        </a>
-                    </li> --}}
-                    <li class="nxl-item {{ request()->routeIs('lab.tests') ? 'active' : '' }}">
-                        <a href="{{ route('lab.tests') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-list"></i></span>
-                            <span class="nxl-mtext">Test Catalog</span>
+                            <span class="nxl-mtext">Invoices</span>
                         </a>
                     </li>
 
-                    <li class="nxl-item {{ request()->routeIs('lab.packages') ? 'active' : '' }}">
-                        <a href="{{ route('lab.packages') }}" class="nxl-link" wire:navigate>
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('lab.tests') || request()->routeIs('lab.packages') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-layers"></i></span>
-                            <span class="nxl-mtext">Test Packages</span>
+                            <span class="nxl-mtext">Lab Catalog</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.tests') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.tests') }}" wire:navigate>Test Catalog</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.packages') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.packages') }}" wire:navigate>Test Packages</a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="nxl-item {{ request()->routeIs('lab.patients') ? 'active' : '' }}">
-                        <a href="{{ route('lab.patients') }}" class="nxl-link" wire:navigate>
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('lab.patients') || request()->routeIs('lab.doctors') || request()->routeIs('lab.agents') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-users"></i></span>
-                            <span class="nxl-mtext">Patients</span>
+                            <span class="nxl-mtext">CRM / People</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.patients') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.patients') }}" wire:navigate>Patients</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.doctors') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.doctors') }}" wire:navigate>Referring Doctors</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.agents') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.agents') }}" wire:navigate>Referral Agents</a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="nxl-item {{ request()->routeIs('lab.doctors') ? 'active' : '' }}">
-                        <a href="{{ route('lab.doctors') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-activity"></i></span>
-                            <span class="nxl-mtext">Referring Doctors</span>
-                        </a>
-                    </li>
-
-                    <li class="nxl-item {{ request()->routeIs('lab.agents') ? 'active' : '' }}">
-                        <a href="{{ route('lab.agents') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-briefcase"></i></span>
-                            <span class="nxl-mtext">Referral Agents</span>
-                        </a>
-                    </li>
-
-                    <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
-                        <a href="{{ route('lab.marketing') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-gift"></i></span>
-                            <span class="nxl-mtext">Marketing & Offers</span>
-                        </a>
-                    </li>
-
-                    <li class="nxl-item {{ request()->routeIs('lab.payment.modes') ? 'active' : '' }}">
-                        <a href="{{ route('lab.payment.modes') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-credit-card"></i></span>
-                            <span class="nxl-mtext">Payment Modes</span>
-                        </a>
-                    </li>
-
-                    <li class="nxl-item {{ request()->routeIs('lab.collection.centers') ? 'active' : '' }}">
-                        <a href="{{ route('lab.collection.centers') }}" class="nxl-link" wire:navigate>
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('lab.collection.centers') || request()->routeIs('lab.branches') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-map-pin"></i></span>
-                            <span class="nxl-mtext">Collection Centers</span>
+                            <span class="nxl-mtext">Network</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.branches') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.branches') }}" wire:navigate>Main Branches</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.collection.centers') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.collection.centers') }}" wire:navigate>Collection Centers</a>
+                            </li>
+                        </ul>
                     </li>
 
-
-                    <li class="nxl-item {{ request()->routeIs('lab.branches') ? 'active' : '' }}">
-                        <a href="{{ route('lab.branches') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-layers"></i></span>
-                            <span class="nxl-mtext">Branches</span>
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('lab.marketing') || request()->routeIs('lab.payment.modes') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
+                            <span class="nxl-mtext">Accounts & Marketing</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.marketing') }}" wire:navigate>Offers & Memberships</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.payment.modes') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.payment.modes') }}" wire:navigate>Payment Modes</a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li class="nxl-item">
-                        <a href="#" class="nxl-link">
+                    <li class="nxl-item {{ request()->routeIs('lab.settings') ? 'active' : '' }}">
+                        <a href="{{ route('lab.settings') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-settings"></i></span>
                             <span class="nxl-mtext">Settings</span>
                         </a>

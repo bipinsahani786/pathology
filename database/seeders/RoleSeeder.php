@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -18,15 +17,26 @@ class RoleSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 2. Permissions List
+        // 1. Permissions List
         $permissions = [
-            'manage lab',
-            'manage staff',
+            // Admin Permissions
+            'manage global_tests',
+            'manage plans',
+            'manage subscriptions',
+            // Lab Permissions
+            'manage lab_tests',
+            'manage test_packages',
             'manage patients',
-            'generate report',
-            'edit report',
+            'manage doctors',
+            'manage agents',
+            'manage collection_centers',
+            'manage branches',
+            'manage marketing',
+            'manage payment_modes',
+            'manage pos',
             'view reports',
-            'download report'
+            'generate reports',
+            'download reports'
         ];
 
         // 2. Permissions Create
@@ -36,32 +46,47 @@ class RoleSeeder extends Seeder
 
         // 3. Roles Create & Permissions Assign
 
-        // Company Admin
-        $companyAdmin = Role::firstOrCreate(['name' => 'company_admin']);
-        $companyAdmin->syncPermissions([
-            'manage lab', 
-            'manage staff', 
-            'manage patients', 
-            'generate report', 
-            'edit report', 
-            'view reports', 
-            'download report'
+        // Super Admin (System Owner)
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
+        $superAdmin->syncPermissions([
+            'manage global_tests',
+            'manage plans',
+            'manage subscriptions'
         ]);
 
-        // Staff
+        // Lab Admin (Tenant Owner)
+        $labAdmin = Role::firstOrCreate(['name' => 'lab_admin']);
+        $labAdmin->syncPermissions([
+            'manage lab_tests',
+            'manage test_packages',
+            'manage patients',
+            'manage doctors',
+            'manage agents',
+            'manage collection_centers',
+            'manage branches',
+            'manage marketing',
+            'manage payment_modes',
+            'manage pos',
+            'view reports',
+            'generate reports',
+            'download reports'
+        ]);
+
+        // Lab Staff
         $staff = Role::firstOrCreate(['name' => 'staff']);
         $staff->syncPermissions([
-            'manage patients', 
-            'generate report', 
-            'view reports', 
-            'download report'
+            'manage patients',
+            'manage pos',
+            'view reports',
+            'generate reports',
+            'download reports'
         ]);
 
         // Customer (Patient)
-        $customer = Role::firstOrCreate(['name' => 'customer']);
-        $customer->syncPermissions([
+        $patient = Role::firstOrCreate(['name' => 'patient']);
+        $patient->syncPermissions([
             'view reports', 
-            'download report'
+            'download reports'
         ]);
         
         $this->command->info('Roles and Permissions synced successfully!');

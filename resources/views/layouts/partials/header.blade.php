@@ -16,6 +16,34 @@
                     <i class="feather-arrow-right"></i>
                 </a>
             </div>
+            
+            <div class="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
+                <a href="javascript:void(0);" id="nxl-lavel-mega-menu-open">
+                    <i class="feather-search"></i>
+                </a>
+            </div>
+            
+            <div class="nxl-drp-link nxl-lavel-mega-menu">
+                <div class="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
+                    <a href="javascript:void(0)" id="nxl-lavel-mega-menu-hide">
+                        <i class="feather-arrow-left me-2"></i>
+                        <span>Back</span>
+                    </a>
+                </div>
+                
+                <div class="nxl-lavel-mega-menu-wrapper d-flex gap-3">
+                    <div class="search-form-wrapper">
+                        <form action="#" class="search-form">
+                            <div class="input-group search-form-group">
+                                <span class="input-group-text border-0 ps-3 bg-transparent">
+                                    <i class="feather-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-0 shadow-none bg-transparent" placeholder="Search Patients, Tests, Reports..." style="width: 300px;">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center">

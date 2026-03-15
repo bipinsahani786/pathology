@@ -11,6 +11,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/vendors.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/daterangepicker.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/theme.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/custom-theme.css') }}" />
 
     @livewireStyles
 </head>
@@ -30,11 +31,14 @@
         @include('layouts.partials.footer')
     </main>
 
+    @include('layouts.partials.customizer')
+
     <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
 <script>
         document.addEventListener('livewire:navigated', () => {
