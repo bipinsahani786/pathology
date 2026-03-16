@@ -3,13 +3,16 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Point of Sale — Billing</h5>
+                <h5 class="m-b-10"><i class="feather-edit-3 me-2"></i>Edit Invoice — {{ $invoice->invoice_number ?? '' }}</h5>
             </div>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item">Lab</li>
-                <li class="breadcrumb-item">POS</li>
+                <li class="breadcrumb-item"><a href="{{ route('lab.invoices') }}" wire:navigate>Invoices</a></li>
+                <li class="breadcrumb-item">Edit</li>
             </ul>
+        </div>
+        <div class="page-header-right ms-auto">
+            <a href="{{ route('lab.invoices') }}" wire:navigate class="btn btn-sm btn-outline-dark"><i class="feather-arrow-left me-1"></i>Back to Invoices</a>
         </div>
     </div>
 
@@ -33,19 +36,16 @@
         @endif
 
         <div class="row g-3">
-            {{-- ============== LEFT COLUMN (Fullwidth search + cart) ============== --}}
+            {{-- ============== LEFT COLUMN ============== --}}
             <div class="col-xl-8">
 
-                {{-- ══════ ROW 1: PATIENT · DOCTOR · AGENT — wide cards ══════ --}}
+                {{-- ══════ ROW 1: PATIENT (read-only) · DOCTOR · AGENT ══════ --}}
                 <div class="row g-3 mb-3">
-                    {{-- Patient --}}
+                    {{-- Patient (Read-Only in edit mode) --}}
                     <div class="col-lg-4">
                         <div class="card stretch stretch-full h-100">
                             <div class="card-header py-2">
-                                <h6 class="card-title fs-12 mb-0"><i class="feather-user text-primary me-1"></i>Patient <span class="text-danger">*</span></h6>
-                                @if($selectedPatient)
-                                    <button wire:click="clearPatient" class="btn btn-sm text-danger p-0 ms-auto" title="Remove"><i class="feather-x-circle fs-14"></i></button>
-                                @endif
+                                <h6 class="card-title fs-12 mb-0"><i class="feather-user text-primary me-1"></i>Patient <span class="badge bg-soft-info text-info fs-10 ms-1">Locked</span></h6>
                             </div>
                             <div class="card-body py-2">
                                 @if ($selectedPatient)
@@ -61,13 +61,7 @@
                                                     <span class="badge bg-soft-primary text-primary fs-10">{{ $patientProfileData['patient_id_string'] ?? '—' }}</span>
                                                     <span class="badge bg-soft-info text-info fs-10">{{ $patientProfileData['age'] ?? '' }} {{ $patientProfileData['age_type'] ?? 'Yrs' }}</span>
                                                     <span class="badge bg-soft-{{ ($patientProfileData['gender'] ?? '') == 'Male' ? 'primary' : (($patientProfileData['gender'] ?? '') == 'Female' ? 'danger' : 'warning') }} fs-10">{{ $patientProfileData['gender'] ?? '—' }}</span>
-                                                    @if(!empty($patientProfileData['blood_group']))
-                                                        <span class="badge bg-soft-danger text-danger fs-10">{{ $patientProfileData['blood_group'] }}</span>
-                                                    @endif
                                                 </div>
-                                                @if(!empty($patientProfileData['address']))
-                                                    <div class="fs-10 text-muted mt-1"><i class="feather-map-pin fs-10 me-1"></i>{{ Str::limit($patientProfileData['address'], 40) }}</div>
-                                                @endif
                                             @endif
                                             @if($active_membership)
                                                 <div class="mt-1">
@@ -75,39 +69,6 @@
                                                 </div>
                                             @endif
                                         </div>
-                                    </div>
-                                @else
-                                    <div class="position-relative">
-                                        <div class="d-flex gap-2 mb-1">
-                                            <div class="input-group input-group-sm flex-grow-1">
-                                                <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
-                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="patientSearch" placeholder="Phone / Name">
-                                            </div>
-                                            <button wire:click="$set('isPatientModalOpen', true)" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
-                                        </div>
-                                        @if (strlen($patientSearch) >= 2)
-                                            @if (!empty($patients) && count($patients) > 0)
-                                                <div class="list-group position-absolute w-100 shadow-lg z-3 rounded-3 border" style="top:100%;left:0;">
-                                                    @foreach ($patients as $pt)
-                                                        <button wire:click="selectPatient({{ $pt->id }})" class="list-group-item list-group-item-action py-2 px-3">
-                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                <div>
-                                                                    <div class="fw-bold fs-12">{{ $pt->name }}</div>
-                                                                    <div class="text-muted fs-10">{{ $pt->phone }} · {{ $pt->patientProfile->patient_id_string ?? '' }}</div>
-                                                                </div>
-                                                                <span class="badge bg-soft-info text-info fs-10">{{ $pt->patientProfile->age ?? '' }}{{ $pt->patientProfile->age_type == 'Years' ? 'Y' : ($pt->patientProfile->age_type == 'Months' ? 'M' : 'D') }}/{{ substr($pt->patientProfile->gender ?? '', 0, 1) }}</span>
-                                                            </div>
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
-                                                    <i class="feather-user-x text-muted fs-3 d-block mb-1"></i>
-                                                    <div class="fw-bold text-muted fs-11">No patient found for "{{ $patientSearch }}"</div>
-                                                    <button wire:click="$set('isPatientModalOpen', true)" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
-                                                </div>
-                                            @endif
-                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -137,9 +98,6 @@
                                                     @if(!empty($doctorProfileData['specialization']))
                                                         <span class="badge bg-soft-success text-success fs-10">{{ $doctorProfileData['specialization'] }}</span>
                                                     @endif
-                                                    @if(!empty($doctorProfileData['clinic_name']))
-                                                        <span class="badge bg-soft-info text-info fs-10"><i class="feather-home fs-10 me-1"></i>{{ $doctorProfileData['clinic_name'] }}</span>
-                                                    @endif
                                                     <span class="badge bg-soft-warning text-warning fs-10">{{ number_format($doctorProfileData['commission_percentage'] ?? 0, 1) }}% Commission</span>
                                                 </div>
                                             @endif
@@ -147,12 +105,9 @@
                                     </div>
                                 @else
                                     <div class="position-relative">
-                                        <div class="d-flex gap-2 mb-1">
-                                            <div class="input-group input-group-sm flex-grow-1">
-                                                <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
-                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="doctorSearch" placeholder="Doctor Name / Phone">
-                                            </div>
-                                            <button wire:click="$set('isDoctorModalOpen', true)" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
+                                            <input type="text" class="form-control" wire:model.live.debounce.300ms="doctorSearch" placeholder="Doctor Name / Phone">
                                         </div>
                                         @if (strlen($doctorSearch) >= 2)
                                             @if (!empty($doctors) && count($doctors) > 0)
@@ -167,7 +122,6 @@
                                             @else
                                                 <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found</div>
-                                                    <button wire:click="$set('isDoctorModalOpen', true)" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
                                                 </div>
                                             @endif
                                         @endif
@@ -234,25 +188,23 @@
                     </div>
                 </div>
 
-                {{-- ══════ ROW 2: LOGISTICS — Collection Center · Branch · Collection At · Report ══════ --}}
+                {{-- ══════ ROW 2: LOGISTICS + STATUS ══════ --}}
                 <div class="card mb-3">
                     <div class="card-header py-2">
                         <h6 class="card-title fs-12 mb-0"><i class="feather-map-pin text-info me-1"></i>Collection & Logistics</h6>
                     </div>
                     <div class="card-body py-2">
                         <div class="row g-2">
-                            <div class="col-md-3 col-6">
+                            <div class="col-md-2 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center</label>
                                 <select class="form-select form-select-sm" wire:model="collection_center_id">
                                     <option value="">— Select —</option>
                                     @foreach ($centers as $center)
-                                        <option value="{{ $center->id }}">
-                                            {{ $center->name }} {{ $center->is_main_lab ? '⭐' : '' }}
-                                        </option>
+                                        <option value="{{ $center->id }}">{{ $center->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3 col-6">
+                            <div class="col-md-2 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
                                 <select class="form-select form-select-sm" wire:model="branch_id">
                                     <option value="">— Select —</option>
@@ -265,7 +217,7 @@
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>
                                 <select class="form-select form-select-sm" wire:model="collection_type">
                                     <option value="Center">🏥 Center</option>
-                                    <option value="Home Collection">🏠 Home Collection</option>
+                                    <option value="Home Collection">🏠 Home</option>
                                     <option value="Hospital">🏨 Hospital</option>
                                 </select>
                             </div>
@@ -276,6 +228,16 @@
                             <div class="col-md-2 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Report Time</label>
                                 <input type="time" class="form-control form-control-sm" wire:model="expected_report_time">
+                            </div>
+                            <div class="col-md-2 col-6">
+                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Status</label>
+                                <select class="form-select form-select-sm fw-bold" wire:model="invoiceStatus">
+                                    <option value="Pending">🟡 Pending</option>
+                                    <option value="Processing">🔵 Processing</option>
+                                    <option value="Completed">🟢 Completed</option>
+                                    <option value="Delivered">✅ Delivered</option>
+                                    <option value="Cancelled">🔴 Cancelled</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -304,7 +266,7 @@
                                                 @if ($test->is_package)
                                                     <span class="badge bg-primary ms-1 rounded-pill fs-10">PKG</span>
                                                 @endif
-                                                <div class="fs-11 text-muted">{{ $test->test_code ?? '' }} · {{ $test->department ?? 'General' }} · {{ $test->sample_type ?? 'Blood' }}</div>
+                                                <div class="fs-11 text-muted">{{ $test->test_code ?? '' }} · {{ $test->department ?? 'General' }}</div>
                                             </div>
                                             <span class="fw-bold text-success fs-14">₹{{ number_format($test->mrp, 0) }}</span>
                                         </button>
@@ -343,9 +305,7 @@
                                             @if ($item['is_package'])
                                                 <span class="badge bg-soft-primary text-primary rounded-pill fs-10">
                                                     <i class="feather-layers fs-10 me-1"></i>Package
-                                                    @if(!empty($item['linked_tests']))
-                                                        ({{ count($item['linked_tests']) }})
-                                                    @endif
+                                                    @if(!empty($item['linked_tests'])) ({{ count($item['linked_tests']) }}) @endif
                                                 </span>
                                             @else
                                                 <span class="badge bg-soft-success text-success rounded-pill fs-10">Test</span>
@@ -357,7 +317,7 @@
                                         </td>
                                     </tr>
 
-                                    {{-- Expanded: Package Sub-Tests --}}
+                                    {{-- Expanded Details --}}
                                     @if(in_array($index, $expandedCartItems))
                                         @if($item['is_package'] && !empty($item['linked_tests']))
                                             <tr>
@@ -426,8 +386,9 @@
             {{-- ============== RIGHT COLUMN — Invoice Summary ============== --}}
             <div class="col-xl-4">
                 <div class="card stretch stretch-full sticky-top" style="top:80px;">
-                    <div class="card-header bg-dark py-3">
-                        <h5 class="card-title text-white fs-13 mb-0"><i class="feather-file-text me-2"></i>Invoice Summary</h5>
+                    <div class="card-header py-3" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
+                        <h5 class="card-title text-white fs-13 mb-0"><i class="feather-edit-3 me-2"></i>Edit Invoice Summary</h5>
+                        <span class="badge bg-warning text-dark ms-auto fs-10">{{ $invoice->invoice_number ?? '' }}</span>
                     </div>
                     <div class="card-body py-3">
 
@@ -442,28 +403,9 @@
                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(59,113,202,0.08);border-color:rgba(59,113,202,0.2)!important;">
                                 <div>
                                     <span class="fw-bold text-primary fs-11"><i class="feather-award me-1 fs-10"></i>{{ $active_membership['name'] ?? '' }}</span>
-                                    <span class="d-block fs-10 text-muted">{{ number_format($active_membership['discount_percentage'] ?? 0, 0) }}% {{ $membership_fee > 0 ? 'applied (new purchase)' : 'auto-applied' }}</span>
+                                    <span class="d-block fs-10 text-muted">{{ number_format($active_membership['discount_percentage'] ?? 0, 0) }}% auto-applied</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="fw-bold fs-13" style="color:#198754;">- ₹{{ number_format($membership_discount_amt, 0) }}</span>
-                                    <button wire:click="removeMembership" class="btn btn-sm text-danger p-0" title="Remove Membership"><i class="feather-x-circle fs-14"></i></button>
-                                </div>
-                            </div>
-                        @elseif($selectedPatient)
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(255,193,7,0.1);border-color:rgba(255,193,7,0.3)!important;">
-                                <span class="fw-bold fs-11" style="color:#8a6d00;"><i class="feather-award me-1 fs-10"></i>No Membership</span>
-                                <button wire:click="$set('isMembershipModalOpen', true)" class="btn btn-sm btn-warning fw-bold fs-10 px-2 py-1" style="color:#000;"><i class="feather-plus fs-10 me-1"></i>Buy</button>
-                            </div>
-                        @endif
-
-                        {{-- Membership Fee (when bought via POS) --}}
-                        @if ($membership_fee > 0)
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.2)!important;">
-                                <div>
-                                    <span class="fw-bold fs-11" style="color:#7c3aed;"><i class="feather-credit-card me-1 fs-10"></i>Membership Fee</span>
-                                    <span class="d-block fs-10 text-muted">{{ $active_membership['name'] ?? '' }} plan purchased</span>
-                                </div>
-                                <span class="fw-bold fs-13" style="color:#7c3aed;">+ ₹{{ number_format($membership_fee, 0) }}</span>
+                                <span class="fw-bold fs-13" style="color:#198754;">- ₹{{ number_format($membership_discount_amt, 0) }}</span>
                             </div>
                         @endif
 
@@ -522,7 +464,6 @@
                         {{-- Payment --}}
                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
                             <h6 class="fw-bold text-dark fs-11 text-uppercase mb-0"><i class="feather-credit-card me-1"></i>Payment</h6>
-                            <button wire:click="$set('isPaymentModeModalOpen', true)" class="btn btn-sm btn-outline-dark fs-10 py-0 px-2"><i class="feather-plus fs-10 me-1"></i>Mode</button>
                         </div>
 
                         @foreach ($payments as $index => $payment)
@@ -547,141 +488,14 @@
                             <span class="fw-bold fs-2" style="color:{{ $due_amount > 0 ? '#dc3545' : '#198754' }};">₹{{ number_format($due_amount, 0) }}</span>
                         </div>
 
-                        {{-- Generate --}}
-                        <button wire:click="generateBill" class="btn btn-primary w-100 py-3 fw-bold mt-3 fs-13">
-                            <span wire:loading.remove wire:target="generateBill"><i class="feather-check-circle me-1"></i>GENERATE INVOICE</span>
-                            <span wire:loading wire:target="generateBill"><span class="spinner-border spinner-border-sm me-1"></span>PROCESSING...</span>
+                        {{-- Update Button --}}
+                        <button wire:click="updateBill" class="btn btn-warning w-100 py-3 fw-bold mt-3 fs-13" style="color:#000;">
+                            <span wire:loading.remove wire:target="updateBill"><i class="feather-save me-1"></i>UPDATE INVOICE</span>
+                            <span wire:loading wire:target="updateBill"><span class="spinner-border spinner-border-sm me-1"></span>UPDATING...</span>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    {{-- ======================== MODALS ======================== --}}
-
-    {{-- Quick Add Patient --}}
-    @if ($isPatientModalOpen)
-        <div class="modal-backdrop fade show" style="z-index:1050;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-user-plus text-primary me-2"></i>Quick Register Patient</h5><button wire:click="$set('isPatientModalOpen', false)" class="btn-close"></button></div>
-                    <div class="modal-body">
-                        @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
-                        @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
-                        <div class="row g-3">
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label><input type="text" class="form-control" wire:model="new_name" placeholder="Full Name"></div>
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile <span class="text-danger">*</span></label><input type="text" class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
-                            <div class="col-6"><label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span></label><input type="number" class="form-control" wire:model="new_age" placeholder="Years"></div>
-                            <div class="col-6"><label class="form-label fw-semibold fs-11">Gender</label><select class="form-select" wire:model="new_gender"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button wire:click="$set('isPatientModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="quickAddPatient" class="btn btn-primary fw-bold"><span wire:loading.remove wire:target="quickAddPatient"><i class="feather-save me-1"></i>Save & Select</span><span wire:loading wire:target="quickAddPatient"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- Quick Add Doctor --}}
-    @if ($isDoctorModalOpen)
-        <div class="modal-backdrop fade show" style="z-index:1050;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-activity text-success me-2"></i>Quick Add Doctor</h5><button wire:click="$set('isDoctorModalOpen', false)" class="btn-close"></button></div>
-                    <div class="modal-body">
-                        @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
-                        @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
-                        <div class="row g-3">
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label><div class="input-group"><span class="input-group-text fw-bold">Dr.</span><input type="text" class="form-control" wire:model="new_doc_name" placeholder="Full Name"></div></div>
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile (Optional)</label><input type="text" class="form-control" wire:model="new_doc_phone" placeholder="10 Digit (optional)" maxlength="10"></div>
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Commission (%)</label><input type="number" class="form-control" wire:model="new_doc_commission" placeholder="e.g. 20"></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button wire:click="$set('isDoctorModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="quickAddDoctor" class="btn btn-success fw-bold"><i class="feather-save me-1"></i>Save & Select</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- Membership Purchase --}}
-    @if ($isMembershipModalOpen)
-        <div class="modal-backdrop fade show" style="z-index:1050;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-award text-warning me-2"></i>Buy Membership for {{ $selectedPatient['name'] ?? 'Patient' }}</h5><button wire:click="$set('isMembershipModalOpen', false)" class="btn-close"></button></div>
-                    <div class="modal-body">
-                        @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
-                        <div class="row g-3">
-                            @forelse ($memberships as $mem)
-                                <div class="col-md-4 col-sm-6">
-                                    <div wire:click="$set('selectedMembershipId', {{ $mem->id }})" class="card h-100 border-2 {{ $selectedMembershipId == $mem->id ? 'border-primary shadow' : 'border-gray-200' }}" style="cursor:pointer;transition:all .2s;">
-                                        <div class="card-body text-center p-3">
-                                            <div class="avatar-text avatar-lg mx-auto mb-2" style="background-color:{{ $mem->color_code ?? '#3b71ca' }}20;"><i class="feather-award fs-3" style="color:{{ $mem->color_code ?? '#3b71ca' }};"></i></div>
-                                            <h6 class="fw-bold mb-1 fs-13" style="color:#1a1a2e;">{{ $mem->name }}</h6>
-                                            <div class="fs-2 fw-bold mb-1" style="color:#1a1a2e;">₹{{ number_format($mem->price, 0) }}</div>
-                                            <div class="badge fs-11 mb-1 px-2 py-1" style="background:#198754;color:#fff;">{{ number_format($mem->discount_percentage, 0) }}% OFF on all tests</div>
-                                            <div class="fs-11" style="color:#555;">Valid {{ $mem->validity_days }} days</div>
-                                            @if($mem->description)
-                                                <div class="fs-10 mt-1" style="color:#777;">{{ $mem->description }}</div>
-                                            @endif
-                                            @if($selectedMembershipId == $mem->id)<div class="mt-1"><i class="feather-check-circle text-primary fs-4"></i></div>@endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="col-12 text-center py-3"><i class="feather-info fs-1 d-block mb-2" style="color:#ccc;"></i><p style="color:#888;">No plans configured.</p></div>
-                            @endforelse
-
-                            {{-- Membership Price Note --}}
-                            @if($selectedMembershipId)
-                                @php $selectedMem = $memberships->firstWhere('id', $selectedMembershipId); @endphp
-                                @if($selectedMem)
-                                    <div class="col-12">
-                                        <div class="alert mb-0 py-2 d-flex align-items-center gap-2" style="background:rgba(59,113,202,0.08);border:1px solid rgba(59,113,202,0.2);color:#1a1a2e;">
-                                            <i class="feather-info text-primary"></i>
-                                            <span class="fs-11"><strong>₹{{ number_format($selectedMem->price, 0) }}</strong> membership fee will be added to this bill. Patient will get <strong>{{ number_format($selectedMem->discount_percentage, 0) }}% discount</strong> on all tests.</span>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endif
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button wire:click="$set('isMembershipModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="purchaseMembership" class="btn btn-primary fw-bold" {{ !$selectedMembershipId ? 'disabled' : '' }}><i class="feather-check me-1"></i>Activate & Apply</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- Quick Add Payment Mode --}}
-    @if ($isPaymentModeModalOpen)
-        <div class="modal-backdrop fade show" style="z-index:1050;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-credit-card text-primary me-2"></i>Add Payment Mode</h5><button wire:click="$set('isPaymentModeModalOpen', false)" class="btn-close"></button></div>
-                    <div class="modal-body">
-                        @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
-                        <label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" wire:model="new_payment_mode_name" placeholder="e.g. Cash, UPI, Card">
-                    </div>
-                    <div class="modal-footer">
-                        <button wire:click="$set('isPaymentModeModalOpen', false)" class="btn btn-light btn-sm">Cancel</button>
-                        <button wire:click="quickAddPaymentMode" class="btn btn-primary btn-sm fw-bold"><i class="feather-save me-1"></i>Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

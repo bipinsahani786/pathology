@@ -32,6 +32,7 @@ class PosManager extends Component
 
     public $active_membership = null;
     public $membership_discount_amt = 0;
+    public $membership_fee = 0;
 
     public $voucher_code = '';
     public $applied_voucher = null;
@@ -57,6 +58,7 @@ class PosManager extends Component
     public $new_name, $new_phone, $new_age, $new_gender = 'Male';
     public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
     public $isMembershipModalOpen = false, $selectedMembershipId = null;
+    public $purchasedMembershipRecordId = null;
     public $isPaymentModeModalOpen = false, $new_payment_mode_name = '';
     public $modalError = '';
 
@@ -85,13 +87,26 @@ class PosManager extends Component
         $this->patientProfileData = $user->patientProfile ? $user->patientProfile->toArray() : null;
         $this->patientSearch = '';
 
-        // Check active membership
+        // Check active membership — only auto-apply if fully paid
         $record = PatientMembership::where('patient_id', $userId)
             ->where('is_active', true)
             ->where('valid_until', '>=', now())
             ->latest()->first();
 
-        $this->active_membership = $record ? Membership::find($record->membership_id)?->toArray() : null;
+        if ($record) {
+            $membership = Membership::find($record->membership_id);
+            // Only auto-apply if membership fee was fully paid
+            if ($membership && $record->amount_paid >= $membership->price) {
+                $this->active_membership = $membership->toArray();
+            } else {
+                $this->active_membership = null;
+            }
+        } else {
+            $this->active_membership = null;
+        }
+
+        $this->membership_fee = 0;
+        $this->purchasedMembershipRecordId = null;
         $this->calculateTotals();
     }
 
@@ -111,7 +126,7 @@ class PosManager extends Component
         $this->agentSearch = '';
     }
 
-    public function clearPatient() { $this->selectedPatient = null; $this->patientProfileData = null; $this->active_membership = null; $this->calculateTotals(); }
+    public function clearPatient() { $this->selectedPatient = null; $this->patientProfileData = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null; $this->calculateTotals(); }
     public function clearDoctor() { $this->selectedDoctor = null; $this->doctorProfileData = null; }
     public function clearAgent() { $this->selectedAgent = null; $this->agentProfileData = null; }
 
@@ -183,11 +198,11 @@ class PosManager extends Component
 
         DB::beginTransaction();
         try {
-            PatientMembership::create([
+            $record = PatientMembership::create([
                 'company_id' => auth()->user()->company_id,
                 'patient_id' => $this->selectedPatient['id'],
                 'membership_id' => $membership->id,
-                'amount_paid' => $membership->price,
+                'amount_paid' => 0, // Will be marked paid when invoice is fully paid
                 'valid_from' => now()->toDateString(),
                 'valid_until' => now()->addDays($membership->validity_days)->toDateString(),
                 'is_active' => true,
@@ -195,6 +210,8 @@ class PosManager extends Component
             DB::commit();
 
             $this->active_membership = $membership->toArray();
+            $this->membership_fee = (float) $membership->price;
+            $this->purchasedMembershipRecordId = $record->id;
             $this->isMembershipModalOpen = false;
             $this->selectedMembershipId = null;
             $this->modalError = '';
@@ -205,6 +222,20 @@ class PosManager extends Component
             Log::error("Membership Purchase Error: " . $e->getMessage());
             $this->modalError = 'Error: ' . $e->getMessage();
         }
+    }
+
+    public function removeMembership()
+    {
+        $this->active_membership = null;
+        $this->membership_fee = 0;
+
+        // If membership was just purchased in this session, delete the record
+        if ($this->purchasedMembershipRecordId) {
+            PatientMembership::where('id', $this->purchasedMembershipRecordId)->delete();
+            $this->purchasedMembershipRecordId = null;
+        }
+
+        $this->calculateTotals();
     }
 
     // ==========================================
@@ -292,7 +323,7 @@ class PosManager extends Component
             $running -= $this->manual_discount_amt;
         }
 
-        $this->net_payable = max($running, 0);
+        $this->net_payable = max($running, 0) + $this->membership_fee;
         $this->total_discount = $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
         $this->due_amount = max($this->net_payable - collect($this->payments)->sum('amount'), 0);
     }
@@ -495,6 +526,14 @@ class PosManager extends Component
 
             if ($this->applied_voucher) $this->applied_voucher->increment('used_count');
 
+            // ── Mark membership as paid if bill is fully paid ──
+            if ($this->purchasedMembershipRecordId && $this->due_amount <= 0) {
+                $memRecord = PatientMembership::find($this->purchasedMembershipRecordId);
+                if ($memRecord) {
+                    $memRecord->update(['amount_paid' => $this->membership_fee]);
+                }
+            }
+
             // ── Credit Doctor & Agent Wallets ──
             if ($docCommission > 0 && $doctorId) {
                 $wallet = Wallet::firstOrCreate(
@@ -517,7 +556,7 @@ class PosManager extends Component
             $this->cart = []; $this->selectedPatient = null; $this->patientProfileData = null;
             $this->selectedDoctor = null; $this->doctorProfileData = null;
             $this->selectedAgent = null; $this->agentProfileData = null;
-            $this->applied_voucher = null; $this->active_membership = null;
+            $this->applied_voucher = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null;
             $this->manual_discount_input = 0; $this->expandedCartItems = [];
             $this->payments = []; $this->addPaymentRow(); $this->calculateTotals();
         } catch (\Exception $e) {

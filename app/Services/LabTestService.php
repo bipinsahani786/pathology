@@ -70,7 +70,7 @@ class LabTestService
         // Map parameters to ensure all keys exist for the lab
         $mappedParams = array_map(function ($p) {
             return [
-                'name' => $p['name'] ?? '',
+                'name' => $p['param'] ?? $p['name'] ?? '',
                 'unit' => $p['unit'] ?? '',
                 'range_type' => $p['range_type'] ?? 'general',
                 'general_range' => $p['general_range'] ?? '',

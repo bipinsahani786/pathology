@@ -33,6 +33,11 @@
                     <i class="feather-layout me-1"></i> Bill Templates
                 </button>
             </li>
+            <li class="nav-item">
+                <button wire:click="$set('activeTab', 'pdf')" class="nav-link {{ $activeTab === 'pdf' ? 'active' : '' }}">
+                    <i class="feather-printer me-1"></i> PDF Header / Footer
+                </button>
+            </li>
         </ul>
 
         {{-- ═══════════════════════════════════════════════════════ --}}
@@ -257,9 +262,9 @@
                         @php
                             $templates = [
                                 'classic' => ['name' => 'Classic', 'icon' => 'feather-file-text', 'color' => '#3b71ca', 'desc' => 'Traditional layout with header, table, and footer. Best for formal medical reports.'],
-                                'modern' => ['name' => 'Modern', 'icon' => 'feather-layout', 'color' => '#14b8a6', 'desc' => 'Clean, contemporary design with gradient accents and rounded elements.'],
+                                'modern' => ['name' => 'Modern', 'icon' => 'feather-layout', 'color' => '#14b8a6', 'desc' => 'Clean contemporary design with gradient banner and colored info cards.'],
                                 'compact' => ['name' => 'Compact', 'icon' => 'feather-minimize-2', 'color' => '#f59e0b', 'desc' => 'Space-efficient layout for quick printing. Fits more data per page.'],
-                                'thermal' => ['name' => 'Thermal', 'icon' => 'feather-printer', 'color' => '#6366f1', 'desc' => 'Optimized for 80mm thermal printers. Narrow format, monospaced text.'],
+                                'thermal' => ['name' => 'Thermal', 'icon' => 'feather-printer', 'color' => '#6366f1', 'desc' => 'Optimized for 80mm thermal printers. Narrow receipt format.'],
                             ];
                         @endphp
 
@@ -293,6 +298,148 @@
                             <span wire:loading.remove wire:target="saveTemplate"><i class="feather-save me-1"></i>Save Template</span>
                             <span wire:loading wire:target="saveTemplate"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                         </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB 4: PDF HEADER / FOOTER --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'pdf')
+            <div class="row g-4">
+                {{-- Toggle Switches --}}
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-toggle-left text-primary me-2"></i>Header & Footer Visibility</h6>
+                        </div>
+                        <div class="card-body">
+                            @if($pdfSaved)
+                                <div class="alert alert-success py-2 fs-12 mb-3 d-flex align-items-center gap-2">
+                                    <i class="feather-check-circle"></i> PDF settings saved!
+                                </div>
+                            @endif
+
+                            <div class="p-3 rounded-3 mb-3" style="background:rgba(59,113,202,0.05);">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <strong class="fs-12">Show Header in PDF</strong>
+                                        <div class="fs-10 text-muted">Lab name, logo, contact details appear at top</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_header" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong class="fs-12">Show Footer in PDF</strong>
+                                        <div class="fs-10 text-muted">Thank you message, website, disclaimer at bottom</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_footer" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info py-2 fs-11 mb-0">
+                                <i class="feather-info me-1"></i>
+                                <strong>Tip:</strong> Labs using their own letterpad can turn OFF both header & footer. Use the "Without Header" PDF option when printing.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Custom Header/Footer Images --}}
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-image text-primary me-2"></i>Custom Header / Footer Images</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="fs-11 text-muted mb-3">
+                                Upload custom header/footer images (screenshot of your letterpad). These will replace the default lab info section in the PDF.
+                            </div>
+
+                            {{-- Header Image --}}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <label class="form-label fw-bold fs-11">📄 Custom Header Image</label>
+                                @if($pdf_header_image)
+                                    <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
+                                        <img src="{{ asset('storage/' . $pdf_header_image) }}" alt="Header" style="max-height:60px;max-width:100%;object-fit:contain;">
+                                        <div class="mt-1">
+                                            <button wire:click="removeHeaderImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if($new_header_image)
+                                    <div class="mb-2 text-center">
+                                        <img src="{{ $new_header_image->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:60px;">
+                                        <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New header selected</div>
+                                    </div>
+                                @endif
+                                <input type="file" wire:model="new_header_image" accept="image/*" class="form-control form-control-sm">
+                                @error('new_header_image') <span class="text-danger fs-10">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Footer Image --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold fs-11">📋 Custom Footer Image</label>
+                                @if($pdf_footer_image)
+                                    <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
+                                        <img src="{{ asset('storage/' . $pdf_footer_image) }}" alt="Footer" style="max-height:50px;max-width:100%;object-fit:contain;">
+                                        <div class="mt-1">
+                                            <button wire:click="removeFooterImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if($new_footer_image)
+                                    <div class="mb-2 text-center">
+                                        <img src="{{ $new_footer_image->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:50px;">
+                                        <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New footer selected</div>
+                                    </div>
+                                @endif
+                                <input type="file" wire:model="new_footer_image" accept="image/*" class="form-control form-control-sm">
+                                @error('new_footer_image') <span class="text-danger fs-10">{{ $message }}</span> @enderror
+                                <div class="fs-10 text-muted mt-1">Max 3MB · JPG, PNG</div>
+                            </div>
+
+                            <div class="text-end">
+                                <button wire:click="savePdfSettings" class="btn btn-primary fw-bold px-4">
+                                    <span wire:loading.remove wire:target="savePdfSettings"><i class="feather-save me-1"></i>Save PDF Settings</span>
+                                    <span wire:loading wire:target="savePdfSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- PDF Options Explainer --}}
+                <div class="col-12">
+                    <div class="card border-0" style="background:linear-gradient(135deg,rgba(59,113,202,0.05),rgba(124,58,237,0.05));">
+                        <div class="card-body">
+                            <h6 class="fw-bold fs-13 mb-3"><i class="feather-book-open me-2 text-primary"></i>How PDF Options Work</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-white rounded-3 h-100 border">
+                                        <div class="fw-bold fs-12 mb-1 text-primary"><i class="feather-file-text me-1"></i>PDF with Header</div>
+                                        <div class="fs-11 text-muted">Contains lab name, logo, contact info at top & thank-you at bottom. Use for patients who need a complete invoice.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-white rounded-3 h-100 border">
+                                        <div class="fw-bold fs-12 mb-1" style="color:#f59e0b;"><i class="feather-minimize me-1"></i>PDF Without Header</div>
+                                        <div class="fs-11 text-muted">Only invoice content — no lab header/footer. Perfect for printing on your own <strong>pre-printed letterpad</strong>.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-white rounded-3 h-100 border">
+                                        <div class="fw-bold fs-12 mb-1" style="color:#7c3aed;"><i class="feather-image me-1"></i>Custom Image Header</div>
+                                        <div class="fs-11 text-muted">Upload a <strong>screenshot of your letterpad header</strong> and it will be placed at the top of the PDF instead of default info.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
