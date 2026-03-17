@@ -62,4 +62,12 @@ class Invoice extends Model
     {
         return $this->belongsTo(User::class, 'referred_by_doctor_id');
     }
+
+    /**
+     * The generated test report for this invoice.
+     */
+    public function testReport()
+    {
+        return $this->hasOne(TestReport::class);
+    }
 }

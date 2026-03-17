@@ -19,6 +19,7 @@ use App\Livewire\Lab\PosManager;
 use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\InvoicePrint;
 use App\Livewire\Lab\InvoiceManager;
+use App\Livewire\Lab\PosEditManager;
 use Illuminate\Support\Facades\Route;
 
 
@@ -105,8 +106,20 @@ Route::middleware(['auth'])->group(function () {
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
 
-            // Invoice Print
+            // Invoice Print (browser)
             Route::get('/invoice/{id}/print', InvoicePrint::class)->name('invoice.print');
+
+            // Invoice Edit (POS-style)
+            Route::get('/invoice/{id}/edit', PosEditManager::class)->name('invoice.edit');
+
+            // Invoice PDF (dompdf)
+            Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
+            Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
+            
+            // Reports Generation
+            Route::get('/reports', \App\Livewire\Lab\ReportManager::class)->name('reports');
+            Route::get('/reports/entry/{id}', \App\Livewire\Lab\ResultEntryManager::class)->name('reports.entry');
+            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
         });
 
 

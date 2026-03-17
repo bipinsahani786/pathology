@@ -25,6 +25,7 @@ class InvoiceManager extends Component
     public function updatingFilterDateFrom() { $this->resetPage(); }
     public function updatingFilterDateTo() { $this->resetPage(); }
     public function updatingFilterCollectionType() { $this->resetPage(); }
+    public function updatingPerPage() { $this->resetPage(); }
 
     public function clearFilters()
     {

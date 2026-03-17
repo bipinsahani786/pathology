@@ -39,6 +39,23 @@ class SettingsManager extends Component
     public $bill_template = 'classic';
     public $templateSaved = false;
 
+    // ==========================================
+    // PDF HEADER / FOOTER
+    // ==========================================
+    public $pdf_show_header = true;
+    public $pdf_show_footer = true;
+    public $pdf_header_image;       // stored path
+    public $pdf_footer_image;       // stored path
+    public $new_header_image;       // upload
+    public $new_footer_image;       // upload
+    public $pdfSaved = false;
+
+    // Report Signatory
+    public $authorized_signatory_name;
+    public $authorized_signatory_designation;
+    public $signature_image;
+    public $new_signature_image;
+
     public function mount()
     {
         $company = Company::find(auth()->user()->company_id);
@@ -60,6 +77,16 @@ class SettingsManager extends Component
         $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4);
         $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
         $this->bill_template = Configuration::getFor('bill_template', 'classic');
+
+        // PDF header/footer
+        $this->pdf_show_header = Configuration::getFor('pdf_show_header', '1') === '1';
+        $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1') === '1';
+        $this->pdf_header_image = Configuration::getFor('pdf_header_image', null);
+        $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null);
+        
+        $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
+        $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
+        $this->signature_image = Configuration::getFor('signature_image', null);
     }
 
     // ==========================================
@@ -82,7 +109,7 @@ class SettingsManager extends Component
 
         // Handle logo upload
         $logoPath = $company->logo;
-        if ($this->new_logo) {
+        if (is_object($this->new_logo) && method_exists($this->new_logo, 'store')) {
             $logoPath = $this->new_logo->store('logos', 'public');
         }
 
@@ -131,6 +158,58 @@ class SettingsManager extends Component
     {
         Configuration::setFor('bill_template', $this->bill_template);
         $this->templateSaved = true;
+    }
+
+    // ==========================================
+    // SAVE PDF HEADER / FOOTER SETTINGS
+    // ==========================================
+    public function savePdfSettings()
+    {
+        $this->validate([
+            'new_header_image' => 'nullable|image|max:3072',
+            'new_footer_image' => 'nullable|image|max:3072',
+        ]);
+
+        // Upload header image
+        if (is_object($this->new_header_image) && method_exists($this->new_header_image, 'store')) {
+            $this->pdf_header_image = $this->new_header_image->store('invoice-headers', 'public');
+            $this->new_header_image = null;
+        }
+
+        // Upload footer image
+        if (is_object($this->new_footer_image) && method_exists($this->new_footer_image, 'store')) {
+            $this->pdf_footer_image = $this->new_footer_image->store('invoice-footers', 'public');
+            $this->new_footer_image = null;
+        }
+
+        // Upload signature image
+        if (is_object($this->new_signature_image) && method_exists($this->new_signature_image, 'store')) {
+            $this->signature_image = $this->new_signature_image->store('signatures', 'public');
+            $this->new_signature_image = null;
+        }
+
+        Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0');
+        Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0');
+        Configuration::setFor('pdf_header_image', $this->pdf_header_image);
+        Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);
+        
+        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
+        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
+        Configuration::setFor('signature_image', $this->signature_image);
+
+        $this->pdfSaved = true;
+    }
+
+    public function removeHeaderImage()
+    {
+        $this->pdf_header_image = null;
+        Configuration::setFor('pdf_header_image', null);
+    }
+
+    public function removeFooterImage()
+    {
+        $this->pdf_footer_image = null;
+        Configuration::setFor('pdf_footer_image', null);
     }
 
     /**

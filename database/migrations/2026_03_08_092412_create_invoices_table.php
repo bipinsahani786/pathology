@@ -22,7 +22,8 @@ return new class extends Migration
             $table->foreignId('referred_by_doctor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('referred_by_agent_id')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->string('invoice_number')->unique(); 
+            $table->string('invoice_number');
+            $table->unique(['company_id', 'invoice_number']);
             $table->dateTime('invoice_date');
 
             // Pricing

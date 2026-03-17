@@ -170,15 +170,34 @@
                                         <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex gap-1 justify-content-center">
-                                            <a href="{{ route('lab.invoice.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Print">
-                                                <i class="feather-printer"></i>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <a href="{{ route('lab.invoice.edit', $inv->id) }}" wire:navigate class="btn btn-sm btn-outline-warning px-2" title="Edit Invoice">
+                                                <i class="feather-edit-2 fs-12"></i>
                                             </a>
-                                            @if($inv->doctor)
-                                                <span class="btn btn-sm btn-outline-info" title="Ref: {{ $inv->doctor->name }}">
-                                                    <i class="feather-user"></i>
-                                                </span>
-                                            @endif
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="feather-printer fs-12"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li>
+                                                        <a class="dropdown-item fs-11" href="{{ route('lab.invoice.pdf', $inv->id) }}" target="_blank">
+                                                            <i class="feather-file-text me-2 text-primary"></i>📄 PDF (With Header)
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item fs-11" href="{{ route('lab.invoice.pdf.plain', $inv->id) }}" target="_blank">
+                                                            <i class="feather-minimize me-2 text-warning"></i>📋 PDF (Without Header)
+                                                            <div class="fs-9 text-muted ms-4">For letterpad printing</div>
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item fs-11" href="{{ route('lab.invoice.print', $inv->id) }}" target="_blank">
+                                                            <i class="feather-monitor me-2 text-info"></i>🖥️ Browser Print
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -195,15 +214,72 @@
                     </table>
                 </div>
 
-                {{-- Pagination --}}
-                @if($invoices->hasPages())
-                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
-                        <div class="fs-11 text-muted">
-                            Showing {{ $invoices->firstItem() }}–{{ $invoices->lastItem() }} of {{ $invoices->total() }}
-                        </div>
-                        {{ $invoices->links() }}
+                {{-- Pagination Footer --}}
+                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-top bg-gray-50">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-11 text-muted">Show</span>
+                        <select class="form-select form-select-sm fw-bold" wire:model.live="perPage" style="width:70px;">
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="fs-11 text-muted">
+                            of <strong>{{ $invoices->total() }}</strong> invoices
+                            @if($invoices->total() > 0)
+                                · Showing {{ $invoices->firstItem() }}–{{ $invoices->lastItem() }}
+                            @endif
+                        </span>
                     </div>
-                @endif
+
+                    @if($invoices->hasPages())
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0 gap-1">
+                                {{-- Previous --}}
+                                @if ($invoices->onFirstPage())
+                                    <li class="page-item disabled"><span class="page-link border-0 bg-transparent"><i class="feather-chevron-left fs-12"></i></span></li>
+                                @else
+                                    <li class="page-item"><button wire:click="previousPage" class="page-link border-0 bg-transparent"><i class="feather-chevron-left fs-12"></i></button></li>
+                                @endif
+
+                                {{-- Page Numbers --}}
+                                @php
+                                    $currentPage = $invoices->currentPage();
+                                    $lastPage = $invoices->lastPage();
+                                    $start = max(1, $currentPage - 2);
+                                    $end = min($lastPage, $currentPage + 2);
+                                @endphp
+
+                                @if($start > 1)
+                                    <li class="page-item"><button wire:click="gotoPage(1)" class="page-link border rounded-2 fs-11 fw-bold" style="min-width:32px;">1</button></li>
+                                    @if($start > 2)
+                                        <li class="page-item disabled"><span class="page-link border-0 bg-transparent fs-11">…</span></li>
+                                    @endif
+                                @endif
+
+                                @for($p = $start; $p <= $end; $p++)
+                                    <li class="page-item {{ $p == $currentPage ? 'active' : '' }}">
+                                        <button wire:click="gotoPage({{ $p }})" class="page-link border rounded-2 fs-11 fw-bold {{ $p == $currentPage ? 'bg-primary text-white border-primary' : '' }}" style="min-width:32px;">{{ $p }}</button>
+                                    </li>
+                                @endfor
+
+                                @if($end < $lastPage)
+                                    @if($end < $lastPage - 1)
+                                        <li class="page-item disabled"><span class="page-link border-0 bg-transparent fs-11">…</span></li>
+                                    @endif
+                                    <li class="page-item"><button wire:click="gotoPage({{ $lastPage }})" class="page-link border rounded-2 fs-11 fw-bold" style="min-width:32px;">{{ $lastPage }}</button></li>
+                                @endif
+
+                                {{-- Next --}}
+                                @if ($invoices->hasMorePages())
+                                    <li class="page-item"><button wire:click="nextPage" class="page-link border-0 bg-transparent"><i class="feather-chevron-right fs-12"></i></button></li>
+                                @else
+                                    <li class="page-item disabled"><span class="page-link border-0 bg-transparent"><i class="feather-chevron-right fs-12"></i></span></li>
+                                @endif
+                            </ul>
+                        </nav>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
