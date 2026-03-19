@@ -37,19 +37,16 @@
 
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden">
             
-            <div class="card-header bg-white py-4 border-bottom border-light">
-                <div class="row g-3 align-items-center">
-                    <div class="col-12 col-md-8 col-lg-6" style="max-width: 600px;">
-                        <div class="position-relative">
-                            <span class="position-absolute top-50 translate-middle-y text-muted" style="left: 18px; z-index: 10;">
-                                <div wire:loading.remove wire:target="searchTerm"><i class="feather-search fs-5"></i></div>
-                                <div wire:loading wire:target="searchTerm"><span class="spinner-border spinner-border-sm text-primary" role="status"></span></div>
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
                             </span>
-                            
                             <input type="text" wire:model.live.debounce.300ms="searchTerm" 
-                                class="form-control rounded-pill border-light shadow-sm" 
-                                placeholder="Search by patient name, phone, or ID (e.g. PAT-)..."
-                                style="padding-left: 48px; height: 45px; font-size: 14px; background-color: #f8fafc; transition: all 0.2s;">
+                                class="form-control" 
+                                placeholder="Search by name, phone, or PAT-ID...">
                         </div>
                     </div>
                 </div>
@@ -130,7 +127,7 @@
     @if ($isModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
 
                     <div class="modal-header bg-light border-bottom p-4">
@@ -143,7 +140,8 @@
                         <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
                     </div>
 
-                    <div class="modal-body p-4 bg-white">
+                    <form wire:submit.prevent="store">
+                        <div class="modal-body p-4 bg-white">
                         <div class="row g-4">
                             <div class="col-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Basic Information</h6></div>
                             
@@ -210,13 +208,12 @@
 
                     <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
                         <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
-                        <button type="button" wire:click="store" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center">
                             <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Patient</div>
                             <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
                         </button>
                     </div>
-
-                </div>
+                </form>
             </div>
         </div>
     @endif

@@ -36,15 +36,16 @@
 
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden">
             
-            <div class="card-header bg-white py-3 border-bottom border-light">
-                <div class="row g-6 align-items-center">
-                    <div class="col-12 col-md-10">
-                        <div class="input-group input-group-sm border rounded-pill px-3 bg-white shadow-sm transition-all focus-ring-wrapper">
-                            <span class="input-group-text bg-transparent border-0 pe-2 text-muted">
-                                <div wire:loading.remove wire:target="searchTerm"><i class="feather-search"></i></div>
-                                <div wire:loading wire:target="searchTerm"><span class="spinner-border spinner-border-sm text-primary" role="status"></span></div>
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <div class="row g-3">
+                    <div class="col-md-10">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
                             </span>
-                            <input type="text" wire:model.live.debounce.300ms="searchTerm" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Search packages by name or code...">
+                            <input type="text" wire:model.live.debounce.300ms="searchTerm" 
+                                class="form-control" 
+                                placeholder="Search packages by name or code...">
                         </div>
                     </div>
                 </div>
@@ -136,7 +137,8 @@
                         <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
                     </div>
 
-                    <div class="modal-body p-4 bg-white" style="max-height: 75vh; overflow-y: auto;">
+                    <form wire:submit.prevent="store">
+                        <div class="modal-body p-4 bg-white">
                         
                         <div class="bg-light p-4 rounded-4 border mb-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -264,11 +266,12 @@
 
                     <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
                         <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
-                        <button type="button" wire:click="store" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
                             <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Package Profile</div>
                             <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing...</div>
                         </button>
                     </div>
+                </form>
 
                 </div>
             </div>

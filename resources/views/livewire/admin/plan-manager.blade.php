@@ -108,7 +108,7 @@
     @if ($isModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-3">
                     <div class="modal-header bg-soft-primary">
                         <h5 class="modal-title fw-bold text-primary">
@@ -216,14 +216,11 @@
 
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-top-0 d-flex justify-content-between">
-                            <button type="button" wire:click="closeModal" class="btn btn-light-danger"><i
-                                    class="feather-x me-2"></i> Cancel</button>
-                            <button type="submit" class="btn btn-success px-4">
-                                <span wire:loading.remove wire:target="store">
-                                    <i class="feather-save me-2"></i> {{ $plan_id ? 'Update Plan' : 'Save Plan' }}
-                                </span>
-                                <span wire:loading wire:target="store">Saving Database...</span>
+                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
+                            <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                                <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> {{ $plan_id ? 'Update Plan' : 'Save Plan' }}</div>
+                                <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
                             </button>
                         </div>
                     </form>

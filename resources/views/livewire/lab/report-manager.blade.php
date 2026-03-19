@@ -23,9 +23,11 @@
                 
                 {{-- Filters --}}
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="feather-search text-muted"></i></span>
+                    <div class="col-md-6">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
+                            </span>
                             <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Search by Invoice, Patient Name, Phone...">
                         </div>
                     </div>

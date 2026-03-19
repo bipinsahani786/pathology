@@ -5,37 +5,52 @@ html.theme-color-teal {
     --bs-primary: #20c997;
     --bs-primary-rgb: 32, 201, 151;
 }
+
 html.theme-color-purple {
     --bs-primary: #6f42c1;
     --bs-primary-rgb: 111, 66, 193;
 }
+
 html.theme-color-green {
     --bs-primary: #198754;
     --bs-primary-rgb: 25, 135, 84;
 }
+
 html.theme-color-orange {
     --bs-primary: #fd7e14;
     --bs-primary-rgb: 253, 126, 20;
 }
+
 html.theme-color-red {
     --bs-primary: #dc3545;
     --bs-primary-rgb: 220, 53, 69;
 }
 
 /* Force override of static bootstrap colors for primary subclasses when theme is set */
-html[class*="theme-color-"]:not(.theme-color-blue) .bg-primary { background-color: var(--bs-primary) !important; }
-html[class*="theme-color-"]:not(.theme-color-blue) .text-primary { color: var(--bs-primary) !important; }
-html[class*="theme-color-"]:not(.theme-color-blue) .border-primary { border-color: var(--bs-primary) !important; }
-html[class*="theme-color-"]:not(.theme-color-blue) .btn-primary { 
-    background-color: var(--bs-primary) !important; 
-    border-color: var(--bs-primary) !important; 
+html[class*="theme-color-"]:not(.theme-color-blue) .bg-primary {
+    background-color: var(--bs-primary) !important;
 }
-html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary { 
-    color: var(--bs-primary) !important; 
-    border-color: var(--bs-primary) !important; 
+
+html[class*="theme-color-"]:not(.theme-color-blue) .text-primary {
+    color: var(--bs-primary) !important;
 }
-html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary:hover { 
-    background-color: var(--bs-primary) !important; 
+
+html[class*="theme-color-"]:not(.theme-color-blue) .border-primary {
+    border-color: var(--bs-primary) !important;
+}
+
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary {
+    color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary:hover {
+    background-color: var(--bs-primary) !important;
     color: #fff !important;
 }
 
@@ -45,10 +60,25 @@ html[class*="theme-color-"]:not(.theme-color-blue) .btn-outline-primary:hover {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
 
-html.app-font-family-poppins { font-family: 'Poppins', sans-serif !important; --bs-body-font-family: 'Poppins', sans-serif; }
-html.app-font-family-montserrat { font-family: 'Montserrat', sans-serif !important; --bs-body-font-family: 'Montserrat', sans-serif; }
-html.app-font-family-roboto { font-family: 'Roboto', sans-serif !important; --bs-body-font-family: 'Roboto', sans-serif; }
-html.app-font-family-nunito { font-family: 'Nunito', sans-serif !important; --bs-body-font-family: 'Nunito', sans-serif; }
+html.app-font-family-poppins {
+    font-family: 'Poppins', sans-serif !important;
+    --bs-body-font-family: 'Poppins', sans-serif;
+}
+
+html.app-font-family-montserrat {
+    font-family: 'Montserrat', sans-serif !important;
+    --bs-body-font-family: 'Montserrat', sans-serif;
+}
+
+html.app-font-family-roboto {
+    font-family: 'Roboto', sans-serif !important;
+    --bs-body-font-family: 'Roboto', sans-serif;
+}
+
+html.app-font-family-nunito {
+    font-family: 'Nunito', sans-serif !important;
+    --bs-body-font-family: 'Nunito', sans-serif;
+}
 
 /* ========================================= */
 /* DARK MODE OVERRIDES & FIXES */
@@ -91,7 +121,12 @@ html.app-skin-dark .form-select:focus {
 }
 
 html.app-skin-dark label,
-html.app-skin-dark h1, html.app-skin-dark h2, html.app-skin-dark h3, html.app-skin-dark h4, html.app-skin-dark h5, html.app-skin-dark h6,
+html.app-skin-dark h1,
+html.app-skin-dark h2,
+html.app-skin-dark h3,
+html.app-skin-dark h4,
+html.app-skin-dark h5,
+html.app-skin-dark h6,
 html.app-skin-dark .text-dark,
 html.app-skin-dark p {
     color: #e4e6ef !important;
@@ -143,6 +178,7 @@ html.app-skin-dark .nav-link.active {
 html.app-skin-dark .text-muted {
     color: #5e6278 !important;
 }
+
 html.app-skin-dark .bg-light,
 html.app-skin-dark .bg-gray-50,
 html.app-skin-dark .bg-gray-100,
@@ -160,6 +196,7 @@ html.app-skin-dark .bg-gray-300 {
     margin-bottom: 30px;
     border-radius: 0.5rem;
 }
+
 .btn {
     border-radius: 0.35rem;
     font-weight: 500;

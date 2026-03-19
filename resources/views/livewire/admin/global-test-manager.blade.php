@@ -31,36 +31,35 @@
 
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4">
             <div class="card-header bg-white py-3 border-bottom-0">
-                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="row g-3">
 
-                    <div class="flex-grow-1" style="max-width: 450px;">
-                        <div class="input-group input-group-sm border rounded-pill px-3 bg-light">
-                            <span class="input-group-text bg-transparent border-0 pe-2">
-                                <i class="feather-search text-muted"></i>
+                    <div class="col-md-7">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
                             </span>
                             <input type="text" wire:model.live.debounce.300ms="searchTerm"
-                                class="form-control border-0 bg-transparent py-2 shadow-none"
+                                class="form-control"
                                 placeholder="Search test name or code...">
                         </div>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted fs-13 d-none d-lg-block me-1">Filter by:</span>
-                        <div style="min-width: 180px;">
-                            <select wire:model.live="filterCategory"
-                                class="form-select form-select-sm border shadow-none bg-white py-2 px-3 rounded-pill">
-                                <option value="">All Categories</option>
-                                <option value="Haematology">Haematology</option>
-                                <option value="Biochemistry">Biochemistry</option>
-                                <option value="Serology">Serology</option>
-                                <option value="Pathology">Pathology</option>
-                                <option value="Microbiology">Microbiology</option>
-                                <option value="Clinical Pathology">Clinical Pathology</option>
-                                <option value="Immunology">Immunology</option>
-                            </select>
-                        </div>
+                    <div class="col-md-3">
+                        <select wire:model.live="filterCategory" class="form-select shadow-sm">
+                            <option value="">All Categories</option>
+                            <option value="Haematology">Haematology</option>
+                            <option value="Biochemistry">Biochemistry</option>
+                            <option value="Serology">Serology</option>
+                            <option value="Pathology">Pathology</option>
+                            <option value="Microbiology">Microbiology</option>
+                            <option value="Clinical Pathology">Clinical Pathology</option>
+                            <option value="Immunology">Immunology</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
                         <button wire:click="$set('filterCategory',''); $set('searchTerm','')"
-                            class="btn btn-sm btn-outline-light text-dark border py-2 px-3 d-flex align-items-center bg-white shadow-sm rounded-pill"
+                            class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center"
                             title="Reset Filters">
                             <i class="feather-refresh-ccw fs-12 me-1"></i>
                             <span>Reset</span>
@@ -148,7 +147,7 @@
                             aria-label="Close"></button>
                     </div>
                     <form wire:submit.prevent="store">
-                        <div class="modal-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="modal-body p-4 bg-white">
                             <div class="row g-3 mb-4">
 
                                 <div class="col-md-3">
@@ -197,12 +196,17 @@
                                         wire:model="suggested_price" placeholder="0.00">
                                 </div>
 
-                                <div class="col-md-9">
+                                <div class="col-md-12">
                                     <label class="form-label fs-12 fw-bold text-muted text-uppercase">Test Description
                                         / Instruction</label>
                                     <input type="text"
                                         class="form-control @error('description') is-invalid @enderror"
                                         wire:model="description" placeholder="e.g. Fasting required for 10-12 hours">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Interpretation Details <span class="text-info fw-normal">(Supports HTML tables — shown on report)</span></label>
+                                    <textarea class="form-control @error('interpretation') is-invalid @enderror" wire:model="interpretation" rows="4" placeholder="You can paste HTML tables here. Example:
+<table><tr><th>Level</th><th>Range</th></tr><tr><td>Desirable</td><td>&lt; 200 mg/dL</td></tr><tr><td>Borderline</td><td>200 - 239 mg/dL</td></tr><tr><td>High</td><td>&gt; 240 mg/dL</td></tr></table>"></textarea>
                                 </div>
                             </div>
 

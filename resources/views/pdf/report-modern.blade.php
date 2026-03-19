@@ -175,6 +175,31 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* Interpretation Tables */
+        .interpretation-block table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 10px;
+        }
+        .interpretation-block table th {
+            background-color: #f3f4f6;
+            padding: 4px 8px;
+            text-align: left;
+            border: 1px solid #ccc;
+            font-weight: bold;
+            font-size: 10px;
+            color: #333;
+        }
+        .interpretation-block table td {
+            padding: 3px 8px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+        }
+        .interpretation-block table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
         
         /* Clearfix */
         .clearfix::after {
@@ -278,9 +303,17 @@
                     @endforeach
                     @if($results->first()->labTest->description)
                         <tr>
-                            <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 10px; color: #555;">
+                            <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: #555;">
                                 <strong>Note:</strong> <br>
                                 {!! nl2br(e($results->first()->labTest->description)) !!}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($results->first()->labTest->interpretation)
+                        <tr>
+                            <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333;">
+                                <strong>Interpretation:</strong> <br>
+                                {!! $results->first()->labTest->interpretation !!}
                             </td>
                         </tr>
                     @endif
