@@ -154,118 +154,22 @@ class DemoSeeder extends Seeder
         // ============================================================
         // 7. GLOBAL TESTS (Master Catalog)
         // ============================================================
-        $globalTests = [
-            ['test_code' => 'CBC-001', 'name' => 'Complete Blood Count (CBC)', 'category' => 'Haematology', 'suggested_price' => 350, 'default_parameters' => [
-                ['param' => 'Hemoglobin', 'unit' => 'g/dL', 'male_range' => '13.0-17.0', 'female_range' => '12.0-15.5'],
-                ['param' => 'WBC Count', 'unit' => 'cells/µL', 'male_range' => '4500-11000', 'female_range' => '4500-11000'],
-                ['param' => 'RBC Count', 'unit' => 'million/µL', 'male_range' => '4.5-5.5', 'female_range' => '4.0-5.0'],
-                ['param' => 'Platelet Count', 'unit' => 'lac/µL', 'male_range' => '1.5-4.0', 'female_range' => '1.5-4.0'],
-                ['param' => 'PCV/HCT', 'unit' => '%', 'male_range' => '38-50', 'female_range' => '36-44'],
-                ['param' => 'MCV', 'unit' => 'fL', 'male_range' => '80-100', 'female_range' => '80-100'],
-                ['param' => 'MCH', 'unit' => 'pg', 'male_range' => '27-33', 'female_range' => '27-33'],
-                ['param' => 'MCHC', 'unit' => 'g/dL', 'male_range' => '32-36', 'female_range' => '32-36'],
-            ]],
-            ['test_code' => 'LFT-001', 'name' => 'Liver Function Test (LFT)', 'category' => 'Biochemistry', 'suggested_price' => 600, 'default_parameters' => [
-                ['param' => 'SGPT (ALT)', 'unit' => 'U/L', 'male_range' => '7-56', 'female_range' => '7-45'],
-                ['param' => 'SGOT (AST)', 'unit' => 'U/L', 'male_range' => '10-40', 'female_range' => '9-32'],
-                ['param' => 'Total Bilirubin', 'unit' => 'mg/dL', 'male_range' => '0.1-1.2', 'female_range' => '0.1-1.2'],
-                ['param' => 'Direct Bilirubin', 'unit' => 'mg/dL', 'male_range' => '0.0-0.3', 'female_range' => '0.0-0.3'],
-                ['param' => 'Alkaline Phosphatase', 'unit' => 'U/L', 'male_range' => '44-147', 'female_range' => '44-147'],
-                ['param' => 'Total Protein', 'unit' => 'g/dL', 'male_range' => '6.0-8.3', 'female_range' => '6.0-8.3'],
-                ['param' => 'Albumin', 'unit' => 'g/dL', 'male_range' => '3.5-5.0', 'female_range' => '3.5-5.0'],
-            ]],
-            ['test_code' => 'KFT-001', 'name' => 'Kidney Function Test (KFT)', 'category' => 'Biochemistry', 'suggested_price' => 500, 'default_parameters' => [
-                ['param' => 'Blood Urea', 'unit' => 'mg/dL', 'male_range' => '15-40', 'female_range' => '15-40'],
-                ['param' => 'Serum Creatinine', 'unit' => 'mg/dL', 'male_range' => '0.7-1.3', 'female_range' => '0.6-1.1'],
-                ['param' => 'Uric Acid', 'unit' => 'mg/dL', 'male_range' => '3.4-7.0', 'female_range' => '2.4-6.0'],
-                ['param' => 'BUN', 'unit' => 'mg/dL', 'male_range' => '7-20', 'female_range' => '7-20'],
-                ['param' => 'Sodium', 'unit' => 'mEq/L', 'male_range' => '136-145', 'female_range' => '136-145'],
-                ['param' => 'Potassium', 'unit' => 'mEq/L', 'male_range' => '3.5-5.0', 'female_range' => '3.5-5.0'],
-            ]],
-            ['test_code' => 'TSH-001', 'name' => 'Thyroid Profile (TSH, T3, T4)', 'category' => 'Endocrinology', 'suggested_price' => 700, 'default_parameters' => [
-                ['param' => 'TSH', 'unit' => 'µIU/mL', 'male_range' => '0.4-4.0', 'female_range' => '0.4-4.0'],
-                ['param' => 'T3', 'unit' => 'ng/dL', 'male_range' => '80-200', 'female_range' => '80-200'],
-                ['param' => 'T4', 'unit' => 'µg/dL', 'male_range' => '5.1-14.1', 'female_range' => '5.1-14.1'],
-            ]],
-            ['test_code' => 'LPD-001', 'name' => 'Lipid Profile', 'category' => 'Biochemistry', 'suggested_price' => 500, 'default_parameters' => [
-                ['param' => 'Total Cholesterol', 'unit' => 'mg/dL', 'male_range' => '<200', 'female_range' => '<200'],
-                ['param' => 'Triglycerides', 'unit' => 'mg/dL', 'male_range' => '<150', 'female_range' => '<150'],
-                ['param' => 'HDL Cholesterol', 'unit' => 'mg/dL', 'male_range' => '>40', 'female_range' => '>50'],
-                ['param' => 'LDL Cholesterol', 'unit' => 'mg/dL', 'male_range' => '<100', 'female_range' => '<100'],
-                ['param' => 'VLDL', 'unit' => 'mg/dL', 'male_range' => '5-40', 'female_range' => '5-40'],
-            ]],
-            ['test_code' => 'BGL-001', 'name' => 'Blood Glucose Fasting', 'category' => 'Biochemistry', 'suggested_price' => 100, 'default_parameters' => [
-                ['param' => 'Fasting Blood Sugar', 'unit' => 'mg/dL', 'male_range' => '70-100', 'female_range' => '70-100'],
-            ]],
-            ['test_code' => 'BGL-002', 'name' => 'Blood Glucose PP', 'category' => 'Biochemistry', 'suggested_price' => 100, 'default_parameters' => [
-                ['param' => 'PP Blood Sugar', 'unit' => 'mg/dL', 'male_range' => '70-140', 'female_range' => '70-140'],
-            ]],
-            ['test_code' => 'HBA-001', 'name' => 'HbA1c (Glycosylated Hemoglobin)', 'category' => 'Biochemistry', 'suggested_price' => 500, 'default_parameters' => [
-                ['param' => 'HbA1c', 'unit' => '%', 'male_range' => '<5.7', 'female_range' => '<5.7'],
-            ]],
-            ['test_code' => 'URI-001', 'name' => 'Urine Routine & Microscopy', 'category' => 'Clinical Pathology', 'suggested_price' => 200, 'default_parameters' => [
-                ['param' => 'Color', 'unit' => '', 'male_range' => 'Pale Yellow', 'female_range' => 'Pale Yellow'],
-                ['param' => 'Specific Gravity', 'unit' => '', 'male_range' => '1.005-1.030', 'female_range' => '1.005-1.030'],
-                ['param' => 'pH', 'unit' => '', 'male_range' => '4.5-8.0', 'female_range' => '4.5-8.0'],
-                ['param' => 'Protein', 'unit' => '', 'male_range' => 'Nil', 'female_range' => 'Nil'],
-                ['param' => 'Sugar', 'unit' => '', 'male_range' => 'Nil', 'female_range' => 'Nil'],
-                ['param' => 'Pus Cells', 'unit' => '/HPF', 'male_range' => '0-5', 'female_range' => '0-5'],
-            ]],
-            ['test_code' => 'ESR-001', 'name' => 'ESR (Erythrocyte Sedimentation Rate)', 'category' => 'Haematology', 'suggested_price' => 100, 'default_parameters' => [
-                ['param' => 'ESR', 'unit' => 'mm/hr', 'male_range' => '0-15', 'female_range' => '0-20'],
-            ]],
-            ['test_code' => 'VIT-001', 'name' => 'Vitamin D (25-OH)', 'category' => 'Immunology', 'suggested_price' => 1200, 'default_parameters' => [
-                ['param' => 'Vitamin D', 'unit' => 'ng/mL', 'male_range' => '30-100', 'female_range' => '30-100'],
-            ]],
-            ['test_code' => 'VIT-002', 'name' => 'Vitamin B12', 'category' => 'Immunology', 'suggested_price' => 800, 'default_parameters' => [
-                ['param' => 'Vitamin B12', 'unit' => 'pg/mL', 'male_range' => '200-900', 'female_range' => '200-900'],
-            ]],
-            ['test_code' => 'WDL-001', 'name' => 'Widal Test', 'category' => 'Serology', 'suggested_price' => 250, 'default_parameters' => [
-                ['param' => 'S. Typhi O', 'unit' => '', 'male_range' => '<1:80', 'female_range' => '<1:80'],
-                ['param' => 'S. Typhi H', 'unit' => '', 'male_range' => '<1:80', 'female_range' => '<1:80'],
-                ['param' => 'S. Para-Typhi AH', 'unit' => '', 'male_range' => '<1:80', 'female_range' => '<1:80'],
-                ['param' => 'S. Para-Typhi BH', 'unit' => '', 'male_range' => '<1:80', 'female_range' => '<1:80'],
-            ]],
-            ['test_code' => 'CRP-001', 'name' => 'C-Reactive Protein (CRP)', 'category' => 'Immunology', 'suggested_price' => 500, 'default_parameters' => [
-                ['param' => 'CRP', 'unit' => 'mg/L', 'male_range' => '<6', 'female_range' => '<6'],
-            ]],
-            ['test_code' => 'HIV-001', 'name' => 'HIV 1 & 2 (ELISA)', 'category' => 'Serology', 'suggested_price' => 500, 'default_parameters' => [
-                ['param' => 'HIV 1 & 2 Antibody', 'unit' => '', 'male_range' => 'Non-Reactive', 'female_range' => 'Non-Reactive'],
-            ]],
-            ['test_code' => 'HBS-001', 'name' => 'HBsAg (Hepatitis B)', 'category' => 'Serology', 'suggested_price' => 350, 'default_parameters' => [
-                ['param' => 'HBsAg', 'unit' => '', 'male_range' => 'Non-Reactive', 'female_range' => 'Non-Reactive'],
-            ]],
-            ['test_code' => 'DNG-001', 'name' => 'Dengue NS1 Antigen', 'category' => 'Serology', 'suggested_price' => 800, 'default_parameters' => [
-                ['param' => 'Dengue NS1 Antigen', 'unit' => '', 'male_range' => 'Negative', 'female_range' => 'Negative'],
-            ]],
-            ['test_code' => 'MAL-001', 'name' => 'Malaria (MP) Test', 'category' => 'Parasitology', 'suggested_price' => 200, 'default_parameters' => [
-                ['param' => 'Malaria Parasite', 'unit' => '', 'male_range' => 'Not Detected', 'female_range' => 'Not Detected'],
-            ]],
-            ['test_code' => 'PT-001', 'name' => 'Prothrombin Time (PT/INR)', 'category' => 'Haematology', 'suggested_price' => 400, 'default_parameters' => [
-                ['param' => 'PT', 'unit' => 'seconds', 'male_range' => '11-13.5', 'female_range' => '11-13.5'],
-                ['param' => 'INR', 'unit' => '', 'male_range' => '0.8-1.2', 'female_range' => '0.8-1.2'],
-            ]],
-            ['test_code' => 'STL-001', 'name' => 'Stool Routine & Microscopy', 'category' => 'Clinical Pathology', 'suggested_price' => 150, 'default_parameters' => [
-                ['param' => 'Color', 'unit' => '', 'male_range' => 'Brown', 'female_range' => 'Brown'],
-                ['param' => 'Consistency', 'unit' => '', 'male_range' => 'Formed', 'female_range' => 'Formed'],
-                ['param' => 'Ova', 'unit' => '', 'male_range' => 'Not Found', 'female_range' => 'Not Found'],
-                ['param' => 'Cyst', 'unit' => '', 'male_range' => 'Not Found', 'female_range' => 'Not Found'],
-            ]],
-        ];
-
-        foreach ($globalTests as $gt) {
-            GlobalTest::firstOrCreate(['test_code' => $gt['test_code']], $gt);
-        }
-        $this->command->info('✅ ' . count($globalTests) . ' Global Tests created');
+        $this->call(GlobalTestSeeder::class);
+        $this->command->info('✅ Global Master Tests seeded');
 
         // ============================================================
         // 8. LAB TESTS (Company-specific, mapped from Global Tests)
         // ============================================================
         $deptMap = [
-            'Haematology' => 'Haematology', 'Biochemistry' => 'Biochemistry',
-            'Endocrinology' => 'Endocrinology', 'Clinical Pathology' => 'Clinical Pathology',
-            'Immunology' => 'Immunology', 'Serology' => 'Serology',
-            'Parasitology' => 'Parasitology',
+            'Haematology' => 'Haematology',
+            'Biochemistry' => 'Biochemistry',
+            'Endocrinology' => 'Biochemistry',
+            'Clinical Pathology' => 'Clinical Pathology',
+            'Immunology' => 'Serology',
+            'Serology' => 'Serology',
+            'Tumor Markers' => 'Serology',
+            'Hormones' => 'Biochemistry',
+            'Molecular Diagnostics' => 'Molecular Biology',
         ];
 
         $createdLabTests = [];
@@ -277,31 +181,32 @@ class DemoSeeder extends Seeder
                 'mrp' => $gt->suggested_price ?? 300,
                 'b2b_price' => ($gt->suggested_price ?? 300) * 0.7,
                 'sample_type' => in_array($gt->category, ['Clinical Pathology']) ? 'Urine/Stool' : 'Blood',
-                'tat_hours' => $gt->category === 'Immunology' ? 24 : 6,
+                'tat_hours' => in_array($gt->category, ['Immunology', 'Hormones']) ? 24 : 6,
                 'parameters' => $gt->default_parameters,
+                'description' => $gt->description,
+                'interpretation' => $gt->interpretation,
                 'is_active' => true,
                 'is_package' => false,
-                'linked_test_ids' => null,
             ]);
             $createdLabTests[$gt->test_code] = $labTest;
         }
 
         // Packages
-        $cbcId = $createdLabTests['CBC-001']->id ?? null;
-        $lftId = $createdLabTests['LFT-001']->id ?? null;
-        $kftId = $createdLabTests['KFT-001']->id ?? null;
-        $tshId = $createdLabTests['TSH-001']->id ?? null;
-        $lipidId = $createdLabTests['LPD-001']->id ?? null;
-        $fbsId = $createdLabTests['BGL-001']->id ?? null;
-        $hbaId = $createdLabTests['HBA-001']->id ?? null;
-        $urineId = $createdLabTests['URI-001']->id ?? null;
-        $vitDId = $createdLabTests['VIT-001']->id ?? null;
-        $vitB12Id = $createdLabTests['VIT-002']->id ?? null;
+        $cbcId = $createdLabTests['CBC']->id ?? null;
+        $lftId = $createdLabTests['LFT']->id ?? null;
+        $kftId = $createdLabTests['KFT']->id ?? null;
+        $tshId = $createdLabTests['TFT']->id ?? null;
+        $lipidId = $createdLabTests['LIPID']->id ?? null;
+        $fbsId = $createdLabTests['BSF']->id ?? null;
+        $hbaId = $createdLabTests['HBA1C']->id ?? null;
+        $urineId = $createdLabTests['URE']->id ?? null;
+        $vitDId = $createdLabTests['VITD']->id ?? null;
+        $vitB12Id = $createdLabTests['VITB12']->id ?? null;
 
         $packages = [
             ['test_code' => 'PKG-FULL', 'name' => 'Full Body Checkup', 'mrp' => 2499, 'linked' => array_filter([$cbcId, $lftId, $kftId, $tshId, $lipidId, $fbsId, $urineId])],
             ['test_code' => 'PKG-DM', 'name' => 'Diabetes Panel', 'mrp' => 999, 'linked' => array_filter([$fbsId, $hbaId, $kftId, $lipidId])],
-            ['test_code' => 'PKG-FEVER', 'name' => 'Fever Panel', 'mrp' => 1299, 'linked' => array_filter([$cbcId, $createdLabTests['WDL-001']->id ?? null, $createdLabTests['MAL-001']->id ?? null, $createdLabTests['DNG-001']->id ?? null])],
+            ['test_code' => 'PKG-FEVER', 'name' => 'Fever Panel', 'mrp' => 1299, 'linked' => array_filter([$cbcId, $createdLabTests['WIDAL']->id ?? null, $createdLabTests['MALARIA']->id ?? null, $createdLabTests['DENGUE']->id ?? null])],
             ['test_code' => 'PKG-VIT', 'name' => 'Vitamin Panel', 'mrp' => 1799, 'linked' => array_filter([$vitDId, $vitB12Id, $cbcId])],
             ['test_code' => 'PKG-LKC', 'name' => 'Liver & Kidney Combo', 'mrp' => 899, 'linked' => array_filter([$lftId, $kftId])],
         ];

@@ -11,7 +11,7 @@ class LabTest extends Model
 
     protected $fillable = [
         'company_id', 'global_test_id', 'test_code', 'name', 'department',
-        'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description' , 'is_package', 'linked_test_ids',
+        'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description' , 'interpretation', 'is_package', 'linked_test_ids',
     ];
 
     protected $casts = [

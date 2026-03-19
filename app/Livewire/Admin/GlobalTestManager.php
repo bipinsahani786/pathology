@@ -14,7 +14,7 @@ class GlobalTestManager extends Component
     protected $paginationTheme = 'bootstrap';
 
     // Form Fields
-    public $test_id, $test_code, $name, $category, $suggested_price, $description;
+    public $test_id, $test_code, $name, $category, $suggested_price, $description, $interpretation;
     public $isModalOpen = false;
     
     // Dynamic array to store test parameters
@@ -74,7 +74,7 @@ class GlobalTestManager extends Component
 
     public function resetFields()
     {
-        $this->reset(['test_id', 'test_code', 'name', 'category', 'suggested_price', 'description']);
+        $this->reset(['test_id', 'test_code', 'name', 'category', 'suggested_price', 'description', 'interpretation']);
         $this->parameters = []; 
         $this->resetValidation(); 
     }
@@ -87,6 +87,7 @@ class GlobalTestManager extends Component
             'category' => 'required|string|max:100',
             'suggested_price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string|max:1000',
+            'interpretation' => 'nullable|string',
             
             // Parameter validation
             'parameters' => 'nullable|array',
@@ -142,6 +143,7 @@ class GlobalTestManager extends Component
         $this->category = $test->category;
         $this->suggested_price = $test->suggested_price;
         $this->description = $test->description;
+        $this->interpretation = $test->interpretation;
         
         $this->parameters = $test->default_parameters ?? [];
         $this->isModalOpen = true;

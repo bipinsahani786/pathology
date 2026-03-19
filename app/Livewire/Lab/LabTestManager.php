@@ -20,6 +20,7 @@ class LabTestManager extends Component
     public $tat_hours = 24;
     public $is_active = true;
     public $description;
+    public $interpretation;
     public array $parameters = []; 
 
     // UI States
@@ -72,6 +73,7 @@ class LabTestManager extends Component
         $this->sample_type = $test->sample_type;
         $this->tat_hours = $test->tat_hours;
         $this->description = $test->description; 
+        $this->interpretation = $test->interpretation;
         $this->is_active = $test->is_active;
         
         $this->parameters = is_array($test->parameters) ? $test->parameters : [];
@@ -113,7 +115,7 @@ class LabTestManager extends Component
 
     public function resetFields()
     {
-        $this->reset(['test_id', 'test_code', 'name', 'department', 'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description']);
+        $this->reset(['test_id', 'test_code', 'name', 'department', 'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description', 'interpretation']);
         $this->resetValidation();
     }
 
@@ -133,6 +135,7 @@ class LabTestManager extends Component
             'test_code' => $this->test_code,
             'department' => $this->department,
             'description' => $this->description,
+            'interpretation' => $this->interpretation,
             'mrp' => $this->mrp,
             'b2b_price' => $this->b2b_price,
             'sample_type' => $this->sample_type,
