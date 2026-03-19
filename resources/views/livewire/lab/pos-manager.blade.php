@@ -242,8 +242,8 @@
                     <div class="card-body py-2">
                         <div class="row g-2">
                             <div class="col-md-3 col-6">
-                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center</label>
-                                <select class="form-select form-select-sm" wire:model="collection_center_id">
+                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id">
                                     <option value="">— Select —</option>
                                     @foreach ($centers as $center)
                                         <option value="{{ $center->id }}">
@@ -251,15 +251,21 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('collection_center_id')
+                                    <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-3 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
-                                <select class="form-select form-select-sm" wire:model="branch_id">
+                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id">
                                     <option value="">— Select —</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
+                                @error('branch_id')
+                                    <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>

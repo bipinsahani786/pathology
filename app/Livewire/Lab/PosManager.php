@@ -200,7 +200,7 @@ class PosManager extends Component
         try {
             $record = PatientMembership::create([
                 'company_id' => auth()->user()->company_id,
-                'patient_id' => $this->selectedPatient['id'],
+                'patient_id' => $this->selectedPatient['id'] ?? null,
                 'membership_id' => $membership->id,
                 'amount_paid' => 0, // Will be marked paid when invoice is fully paid
                 'valid_from' => now()->toDateString(),
@@ -426,6 +426,15 @@ class PosManager extends Component
         if (!$this->selectedPatient) { session()->flash('error', 'Select a patient.'); return; }
         if (empty($this->cart)) { session()->flash('error', 'Add at least one test.'); return; }
 
+        $this->validate([
+            'collection_center_id' => 'required|exists:collection_centers,id',
+            'branch_id'            => 'nullable|exists:branches,id',
+            'collection_type'      => 'required|string',
+        ], [
+            'collection_center_id.required' => 'Please select a Collection Center.',
+            'collection_center_id.exists'   => 'The selected Collection Center is invalid.',
+        ]);
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
@@ -475,7 +484,7 @@ class PosManager extends Component
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
-                'patient_id' => $this->selectedPatient['id'],
+                'patient_id' => $this->selectedPatient['id'] ?? null,
                 'created_by' => auth()->id(),
                 'referred_by_doctor_id' => $doctorId,
                 'referred_by_agent_id' => $agentId,
@@ -515,7 +524,7 @@ class PosManager extends Component
                     Payment::create([
                         'company_id' => $companyId,
                         'invoice_id' => $invoice->id,
-                        'patient_id' => $this->selectedPatient['id'],
+                        'patient_id' => $this->selectedPatient['id'] ?? null,
                         'collected_by' => auth()->id(),
                         'payment_mode_id' => $payment['mode_id'],
                         'amount' => $payment['amount'],
@@ -559,10 +568,17 @@ class PosManager extends Component
             $this->applied_voucher = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null;
             $this->manual_discount_input = 0; $this->expandedCartItems = [];
             $this->payments = []; $this->addPaymentRow(); $this->calculateTotals();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Invoice Error: " . $e->getMessage());
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            Log::error("Invoice Generation Error: " . $e->getMessage(), [
+                'exception' => $e,
+                'user_id' => auth()->id(),
+                'patient_id' => $this->selectedPatient['id'] ?? null,
+                'cart_count' => count($this->cart)
+            ]);
+            session()->flash('error', 'Failed to generate bill: ' . $e->getMessage());
         }
     }
 

@@ -292,7 +292,7 @@
                             <td>
                                 @if($r->is_highlighted)
                                     <span class="text-danger bg-abnormal">{{ $r->result_value }}</span>
-                                    <span class="text-danger">*</span>
+                                    <span class="text-danger">* {{ substr($r->status, 0, 1) }}</span>
                                 @else
                                     <span style="font-weight:bold;">{{ $r->result_value }}</span>
                                 @endif

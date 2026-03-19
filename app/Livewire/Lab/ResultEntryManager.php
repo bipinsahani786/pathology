@@ -14,9 +14,9 @@ class ResultEntryManager extends Component
     public $testReport;
     public $comments;
     
-    // Arrays to hold our vital data bound to the frontend
     public $results = [];
     public $highlights = [];
+    public $flags = []; // New array to hold 'H' or 'L' flags
     public $parametersList = [];
 
     public function mount($id)
@@ -52,26 +52,31 @@ class ResultEntryManager extends Component
         foreach ($this->invoice->items as $item) {
             if ($item->labTest && $item->labTest->parameters) {
                 foreach ($item->labTest->parameters as $param) {
-                    $key = $item->labTest->id . '_' . md5($param['param']);
+                    $paramName = is_array($param) ? ($param['param'] ?? $param['name'] ?? 'Unknown') : $param;
+                    $key = $item->labTest->id . '_' . md5($paramName);
                     
                     // Determine reference range text
                     $refRange = '';
-                    if ($gender === 'male' && isset($param['male_range'])) {
+                    if ($gender === 'male' && !empty($param['male_range'])) {
                         $refRange = $param['male_range'];
-                    } elseif ($gender === 'female' && isset($param['female_range'])) {
+                    } elseif ($gender === 'female' && !empty($param['female_range'])) {
                         $refRange = $param['female_range'];
                     } else {
-                        $refRange = $param['male_range'] ?? $param['female_range'] ?? '';
+                        // Fallback order: general -> male -> female -> custom range keys
+                        $refRange = $param['general_range'] ?? $param['male_range'] ?? $param['female_range'] ?? $param['reference_range'] ?? $param['range'] ?? '';
                     }
 
                     // Existing or blank
                     $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
                     $this->highlights[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->is_highlighted : false;
+                    $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low'])) 
+                        ? substr($existingResultsMap[$key]->status, 0, 1) 
+                        : '';
                     
                     $this->parametersList[$key] = [
                         'lab_test_id' => $item->labTest->id,
-                        'name' => $param['param'],
-                        'unit' => $param['unit'] ?? '',
+                        'name' => $paramName,
+                        'unit' => is_array($param) ? ($param['unit'] ?? '') : '',
                         'ref_range' => $refRange,
                         'department' => $item->labTest->department,
                         'test_name' => $item->labTest->name,
@@ -120,36 +125,81 @@ class ResultEntryManager extends Component
                 $this->results[$ldlKey] = $ldl;
             }
         }
+
+        // --- CBC Formulas ---
+        $hbKey = $keysByName['hemoglobin (hb)'] ?? $keysByName['hemoglobin'] ?? $keysByName['hb'] ?? null;
+        $rbcKey = $keysByName['total rbc count'] ?? $keysByName['rbc count'] ?? $keysByName['rbc'] ?? $keysByName['total rbc'] ?? null;
+        $pcvKey = $keysByName['packed cell volume (pcv)'] ?? $keysByName['pcv'] ?? $keysByName['packed cell volume'] ?? $keysByName['hct'] ?? null;
+        $mcvKey = $keysByName['mean corpuscular volume (mcv)'] ?? $keysByName['mcv'] ?? null;
+        $mchKey = $keysByName['mch'] ?? null;
+        $mchcKey = $keysByName['mchc'] ?? null;
+
+        if ($hbKey && $rbcKey && $pcvKey) {
+            $hb = (float)($this->results[$hbKey] ?? 0);
+            $rbc = (float)($this->results[$rbcKey] ?? 0);
+            $pcv = (float)($this->results[$pcvKey] ?? 0);
+
+            if ($rbc > 0) {
+                // MCV = (PCV / RBC) * 10
+                if ($mcvKey && ($this->results[$mcvKey] == '' || $this->results[$mcvKey] == '-')) {
+                    $this->results[$mcvKey] = round(($pcv / $rbc) * 10, 2);
+                }
+                // MCH = (Hb / RBC) * 10
+                if ($mchKey && ($this->results[$mchKey] == '' || $this->results[$mchKey] == '-')) {
+                    $this->results[$mchKey] = round(($hb / $rbc) * 10, 2);
+                }
+            }
+            if ($pcv > 0) {
+                // MCHC = (Hb / PCV) * 100
+                if ($mchcKey && ($this->results[$mchcKey] == '' || $this->results[$mchcKey] == '-')) {
+                    $this->results[$mchcKey] = round(($hb / $pcv) * 100, 2);
+                }
+            }
+        }
     }
 
     private function autoEvaluateRanges()
     {
         // Evaluate numerical bounds to auto-trigger High/Low flags
         foreach ($this->results as $key => $val) {
-            if ($val === '' || !is_numeric($val)) continue;
+            if ($val === '' || !is_numeric($val)) {
+                $this->flags[$key] = '';
+                continue;
+            }
             
             $ref = $this->parametersList[$key]['ref_range'] ?? '';
             $numVal = (float)$val;
             $isAbnormal = false;
+            $flag = '';
 
             if (str_contains($ref, '-')) {
                 $parts = explode('-', $ref);
                 if (count($parts) == 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
-                    if ($numVal < (float)$parts[0] || $numVal > (float)$parts[1]) {
+                    if ($numVal < (float)$parts[0]) {
                         $isAbnormal = true;
+                        $flag = 'L';
+                    } elseif ($numVal > (float)$parts[1]) {
+                        $isAbnormal = true;
+                        $flag = 'H';
                     }
                 }
             } elseif (str_contains($ref, '<')) {
                 $limit = (float)str_replace('<', '', $ref);
-                if ($numVal >= $limit) $isAbnormal = true;
+                if ($numVal >= $limit) {
+                    $isAbnormal = true;
+                    $flag = 'H';
+                }
             } elseif (str_contains($ref, '>')) {
                 $limit = (float)str_replace('>', '', $ref);
-                if ($numVal <= $limit) $isAbnormal = true;
+                if ($numVal <= $limit) {
+                    $isAbnormal = true;
+                    $flag = 'L';
+                }
             }
 
+            $this->flags[$key] = $flag;
             // Auto toggle highlight if bounding fails
             if ($isAbnormal) {
-                // Only auto-enable; don't auto-disable so user can manually override
                 $this->highlights[$key] = true;
             } else {
                  $this->highlights[$key] = false;
@@ -188,21 +238,11 @@ class ResultEntryManager extends Component
             $val = $this->results[$key] ?? '';
             $highlight = $this->highlights[$key] ?? false;
 
-            // Determine textual status based on highlighting
+            // Determine textual status based on flags
+            $flag = $this->flags[$key] ?? '';
             $stat = 'Normal';
-            if ($highlight && is_numeric($val)) {
-                $ref = $details['ref_range'];
-                if (str_contains($ref, '-')) {
-                    $parts = explode('-', $ref);
-                    if (count($parts) == 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
-                        if ((float)$val > (float)$parts[1]) $stat = 'High';
-                        if ((float)$val < (float)$parts[0]) $stat = 'Low';
-                    }
-                } elseif (str_contains($ref, '<')) {
-                    $limit = (float)str_replace('<', '', $ref);
-                    if ((float)$val >= $limit) $stat = 'High';
-                }
-            }
+            if ($flag === 'H') $stat = 'High';
+            if ($flag === 'L') $stat = 'Low';
 
             ReportResult::updateOrCreate(
                 [

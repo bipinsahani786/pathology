@@ -106,13 +106,22 @@
                                             <td class="fw-bold fs-12 ps-4">
                                                 {{ $p['name'] }}
                                                 @if($isHigh)
-                                                    <span class="ms-2 text-danger"><i class="feather-alert-triangle fs-13"></i></span>
+                                                    <span class="ms-2 badge {{ $flags[$itemKey] == 'H' ? 'bg-danger' : 'bg-warning text-dark' }} px-2" style="font-size: 10px;">
+                                                        {{ $flags[$itemKey] ?? 'Abnormal' }}
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm w-75 {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                       wire:model.live.debounce.500ms="results.{{ $itemKey }}" 
-                                                       placeholder="-">
+                                                <div class="input-group input-group-sm w-75">
+                                                    <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
+                                                           wire:model.live.debounce.500ms="results.{{ $itemKey }}" 
+                                                           placeholder="-">
+                                                    @if($isHigh && isset($flags[$itemKey]))
+                                                        <span class="input-group-text bg-danger text-white border-danger fw-bold fs-11 px-2" title="{{ $flags[$itemKey] == 'H' ? 'High Value' : 'Low Value' }}">
+                                                            {{ $flags[$itemKey] }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td class="fs-12 text-muted">{{ $p['unit'] }}</td>
                                             <td class="fs-12">{{ $p['ref_range'] }}</td>

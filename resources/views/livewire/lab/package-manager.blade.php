@@ -38,15 +38,23 @@
             
             <div class="card-header bg-white py-3 border-bottom-0">
                 <div class="row g-3">
-                    <div class="col-md-10">
+                    <div class="col-md-9">
                         <div class="input-group search-group shadow-sm">
-                            <span class="input-group-text">
+                            <span class="input-group-text bg-white">
                                 <i class="feather-search text-primary"></i>
                             </span>
                             <input type="text" wire:model.live.debounce.300ms="searchTerm" 
                                 class="form-control" 
                                 placeholder="Search packages by name or code...">
                         </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button wire:click="$set('searchTerm','')"
+                            class="btn btn-light border bg-white shadow-sm h-100 w-100 d-flex align-items-center justify-content-center transition-all hover-lift"
+                            title="Reset Filters">
+                            <i class="feather-refresh-ccw fs-12 me-2 text-primary"></i>
+                            <span class="fw-bold text-dark fs-12">RESET</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -124,155 +132,163 @@
     @if ($isModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable mb-5">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
 
-                    <div class="modal-header bg-light border-bottom p-4">
+                    <div class="modal-header bg-light border-bottom p-3 px-4">
                         <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
-                                <i class="feather-{{ $package_id ? 'edit' : 'layers' }} fs-5"></i>
-                            </div>
+                            <i class="feather-{{ $package_id ? 'edit' : 'layers' }} text-primary me-2"></i>
                             {{ $package_id ? 'Edit Package Configuration' : 'Create New Test Package' }}
                         </h5>
                         <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
                     </div>
 
-                    <form wire:submit.prevent="store">
-                        <div class="modal-body p-4 bg-white">
-                        
-                        <div class="bg-light p-4 rounded-4 border mb-4">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-1">Step 1: Build Your Package <span class="text-danger">*</span></h6>
-                                    <p class="fs-12 text-muted mb-0">Search and add single tests to automatically calculate the total original value.</p>
-                                </div>
-                                @if(count($selectedTests) > 0)
-                                    <div class="bg-white border px-4 py-2 rounded-pill shadow-sm text-end border-primary">
-                                        <span class="fs-11 text-muted text-uppercase fw-bold me-2">Original Total:</span>
-                                        <span class="fs-15 fw-bold text-primary">₹{{ number_format(array_sum(array_column($selectedTests, 'mrp')), 2) }}</span>
-                                    </div>
-                                @endif
-                            </div>
+                    <form wire:submit.prevent="store" class="d-flex flex-column" style="overflow: hidden;">
+                        <div class="modal-body p-0 bg-white" style="overflow-y: auto;">
                             
-                            @error('selectedTests') 
-                                <div class="alert alert-danger py-2 fs-12 mb-3 border-0 shadow-sm"><i class="feather-alert-circle me-1"></i>{{ $message }}</div> 
-                            @enderror
-
-                            <div class="position-relative mb-4">
-                                <div class="input-group border border-primary rounded-pill bg-white shadow-sm px-3 py-2 focus-ring-wrapper" style="border-width: 2px !important;">
-                                    <span class="input-group-text bg-transparent border-0 pe-2 text-primary">
-                                        <div wire:loading.remove wire:target="testSearchTerm"><i class="feather-search fs-5"></i></div>
-                                        <div wire:loading wire:target="testSearchTerm"><span class="spinner-border spinner-border-sm" role="status"></span></div>
-                                    </span>
-                                    <input type="text" wire:model.live.debounce.300ms="testSearchTerm" class="form-control border-0 bg-transparent shadow-none fw-medium text-dark fs-14" placeholder="Search test by name (e.g. CBC, Lipid Profile)...">
-                                </div>
-
-                                @if(strlen($testSearchTerm) > 1)
-                                    <div class="position-absolute w-100 mt-2 bg-white border border-light rounded-3 shadow-lg overflow-hidden" style="z-index: 1055; max-height: 280px; overflow-y: auto;">
-                                        <div class="list-group list-group-flush">
-                                            @forelse($searchResultTests as $srt)
-                                                <button type="button" wire:click="addTestToPackage({{ $srt->id }}, '{{ addslashes($srt->name) }}', '{{ addslashes($srt->department) }}', {{ $srt->mrp ?? 0 }})" 
-                                                    class="list-group-item list-group-item-action py-3 px-4 border-bottom d-flex justify-content-between align-items-center hover-bg-light transition-all">
-                                                    <div>
-                                                        <span class="fw-bold text-dark d-block fs-14">{{ $srt->name }}</span>
-                                                        <span class="fs-11 text-muted text-uppercase"><i class="feather-tag me-1"></i>{{ $srt->department }} | Code: {{ $srt->test_code ?? 'N/A' }}</span>
-                                                    </div>
-                                                    <div class="d-flex align-items-center gap-3">
-                                                        <span class="badge bg-soft-primary text-primary fs-12 px-2 py-1 border border-primary border-opacity-25">₹{{ number_format($srt->mrp, 0) }}</span>
-                                                        <i class="feather-plus-circle text-primary fs-4"></i>
-                                                    </div>
-                                                </button>
-                                            @empty
-                                                <div class="p-4 text-center text-muted fs-13 bg-soft-warning">
-                                                    <i class="feather-info fs-4 d-block mb-2 text-warning"></i>
-                                                    No single test found. Ensure it exists in the Test Catalog first.
-                                                </div>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-
-                          @if(count($selectedTests) > 0)
-                                <div class="list-group shadow-sm border-0 rounded-4 overflow-hidden">
-                                    @foreach($selectedTests as $testId => $sTest)
-                                        <div wire:key="sel-test-{{ $testId }}" class="list-group-item d-flex justify-content-between align-items-center py-3 px-4 border-bottom border-light bg-white">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 28px; height: 28px;">
-                                                    <i class="feather-check fs-11 fw-bold"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="fw-bold text-dark fs-14">{{ $sTest['name'] }}</div>
-                                                    <div class="fs-11 text-muted text-uppercase">{{ $sTest['department'] }}</div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-4">
-                                                <span class="fw-bold text-dark fs-14">₹{{ number_format($sTest['mrp'], 2) }}</span>
-                                                <button type="button" wire:click="removeTestFromPackage({{ $testId }})" class="btn btn-sm btn-icon btn-light text-danger rounded-circle shadow-sm border transition-all hover-danger p-2" title="Remove Test">
-                                                    <i class="feather-x fs-14"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="p-5 text-center border border-dashed rounded-4 bg-white mt-3">
-                                    <i class="feather-package text-muted opacity-50 mb-3" style="font-size: 3rem;"></i>
-                                    <h6 class="fw-bold text-dark">Package is empty</h6>
-                                    <p class="text-muted fs-13 mb-0">Use the search bar above to start adding tests to this profile.</p>
+                            @if (session()->has('error'))
+                                <div class="alert alert-danger border-0 rounded-0 mb-0 py-2 fs-12 px-4 shadow-sm">
+                                    <i class="feather-alert-octagon me-2"></i>{{ session('error') }}
                                 </div>
                             @endif
+
+                            <div class="p-4">
+                                <div class="bg-light p-3 p-md-4 rounded-4 border mb-4 shadow-sm">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-1 small-caps">Step 1: Build Your Profile <span class="text-danger">*</span></h6>
+                                            <p class="fs-11 text-muted mb-0">Search and aggregate single tests into this package.</p>
+                                        </div>
+                                        @if(count($selectedTests) > 0)
+                                            <div class="bg-white border-primary border px-3 py-1 rounded-pill shadow-sm">
+                                                <span class="fs-10 text-muted text-uppercase fw-bold me-1">Original Sum:</span>
+                                                <span class="fs-14 fw-bold text-primary">₹{{ number_format(array_sum(array_column($selectedTests, 'mrp')), 2) }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    @error('selectedTests') 
+                                        <div class="alert alert-danger py-2 fs-11 mb-3 border-0 shadow-sm"><i class="feather-alert-octagon me-1"></i>{{ $message }}</div> 
+                                    @enderror
+
+                                    <div class="position-relative mb-3">
+                                        <div class="input-group border border-primary rounded-pill bg-white shadow-sm px-3 py-1 overflow-hidden" style="border-width: 2px !important;">
+                                            <span class="input-group-text bg-transparent border-0 pe-2 text-primary">
+                                                <div wire:loading.remove wire:target="testSearchTerm"><i class="feather-search fs-5"></i></div>
+                                                <div wire:loading wire:target="testSearchTerm"><span class="spinner-border spinner-border-sm" role="status"></span></div>
+                                            </span>
+                                            <input type="text" wire:model.live.debounce.300ms="testSearchTerm" class="form-control border-0 bg-transparent shadow-none fw-medium text-dark fs-14" placeholder="Type test name (e.g. CBC, Liver)...">
+                                        </div>
+
+                                        @if(strlen($testSearchTerm) > 1)
+                                            <div class="position-absolute w-100 mt-2 bg-white border border-light rounded-4 shadow-xl overflow-hidden z-3" style="max-height: 250px; overflow-y: auto;">
+                                                <div class="list-group list-group-flush">
+                                                    @forelse($searchResultTests as $srt)
+                                                        @if(!isset($selectedTests[$srt->id]))
+                                                            <button type="button" wire:click="addTestToPackage({{ $srt->id }}, '{{ addslashes($srt->name) }}', '{{ addslashes($srt->department) }}', {{ $srt->mrp ?? 0 }})" 
+                                                                class="list-group-item list-group-item-action py-3 px-4 border-bottom d-flex justify-content-between align-items-center hover-bg-light transition-all">
+                                                                <div class="text-start">
+                                                                    <span class="fw-bold text-dark d-block fs-13">{{ $srt->name }}</span>
+                                                                    <span class="fs-10 text-muted text-uppercase fw-bold opacity-75">{{ $srt->department }}</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-soft-primary text-primary fs-11 rounded-pill px-2">₹{{ number_format($srt->mrp, 0) }}</span>
+                                                                    <i class="feather-plus-circle text-primary fs-5 mt-1"></i>
+                                                                </div>
+                                                            </button>
+                                                        @endif
+                                                    @empty
+                                                        <div class="p-4 text-center text-muted fs-12 bg-soft-light">
+                                                            <i class="feather-info fs-5 d-block mb-1 text-warning"></i>
+                                                            No matches found in catalog.
+                                                        </div>
+                                                    @endforelse
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="selected-tests-container" style="max-height: 300px; overflow-y: auto;">
+                                        @if(count($selectedTests) > 0)
+                                            <div class="list-group border-0 rounded-3 overflow-hidden shadow-sm">
+                                                @foreach($selectedTests as $testId => $sTest)
+                                                    <div wire:key="sel-test-{{ $testId }}" class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 border-bottom border-light bg-white hover-bg-light transition-all">
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <div class="bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 24px; height: 24px;">
+                                                                <i class="feather-check fs-10 fw-bold"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold text-dark fs-13">{{ $sTest['name'] }}</div>
+                                                                <div class="fs-10 text-muted text-uppercase fw-bold opacity-75">{{ $sTest['department'] }}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-3">
+                                                            <span class="fw-bold text-dark fs-13 text-nowrap">₹{{ number_format($sTest['mrp'], 2) }}</span>
+                                                            <button type="button" wire:click="removeTestFromPackage({{ $testId }})" class="btn btn-sm btn-icon btn-outline-danger border-0 rounded-circle shadow-none p-1" title="Remove">
+                                                                <i class="feather-x fs-14"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="p-4 text-center border border-dashed rounded-4 bg-white bg-opacity-50">
+                                                <i class="feather-package text-muted opacity-25 mb-2 d-block" style="font-size: 2.5rem;"></i>
+                                                <h6 class="fw-bold text-dark opacity-75 mb-1 fs-13">Profile is currently empty</h6>
+                                                <p class="text-muted fs-11 mb-0">Search above to add tests to this panel.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <h6 class="fw-bold text-dark mb-3 px-1 small-caps">Step 2: Profile Metadata & Pricing</h6>
+                                <div class="row g-3 px-1 mb-2">
+                                    <div class="col-12 col-md-5">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Package Name *</label>
+                                        <input type="text" class="form-control" wire:model="name" placeholder="E.g. Comprehensive Lipid Panel">
+                                        @error('name') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Internal Code</label>
+                                        <input type="text" class="form-control" wire:model="test_code" placeholder="E.g. PR-001">
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Classification</label>
+                                        <input type="text" class="form-control bg-light text-muted fw-medium" wire:model="department" readonly>
+                                    </div>
+
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label fs-11 fw-bold text-primary text-uppercase mb-1">Selling Price (MRP) *</label>
+                                        <input type="number" step="0.01" class="form-control border-primary bg-soft-primary fw-bold text-primary fs-15 shadow-sm" wire:model="mrp" placeholder="0.00">
+                                        @error('mrp') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">B2B Rate (₹)</label>
+                                        <input type="number" step="0.01" class="form-control" wire:model="b2b_price" placeholder="Franchise cost">
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">TAT (Hours)</label>
+                                        <input type="number" class="form-control" wire:model="tat_hours" placeholder="e.g. 12-24">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Clinical Notes / Preparation Instructions</label>
+                                        <textarea class="form-control fs-12" wire:model="description" rows="2" placeholder="E.g. Requires 12 hours of fasting. Avoid fatty meals before the test..."></textarea>
+                                    </div>
+                                </div>
+                                {{-- Vertical Spacer for better scrolling experience --}}
+                                <div class="py-4"></div>
+                            </div>
                         </div>
 
-                        <h6 class="fw-bold text-dark mb-3 px-2">Step 2: Package Details & Final Pricing</h6>
-                        <div class="row g-3 px-2 mb-2">
-                            
-                            <div class="col-md-5">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Package Name *</label>
-                                <input type="text" class="form-control" wire:model="name" placeholder="E.g. Full Body Checkup">
-                                @error('name') <span class="text-danger fs-11">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Package Code</label>
-                                <input type="text" class="form-control" wire:model="test_code" placeholder="E.g. FBC-01">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Department</label>
-                                <input type="text" class="form-control bg-light text-muted" wire:model="department" readonly>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-primary text-uppercase">Final Package MRP (₹) *</label>
-                                <input type="number" step="0.01" class="form-control border-primary bg-soft-primary fw-bold text-primary fs-15" wire:model="mrp" placeholder="Enter Discounted Price">
-                                <div class="form-text fs-11 text-muted">Set the final selling price for patients.</div>
-                                @error('mrp') <span class="text-danger fs-11">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">B2B Price (₹)</label>
-                                <input type="number" step="0.01" class="form-control" wire:model="b2b_price" placeholder="Franchise Price">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">TAT (Hours)</label>
-                                <input type="number" class="form-control" wire:model="tat_hours" placeholder="e.g. 24">
-                            </div>
-
-                            <div class="col-md-12">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Package Description / Special Instructions</label>
-                                <textarea class="form-control" wire:model="description" rows="2" placeholder="E.g. Fasting required for 10-12 hours..."></textarea>
-                            </div>
+                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2 px-4 shadow-sm">
+                            <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm transition-all hover-lift" style="height: 42px;">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift" style="height: 42px;">
+                                <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Profile</div>
+                                <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Updating...</div>
+                            </button>
                         </div>
-
-                    </div>
-
-                    <div class="modal-footer bg-light border-top p-4 d-flex justify-content-end gap-2">
-                        <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
-                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
-                            <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Package Profile</div>
-                            <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing...</div>
-                        </button>
-                    </div>
-                </form>
-
+                    </form>
                 </div>
             </div>
         </div>
