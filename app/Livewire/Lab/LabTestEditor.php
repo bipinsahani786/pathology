@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class LabTestEditor extends Component
 {
-    public $test_id, $test_code, $name, $department_id, $mrp, $b2b_price, $sample_type;
+    public $test_id, $test_code, $name, $method, $department_id, $mrp, $b2b_price, $sample_type;
     public $tat_hours = 24;
     public $is_active = true;
     public $description;
@@ -25,6 +25,7 @@ class LabTestEditor extends Component
             $test = $labTestService->getTestById($id);
             $this->test_id = $test->id;
             $this->name = $test->name;
+            $this->method = $test->method;
             $this->test_code = $test->test_code;
             $this->mrp = $test->mrp;
             $this->b2b_price = $test->b2b_price;
@@ -131,6 +132,7 @@ class LabTestEditor extends Component
         $labTestService = new LabTestService();
         $this->validate([
             'name' => 'required|string|max:255',
+            'method' => 'nullable|string|max:100',
             'mrp' => 'required|numeric|min:0',
             'department_id' => 'required|exists:departments,id',
             'parameters.*.name' => 'required|string|max:255',
@@ -142,6 +144,7 @@ class LabTestEditor extends Component
         try {
             $data = [
                 'name' => $this->name,
+                'method' => $this->method,
                 'test_code' => $this->test_code,
                 'department_id' => $this->department_id,
                 'description' => $this->description,

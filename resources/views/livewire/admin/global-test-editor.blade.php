@@ -42,7 +42,7 @@
                                     <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name" placeholder="E.G. Complete Blood Count">
                                     @error('name') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">System Department <span class="text-danger">*</span></label>
                                     <select class="form-select @error('department_id') is-invalid @enderror" wire:model="department_id">
                                         <option value="">Select Department</option>
@@ -52,9 +52,13 @@
                                     </select>
                                     @error('department_id') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Suggested Price (₹)</label>
                                     <input type="number" step="0.01" class="form-control" wire:model="suggested_price" placeholder="0.00">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Method (e.g. HPLC)</label>
+                                    <input type="text" class="form-control" wire:model="method" placeholder="CLIA, ELISA, HPLC, etc.">
                                 </div>
                                 <div class="col-md-12">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Short Description</label>

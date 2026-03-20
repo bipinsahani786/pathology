@@ -10,7 +10,7 @@ class LabTest extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'company_id', 'global_test_id', 'department_id', 'test_code', 'name', 'department',
+        'company_id', 'global_test_id', 'department_id', 'test_code', 'name', 'method', 'department',
         'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description' , 'interpretation', 'is_package', 'linked_test_ids',
     ];
 

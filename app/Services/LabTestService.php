@@ -101,6 +101,7 @@ class LabTestService
             'company_id' => $companyId,
             'global_test_id' => $global->id,
             'name' => $global->name,
+            'method' => $global->method,
             'test_code' => $global->test_code,
             'department_id' => $global->department_id, // Inherit from global test
             'description' => $global->description ?? null,

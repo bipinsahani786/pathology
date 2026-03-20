@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 
 class GlobalTestEditor extends Component
 {
-    public $test_id, $test_code, $name, $department_id, $suggested_price, $description, $interpretation;
+    public $test_id, $test_code, $name, $method, $department_id, $suggested_price, $description, $interpretation;
     public array $parameters = [];
     public $editingParamIndex = null;
     public $isRangeModalOpen = false;
@@ -22,6 +22,7 @@ class GlobalTestEditor extends Component
             $this->test_id = $test->id;
             $this->test_code = $test->test_code;
             $this->name = $test->name;
+            $this->method = $test->method;
             $this->department_id = $test->department_id;
             $this->suggested_price = $test->suggested_price;
             $this->description = $test->description;
@@ -130,6 +131,7 @@ class GlobalTestEditor extends Component
         $validatedData = $this->validate([
             'test_code' => ['required', 'string', 'max:50', Rule::unique('global_tests', 'test_code')->ignore($this->test_id)],
             'name' => 'required|string|max:255',
+            'method' => 'nullable|string|max:100',
             'department_id' => 'required|exists:departments,id',
             'suggested_price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string|max:1000',
@@ -152,6 +154,7 @@ class GlobalTestEditor extends Component
         $saveData = [
             'test_code' => $this->test_code,
             'name' => $this->name,
+            'method' => $this->method,
             'department_id' => $this->department_id,
             'suggested_price' => $this->suggested_price,
             'description' => $this->description,

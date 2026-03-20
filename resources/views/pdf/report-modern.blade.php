@@ -284,7 +284,12 @@
             <tbody>
                 @foreach($tests as $testName => $results)
                     <tr>
-                        <td colspan="4" class="test-title">{{ $testName }}</td>
+                        <td colspan="4" class="test-title">
+                            {{ $testName }}
+                            @if($results->first()->labTest->method)
+                                <span style="font-size: 10px; font-weight: normal; margin-left: 10px; color: #666;">(Method: {{ $results->first()->labTest->method }})</span>
+                            @endif
+                        </td>
                     </tr>
                     @foreach($results as $r)
                         <tr>

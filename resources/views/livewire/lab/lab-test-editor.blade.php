@@ -68,20 +68,23 @@
                                         <span class="input-group-text bg-light border-end-0">₹</span>
                                         <input type="number" step="0.01" class="form-control" wire:model="b2b_price">
                                     </div>
-                                </div>
-                                <div class="col-md-4">
+                                                           <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Sample Type</label>
                                     <input type="text" class="form-control" wire:model="sample_type" placeholder="Serum, Blood, etc.">
                                 </div>
-
+                                <div class="col-md-4">
+                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Method (e.g. HPLC)</label>
+                                    <input type="text" class="form-control" wire:model="method" placeholder="CLIA, ELISA, HPLC, etc.">
+                                </div>
                                 <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">TAT (Hours)</label>
                                     <input type="number" class="form-control" wire:model="tat_hours">
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Internal Description</label>
                                     <input type="text" class="form-control" wire:model="description" placeholder="Notes for lab staff...">
                                 </div>
+     </div>
                             </div>
 
                             <hr class="my-4 opacity-50">
