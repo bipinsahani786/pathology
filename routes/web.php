@@ -20,6 +20,10 @@ use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\InvoicePrint;
 use App\Livewire\Lab\InvoiceManager;
 use App\Livewire\Lab\PosEditManager;
+use App\Livewire\Lab\SettlementManager;
+use App\Livewire\Lab\ReportManager;
+use App\Livewire\Lab\ResultEntryManager;
+use App\Livewire\Partner\PartnerDashboard;
 use Illuminate\Support\Facades\Route;
 
 
@@ -97,6 +101,9 @@ Route::middleware(['auth'])->group(function () {
             //Agent
             Route::get('/agents', AgentManager::class)->name('agents');
 
+            // Settlements (Partner Commissions)
+            Route::get('/settlements', SettlementManager::class)->name('settlements');
+
             // Point of Sale (Billing & Invoicing)
             Route::get('/pos', PosManager::class)->name('pos');
 
@@ -105,26 +112,34 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
+            Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
+            Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
+            
+            // Reports Generation
+            Route::get('/reports', ReportManager::class)->name('reports');
+            Route::get('/reports/entry/{id}', ResultEntryManager::class)->name('reports.entry');
+            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
 
             // Invoice Print (browser)
             Route::get('/invoice/{id}/print', InvoicePrint::class)->name('invoice.print');
 
             // Invoice Edit (POS-style)
             Route::get('/invoice/{id}/edit', PosEditManager::class)->name('invoice.edit');
+        });
 
-            // Invoice PDF (dompdf)
-            Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
-            Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
-            
-            // Reports Generation
-            Route::get('/reports', \App\Livewire\Lab\ReportManager::class)->name('reports');
-            Route::get('/reports/entry/{id}', \App\Livewire\Lab\ResultEntryManager::class)->name('reports.entry');
-            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+    // ----------------------------------------------------
+    // 3. PARTNER ROUTES (Doctor, Agent, Collection Center)
+    // ----------------------------------------------------
+    Route::middleware(['auth', 'role:doctor|agent|collection_center'])
+        ->prefix('partner')
+        ->name('partner.')
+        ->group(function () {
+            Route::get('/dashboard', PartnerDashboard::class)->name('dashboard');
         });
 
 
     // ----------------------------------------------------
-    // 3. PATIENT PORTAL ROUTES (Future)
+    // 4. PATIENT PORTAL ROUTES (Future)
     // ----------------------------------------------------
     Route::middleware(['role:patient'])->prefix('portal')->name('portal.')->group(function () {
         // Route::get('/dashboard', PatientDashboard::class)->name('dashboard');

@@ -201,3 +201,58 @@ html.app-skin-dark .bg-gray-300 {
     border-radius: 0.35rem;
     font-weight: 500;
 }
+
+/* --- Global Utility Classes for Clean UI --- */
+.bg-soft-primary {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.bg-soft-success {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-soft-info {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.bg-soft-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-soft-danger {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.text-soft-primary {
+    color: var(--bs-primary) !important;
+}
+
+/* Sidebar Specific Polishing */
+.nxl-navigation .nxl-navbar .nxl-item .nxl-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.nxl-navigation .nxl-navbar .nxl-item.active>.nxl-link {
+    background: rgba(var(--bs-primary-rgb), 0.08) !important;
+    border-right: 3px solid var(--bs-primary) !important;
+    position: relative;
+    color: var(--bs-primary) !important;
+    font-weight: 600 !important;
+}
+
+/* Ensure no left indicator exists */
+.nxl-navbar .nxl-item.active > .nxl-link::before {
+    display: none !important;
+}
+
+.nxl-navigation .nxl-navbar .nxl-item.nxl-caption label {
+    letter-spacing: 0.8px;
+    opacity: 0.6;
+}
+
+/* Page Header Alignment */
+.page-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 1rem;
+}

@@ -243,7 +243,7 @@
                         <div class="row g-2">
                             <div class="col-md-3 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id">
+                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id" {{ auth()->user()->collection_center_id ? 'disabled' : '' }}>
                                     <option value="">— Select —</option>
                                     @foreach ($centers as $center)
                                         <option value="{{ $center->id }}">
@@ -257,7 +257,7 @@
                             </div>
                             <div class="col-md-3 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
-                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id">
+                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id" {{ auth()->user()->branch_id ? 'disabled' : '' }}>
                                     <option value="">— Select —</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>

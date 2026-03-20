@@ -256,6 +256,9 @@ class DemoSeeder extends Seeder
                 'clinic_name' => $doc['clinic'],
                 'commission_percentage' => $doc['comm'],
             ]);
+            if (!$user->hasRole('doctor')) {
+                $user->assignRole($doctorRole);
+            }
             $doctorUsers[] = $user;
         }
         $this->command->info('✅ Doctors created');
@@ -284,6 +287,9 @@ class DemoSeeder extends Seeder
                 'agency_name' => $agt['agency'],
                 'commission_percentage' => $agt['comm'],
             ]);
+            if (!$user->hasRole('agent')) {
+                $user->assignRole($agentRole);
+            }
             $agentUsers[] = $user;
         }
         $this->command->info('✅ Agents created');

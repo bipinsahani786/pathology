@@ -88,6 +88,30 @@ class RoleSeeder extends Seeder
             'view reports', 
             'download reports'
         ]);
+
+        // Doctor (Referral Partner)
+        $doctor = Role::firstOrCreate(['name' => 'doctor']);
+        $doctor->syncPermissions([
+            'view reports',
+            'download reports'
+        ]);
+
+        // Agent (Referral Partner)
+        $agent = Role::firstOrCreate(['name' => 'agent']);
+        $agent->syncPermissions([
+            'view reports',
+            'download reports'
+        ]);
+
+        // Collection Center User
+        $collector = Role::firstOrCreate(['name' => 'collection_center']);
+        $collector->syncPermissions([
+            'manage patients',
+            'manage pos',
+            'view reports',
+            'generate reports',
+            'download reports'
+        ]);
         
         $this->command->info('Roles and Permissions synced successfully!');
     }

@@ -64,10 +64,25 @@ class Invoice extends Model
     }
 
     /**
+     * The agent who referred the patient for these tests.
+     */
+    public function agent() 
+    {
+        return $this->belongsTo(User::class, 'referred_by_agent_id');
+    }
+
+    /**
      * The generated test report for this invoice.
      */
     public function testReport()
     {
         return $this->hasOne(TestReport::class);
     }
+
+    /**
+     * Settlement relationships
+     */
+    public function doctorSettlement() { return $this->belongsTo(Settlement::class, 'doctor_settlement_id'); }
+    public function agentSettlement() { return $this->belongsTo(Settlement::class, 'agent_settlement_id'); }
+    public function ccSettlement() { return $this->belongsTo(Settlement::class, 'cc_settlement_id'); }
 }

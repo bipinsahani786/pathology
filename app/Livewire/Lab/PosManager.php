@@ -69,9 +69,13 @@ class PosManager extends Component
 
     public function mount()
     {
-        $companyId = auth()->user()->company_id;
-        $this->collection_center_id = CollectionCenter::where('company_id', $companyId)->first()->id ?? null;
-        $this->branch_id = Branch::where('company_id', $companyId)->first()->id ?? null;
+        $user = auth()->user();
+        $companyId = $user->company_id;
+
+        // If user is linked to a collection center, use that. Otherwise use first center.
+        $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
+        $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
+        
         $this->expected_report_date = date('Y-m-d');
         $this->expected_report_time = date('H:i', strtotime('+24 hours'));
         $this->addPaymentRow();
@@ -524,7 +528,7 @@ class PosManager extends Component
                     Payment::create([
                         'company_id' => $companyId,
                         'invoice_id' => $invoice->id,
-                        'patient_id' => $this->selectedPatient['id'] ?? null,
+                        'patient_id' => ($this->selectedPatient ? $this->selectedPatient['id'] : null),
                         'collected_by' => auth()->id(),
                         'payment_mode_id' => $payment['mode_id'],
                         'amount' => $payment['amount'],

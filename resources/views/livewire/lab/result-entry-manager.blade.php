@@ -3,12 +3,12 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Result Entry</h5>
+                <h4 class="fw-bold mb-1 text-dark">Result Entry</h4>
             </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('lab.reports') }}">Reports</a></li>
-                <li class="breadcrumb-item">Result Entry</li>
+            <ul class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" class="text-primary text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('lab.reports') }}" class="text-primary text-decoration-none">Reports</a></li>
+                <li class="breadcrumb-item active fw-medium">Result Entry</li>
             </ul>
         </div>
     </div>

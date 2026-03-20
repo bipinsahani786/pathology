@@ -29,6 +29,8 @@ class Login extends Component
                 return redirect()->route('admin.dashboard');
             } elseif ($user->hasRole('lab_admin')) {
                 return redirect()->route('lab.dashboard');
+            } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center'])) {
+                return redirect()->route('partner.dashboard');
             }
             return redirect('/');
         }
