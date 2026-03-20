@@ -11,6 +11,8 @@ class GlobalTestEditor extends Component
 {
     public $test_id, $test_code, $name, $department_id, $suggested_price, $description, $interpretation;
     public array $parameters = [];
+    public $editingParamIndex = null;
+    public $isRangeModalOpen = false;
 
     public function mount($id = null)
     {
@@ -38,13 +40,82 @@ class GlobalTestEditor extends Component
             'short_code' => '',
             'unit' => '',
             'input_type' => 'numeric',
-            'range_type' => 'general',
-            'general_range' => '',
-            'male_range' => '',
-            'female_range' => '',
-            'normal_value' => '',
+            'options' => [], // For selection type
+            'range_type' => 'flexible', // Default to the new flexible system
+            'ranges' => [
+                [
+                    'gender' => 'Both',
+                    'age_min' => 0,
+                    'age_max' => 100,
+                    'age_unit' => 'Years',
+                    'min_val' => '',
+                    'max_val' => '',
+                    'display_range' => '',
+                    'normal_value' => '', // For qualitative
+                    'is_critical' => false
+                ]
+            ],
             'formula' => ''
         ];
+    }
+
+    public function openRangeModal($index)
+    {
+        $this->editingParamIndex = $index;
+        // Ensure ranges array exists
+        if (!isset($this->parameters[$index]['ranges'])) {
+            $this->parameters[$index]['ranges'] = [];
+        }
+        if (empty($this->parameters[$index]['ranges'])) {
+            $this->addRange();
+        }
+        $this->isRangeModalOpen = true;
+    }
+
+    public function addRange()
+    {
+        if ($this->editingParamIndex !== null) {
+            $this->parameters[$this->editingParamIndex]['ranges'][] = [
+                'gender' => 'Both',
+                'age_min' => 0,
+                'age_max' => 100,
+                'age_unit' => 'Years',
+                'min_val' => '',
+                'max_val' => '',
+                'display_range' => '',
+                'normal_value' => '',
+                'is_critical' => false
+            ];
+        }
+    }
+
+    public function removeRange($rangeIndex)
+    {
+        if ($this->editingParamIndex !== null) {
+            unset($this->parameters[$this->editingParamIndex]['ranges'][$rangeIndex]);
+            $this->parameters[$this->editingParamIndex]['ranges'] = array_values($this->parameters[$this->editingParamIndex]['ranges']);
+        }
+    }
+
+    public function closeRangeModal()
+    {
+        $this->isRangeModalOpen = false;
+        $this->editingParamIndex = null;
+    }
+
+    public function addOption()
+    {
+        if ($this->editingParamIndex !== null) {
+            $this->parameters[$this->editingParamIndex]['options'][] = '';
+        }
+    }
+
+    public function removeOption($optionIndex)
+    {
+        if ($this->editingParamIndex !== null) {
+            unset($this->parameters[$this->editingParamIndex]['options'][$optionIndex]);
+            $this->parameters[$this->editingParamIndex]['options'] = array_values($this->parameters[$this->editingParamIndex]['options']);
+        }
     }
 
     public function removeParameter($index)
@@ -66,25 +137,13 @@ class GlobalTestEditor extends Component
             'parameters' => 'nullable|array',
             'parameters.*.name' => 'required|string|max:255',
             'parameters.*.short_code' => 'nullable|string|max:50',
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated',
-            'parameters.*.range_type' => 'required|in:general,gender,value',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
+            'parameters.*.range_type' => 'required|in:general,gender,value,flexible',
             'parameters.*.unit' => 'nullable|string|max:50',
         ]);
 
-        // Logic for range cleanup based on range_type
+        // Basic cleanup for non-calculated types
         foreach ($this->parameters as $key => $param) {
-            if ($param['range_type'] === 'general') {
-                $this->parameters[$key]['male_range'] = null;
-                $this->parameters[$key]['female_range'] = null;
-                $this->parameters[$key]['normal_value'] = null;
-            } elseif ($param['range_type'] === 'gender') {
-                $this->parameters[$key]['general_range'] = null;
-                $this->parameters[$key]['normal_value'] = null;
-            } elseif ($param['range_type'] === 'value') {
-                $this->parameters[$key]['general_range'] = null;
-                $this->parameters[$key]['male_range'] = null;
-                $this->parameters[$key]['female_range'] = null;
-            }
             if ($param['input_type'] !== 'calculated') {
                 $this->parameters[$key]['formula'] = null;
             }

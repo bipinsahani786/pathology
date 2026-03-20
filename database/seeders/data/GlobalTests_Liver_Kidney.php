@@ -9,64 +9,120 @@ return [
         'interpretation' => '<table><tr><th>Pattern</th><th>Findings</th><th>Conditions</th></tr><tr><td>Hepatocellular</td><td>ALT/AST ↑↑, ALP mild ↑</td><td>Hepatitis, Drug toxicity</td></tr><tr><td>Cholestatic</td><td>ALP/GGT ↑↑, Bilirubin ↑</td><td>Gallstones, Cholangitis</td></tr><tr><td>Infiltrative</td><td>ALP ↑, Others normal</td><td>Granuloma, Metastasis</td></tr><tr><td>Cirrhosis</td><td>Albumin ↓, PT ↑, Bilirubin ↑</td><td>Chronic liver disease</td></tr></table>',
         'suggested_price' => 500,
         'default_parameters' => [
-            ['name' => 'Total Bilirubin', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '0.1 - 1.2', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'TBIL', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Direct Bilirubin', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '0.0 - 0.3', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'DBIL', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Indirect Bilirubin', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '0.1 - 0.9', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'IBIL', 'input_type' => 'calculated', 'formula' => '{TBIL} - {DBIL}'],
-            ['name' => 'SGOT (AST)', 'unit' => 'U/L', 'range_type' => 'general', 'general_range' => '0 - 40', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'AST', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'SGPT (ALT)', 'unit' => 'U/L', 'range_type' => 'general', 'general_range' => '0 - 40', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ALT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Alkaline Phosphatase (ALP)', 'unit' => 'U/L', 'range_type' => 'general', 'general_range' => '44 - 147', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ALP', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'GGT', 'unit' => 'U/L', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '8 - 61', 'female_range' => '5 - 36', 'normal_value' => '', 'short_code' => 'GGT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Total Protein', 'unit' => 'g/dL', 'range_type' => 'general', 'general_range' => '6.0 - 8.3', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'TP', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Albumin', 'unit' => 'g/dL', 'range_type' => 'general', 'general_range' => '3.5 - 5.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ALB', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Globulin', 'unit' => 'g/dL', 'range_type' => 'general', 'general_range' => '2.0 - 3.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'GLOB', 'input_type' => 'calculated', 'formula' => '{TP} - {ALB}'],
-            ['name' => 'A/G Ratio', 'unit' => '', 'range_type' => 'general', 'general_range' => '1.1 - 2.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'AG', 'input_type' => 'calculated', 'formula' => '{ALB} / {GLOB}'],
-            ['name' => 'Corrected Calcium', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '8.5 - 10.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'CCAL', 'input_type' => 'calculated', 'formula' => '{CAR} + 0.8 * (4.0 - {ALB})'],
+            [
+                'name' => 'Total Bilirubin', 'unit' => 'mg/dL', 'short_code' => 'TBIL', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.1', 'max_val' => '1.2', 'display_range' => '0.1 - 1.2']]
+            ],
+            [
+                'name' => 'Direct Bilirubin', 'unit' => 'mg/dL', 'short_code' => 'DBIL', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.0', 'max_val' => '0.3', 'display_range' => '0.0 - 0.3']]
+            ],
+            [
+                'name' => 'Indirect Bilirubin', 'unit' => 'mg/dL', 'short_code' => 'IBIL', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '{TBIL} - {DBIL}',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.1', 'max_val' => '0.9', 'display_range' => '0.1 - 0.9']]
+            ],
+            [
+                'name' => 'SGOT (AST)', 'unit' => 'U/L', 'short_code' => 'AST', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '40', 'display_range' => '0 - 40']]
+            ],
+            [
+                'name' => 'SGPT (ALT)', 'unit' => 'U/L', 'short_code' => 'ALT', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '40', 'display_range' => '0 - 40']]
+            ],
+            [
+                'name' => 'GGT', 'unit' => 'U/L', 'short_code' => 'GGT', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '8', 'max_val' => '61', 'display_range' => '8 - 61'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '5', 'max_val' => '36', 'display_range' => '5 - 36'],
+                ]
+            ],
+            [
+                'name' => 'Total Protein', 'unit' => 'g/dL', 'short_code' => 'TP', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '6.0', 'max_val' => '8.3', 'display_range' => '6.0 - 8.3']]
+            ],
+            [
+                'name' => 'Albumin', 'unit' => 'g/dL', 'short_code' => 'ALB', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.5', 'max_val' => '5.5', 'display_range' => '3.5 - 5.5']]
+            ],
+            [
+                'name' => 'A/G Ratio', 'unit' => '', 'short_code' => 'AG', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '{ALB} / ({TP} - {ALB})',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '1.1', 'max_val' => '2.5', 'display_range' => '1.1 - 2.5']]
+            ],
         ],
     ],
     [
         'test_code' => 'KFT',
         'name' => 'Kidney Function Test (KFT/RFT)',
         'category' => 'Biochemistry',
-        'description' => 'Renal function panel including urea, creatinine and electrolytes.',
-        'interpretation' => '<table><tr><th>Stage</th><th>eGFR (mL/min)</th><th>Description</th></tr><tr><td>G1</td><td>&ge; 90</td><td>Normal kidney function</td></tr><tr><td>G2</td><td>60 - 89</td><td>Mildly decreased</td></tr><tr><td>G3a</td><td>45 - 59</td><td>Mild-Moderate decrease</td></tr><tr><td>G3b</td><td>30 - 44</td><td>Moderate-Severe decrease</td></tr><tr><td>G4</td><td>15 - 29</td><td>Severely decreased</td></tr><tr><td>G5</td><td>&lt; 15</td><td>Kidney failure (Dialysis)</td></tr></table>',
+        'description' => 'Renal function panel.',
+        'interpretation' => 'Assess GFR and renal health.',
         'suggested_price' => 450,
         'default_parameters' => [
-            ['name' => 'Blood Urea', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '15 - 40', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UREA', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'BUN', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '7 - 20', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'BUN', 'input_type' => 'calculated', 'formula' => '{UREA} / 2.14'],
-            ['name' => 'Serum Creatinine', 'unit' => 'mg/dL', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '0.7 - 1.3', 'female_range' => '0.6 - 1.1', 'normal_value' => '', 'short_code' => 'CREAT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Uric Acid', 'unit' => 'mg/dL', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '3.4 - 7.0', 'female_range' => '2.4 - 6.0', 'normal_value' => '', 'short_code' => 'UA', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Sodium (Na)', 'unit' => 'mEq/L', 'range_type' => 'general', 'general_range' => '136 - 146', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'NAR', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Potassium (K)', 'unit' => 'mEq/L', 'range_type' => 'general', 'general_range' => '3.5 - 5.1', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'KR', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Chloride (Cl)', 'unit' => 'mEq/L', 'range_type' => 'general', 'general_range' => '98 - 106', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'CLR', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Calcium', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '8.5 - 10.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'CAR', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Phosphorus', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '2.5 - 4.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'PHR', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Urine Protein', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '< 150', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UPROT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Urine Creatinine', 'unit' => 'mg/dL', 'range_type' => 'general', 'general_range' => '20 - 320', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UCREAT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Urine Albumin', 'unit' => 'mg/L', 'range_type' => 'general', 'general_range' => '< 20', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UALB', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Urine Protein/Creatinine Ratio (UPCR)', 'unit' => 'mg/g', 'range_type' => 'general', 'general_range' => '< 150', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UPCR', 'input_type' => 'calculated', 'formula' => '({UPROT} / {UCREAT}) * 1000'],
-            ['name' => 'Urine Albumin/Creatinine Ratio (UACR)', 'unit' => 'mg/g', 'range_type' => 'general', 'general_range' => '< 30', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'UACR', 'input_type' => 'calculated', 'formula' => '({UALB} / {UCREAT}) * 1000'],
+            [
+                'name' => 'Blood Urea', 'unit' => 'mg/dL', 'short_code' => 'UREA', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '15', 'max_val' => '40', 'display_range' => '15 - 40']]
+            ],
+            [
+                'name' => 'BUN', 'unit' => 'mg/dL', 'short_code' => 'BUN', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '{UREA} / 2.14',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '7', 'max_val' => '20', 'display_range' => '7 - 20']]
+            ],
+            [
+                'name' => 'Serum Creatinine', 'unit' => 'mg/dL', 'short_code' => 'CREAT', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.7', 'max_val' => '1.3', 'display_range' => '0.7 - 1.3'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.6', 'max_val' => '1.1', 'display_range' => '0.6 - 1.1'],
+                ]
+            ],
+            [
+                'name' => 'Uric Acid', 'unit' => 'mg/dL', 'short_code' => 'UA', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.4', 'max_val' => '7.0', 'display_range' => '3.4 - 7.0'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.4', 'max_val' => '6.0', 'display_range' => '2.4 - 6.0'],
+                ]
+            ],
         ],
     ],
     [
         'test_code' => 'AMY',
         'name' => 'Serum Amylase',
         'category' => 'Biochemistry',
-        'description' => 'Pancreatic enzyme. Elevated in acute pancreatitis.',
-        'interpretation' => 'Values > 3x upper limit strongly suggest acute pancreatitis. Also elevated in: Parotitis, Bowel obstruction, Ectopic pregnancy.',
+        'description' => 'Pancreatic enzyme.',
+        'interpretation' => 'Elevated in acute pancreatitis.',
         'suggested_price' => 350,
         'default_parameters' => [
-            ['name' => 'Serum Amylase', 'unit' => 'U/L', 'range_type' => 'general', 'general_range' => '28 - 100', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'AMY', 'input_type' => 'numeric', 'formula' => ''],
+            [
+                'name' => 'Serum Amylase', 'unit' => 'U/L', 'short_code' => 'AMY', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '28', 'max_val' => '100', 'display_range' => '28 - 100']]
+            ],
         ],
     ],
     [
         'test_code' => 'LIPASE',
         'name' => 'Serum Lipase',
         'category' => 'Biochemistry',
-        'description' => 'More specific than amylase for pancreatic disease.',
-        'interpretation' => 'Values > 3x upper limit diagnostic of acute pancreatitis. More specific than amylase. Stays elevated longer.',
+        'description' => 'Specific for pancreatic disease.',
+        'interpretation' => 'Elevated in pancreatitis.',
         'suggested_price' => 400,
         'default_parameters' => [
-            ['name' => 'Serum Lipase', 'unit' => 'U/L', 'range_type' => 'general', 'general_range' => '0 - 160', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'LIP', 'input_type' => 'numeric', 'formula' => ''],
+            [
+                'name' => 'Serum Lipase', 'unit' => 'U/L', 'short_code' => 'LIP', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '160', 'display_range' => '0 - 160']]
+            ],
         ],
     ],
 ];

@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
         // 1. Roles & Permissions
         $this->call(RoleSeeder::class);
 
+        // 2. System Departments
+        $this->call(SystemDepartmentSeeder::class);
+
         // 2. Super Admin Account 
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin = User::firstOrCreate(

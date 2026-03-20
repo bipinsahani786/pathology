@@ -291,14 +291,18 @@
                             <td style="padding-left: 15px;">{{ $r->parameter_name }}</td>
                             <td>
                                 @if($r->is_highlighted)
+                                    @php 
+                                        $flag = substr($r->status, 0, 1);
+                                        $flagText = in_array($flag, ['H', 'L']) ? $flag : '*';
+                                    @endphp
                                     <span class="text-danger bg-abnormal">{{ $r->result_value }}</span>
-                                    <span class="text-danger">* {{ substr($r->status, 0, 1) }}</span>
+                                    <span class="text-danger" style="font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
                                 @else
                                     <span style="font-weight:bold;">{{ $r->result_value }}</span>
                                 @endif
                             </td>
                             <td>{{ $r->unit }}</td>
-                            <td>{{ $r->reference_range }}</td>
+                            <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
                         </tr>
                     @endforeach
                     @if($results->first()->labTest->description)

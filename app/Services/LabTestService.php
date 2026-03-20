@@ -81,16 +81,18 @@ class LabTestService
         // Map parameters to ensure all keys exist for the lab
         $mappedParams = array_map(function ($p) {
             return [
-            'name' => $p['param'] ?? $p['name'] ?? '',
-            'unit' => $p['unit'] ?? '',
-            'range_type' => $p['range_type'] ?? 'general',
-            'general_range' => $p['general_range'] ?? '',
-            'male_range' => $p['male_range'] ?? '',
-            'female_range' => $p['female_range'] ?? '',
-            'normal_value' => $p['normal_value'] ?? '',
-            'short_code' => $p['short_code'] ?? $p['code'] ?? '',
-            'input_type' => $p['input_type'] ?? 'numeric',
-            'formula' => $p['formula'] ?? '',
+                'name' => $p['param'] ?? $p['name'] ?? '',
+                'unit' => $p['unit'] ?? '',
+                'range_type' => $p['range_type'] ?? (isset($p['ranges']) ? 'flexible' : 'general'),
+                'options' => $p['options'] ?? [],
+                'ranges' => $p['ranges'] ?? [],
+                'general_range' => $p['general_range'] ?? '',
+                'male_range' => $p['male_range'] ?? '',
+                'female_range' => $p['female_range'] ?? '',
+                'normal_value' => $p['normal_value'] ?? '',
+                'short_code' => $p['short_code'] ?? $p['code'] ?? '',
+                'input_type' => $p['input_type'] ?? 'numeric',
+                'formula' => $p['formula'] ?? '',
             ];
         }, $globalParams);
 

@@ -12,19 +12,12 @@ class SystemDepartmentSeeder extends Seeder
         $departments = [
             'Haematology',
             'Biochemistry',
-            'Thyroid & Diabetes',
-            'Liver & Kidney',
-            'Lipid & Cardiac',
-            'Serology & Urine',
-            'Vitamins & Minerals',
-            'Tumor Markers & Hormones',
-            'Special',
+            'Serology & Immunology',
+            'Clinical Pathology',
             'Microbiology',
-            'Immunology',
+            'Molecular Biology',
             'Histopathology',
             'Cytopathology',
-            'Molecular Biology',
-            'Radiology',
             'Other'
         ];
 

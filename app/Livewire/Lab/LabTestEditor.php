@@ -15,6 +15,8 @@ class LabTestEditor extends Component
     public $description;
     public $interpretation;
     public array $parameters = [];
+    public $editingParamIndex = null;
+    public $isRangeModalOpen = false;
 
     public function mount($id = null)
     {
@@ -41,10 +43,81 @@ class LabTestEditor extends Component
     public function addParameter()
     {
         $this->parameters[] = [
-            'name' => '', 'unit' => '', 'range_type' => 'general',
-            'general_range' => '', 'male_range' => '', 'female_range' => '',
-            'normal_value' => '', 'short_code' => '', 'input_type' => 'numeric', 'formula' => ''
+            'name' => '', 'unit' => '', 'range_type' => 'flexible',
+            'options' => [],
+            'ranges' => [
+                [
+                    'gender' => 'Both',
+                    'age_min' => 0,
+                    'age_max' => 120,
+                    'age_unit' => 'Years',
+                    'min_val' => '',
+                    'max_val' => '',
+                    'display_range' => '',
+                    'normal_value' => '',
+                    'is_critical' => false
+                ]
+            ],
+            'short_code' => '', 'input_type' => 'numeric', 'formula' => ''
         ];
+    }
+
+    public function openRangeModal($index)
+    {
+        $this->editingParamIndex = $index;
+        if (!isset($this->parameters[$index]['ranges'])) {
+            $this->parameters[$index]['ranges'] = [];
+        }
+        if (empty($this->parameters[$index]['ranges'])) {
+            $this->addRange();
+        }
+        $this->isRangeModalOpen = true;
+    }
+
+    public function addRange()
+    {
+        if ($this->editingParamIndex !== null) {
+            $this->parameters[$this->editingParamIndex]['ranges'][] = [
+                'gender' => 'Both',
+                'age_min' => 0,
+                'age_max' => 120,
+                'age_unit' => 'Years',
+                'min_val' => '',
+                'max_val' => '',
+                'display_range' => '',
+                'normal_value' => '',
+                'is_critical' => false
+            ];
+        }
+    }
+
+    public function removeRange($rangeIndex)
+    {
+        if ($this->editingParamIndex !== null) {
+            unset($this->parameters[$this->editingParamIndex]['ranges'][$rangeIndex]);
+            $this->parameters[$this->editingParamIndex]['ranges'] = array_values($this->parameters[$this->editingParamIndex]['ranges']);
+        }
+    }
+
+    public function closeRangeModal()
+    {
+        $this->isRangeModalOpen = false;
+        $this->editingParamIndex = null;
+    }
+
+    public function addOption()
+    {
+        if ($this->editingParamIndex !== null) {
+            $this->parameters[$this->editingParamIndex]['options'][] = '';
+        }
+    }
+
+    public function removeOption($optionIndex)
+    {
+        if ($this->editingParamIndex !== null) {
+            unset($this->parameters[$this->editingParamIndex]['options'][$optionIndex]);
+            $this->parameters[$this->editingParamIndex]['options'] = array_values($this->parameters[$this->editingParamIndex]['options']);
+        }
     }
 
     public function removeParameter($index)
@@ -60,7 +133,8 @@ class LabTestEditor extends Component
             'name' => 'required|string|max:255',
             'mrp' => 'required|numeric|min:0',
             'department_id' => 'required|exists:departments,id',
-            'parameters.*.name' => 'required',
+            'parameters.*.name' => 'required|string|max:255',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
         ], [
             'parameters.*.name.required' => 'Parameter name is required.'
         ]);

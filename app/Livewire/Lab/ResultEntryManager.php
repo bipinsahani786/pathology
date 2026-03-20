@@ -40,10 +40,34 @@ class ResultEntryManager extends Component
         $profile = $patient->patientProfile;
         $gender = strtolower($profile->gender ?? 'male');
         
+        // Calculate/retrieve age for precise matching
+        $ageDays = 0; $ageMonths = 0; $ageYears = 0;
+        
+        if ($profile && $profile->dob) {
+            $dob = $profile->dob;
+            $ageDays = now()->diffInDays($dob);
+            $ageMonths = now()->diffInMonths($dob);
+            $ageYears = now()->diffInYears($dob);
+        } else {
+            // Fallback to manual age fields
+            $ageYears = (int)($profile->age ?? 0);
+            $type = $profile->age_type ?? 'Years';
+            if ($type === 'Months') {
+                $ageMonths = $ageYears; // age field holds months
+                $ageDays = $ageMonths * 30;
+                $ageYears = 0;
+            } elseif ($type === 'Days') {
+                $ageDays = $ageYears; // age field holds days
+                $ageMonths = 0; $ageYears = 0;
+            } else {
+                $ageMonths = $ageYears * 12;
+                $ageDays = $ageYears * 365;
+            }
+        }
+
         $existingResultsMap = [];
         if ($this->testReport && $this->testReport->results) {
             foreach ($this->testReport->results as $r) {
-                // Key format: labTestId_parameterName (Replacing spaces with underscores for array keys)
                 $key = $r->lab_test_id . '_' . md5($r->parameter_name);
                 $existingResultsMap[$key] = $r;
             }
@@ -52,21 +76,19 @@ class ResultEntryManager extends Component
         foreach ($this->invoice->items as $item) {
             if ($item->labTest && $item->labTest->parameters) {
                 foreach ($item->labTest->parameters as $param) {
-                    $paramName = is_array($param) ? ($param['param'] ?? $param['name'] ?? 'Unknown') : $param;
+                    $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
                     $key = $item->labTest->id . '_' . md5($paramName);
                     
-                    // Determine reference range text
-                    $refRange = '';
-                    if ($gender === 'male' && !empty($param['male_range'])) {
-                        $refRange = $param['male_range'];
-                    } elseif ($gender === 'female' && !empty($param['female_range'])) {
-                        $refRange = $param['female_range'];
-                    } else {
-                        // Fallback order: general -> male -> female -> custom range keys
-                        $refRange = $param['general_range'] ?? $param['male_range'] ?? $param['female_range'] ?? $param['reference_range'] ?? $param['range'] ?? '';
+                    // NEW: Smart Range Matching
+                    $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
+                    $refText = $matchedRange['display_range'] ?? $matchedRange['normal_value'] ?? '';
+                    
+                    // Fallback for old data structure if needed
+                    if (empty($refText)) {
+                        if ($gender === 'female') $refText = $param['female_range'] ?? $param['general_range'] ?? '';
+                        else $refText = $param['male_range'] ?? $param['general_range'] ?? '';
                     }
 
-                    // Existing or blank
                     $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
                     $this->highlights[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->is_highlighted : false;
                     $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low'])) 
@@ -76,14 +98,40 @@ class ResultEntryManager extends Component
                     $this->parametersList[$key] = [
                         'lab_test_id' => $item->labTest->id,
                         'name' => $paramName,
+                        'short_code' => $param['short_code'] ?? '',
                         'unit' => is_array($param) ? ($param['unit'] ?? '') : '',
-                        'ref_range' => $refRange,
+                        'input_type' => $param['input_type'] ?? 'numeric',
+                        'options' => $param['options'] ?? [],
+                        'formula' => $param['formula'] ?? '',
+                        'ref_range' => $refText,
+                        'matched_range_details' => $matchedRange, // Keep for evaluation
                         'department' => $item->labTest->department,
                         'test_name' => $item->labTest->name,
                     ];
                 }
             }
         }
+    }
+
+    private function findMatchingRange($param, $patientGender, $days, $months, $years)
+    {
+        if (!isset($param['ranges']) || !is_array($param['ranges'])) return null;
+
+        foreach ($param['ranges'] as $range) {
+            // 1. Gender check
+            $rGender = strtolower($range['gender'] ?? 'both');
+            if ($rGender !== 'both' && $rGender !== $patientGender) continue;
+
+            // 2. Age check
+            $unit = $range['age_unit'] ?? 'Years';
+            $val = ($unit === 'Days') ? $days : (($unit === 'Months') ? $months : $years);
+            
+            if ($val >= ($range['age_min'] ?? 0) && $val <= ($range['age_max'] ?? 120)) {
+                return $range;
+            }
+        }
+
+        return null;
     }
 
     public function updatedResults($value, $key)
@@ -94,65 +142,39 @@ class ResultEntryManager extends Component
 
     private function autoCalculateFormulas()
     {
-        // Simple logic: if LDL is blank, calculate it. 
-        // Real logic would parse formulas from the DB. 
-        // Hardcoding standard formulas for demonstration (LalPathLabs style lipid profile).
-        
-        // Find keys by name to hook them up
-        $keysByName = [];
+        // 1. Build a code-to-value map
+        $codeMap = [];
         foreach ($this->parametersList as $k => $p) {
-            $keysByName[strtolower($p['name'])] = $k;
-        }
-
-        $tcKey = $keysByName['total cholesterol'] ?? null;
-        $hdlKey = $keysByName['hdl cholesterol'] ?? null;
-        $tgKey = $keysByName['triglycerides'] ?? null;
-        $ldlKey = $keysByName['ldl cholesterol'] ?? null;
-        $vldlKey = $keysByName['vldl'] ?? null;
-
-        if ($tcKey && $hdlKey && $tgKey && $vldlKey && $ldlKey) {
-            $tc = (float)($this->results[$tcKey] ?? 0);
-            $hdl = (float)($this->results[$hdlKey] ?? 0);
-            $tg = (float)($this->results[$tgKey] ?? 0);
-
-            if ($tc > 0 && $hdl > 0 && $tg > 0) {
-                // VLDL = TG / 5
-                $vldl = round($tg / 5, 2);
-                $this->results[$vldlKey] = $vldl;
-
-                // LDL = TC - (HDL + VLDL)
-                $ldl = round($tc - ($hdl + $vldl), 2);
-                $this->results[$ldlKey] = $ldl;
+            if (!empty($p['short_code'])) {
+                $codeMap[strtoupper($p['short_code'])] = (float)($this->results[$k] ?: 0);
             }
         }
 
-        // --- CBC Formulas ---
-        $hbKey = $keysByName['hemoglobin (hb)'] ?? $keysByName['hemoglobin'] ?? $keysByName['hb'] ?? null;
-        $rbcKey = $keysByName['total rbc count'] ?? $keysByName['rbc count'] ?? $keysByName['rbc'] ?? $keysByName['total rbc'] ?? null;
-        $pcvKey = $keysByName['packed cell volume (pcv)'] ?? $keysByName['pcv'] ?? $keysByName['packed cell volume'] ?? $keysByName['hct'] ?? null;
-        $mcvKey = $keysByName['mean corpuscular volume (mcv)'] ?? $keysByName['mcv'] ?? null;
-        $mchKey = $keysByName['mch'] ?? null;
-        $mchcKey = $keysByName['mchc'] ?? null;
-
-        if ($hbKey && $rbcKey && $pcvKey) {
-            $hb = (float)($this->results[$hbKey] ?? 0);
-            $rbc = (float)($this->results[$rbcKey] ?? 0);
-            $pcv = (float)($this->results[$pcvKey] ?? 0);
-
-            if ($rbc > 0) {
-                // MCV = (PCV / RBC) * 10
-                if ($mcvKey && ($this->results[$mcvKey] == '' || $this->results[$mcvKey] == '-')) {
-                    $this->results[$mcvKey] = round(($pcv / $rbc) * 10, 2);
+        // 2. Process all calculated parameters
+        foreach ($this->parametersList as $k => $p) {
+            if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
+                $formula = strtoupper($p['formula']);
+                
+                // Replace codes like {HB} with values
+                foreach ($codeMap as $code => $val) {
+                    $formula = str_replace('{'.$code.'}', $val, $formula);
                 }
-                // MCH = (Hb / RBC) * 10
-                if ($mchKey && ($this->results[$mchKey] == '' || $this->results[$mchKey] == '-')) {
-                    $this->results[$mchKey] = round(($hb / $rbc) * 10, 2);
-                }
-            }
-            if ($pcv > 0) {
-                // MCHC = (Hb / PCV) * 100
-                if ($mchcKey && ($this->results[$mchcKey] == '' || $this->results[$mchcKey] == '-')) {
-                    $this->results[$mchcKey] = round(($hb / $pcv) * 100, 2);
+
+                // Clean up any remaining braces or invalid chars
+                $formula = preg_replace('/[^{}0-9\+\-\*\/\.\(\) ]/', '', $formula);
+                
+                try {
+                    // Basic evaluation if formula looks safe
+                    if (!empty($formula) && !str_contains($formula, '{')) {
+                        // Use Laravel/PHP's helper or simple eval for now for basic math
+                        // For production, a proper math parser (like Hoa\Math) is better.
+                        $result = @eval("return $formula;");
+                        if ($result !== false && is_numeric($result)) {
+                            $this->results[$k] = round($result, 2);
+                        }
+                    }
+                } catch (\Exception $e) {
+                     Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
                 }
             }
         }
@@ -160,50 +182,40 @@ class ResultEntryManager extends Component
 
     private function autoEvaluateRanges()
     {
-        // Evaluate numerical bounds to auto-trigger High/Low flags
         foreach ($this->results as $key => $val) {
-            if ($val === '' || !is_numeric($val)) {
+            if ($val === '') {
                 $this->flags[$key] = '';
                 continue;
             }
             
-            $ref = $this->parametersList[$key]['ref_range'] ?? '';
-            $numVal = (float)$val;
+            $param = $this->parametersList[$key];
+            $range = $param['matched_range_details'] ?? null;
+            $inputType = $param['input_type'] ?? 'numeric';
+
             $isAbnormal = false;
             $flag = '';
 
-            if (str_contains($ref, '-')) {
-                $parts = explode('-', $ref);
-                if (count($parts) == 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
-                    if ($numVal < (float)$parts[0]) {
-                        $isAbnormal = true;
-                        $flag = 'L';
-                    } elseif ($numVal > (float)$parts[1]) {
-                        $isAbnormal = true;
-                        $flag = 'H';
+            if ($inputType === 'numeric' || $inputType === 'calculated') {
+                $numVal = (float)$val;
+                if ($range && !empty($range['min_val']) && !empty($range['max_val'])) {
+                    if ($numVal < (float)$range['min_val']) {
+                        $isAbnormal = true; $flag = 'L';
+                    } elseif ($numVal > (float)$range['max_val']) {
+                        $isAbnormal = true; $flag = 'H';
                     }
                 }
-            } elseif (str_contains($ref, '<')) {
-                $limit = (float)str_replace('<', '', $ref);
-                if ($numVal >= $limit) {
-                    $isAbnormal = true;
-                    $flag = 'H';
-                }
-            } elseif (str_contains($ref, '>')) {
-                $limit = (float)str_replace('>', '', $ref);
-                if ($numVal <= $limit) {
-                    $isAbnormal = true;
-                    $flag = 'L';
+            } elseif ($inputType === 'text' || $inputType === 'selection') {
+                // Qualitative check
+                if ($range && !empty($range['normal_value'])) {
+                    if (strtolower(trim($val)) !== strtolower(trim($range['normal_value']))) {
+                        $isAbnormal = true;
+                        $flag = 'Abn';
+                    }
                 }
             }
 
             $this->flags[$key] = $flag;
-            // Auto toggle highlight if bounding fails
-            if ($isAbnormal) {
-                $this->highlights[$key] = true;
-            } else {
-                 $this->highlights[$key] = false;
-            }
+            $this->highlights[$key] = $isAbnormal;
         }
     }
 

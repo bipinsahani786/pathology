@@ -1,4 +1,3 @@
-```html
 <div>
     <!-- Page Header -->
     <div class="page-header">

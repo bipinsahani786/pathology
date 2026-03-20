@@ -89,62 +89,41 @@
                                     </thead>
                                     <tbody>
                                         @foreach($parameters as $index => $param)
-                                            <tr wire:key="param-{{ $index }}" class="border-bottom border-white">
-                                                <td class="ps-3 py-2">
-                                                    <input type="text" class="form-control form-control-sm @error('parameters.'.$index.'.name') is-invalid @enderror" 
-                                                        wire:model="parameters.{{ $index }}.name">
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control form-control-sm text-center fw-bold" 
-                                                        wire:model="parameters.{{ $index }}.short_code" placeholder="HB">
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
-                                                        <option value="numeric">Numeric</option>
-                                                        <option value="text">Textual</option>
-                                                        <option value="calculated">Calculated</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.range_type">
-                                                        <option value="general">Global</option>
-                                                        <option value="gender">M/F Split</option>
-                                                        <option value="value">Qualitative</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex flex-column gap-1">
-                                                        <div class="row g-1">
-                                                            <div class="col-8">
-                                                                @if(($parameters[$index]['range_type'] ?? 'general') === 'general')
-                                                                    <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.general_range" placeholder="e.g. 13 - 17">
-                                                                @elseif(($parameters[$index]['range_type'] ?? 'general') === 'gender')
-                                                                    <div class="input-group input-group-sm">
-                                                                        <span class="input-group-text p-1 fs-9">M</span>
-                                                                        <input type="text" class="form-control" wire:model="parameters.{{ $index }}.male_range">
-                                                                        <span class="input-group-text p-1 fs-9">F</span>
-                                                                        <input type="text" class="form-control" wire:model="parameters.{{ $index }}.female_range">
-                                                                    </div>
-                                                                @else
-                                                                    <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.normal_value" placeholder="Positive">
-                                                                @endif
-                                                            </div>
-                                                            <div class="col-4">
-                                                                <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
-                                                            </div>
-                                                        </div>
-                                                        @if(($parameters[$index]['input_type'] ?? 'numeric') === 'calculated')
-                                                            <input type="text" class="form-control form-control-sm border-primary text-primary fw-bold" 
-                                                                wire:model="parameters.{{ $index }}.formula" placeholder="Formula: {HB}*3">
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
-                                                        <i class="feather-trash-2"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                    <tr wire:key="param-{{ $index }}" class="border-bottom border-white">
+                                        <td class="ps-3 py-2">
+                                            <input type="text" class="form-control form-control-sm @error('parameters.'.$index.'.name') is-invalid @enderror" 
+                                                wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm text-center fw-bold text-primary" 
+                                                wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
+                                                <option value="numeric">Numerical</option>
+                                                <option value="text">Text/Qualitative</option>
+                                                <option value="selection">Predefined Options</option>
+                                                <option value="calculated">Calculated (Formula)</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit (e.g. mg/dL)">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <button type="button" wire:click="openRangeModal({{ $index }})" 
+                                                    class="btn btn-sm {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} w-100 py-1 rounded-pill">
+                                                    <i class="feather-settings me-1"></i>
+                                                    {{ count($parameters[$index]['ranges'] ?? []) }} Range(s) / Config
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
+                                                <i class="feather-trash-2"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -198,7 +177,137 @@
         </form>
     </div>
 
+    <!-- Advanced Range / Config Modal -->
+    @if($isRangeModalOpen && $editingParamIndex !== null)
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5); z-index: 1060;" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-light p-4">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="feather-settings text-primary me-2"></i>
+                        Configure: {{ $parameters[$editingParamIndex]['name'] ?: 'Unnamed Parameter' }}
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeRangeModal"></button>
+                </div>
+                <div class="modal-body p-4" style="max-height: 70vh; overflow-y: auto;">
+                    <!-- General Settings -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase">Input Type</label>
+                            <select class="form-select" wire:model.live="parameters.{{ $editingParamIndex }}.input_type">
+                                <option value="numeric">Numerical (Normal evaluation)</option>
+                                <option value="text">Free Text / Qualitative</option>
+                                <option value="selection">Dropdown Options (e.g. Widal Titers)</option>
+                                <option value="calculated">Calculated Formula</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase">Parameter Unit</label>
+                            <input type="text" class="form-control" wire:model="parameters.{{ $editingParamIndex }}.unit" placeholder="e.g. mg/dL, %">
+                        </div>
+                    </div>
+
+                    <!-- Formula Section -->
+                    @if($parameters[$editingParamIndex]['input_type'] === 'calculated')
+                    <div class="bg-soft-primary p-3 rounded-4 mb-4 border border-primary border-opacity-25">
+                        <label class="form-label fs-11 fw-bold text-primary text-uppercase mb-2">Calculation Formula</label>
+                        <input type="text" class="form-control form-control-lg border-primary text-primary fw-bold" 
+                            wire:model="parameters.{{ $editingParamIndex }}.formula" placeholder="Example: {HB} * 3">
+                        <p class="fs-10 text-muted mt-2 mb-0">Use parameter codes in curly braces, e.g., <code>{HB}</code>, <code>{RBC}</code>.</p>
+                    </div>
+                    @endif
+
+                    <!-- Options Section for Selection -->
+                    @if($parameters[$editingParamIndex]['input_type'] === 'selection')
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-0">Dropdown Options</label>
+                            <button type="button" wire:click="addOption" class="btn btn-soft-primary btn-xs py-0 px-2 rounded-pill">Add Option</button>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 p-3 bg-light rounded-4 border">
+                            @foreach($parameters[$editingParamIndex]['options'] ?? [] as $optIdx => $opt)
+                            <div class="input-group input-group-sm" style="width: auto; min-width: 120px;">
+                                <input type="text" class="form-control" wire:model="parameters.{{ $editingParamIndex }}.options.{{ $optIdx }}">
+                                <button class="btn btn-outline-danger" type="button" wire:click="removeOption({{ $optIdx }})"><i class="feather-x"></i></button>
+                            </div>
+                            @endforeach
+                            @if(empty($parameters[$editingParamIndex]['options']))
+                            <span class="text-muted fs-11">No options added yet. Click 'Add Option' to start.</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Advanced Ranges Section -->
+                    <div class="d-flex justify-content-between align-items-center mb-2 mt-4">
+                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-0">Reference Ranges (Age/Gender Based)</label>
+                        <button type="button" wire:click="addRange" class="btn btn-soft-primary btn-xs py-0 px-2 rounded-pill">Add Range Variation</button>
+                    </div>
+
+                    <div class="table-responsive border rounded-4 bg-white shadow-sm mb-3">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr class="fs-10 text-muted text-uppercase fw-bold">
+                                    <th class="ps-3 py-3">Gender</th>
+                                    <th>Age Range</th>
+                                    <th>Min Val</th>
+                                    <th>Max Val</th>
+                                    <th>Display Text (Report)</th>
+                                    <th class="text-end pe-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($parameters[$editingParamIndex]['ranges'] ?? [] as $rIndex => $range)
+                                <tr wire:key="range-{{ $rIndex }}">
+                                    <td class="ps-3">
+                                        <select class="form-select form-select-sm" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.gender">
+                                            <option value="Both">Both</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <input type="number" class="form-control form-control-sm px-1 text-center" style="width: 45px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.age_min">
+                                            <span class="fs-10 text-muted">-</span>
+                                            <input type="number" class="form-control form-control-sm px-1 text-center" style="width: 45px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.age_max">
+                                            <select class="form-select form-select-sm px-1" style="width: 85px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.age_unit">
+                                                <option value="Years">Years</option>
+                                                <option value="Months">Months</option>
+                                                <option value="Days">Days</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm text-center" style="width: 65px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.min_val" placeholder="Min">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm text-center" style="width: 65px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.max_val" placeholder="Max">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.display_range" placeholder="e.g. 13.5 - 17.5">
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <button type="button" wire:click="removeRange({{ $rIndex }})" class="btn btn-icon btn-soft-danger btn-xs border-0">
+                                            <i class="feather-trash-2"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 p-4">
+                    <button type="button" class="btn btn-primary w-100 py-2 fw-bold rounded-3" wire:click="closeRangeModal">Done, Save Configuration</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <style>
+        .btn-xs { padding: 0.125rem 0.25rem; font-size: 0.75rem; }
         .fs-9 { font-size: 9px; }
         .fs-10 { font-size: 10px; }
         .fs-11 { font-size: 11px; }

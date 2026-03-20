@@ -1,4 +1,3 @@
-```html
 <div>
     <!-- Page Header -->
     <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-2 gap-md-3">

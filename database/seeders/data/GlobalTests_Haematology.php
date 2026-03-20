@@ -9,26 +9,65 @@ return [
         'interpretation' => '<table><tr><th>Parameter</th><th>Low Indicates</th><th>High Indicates</th></tr><tr><td>Hemoglobin</td><td>Anemia, Blood loss</td><td>Polycythemia, Dehydration</td></tr><tr><td>WBC</td><td>Bone marrow failure, Autoimmune</td><td>Infection, Inflammation, Leukemia</td></tr><tr><td>Platelets</td><td>Thrombocytopenia, Dengue</td><td>Thrombocytosis, Infection</td></tr><tr><td>RBC</td><td>Anemia, Hemorrhage</td><td>Polycythemia Vera</td></tr></table>',
         'suggested_price' => 350,
         'default_parameters' => [
-            ['name' => 'Hemoglobin (Hb)', 'unit' => 'g/dL', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '13.0 - 17.0', 'female_range' => '12.0 - 15.5', 'normal_value' => '', 'short_code' => 'HB', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Total RBC Count', 'unit' => 'million/cumm', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '4.5 - 5.5', 'female_range' => '3.8 - 4.8', 'normal_value' => '', 'short_code' => 'RBC', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Packed Cell Volume (PCV)', 'unit' => '%', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '40 - 50', 'female_range' => '36 - 46', 'normal_value' => '', 'short_code' => 'PCV', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Mean Corpuscular Volume (MCV)', 'unit' => 'fL', 'range_type' => 'general', 'general_range' => '83 - 101', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'MCV', 'input_type' => 'calculated', 'formula' => '({PCV} * 10) / {RBC}'],
-            ['name' => 'MCH', 'unit' => 'pg', 'range_type' => 'general', 'general_range' => '27 - 32', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'MCH', 'input_type' => 'calculated', 'formula' => '({HB} * 10) / {RBC}'],
-            ['name' => 'MCHC', 'unit' => 'g/dL', 'range_type' => 'general', 'general_range' => '31.5 - 34.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'MCHC', 'input_type' => 'calculated', 'formula' => '({HB} * 100) / {PCV}'],
-            ['name' => 'RDW', 'unit' => '%', 'range_type' => 'general', 'general_range' => '11.6 - 14.0', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'RDW', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Total WBC Count', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '4000 - 10000', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'WBC', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Neutrophils', 'unit' => '%', 'range_type' => 'general', 'general_range' => '40 - 80', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'NEUT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Lymphocytes', 'unit' => '%', 'range_type' => 'general', 'general_range' => '20 - 40', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'LYMPH', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Eosinophils', 'unit' => '%', 'range_type' => 'general', 'general_range' => '1 - 6', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'EOS', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Monocytes', 'unit' => '%', 'range_type' => 'general', 'general_range' => '2 - 10', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'MONO', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Basophils', 'unit' => '%', 'range_type' => 'general', 'general_range' => '0 - 2', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'BASO', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'Absolute Neutrophil Count (ANC)', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '2000 - 7000', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ANC', 'input_type' => 'calculated', 'formula' => '({WBC} * {NEUT}) / 100'],
-            ['name' => 'Absolute Lymphocyte Count (ALC)', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '1000 - 3000', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ALC', 'input_type' => 'calculated', 'formula' => '({WBC} * {LYMPH}) / 100'],
-            ['name' => 'Absolute Eosinophil Count (AEC)', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '20 - 500', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'AEC', 'input_type' => 'calculated', 'formula' => '({WBC} * {EOS}) / 100'],
-            ['name' => 'Absolute Monocyte Count (AMC)', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '200 - 1000', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'AMC', 'input_type' => 'calculated', 'formula' => '({WBC} * {MONO}) / 100'],
-            ['name' => 'Absolute Basophil Count (ABC)', 'unit' => 'cells/cumm', 'range_type' => 'general', 'general_range' => '20 - 100', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'ABC', 'input_type' => 'calculated', 'formula' => '({WBC} * {BASO}) / 100'],
-            ['name' => 'Platelet Count', 'unit' => 'lakhs/cumm', 'range_type' => 'general', 'general_range' => '1.5 - 4.0', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'PLT', 'input_type' => 'numeric', 'formula' => ''],
-            ['name' => 'MPV', 'unit' => 'fL', 'range_type' => 'general', 'general_range' => '7.5 - 11.5', 'male_range' => '', 'female_range' => '', 'normal_value' => '', 'short_code' => 'MPV', 'input_type' => 'numeric', 'formula' => ''],
+            [
+                'name' => 'Hemoglobin (Hb)', 'unit' => 'g/dL', 'short_code' => 'HB', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '13.0', 'max_val' => '17.0', 'display_range' => '13.0 - 17.0'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '12.0', 'max_val' => '15.5', 'display_range' => '12.0 - 15.5'],
+                ]
+            ],
+            [
+                'name' => 'Total RBC Count', 'unit' => 'million/cumm', 'short_code' => 'RBC', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.5', 'max_val' => '5.5', 'display_range' => '4.5 - 5.5'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.8', 'max_val' => '4.8', 'display_range' => '3.8 - 4.8'],
+                ]
+            ],
+            [
+                'name' => 'Packed Cell Volume (PCV)', 'unit' => '%', 'short_code' => 'PCV', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '40', 'max_val' => '50', 'display_range' => '40 - 50'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '36', 'max_val' => '46', 'display_range' => '36 - 46'],
+                ]
+            ],
+            [
+                'name' => 'Mean Corpuscular Volume (MCV)', 'unit' => 'fL', 'short_code' => 'MCV', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '({PCV} * 10) / {RBC}',
+                'ranges' => [
+                    ['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '83', 'max_val' => '101', 'display_range' => '83 - 101'],
+                ]
+            ],
+            [
+                'name' => 'MCH', 'unit' => 'pg', 'short_code' => 'MCH', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '({HB} * 10) / {RBC}',
+                'ranges' => [
+                    ['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '27', 'max_val' => '32', 'display_range' => '27 - 32'],
+                ]
+            ],
+            [
+                'name' => 'MCHC', 'unit' => 'g/dL', 'short_code' => 'MCHC', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '({HB} * 100) / {PCV}',
+                'ranges' => [
+                    ['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '31.5', 'max_val' => '34.5', 'display_range' => '31.5 - 34.5'],
+                ]
+            ],
+            [
+                'name' => 'Total WBC Count', 'unit' => 'cells/cumm', 'short_code' => 'WBC', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4000', 'max_val' => '11000', 'display_range' => '4000 - 11000'],
+                ]
+            ],
+            [
+                'name' => 'Platelet Count', 'unit' => 'lakhs/cumm', 'short_code' => 'PLT', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '1.5', 'max_val' => '4.5', 'display_range' => '1.5 - 4.5'],
+                ]
+            ],
         ],
     ],
     [
@@ -36,10 +75,19 @@ return [
         'name' => 'Erythrocyte Sedimentation Rate (ESR)',
         'category' => 'Haematology',
         'description' => 'Non-specific measure of inflammation. Westergren method.',
-        'interpretation' => '<table><tr><th>Age Group</th><th>Male (mm/hr)</th><th>Female (mm/hr)</th></tr><tr><td>Under 50</td><td>0 - 15</td><td>0 - 20</td></tr><tr><td>Over 50</td><td>0 - 20</td><td>0 - 30</td></tr></table><br>Elevated in: Infections, Autoimmune disorders, Malignancy, Pregnancy. Reduced in: Polycythemia, Sickle cell anemia.',
+        'interpretation' => 'Elevated in: Infections, Autoimmune disorders, Malignancy. Westergren method is standard.',
         'suggested_price' => 100,
         'default_parameters' => [
-            ['name' => 'ESR (Westergren)', 'unit' => 'mm/1st hr', 'range_type' => 'gender', 'general_range' => '', 'male_range' => '0 - 15', 'female_range' => '0 - 20', 'normal_value' => '', 'short_code' => 'ESR', 'input_type' => 'numeric', 'formula' => ''],
+            [
+                'name' => 'ESR (Westergren)', 'unit' => 'mm/1st hr', 'short_code' => 'ESR', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [
+                    ['gender' => 'Male', 'age_min' => 0, 'age_max' => 50, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '15', 'display_range' => '0 - 15'],
+                    ['gender' => 'Male', 'age_min' => 51, 'age_max' => 150, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '20', 'display_range' => '0 - 20'],
+                    ['gender' => 'Female', 'age_min' => 0, 'age_max' => 50, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '20', 'display_range' => '0 - 20'],
+                    ['gender' => 'Female', 'age_min' => 51, 'age_max' => 150, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '30', 'display_range' => '0 - 30'],
+                ]
+            ],
         ],
     ],
     [
