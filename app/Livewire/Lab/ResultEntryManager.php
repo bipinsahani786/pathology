@@ -166,14 +166,19 @@ class ResultEntryManager extends Component
                 try {
                     // Basic evaluation if formula looks safe
                     if (!empty($formula) && !str_contains($formula, '{')) {
-                        // Use Laravel/PHP's helper or simple eval for now for basic math
-                        // For production, a proper math parser (like Hoa\Math) is better.
+                        // Prevent DivisionByZeroError by checking if '/ 0' exists in the string (approximate)
+                        // Note: This is a simple protection for common cases.
+                        if (preg_match('/\/ *0(\.0*)?($|[^0-9])/', $formula)) {
+                             Log::warning("Division by zero in formula: $formula");
+                             continue;
+                        }
+
                         $result = @eval("return $formula;");
                         if ($result !== false && is_numeric($result)) {
                             $this->results[$k] = round($result, 2);
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                      Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
                 }
             }
