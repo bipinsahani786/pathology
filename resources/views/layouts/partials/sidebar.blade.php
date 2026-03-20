@@ -11,32 +11,50 @@
 
                 @role('super_admin')
                     <li class="nxl-item nxl-caption">
-                        <label>Super Admin Panel</label>
+                        <label>Main Cabinet</label>
                     </li>
-                    <li class="nxl-item">
+                    <li class="nxl-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <a href="{{ route('admin.dashboard') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
                             <span class="nxl-mtext">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nxl-item">
-                        <a href="{{ route('admin.global-tests') }}" wire:navigate
-                            class="nxl-link {{ request()->routeIs('admin.global-tests') ? 'active' : '' }}">
+
+                    <li class="nxl-item nxl-caption">
+                        <label>Master Catalog</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.global-tests') ? 'active' : '' }}">
+                        <a href="{{ route('admin.global-tests') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-layers"></i></span>
                             <span class="nxl-mtext">Global Tests</span>
                         </a>
                     </li>
-                    <li class="nxl-item">
-                        <a href="{{ route('admin.plans') }}" wire:navigate
-                            class="nxl-link {{ request()->routeIs('admin.plans') ? 'active' : '' }}">
+                    <li class="nxl-item {{ request()->routeIs('admin.departments') ? 'active' : '' }}">
+                        <a href="{{ route('admin.departments') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-grid"></i></span>
+                            <span class="nxl-mtext">System Departments</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item nxl-caption">
+                        <label>Business & Finance</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.plans') ? 'active' : '' }}">
+                        <a href="{{ route('admin.plans') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-credit-card"></i></span>
-                            <span class="nxl-mtext">Plans</span>
+                            <span class="nxl-mtext">Pricing Plans</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.labs') ? 'active' : '' }}">
+                        <a href="{{ route('admin.labs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
+                            <span class="nxl-mtext">Labs & Settlements</span>
                         </a>
                     </li>
                 @endrole
 
 
-                @role('lab_admin')
+                @if(auth()->user()->hasAnyRole(['lab_admin', 'staff']) || str_contains(auth()->user()->roles->first()?->name ?? '', 'lab_'))
                     <li class="nxl-item nxl-caption">
                         <label>Main</label>
                     </li>
@@ -81,6 +99,9 @@
                             <span class="nxl-mtext">Lab Catalog</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                         </a>
                         <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.departments') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.departments') }}" wire:navigate><i class="feather-grid me-2 fs-12"></i>Departments</a>
+                            </li>
                             <li class="nxl-item {{ request()->routeIs('lab.tests') ? 'active' : '' }}">
                                 <a class="nxl-link" href="{{ route('lab.tests') }}" wire:navigate><i class="feather-activity me-2 fs-12"></i>Test Catalog</a>
                             </li>

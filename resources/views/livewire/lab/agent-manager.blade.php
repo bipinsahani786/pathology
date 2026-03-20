@@ -1,13 +1,13 @@
 <div>
-    <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-2 gap-md-3 mb-4">
-        <div class="page-header-left d-flex align-items-center flex-wrap">
+    <div class="page-header">
+        <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10 text-dark fw-bold">Referral Agents & Partners</h5>
-                <p class="fs-13 text-muted mb-0">Manage third-party agents, hospital tie-ups, and their payout structures.</p>
+                <h5 class="text-dark fw-bold">Referral Agents & Partners</h5>
+                <p class="fs-13 text-muted mb-0">Manage third-party agents.</p>
             </div>
-            <ul class="breadcrumb d-none d-md-flex mb-0 ms-3">
-                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate>Home</a></li>
-                <li class="breadcrumb-item active">Agents</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Agents</li>
             </ul>
         </div>
         <div class="page-header-right d-flex gap-2">

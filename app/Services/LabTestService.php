@@ -13,11 +13,16 @@ class LabTestService
      */
     public function getPaginatedTests($searchTerm = null, $filterCategory = null, $perPage = 10)
     {
-        return LabTest::where(function ($q) use ($searchTerm) {
-            $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
-        })
-            ->when($filterCategory, fn($q) => $q->where('department', $filterCategory))
+        $query = LabTest::with('dept');
+
+        if (!empty($searchTerm)) {
+            $query = $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', '%' . $searchTerm . '%')
+                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+            });
+        }
+
+        return $query->when($filterCategory, fn($q) => $q->where('department_id', $filterCategory))
             ->orderBy('id', 'desc')
             ->paginate($perPage);
     }
@@ -27,7 +32,8 @@ class LabTestService
      */
     public function searchGlobalTests($globalSearch = null, $limit = 15)
     {
-        return GlobalTest::where('name', 'ilike', '%' . $globalSearch . '%')
+        return GlobalTest::with('dept')
+            ->where('name', 'ilike', '%' . $globalSearch . '%')
             ->orWhere('test_code', 'ilike', '%' . $globalSearch . '%')
             ->limit($limit)
             ->get();
@@ -45,7 +51,7 @@ class LabTestService
                 'company_id' => auth()->user()->company_id, // Handled by trait, but safe to pass
                 'name' => $data['name'],
                 'test_code' => $data['test_code'] ?? null,
-                'department' => $data['department'] ?? null,
+                'department_id' => $data['department_id'] ?? null,
                 'description' => $data['description'] ?? null,
                 'interpretation' => $data['interpretation'] ?? null,
                 'mrp' => $data['mrp'] ?? 0,
@@ -94,7 +100,7 @@ class LabTestService
             'global_test_id' => $global->id,
             'name' => $global->name,
             'test_code' => $global->test_code,
-            'department' => $global->category, // mapping category to department
+            'department_id' => $global->department_id, // Inherit from global test
             'description' => $global->description ?? null,
             'interpretation' => $global->interpretation ?? null,
             'parameters' => $mappedParams,
@@ -142,13 +148,16 @@ class LabTestService
      */
     public function getPaginatedPackages($searchTerm = null, $perPage = 10)
     {
-        return LabTest::where('is_package', true)
-            ->where(function ($q) use ($searchTerm) {
-            $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
-        })
-            ->orderBy('id', 'desc')
-            ->paginate($perPage);
+        $query = LabTest::where('is_package', true);
+
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', '%' . $searchTerm . '%')
+                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+            });
+        }
+
+        return $query->orderBy('id', 'desc')->paginate($perPage);
     }
 
     /**
@@ -159,13 +168,16 @@ class LabTestService
         if (empty($searchTerm))
             return collect();
 
-        return LabTest::where('is_package', false) // Only fetch individual tests, not packages
-            ->where(function ($q) use ($searchTerm) {
-            $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
-        })
-            ->limit($limit)
-            ->get();
+        $query = LabTest::where('is_package', false);
+
+        if (!empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ilike', '%' . $searchTerm . '%')
+                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+            });
+        }
+
+        return $query->limit($limit)->get();
     }
 
     /**
@@ -173,6 +185,6 @@ class LabTestService
      */
     public function getTestsByIds(array $ids)
     {
-        return LabTest::whereIn('id', $ids)->get(['id', 'name', 'test_code', 'department', 'mrp']);
+        return LabTest::with('dept')->whereIn('id', $ids)->get(['id', 'name', 'test_code', 'department_id', 'mrp']);
     }
 }

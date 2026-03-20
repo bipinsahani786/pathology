@@ -368,6 +368,7 @@ class PosManager extends Component
                 'age' => $this->new_age,
                 'gender' => $this->new_gender,
             ]);
+            $user->assignRole('patient');
             DB::commit();
             $this->selectPatient($user->id);
             $this->isPatientModalOpen = false;
@@ -410,6 +411,7 @@ class PosManager extends Component
                 'user_id' => $user->id,
                 'commission_percentage' => $this->new_doc_commission ?: 0,
             ]);
+            $user->assignRole('doctor');
             DB::commit();
             $this->selectDoctor($user->id);
             $this->isDoctorModalOpen = false;

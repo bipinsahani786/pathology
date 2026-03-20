@@ -40,7 +40,10 @@
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
-<script>
+    
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js"></script>
+
+    <script>
         document.addEventListener('livewire:navigated', () => {
             if (typeof bootstrap !== 'undefined') {
                 const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');

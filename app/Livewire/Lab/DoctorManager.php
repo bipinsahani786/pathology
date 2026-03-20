@@ -139,7 +139,8 @@ class DoctorManager extends Component
                     'commission_percentage' => $this->commission_percentage,
                 ]);
 
-                // Optional: $user->assignRole('doctor'); if using Spatie
+                // Assign Role
+                $user->assignRole('doctor');
 
                 session()->flash('message', 'New referring doctor added successfully.');
             }

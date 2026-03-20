@@ -160,24 +160,13 @@ class DemoSeeder extends Seeder
         // ============================================================
         // 8. LAB TESTS (Company-specific, mapped from Global Tests)
         // ============================================================
-        $deptMap = [
-            'Haematology' => 'Haematology',
-            'Biochemistry' => 'Biochemistry',
-            'Endocrinology' => 'Biochemistry',
-            'Clinical Pathology' => 'Clinical Pathology',
-            'Immunology' => 'Serology',
-            'Serology' => 'Serology',
-            'Tumor Markers' => 'Serology',
-            'Hormones' => 'Biochemistry',
-            'Molecular Diagnostics' => 'Molecular Biology',
-        ];
 
         $createdLabTests = [];
         foreach (GlobalTest::all() as $gt) {
             $labTest = LabTest::firstOrCreate(['company_id' => $company->id, 'test_code' => $gt->test_code], [
                 'global_test_id' => $gt->id,
                 'name' => $gt->name,
-                'department' => $deptMap[$gt->category] ?? $gt->category,
+                'department_id' => $gt->department_id,
                 'mrp' => $gt->suggested_price ?? 300,
                 'b2b_price' => ($gt->suggested_price ?? 300) * 0.7,
                 'sample_type' => in_array($gt->category, ['Clinical Pathology']) ? 'Urine/Stool' : 'Blood',
@@ -211,10 +200,12 @@ class DemoSeeder extends Seeder
             ['test_code' => 'PKG-LKC', 'name' => 'Liver & Kidney Combo', 'mrp' => 899, 'linked' => array_filter([$lftId, $kftId])],
         ];
 
+        $otherDeptId = \App\Models\Department::where('name', 'Other')->where('is_system', true)->first()?->id;
+
         foreach ($packages as $pkg) {
             LabTest::firstOrCreate(['company_id' => $company->id, 'test_code' => $pkg['test_code']], [
                 'name' => $pkg['name'],
-                'department' => 'Packages',
+                'department_id' => $otherDeptId,
                 'mrp' => $pkg['mrp'],
                 'b2b_price' => $pkg['mrp'] * 0.6,
                 'sample_type' => 'Blood',

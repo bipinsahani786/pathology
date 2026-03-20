@@ -1,18 +1,18 @@
 <div>
-    <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-2 gap-md-3 mb-4">
-        <div class="page-header-left d-flex align-items-center flex-wrap">
+    <div class="page-header">
+        <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10 text-dark fw-bold">Referring Doctors</h5>
-                <p class="fs-13 text-muted mb-0">Manage doctors, clinics, and their referral commission percentages.</p>
+                <h5 class="text-dark fw-bold">Referring Doctors</h5>
+                <p class="fs-13 text-muted mb-0">Manage doctor referrals.</p>
             </div>
-            <ul class="breadcrumb d-none d-md-flex mb-0 ms-3">
-                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate>Home</a></li>
-                <li class="breadcrumb-item active">Doctors</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Doctors</li>
             </ul>
         </div>
-        <div class="page-header-right d-flex gap-2">
-            <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
-                <i class="feather-user-plus me-1"></i> Add New Doctor
+        <div class="page-header-right">
+            <button wire:click="create" class="btn btn-primary px-4">
+                <i class="feather-user-plus me-2"></i> Add New Doctor
             </button>
         </div>
     </div>

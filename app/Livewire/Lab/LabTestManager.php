@@ -4,7 +4,8 @@ namespace App\Livewire\Lab;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Services\LabTestService; // Import the new service
+use App\Services\LabTestService;
+use App\Models\Department;
 
 class LabTestManager extends Component
 {
@@ -15,29 +16,13 @@ class LabTestManager extends Component
     public $searchTerm = '';
     public $filterCategory = '';
 
-    // Form Fields
-    public $test_id, $test_code, $name, $department, $mrp, $b2b_price, $sample_type;
-    public $tat_hours = 24;
-    public $is_active = true;
-    public $description;
-    public $interpretation;
-    public array $parameters = []; 
-
     // UI States
-    public $isModalOpen = false;
     public $isImportModalOpen = false;
     public $globalSearch = '';
-    public $globalLimit = 15; // Initial limit for global tests
+    public $globalLimit = 15;
 
     public function updatingSearchTerm() { $this->resetPage(); }
     public function updatingFilterCategory() { $this->resetPage(); }
-
-    public function create()
-    {
-        $this->resetFields();
-        $this->addParameter(); 
-        $this->isModalOpen = true;
-    }
 
     public function openImportModal()
     {
@@ -56,129 +41,55 @@ class LabTestManager extends Component
         $this->globalLimit = 15;
     }
 
-    /**
-     * Inject LabTestService directly into the method
-     */
-    public function importGlobalTest($globalTestId, LabTestService $labTestService)
+    public function importGlobalTest($globalTestId)
     {
+        $labTestService = new LabTestService();
         try {
             $newTest = $labTestService->importFromGlobal($globalTestId, auth()->user()->company_id);
-
             $this->isImportModalOpen = false;
             
-            // Open edit modal directly for the new test
-            $this->edit($newTest->id, $labTestService);
+            session()->flash('message', 'Global test imported successfully. Please set your pricing and verify parameters.');
+            return redirect()->route('lab.tests.edit', $newTest->id);
             
-            session()->flash('message', 'Global test imported successfully. Please set your pricing and short codes.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error importing test: ' . $e->getMessage());
         }
     }
 
-    public function edit($id, LabTestService $labTestService)
+    public function delete($id)
     {
-        $this->resetFields();
-        $test = $labTestService->getTestById($id);
-        
-        $this->test_id = $test->id;
-        $this->name = $test->name;
-        $this->test_code = $test->test_code;
-        $this->mrp = $test->mrp;
-        $this->b2b_price = $test->b2b_price;
-        $this->department = $test->department;
-        $this->sample_type = $test->sample_type;
-        $this->tat_hours = $test->tat_hours;
-        $this->description = $test->description; 
-        $this->interpretation = $test->interpretation;
-        $this->is_active = $test->is_active;
-        
-        $this->parameters = is_array($test->parameters) ? $test->parameters : [];
-        $this->isModalOpen = true;
-    }
-
-    public function delete($id, LabTestService $labTestService)
-    {
+        $labTestService = new LabTestService();
         $labTestService->deleteTest($id);
         session()->flash('message', 'Lab test deleted successfully.');
     }
 
-    public function toggleStatus($id, LabTestService $labTestService)
+    public function toggleStatus($id)
     {
+        $labTestService = new LabTestService();
         $labTestService->toggleStatus($id);
-    }
-
-    public function addParameter()
-    {
-        $this->parameters[] = [
-            'name' => '', 'unit' => '', 'range_type' => 'general',
-            'general_range' => '', 'male_range' => '', 'female_range' => '',
-            'normal_value' => '', 'short_code' => '', 'input_type' => 'numeric', 'formula' => ''
-        ];
-    }
-
-    public function removeParameter($index)
-    {
-        unset($this->parameters[$index]);
-        $this->parameters = array_values($this->parameters);
     }
 
     public function closeModal()
     {
-        $this->isModalOpen = false;
         $this->isImportModalOpen = false;
-        $this->resetFields();
     }
 
-    public function resetFields()
+    public function render()
     {
-        $this->reset(['test_id', 'test_code', 'name', 'department', 'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description', 'interpretation']);
-        $this->resetValidation();
-    }
-
-    public function store(LabTestService $labTestService)
-    {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'mrp' => 'required|numeric|min:0',
-            'department' => 'required',
-            'parameters.*.name' => 'required',
-        ], [
-            'parameters.*.name.required' => 'Parameter name is required.'
-        ]);
-
-        try {
-            // Bundle data for service
-            $data = [
-                'name' => $this->name,
-                'test_code' => $this->test_code,
-                'department' => $this->department,
-                'description' => $this->description,
-                'interpretation' => $this->interpretation,
-                'mrp' => $this->mrp,
-                'b2b_price' => $this->b2b_price,
-                'sample_type' => $this->sample_type,
-                'tat_hours' => $this->tat_hours,
-                'parameters' => $this->parameters,
-                'is_active' => $this->is_active,
-            ];
-
-            $labTestService->saveTest($data, $this->test_id);
-
-            session()->flash('message', $this->test_id ? 'Test updated successfully.' : 'New test created.');
-            $this->closeModal();
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error saving test: ' . $e->getMessage());
-        }
-    }
-
-    public function render(LabTestService $labTestService)
-    {
+        $labTestService = new LabTestService();
         $tests = $labTestService->getPaginatedTests($this->searchTerm, $this->filterCategory, 12);
         $globalTests = $labTestService->searchGlobalTests($this->globalSearch, $this->globalLimit);
+        
+        $departments = Department::forCompany(auth()->user()->company_id)
+            ->where('is_active', true)
+            ->orderBy('is_system', 'desc')
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.lab.lab-test-manager', [
             'tests' => $tests,
-            'globalTests' => $globalTests
+            'globalTests' => $globalTests,
+            'departments' => $departments
         ])->layout('layouts.app');
     }
 }

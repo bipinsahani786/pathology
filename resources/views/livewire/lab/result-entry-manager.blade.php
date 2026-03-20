@@ -141,9 +141,21 @@
                 </div>
                 
                 {{-- Report Comments --}}
-                <div class="px-4 py-3 bg-light border-top">
+                <div class="px-4 py-3 bg-light border-top" wire:ignore>
                     <label class="form-label fw-bold fs-12 text-dark"><i class="feather-message-square me-2 text-primary"></i>Report Comments / Interpretation</label>
-                    <textarea class="form-control text-muted fs-13" rows="3" wire:model.defer="comments" placeholder="Add any final interpretation or general remarks that should appear at the bottom of the printed report..."></textarea>
+                    <textarea class="form-control rich-editor" id="report-comments-editor" rows="3" 
+                        x-data x-init="
+                            ClassicEditor
+                                .create($el, {
+                                    toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'insertTable', 'undo', 'redo']
+                                })
+                                .then(editor => {
+                                    editor.model.document.on('change:data', () => {
+                                        @this.set('comments', editor.getData());
+                                    });
+                                    editor.setData(@js($comments));
+                                })
+                        " placeholder="Add final interpretation or remarks..."></textarea>
                 </div>
             </div>
             

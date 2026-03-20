@@ -24,9 +24,14 @@ class GlobalTestSeeder extends Seeder
         foreach ($dataFiles as $file) {
             $tests = require database_path("seeders/data/{$file}.php");
             foreach ($tests as $test) {
+                // Find system department
+                $department = \App\Models\Department::where('name', $test['category'] ?? 'Other')
+                    ->where('is_system', true)
+                    ->first();
+
                 GlobalTest::updateOrCreate(
                     ['test_code' => $test['test_code']],
-                    $test
+                    array_merge($test, ['department_id' => $department?->id])
                 );
             }
         }

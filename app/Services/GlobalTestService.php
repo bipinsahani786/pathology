@@ -42,10 +42,10 @@ class GlobalTestService
      *
      * @param int $perPage
      * @param string|null $search
-     * @param string|null $category
+     * @param string|null $department_id
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getPaginatedTests($perPage = 10, $search = null, $category = null)
+    public function getPaginatedTests($perPage = 10, $search = null, $department_id = null)
     {
         $query = GlobalTest::query();
 
@@ -57,12 +57,12 @@ class GlobalTestService
             });
         }
 
-        // Apply Category Filter
-        if (!empty($category)) {
-            $query->where('category', $category);
+        // Apply Department Filter
+        if (!empty($department_id)) {
+            $query->where('department_id', $department_id);
         }
 
-        return $query->orderBy('id', 'desc')->paginate($perPage);
+        return $query->with('dept')->orderBy('id', 'desc')->paginate($perPage);
     }
 
 

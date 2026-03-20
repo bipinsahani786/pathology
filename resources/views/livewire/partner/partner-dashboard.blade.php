@@ -1,11 +1,13 @@
 <div class="row g-4">
     <div class="col-12">
-        <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-            <div>
-                <h4 class="fw-bold mb-1">Partner Dashboard</h4>
-                <p class="text-muted small mb-0">Welcome back! Here's an overview of your earnings and settlements.</p>
+        <div class="page-header d-flex align-items-center justify-content-between mb-4">
+            <div class="page-header-left d-flex align-items-center">
+                <div class="page-header-title">
+                    <h4 class="fw-bold mb-0">Partner Dashboard</h4>
+                    <p class="text-muted small mb-0">Welcome back!</p>
+                </div>
             </div>
-            <div class="mt-3 mt-md-0">
+            <div class="page-header-right">
                 <span class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fs-12 fw-bold">
                     <i class="feather-user me-1"></i>{{ $role }} Mode
                 </span>

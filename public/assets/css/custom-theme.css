@@ -241,7 +241,7 @@ html.app-skin-dark .bg-gray-300 {
 }
 
 /* Ensure no left indicator exists */
-.nxl-navbar .nxl-item.active > .nxl-link::before {
+.nxl-navbar .nxl-item.active>.nxl-link::before {
     display: none !important;
 }
 
@@ -250,9 +250,199 @@ html.app-skin-dark .bg-gray-300 {
     opacity: 0.6;
 }
 
-/* Page Header Alignment */
+/* Page Header Alignment Refinement */
 .page-header {
     margin-bottom: 2rem;
     border-bottom: 1px solid var(--bs-border-color);
-    padding-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.page-header-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.page-header-title {
+    position: relative;
+    padding-right: 1.5rem;
+    margin-right: 1.5rem;
+    display: flex;
+    align-items: baseline;
+}
+
+.page-header-title::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 1px;
+    background: #e2e8f0;
+}
+
+.page-header h5,
+.page-header h2,
+.page-header h3,
+.page-header h4 {
+    margin-bottom: 0 !important;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.page-header .breadcrumb {
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    font-size: 0.8125rem;
+    /* 13px */
+    line-height: 1.2;
+}
+
+.page-header .breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.page-header .breadcrumb-item+.breadcrumb-item::before {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+    color: #94a3b8;
+}
+
+/* ========================================= */
+/* PREMIUM BUTTON STYLES & HOVER EFFECTS */
+/* ========================================= */
+
+.btn {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Primary Button Enhancements */
+.btn-primary {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, darken(var(--bs-primary), 5%) 100%);
+    border: none;
+    box-shadow: 0 2px 6px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--bs-primary);
+    filter: brightness(1.1);
+}
+
+/* Soft Buttons (Premium Feel) */
+.btn-soft-primary {
+    background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+    color: var(--bs-primary) !important;
+    border: 1px solid transparent !important;
+}
+
+.btn-soft-primary:hover {
+    background-color: var(--bs-primary) !important;
+    color: #fff !important;
+}
+
+.btn-soft-success {
+    background-color: rgba(25, 135, 84, 0.08) !important;
+    color: #198754 !important;
+    border: 1px solid transparent !important;
+}
+
+.btn-soft-success:hover {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.btn-soft-info {
+    background-color: rgba(13, 202, 240, 0.08) !important;
+    color: #0dcaf0 !important;
+    border: 1px solid transparent !important;
+}
+
+.btn-soft-info:hover {
+    background-color: #0dcaf0 !important;
+    color: #fff !important;
+}
+
+.btn-soft-danger {
+    background-color: rgba(220, 53, 69, 0.08) !important;
+    color: #dc3545 !important;
+    border: 1px solid transparent !important;
+}
+
+.btn-soft-danger:hover {
+    background-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+/* Light / Bordered Buttons */
+.btn-light {
+    background-color: #f8f9fa !important;
+    border-color: #e9ecef !important;
+    color: #495057 !important;
+}
+
+.btn-light:hover {
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+/* Card Hover Elevation */
+.card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Form Control Polish */
+.form-control,
+.form-select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border-color: #e2e8f0;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-primary) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+/* Custom Table Polish */
+.table thead th {
+    background-color: #f8fafc !important;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #64748b;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.02) !important;
 }

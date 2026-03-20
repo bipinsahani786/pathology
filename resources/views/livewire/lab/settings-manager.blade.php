@@ -3,12 +3,11 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Settings</h5>
+                <h5 class="text-dark fw-bold">Settings</h5>
             </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item">Lab</li>
-                <li class="breadcrumb-item">Settings</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Settings</li>
             </ul>
         </div>
     </div>
@@ -36,6 +35,11 @@
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'pdf')" class="nav-link {{ $activeTab === 'pdf' ? 'active' : '' }}">
                     <i class="feather-printer me-1"></i> PDF Header / Footer
+                </button>
+            </li>
+            <li class="nav-item">
+                <button wire:click="$set('activeTab', 'staff')" class="nav-link {{ $activeTab === 'staff' ? 'active' : '' }}">
+                    <i class="feather-users me-1"></i> Staff & Roles
                 </button>
             </li>
         </ul>
@@ -443,6 +447,13 @@
                     </div>
                 </div>
             </div>
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB 5: STAFF & ROLES --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'staff')
+            @livewire('lab.staff-role-manager')
         @endif
     </div>
 </div>

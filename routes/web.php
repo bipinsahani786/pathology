@@ -23,6 +23,7 @@ use App\Livewire\Lab\PosEditManager;
 use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Lab\ReportManager;
 use App\Livewire\Lab\ResultEntryManager;
+use App\Livewire\Lab\DepartmentManager;
 use App\Livewire\Partner\PartnerDashboard;
 use Illuminate\Support\Facades\Route;
 
@@ -52,9 +53,14 @@ Route::middleware(['auth'])->group(function () {
         // URL: /admin/dashboard  |  Route Name: admin.dashboard
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
 
-        // Future Routes  examples:
+        // Global Master Test Library
         Route::get('/global-tests', GlobalTestManager::class)->name('global-tests');
+        Route::get('/global-tests/create', \App\Livewire\Admin\GlobalTestEditor::class)->name('global-tests.create');
+        Route::get('/global-tests/{id}/edit', \App\Livewire\Admin\GlobalTestEditor::class)->name('global-tests.edit');
+
+        Route::get('/departments', \App\Livewire\Admin\DepartmentManager::class)->name('departments');
         Route::get('/plans', PlanManager::class)->name('plans');
+        Route::get('/labs', \App\Livewire\Admin\LabManager::class)->name('labs');
         // Route::get('/manage-labs', ManageLabs::class)->name('manage-labs');
         // Route::get('/subscriptions', ManageSubscriptions::class)->name('subscriptions');
     });
@@ -79,10 +85,19 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+            // Lab Departments
+            Route::get('/departments', DepartmentManager::class)->name('departments');
+
             // Lab Tests Management
             Route::get('/lab-tests', LabTestManager::class)->name('tests');
+            Route::get('/lab-tests/create', \App\Livewire\Lab\LabTestEditor::class)->name('tests.create');
+            Route::get('/lab-tests/{id}/edit', \App\Livewire\Lab\LabTestEditor::class)->name('tests.edit');
+
             // test packages and profiles
             Route::get('/test-packages', PackageManager::class)->name('packages');
+            Route::get('/test-packages/create', \App\Livewire\Lab\PackageEditor::class)->name('packages.create');
+            Route::get('/test-packages/{id}/edit', \App\Livewire\Lab\PackageEditor::class)->name('packages.edit');
+
             //membership and vouchers
             Route::get('/marketing', MarketingManager::class)->name('marketing');
             // Payment Modes

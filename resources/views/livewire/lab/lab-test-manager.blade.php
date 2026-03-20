@@ -1,120 +1,111 @@
 <div>
+    <!-- Page Header -->
     <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-2 gap-md-3">
-        <div class="page-header-left d-flex align-items-center flex-wrap">
+        <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Lab Test Catalog</h5>
+                <h5 class="text-dark fw-bold">Test Catalog</h5>
             </div>
-            <ul class="breadcrumb d-none d-md-flex mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate>Home</a></li>
-                <li class="breadcrumb-item text-primary">Test Catalog</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Catalog</li>
             </ul>
         </div>
-        <div class="page-header-right d-flex gap-2">
-            <button wire:click="openImportModal" class="btn btn-outline-primary w-100 w-md-auto shadow-sm bg-white">
-                <i class="feather-download"></i>
-                <span class="d-none d-sm-inline ms-2">Import Library</span>
+        <div class="page-header-right">
+            <button wire:click="openImportModal" class="btn btn-soft-primary px-4 me-2">
+                <i class="feather-download me-2"></i>Import Global
             </button>
-            <button wire:click="create" class="btn btn-primary w-100 w-md-auto shadow-sm">
-                <i class="feather-plus"></i>
-                <span class="d-none d-sm-inline ms-2">Add Custom Test</span>
-            </button>
+            <a href="{{ route('lab.tests.create') }}" wire:navigate class="btn btn-primary px-4">
+                <i class="feather-plus me-2"></i>Add Custom Test
+            </a>
         </div>
     </div>
 
     <div class="main-content mt-4">
         @if (session()->has('message'))
-            <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3">
-                <i class="feather-check-circle fs-4 me-2"></i>
-                <strong>{{ session('message') }}</strong>
+            <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3 mb-4">
+                <i class="feather-check-circle fs-4 text-success me-3"></i>
+                <div class="fw-bold">{{ session('message') }}</div>
+                <button type="button" class="btn-close ms-auto shadow-none" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        <div class="card stretch stretch-full border-0 shadow-sm rounded-4">
+        <!-- Filter Card -->
+        <div class="card stretch stretch-full border-0 shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white py-3 border-bottom-0">
-                <div class="row g-3">
-
-                    <div class="col-md-6">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-5">
                         <div class="input-group search-group shadow-sm">
                             <span class="input-group-text bg-white">
                                 <i class="feather-search text-primary"></i>
                             </span>
-                            <input type="text" wire:model.live.debounce.300ms="searchTerm"
-                                class="form-control"
-                                placeholder="Search test name or code...">
+                            <input type="text" wire:model.live.debounce.300ms="searchTerm" 
+                                class="form-control" 
+                                placeholder="Search tests name, code or keyword...">
                         </div>
                     </div>
-
                     <div class="col-md-4">
                         <select wire:model.live="filterCategory" class="form-select shadow-sm">
-                            <option value="">All Departments</option>
-                            <option value="Haematology">Haematology</option>
-                            <option value="Biochemistry">Biochemistry</option>
-                            <option value="Serology">Serology</option>
-                            <option value="Pathology">Pathology</option>
-                            <option value="Microbiology">Microbiology</option>
-                            <option value="Clinical Pathology">Clinical Pathology</option>
-                            <option value="Immunology">Immunology</option>
+                            <option value="">All Categories</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
                         </select>
                     </div>
-
-                    <div class="col-md-2">
-                        <button wire:click="$set('searchTerm',''); $set('filterCategory','')"
-                            class="btn btn-light border bg-white shadow-sm h-100 w-100 d-flex align-items-center justify-content-center transition-all hover-lift"
-                            title="Reset Filters">
-                            <i class="feather-refresh-ccw fs-12 me-2 text-primary"></i>
-                            <span class="fw-bold text-dark fs-12">RESET</span>
+                    <div class="col-md-3">
+                        <button wire:click="$set('filterCategory',''); $set('searchTerm','')" 
+                            class="btn btn-soft-danger w-100 fw-bold d-flex align-items-center justify-content-center">
+                            <i class="feather-refresh-ccw me-2 fs-12"></i>RESET FILTERS
                         </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Table -->
             <div class="card-body p-0">
                 <div class="table-responsive border-top">
                     <table class="table table-hover table-striped align-middle mb-0">
-                        <thead class="bg-light fs-11 text-uppercase text-muted">
+                        <thead class="bg-light fs-11 text-uppercase text-muted fw-bold">
                             <tr>
-                                <th class="ps-4">Code</th>
-                                <th>Test Name & Dept</th>
-                                <th>Pricing</th>
-                                <th>Status</th>
-                                <th class="text-end pe-4">Actions</th>
+                                <th class="ps-4" style="width: 120px;">Code</th>
+                                <th>Test Information</th>
+                                <th>Category</th>
+                                <th style="width: 150px;">Pricing (₹)</th>
+                                <th style="width: 120px;">Status</th>
+                                <th class="text-end pe-4" style="width: 120px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($tests as $test)
-                                <tr wire:key="test-{{ $test->id }}" class="border-bottom border-light">
+                                <tr class="border-bottom border-light" wire:key="test-row-{{ $test->id }}">
                                     <td class="ps-4">
                                         <span class="badge bg-soft-primary text-primary px-2 py-1">{{ $test->test_code ?? 'N/A' }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark fs-14">{{ $test->name }}</div>
-                                        <small class="text-muted fw-medium">{{ $test->department }}</small>
+                                        <div class="fw-bold text-dark fs-14 mb-0">{{ $test->name }}</div>
+                                        <div class="text-muted fs-11 text-truncate-1-line" title="{{ $test->description }}">{{ $test->description ?: 'No internal description' }}</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-primary fs-14">₹{{ number_format($test->mrp, 2) }}</div>
-                                        <div class="fs-11 text-muted">B2B: ₹{{ number_format($test->b2b_price, 2) }}</div>
+                                        <span class="badge bg-soft-info text-info px-3 fw-medium">{{ $test->dept?->name ?? 'N/A' }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark fs-14">₹{{ number_format($test->mrp ?? 0, 2) }}</div>
+                                        <div class="text-muted fs-11">B2B: ₹{{ number_format($test->b2b_price ?? 0, 2) }}</div>
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                wire:click="toggleStatus({{ $test->id }})"
-                                                {{ $test->is_active ? 'checked' : '' }} style="cursor: pointer;">
-                                            <span class="fs-12 ms-2 fw-medium {{ $test->is_active ? 'text-success' : 'text-danger' }}">
-                                                {{ $test->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
+                                            <input class="form-check-input shadow-none" type="checkbox" 
+                                                wire:click="toggleStatus({{ $test->id }})" 
+                                                {{ $test->is_active ? 'checked' : '' }}>
                                         </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">
-                                            <button wire:click="edit({{ $test->id }})"
-                                                class="avatar-text avatar-md bg-soft-info text-info rounded border-0"
-                                                data-bs-toggle="tooltip" title="Edit">
+                                            <a href="{{ route('lab.tests.edit', $test->id) }}" wire:navigate class="btn btn-icon btn-soft-info btn-sm" data-bs-toggle="tooltip" title="Edit">
                                                 <i class="feather-edit-3"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $test->id }})"
-                                                wire:confirm="Are you sure you want to delete this lab test? This action cannot be undone."
-                                                class="avatar-text avatar-md bg-soft-danger text-danger rounded border-0"
-                                                data-bs-toggle="tooltip" title="Delete">
+                                            </a>
+                                            <button wire:click="delete({{ $test->id }})" 
+                                                wire:confirm="Are you sure you want to delete this test?" 
+                                                class="btn btn-icon btn-soft-danger btn-sm" data-bs-toggle="tooltip" title="Delete">
                                                 <i class="feather-trash-2"></i>
                                             </button>
                                         </div>
@@ -122,10 +113,11 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
-                                        <div class="text-muted mb-2"><i class="feather-inbox fs-1"></i></div>
-                                        <h6 class="fw-bold text-dark">No Lab Tests Found</h6>
-                                        <p class="text-muted fs-13">Start by adding a custom test or importing from the global library.</p>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="p-5 text-center">
+                                            <i class="feather-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
+                                            <h6 class="text-muted fw-bold">No tests found in your catalog.</h6>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -133,303 +125,75 @@
                     </table>
                 </div>
             </div>
-            <div class="card-footer bg-white border-top border-light py-3">{{ $tests->links() }}</div>
+            
+            <div class="card-footer bg-white border-top border-light py-3 px-4">
+                {{ $tests->links() }}
+            </div>
         </div>
     </div>
 
-    @if ($isModalOpen)
-        <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable mb-5">
-                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-
-                    <div class="modal-header bg-light border-bottom p-3 px-4">
-                        <h5 class="modal-title fw-bold text-dark">
-                            <i class="feather-{{ $test_id ? 'edit' : 'plus-circle' }} text-primary me-2"></i>
-                            {{ $test_id ? 'Edit Lab Test' : 'New Custom Test' }}
-                        </h5>
-                        <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
-                    </div>
-
-                    <form wire:submit.prevent="store" class="d-flex flex-column" style="overflow: hidden;">
-                        <div class="modal-body p-0 bg-white" style="overflow-y: auto;">
-                            
-                            @if (session()->has('error'))
-                                <div class="alert alert-danger border-0 rounded-0 mb-0 py-2 fs-12 px-4 shadow-sm">
-                                    <i class="feather-alert-octagon me-2"></i>{{ session('error') }}
-                                </div>
-                            @endif
-
-                            <div class="p-4 pt-4">
-                                <div class="row g-3 mb-4">
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Code</label>
-                                        <input type="text" class="form-control" wire:model="test_code" placeholder="E.g. CBC-01">
-                                    </div>
-                                    <div class="col-12 col-md-5">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name" placeholder="E.g. Complete Blood Count">
-                                        @error('name') <span class="text-danger fs-11 mt-1">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Department <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('department') is-invalid @enderror" wire:model="department">
-                                            <option value="">Select Department</option>
-                                            <option value="Haematology">Haematology</option>
-                                            <option value="Biochemistry">Biochemistry</option>
-                                            <option value="Serology">Serology</option>
-                                            <option value="Pathology">Pathology</option>
-                                            <option value="Microbiology">Microbiology</option>
-                                            <option value="Immunology">Immunology</option>
-                                            <option value="Clinical Pathology">Clinical Pathology</option>
-                                        </select>
-                                        @error('department') <span class="text-danger fs-11 mt-1">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">MRP (₹) <span class="text-danger">*</span></label>
-                                        <input type="number" step="0.01" class="form-control @error('mrp') is-invalid @enderror" wire:model="mrp" placeholder="0.00">
-                                        @error('mrp') <span class="text-danger fs-11 mt-1">{{ $message }}</span> @enderror
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">B2B Price (₹)</label>
-                                        <input type="number" step="0.01" class="form-control" wire:model="b2b_price" placeholder="0.00">
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Sample Type</label>
-                                        <input type="text" class="form-control" wire:model="sample_type" placeholder="Serum">
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">TAT (Hours)</label>
-                                        <input type="number" class="form-control" wire:model="tat_hours">
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Description / Instruction</label>
-                                        <input type="text" class="form-control @error('description') is-invalid @enderror" wire:model="description" placeholder="E.g. Fasting required for 10-12 hours">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Interpretation Details <span class="text-info fw-normal">(Shown on report)</span></label>
-                                        <textarea class="form-control fs-12" wire:model="interpretation" rows="4" 
-                                            placeholder="Enter clinical notes here. For tables, use standard formatting or lists.&#10;Example:&#10;- Normal: 70 - 110 mg/dL&#10;- Prediabetic: 110 - 125 mg/dL&#10;- Diabetic: > 125 mg/dL"></textarea>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3 d-flex flex-wrap justify-content-between align-items-center bg-light p-3 rounded-3 border gap-2">
-                                    <div>
-                                        <h6 class="fw-bold text-dark mb-0">Test Parameters & Reference Ranges</h6>
-                                        <p class="fs-11 text-muted mb-0">Define fields that will appear in result entry.</p>
-                                    </div>
-                                    <button type="button" wire:click="addParameter" class="btn btn-sm btn-primary shadow-sm rounded-pill px-3">
-                                        <i class="feather-plus me-1"></i> Add Parameter
-                                    </button>
-                                </div>
-
-                                <div class="border rounded-4 bg-white shadow-sm overflow-visible p-4 mb-5" style="overflow-x: auto;">
-                                    <table class="table table-sm align-middle mb-4">
-                                        <thead class="bg-light">
-                                            <tr class="fs-10 text-uppercase text-muted fw-bold">
-                                                <th class="ps-3 py-2" style="min-width: 200px;">Parameter Name</th>
-                                                <th style="min-width: 120px;">Input Type</th>
-                                                <th style="min-width: 120px;">Range Type</th>
-                                                <th style="min-width: 280px;">Ref Range / Logic</th>
-                                                <th style="min-width: 80px;">Unit</th>
-                                                <th class="text-end pe-3" style="width: 40px;"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($parameters as $index => $param)
-                                                <tr wire:key="param-row-{{ $index }}" class="border-bottom border-light">
-                                                    <td class="ps-3 py-2">
-                                                        <input type="text" class="form-control form-control-sm @if($errors->has('parameters.'.$index.'.name')) is-invalid @endif" 
-                                                               wire:model="parameters.{{ $index }}.name" placeholder="Name">
-                                                    </td>
-                                                    <td class="py-2">
-                                                        <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
-                                                            <option value="numeric">Numeric</option>
-                                                            <option value="text">Textual</option>
-                                                            <option value="calculated">Formula</option>
-                                                        </select>
-                                                    </td>
-                                                    <td class="py-2">
-                                                        <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.range_type">
-                                                            <option value="general">General</option>
-                                                            <option value="gender">Gender Specific</option>
-                                                            <option value="value">Qualitative</option>
-                                                        </select>
-                                                    </td>
-                                                    <td class="py-2">
-                                                        @php $rType = $parameters[$index]['range_type'] ?? 'general'; @endphp
-                                                        @if($rType === 'general')
-                                                            <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.general_range" placeholder="e.g. 70 - 110">
-                                                        @elseif($rType === 'gender')
-                                                            <div class="input-group input-group-sm">
-                                                                <span class="input-group-text px-2 text-primary bg-soft-primary border-0 fs-10">M</span>
-                                                                <input type="text" class="form-control px-2" wire:model="parameters.{{ $index }}.male_range" placeholder="Range">
-                                                                <span class="input-group-text px-2 text-danger bg-soft-danger border-0 fs-10 border-start">F</span>
-                                                                <input type="text" class="form-control px-2" wire:model="parameters.{{ $index }}.female_range" placeholder="Range">
-                                                            </div>
-                                                        @else
-                                                            <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.normal_value" placeholder="e.g. Negative">
-                                                        @endif
-                                                        
-                                                        @if(($parameters[$index]['input_type'] ?? '') === 'calculated')
-                                                            <input type="text" class="form-control form-control-sm border-info bg-soft-info mt-1" wire:model="parameters.{{ $index }}.formula" placeholder="Formula: {Hb}*10 / {RBC}">
-                                                        @endif
-                                                    </td>
-                                                    <td class="py-2">
-                                                        <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
-                                                    </td>
-                                                    <td class="text-end pe-3 py-2">
-                                                        <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-sm btn-icon btn-outline-danger border-0 shadow-none">
-                                                            <i class="feather-trash-2"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-4 text-muted fs-12">No parameters added.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                               
-                            </div>
-                        </div>
-
-                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2 px-4 shadow-sm">
-                            <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm transition-all hover-lift" style="height: 42px;">Cancel</button>
-                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift" style="height: 42px;">
-                                <div wire:loading.remove wire:target="store">
-                                    <i class="feather-save me-2"></i> {{ $test_id ? 'Update Test' : 'Create Test' }}
-                                </div>
-                                <div wire:loading wire:target="store">
-                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...
-                                </div>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-
+    <!-- Import Global Tests Modal -->
     @if ($isImportModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal fade show d-block" tabindex="-1" role="dialog" style="z-index: 1050;">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                     <div class="modal-header bg-light border-bottom p-3 px-4">
-                        <h5 class="modal-title fw-bold text-dark"><i class="feather-globe text-primary me-2"></i>Master Test Library</h5>
-                        <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
+                        <h5 class="modal-title fw-bold text-dark">
+                            <i class="feather-download-cloud text-primary me-2"></i>Import from Global Master
+                        </h5>
+                        <button type="button" wire:click="closeModal" class="btn-close shadow-none" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body p-0 bg-white d-flex flex-column" style="overflow: hidden;">
-                        
-                        <div class="p-4 pb-3 bg-white border-bottom shadow-sm z-1">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white text-muted border-end-0 pe-1">
-                                    <i class="feather-search"></i>
-                                </span>
-                                <input type="text" wire:model.live.debounce.300ms="globalSearch" class="form-control py-2 shadow-none border-start-0" placeholder="Search Master Catalog (E.g. CBC, Lipid, Liver)...">
-                            </div>
+
+                    <div class="modal-body p-4 bg-white">
+                        <div class="input-group mb-4 shadow-sm border rounded-pill overflow-hidden">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i class="feather-search text-muted"></i>
+                            </span>
+                            <input type="text" wire:model.live.debounce.300ms="globalSearch" 
+                                class="form-control border-0 py-2 shadow-none" 
+                                placeholder="Search by test name or code in global library...">
                         </div>
 
-                        <div class="flex-grow-1" style="overflow-y: auto;">
-                            <div class="list-group list-group-flush">
-                                @forelse($globalTests as $gTest)
-                                    <div class="list-group-item d-flex align-items-center justify-content-between py-3 px-4 hover-bg-light transition-all">
-                                        <div class="flex-grow-1">
-                                            <div class="d-flex align-items-center mb-1">
-                                                <h6 class="mb-0 fw-bold text-dark">{{ $gTest->name }}</h6>
-                                                <span class="badge bg-soft-primary text-primary ms-2 fs-10">{{ $gTest->test_code }}</span>
-                                            </div>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <small class="text-muted text-uppercase fs-10 fw-bold"><i class="feather-tag me-1"></i>{{ $gTest->category }}</small>
-                                                <small class="text-dark fs-10 fw-bold"><i class="feather-credit-card me-1"></i>Sugg: ₹{{ $gTest->suggested_price ?? 0 }}</small>
-                                                <small class="text-info fs-10 fw-bold"><i class="feather-layers me-1"></i>{{ count($gTest->default_parameters ?? []) }} Parameters</small>
-                                            </div>
+                        <div class="row g-3">
+                            @foreach($globalTests as $gt)
+                                <div class="col-md-6" wire:key="global-{{ $gt->id }}">
+                                    <div class="card border rounded-3 p-3 shadow-none h-100 hover-border-primary transition-all">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge bg-soft-primary text-primary fs-10 px-2">{{ $gt->test_code }}</span>
+                                            <button wire:click="importGlobalTest({{ $gt->id }})" class="btn btn-sm btn-primary rounded-pill px-3 fs-11">
+                                                Import
+                                            </button>
                                         </div>
-                                        <button wire:click="importGlobalTest({{ $gTest->id }})" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold shadow-sm">
-                                            <div wire:loading.remove wire:target="importGlobalTest({{ $gTest->id }})">Import</div>
-                                            <div wire:loading wire:target="importGlobalTest({{ $gTest->id }})"><span class="spinner-border spinner-border-sm" role="status"></span></div>
-                                        </button>
+                                        <h6 class="fw-bold text-dark mb-1">{{ $gt->name }}</h6>
+                                        <p class="text-muted fs-11 mb-2">{{ $gt->dept?->name ?? 'N/A' }}</p>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="fs-11 text-muted"><i class="feather-list me-1"></i>{{ is_array($gt->default_parameters) ? count($gt->default_parameters) : 0 }} Params</span>
+                                            <span class="fs-11 text-muted"><i class="feather-tag me-1"></i>₹{{ number_format($gt->suggested_price ?? 0, 2) }} (Sugg.)</span>
+                                        </div>
                                     </div>
-                                @empty
-                                    <div class="p-5 text-center">
-                                        @if(strlen($globalSearch) > 0)
-                                            <i class="feather-search text-muted fs-1 mb-2 d-block opacity-25"></i>
-                                            <h6 class="text-muted fw-bold mb-0">No tests found for "{{ $globalSearch }}"</h6>
-                                        @else
-                                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div> Loading library...
-                                        @endif
-                                    </div>
-                                @endforelse
-                                
-                                {{-- Load More Trigger --}}
-                                @if(count($globalTests) >= $globalLimit)
-                                    <div class="p-4 text-center border-top">
-                                        <button wire:click="loadMoreGlobalTests" class="btn btn-sm btn-outline-primary rounded-pill px-5 fw-bold">
-                                            <i class="feather-chevron-down me-1"></i> Show More Tests
-                                        </button>
-                                    </div>
-                                @endif
-                            </div>
+                                </div>
+                            @endforeach
                         </div>
+
+                        @if(count($globalTests) >= $globalLimit)
+                            <div class="text-center mt-4">
+                                <button wire:click="loadMoreGlobalTests" class="btn btn-light border rounded-pill px-4 fs-12 fw-bold">
+                                    Load More Tests
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     @endif
 
-      <style>
-        .form-select-sm,
-        .form-control-sm {
-            padding: 0.4rem 0.5rem;
-            border-color: #e2e8f0;
-        }
-
-        .bg-soft-primary {
-            background-color: rgba(59, 113, 202, 0.08) !important;
-        }
-
-        .bg-soft-success {
-            background-color: rgba(25, 135, 84, 0.08) !important;
-        }
-
-        .bg-soft-info {
-            background-color: rgba(23, 162, 184, 0.08) !important;
-        }
-
-        .bg-soft-danger {
-            background-color: rgba(220, 53, 69, 0.08) !important;
-        }
-
-        .text-primary {
-            color: #3b71ca !important;
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-            color: #6c757d;
-            border-top: none !important;
-        }
-
-        /* Hover effect for list items */
-        .hover-bg-light:hover {
-            background-color: #f8fafc !important;
-        }
-
-        @media (max-width: 768px) {
-            .modal-xl {
-                max-width: 100%;
-                margin: 0.5rem;
-            }
-        }
+    <style>
+        .transition-all { transition: all 0.2s ease; }
+        .hover-border-primary:hover { border-color: var(--bs-primary) !important; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05) !important; }
+        .fs-10 { font-size: 10px; }
+        .fs-11 { font-size: 11px; }
+        .fs-14 { font-size: 14px; }
     </style>
 </div>

@@ -15,5 +15,11 @@ class GlobalTest extends Model
     protected $casts = [
         'default_parameters' => 'array',
         'is_active' => 'boolean',
+        'department_id' => 'integer',
     ];
+
+    public function dept()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
 }

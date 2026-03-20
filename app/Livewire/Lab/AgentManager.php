@@ -132,7 +132,8 @@ class AgentManager extends Component
                     'commission_percentage' => $this->commission_percentage,
                 ]);
 
-                // Optional: $user->assignRole('agent'); if using Spatie
+                // Assign Role
+                $user->assignRole('agent');
 
                 session()->flash('message', 'New referral agent added successfully.');
             }
