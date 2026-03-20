@@ -48,7 +48,14 @@
             if (typeof bootstrap !== 'undefined') {
                 const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
                 dropdowns.forEach(dropdown => {
-                    new bootstrap.Dropdown(dropdown);
+                    new bootstrap.Dropdown(dropdown, {
+                        popperConfig(defaultBsPopperConfig) {
+                            return {
+                                ...defaultBsPopperConfig,
+                                strategy: 'fixed'
+                            };
+                        }
+                    });
                 });
             }
             setTimeout(() => {

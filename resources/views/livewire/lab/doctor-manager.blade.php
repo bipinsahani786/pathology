@@ -60,6 +60,7 @@
                                 <th class="ps-4 py-3">Doctor Details</th>
                                 <th class="py-3">Clinic & Contact</th>
                                 <th class="py-3">Commission Cut</th>
+                                <th class="text-center py-3">Status</th>
                                 <th class="text-center pe-4 py-3" style="width: 120px;">Actions</th>
                             </tr>
                         </thead>
@@ -93,6 +94,17 @@
                                         @else
                                             <span class="badge bg-soft-secondary text-secondary border px-3 py-2 fs-12">No Commission</span>
                                         @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-flex justify-content-center p-0">
+                                            <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" 
+                                                wire:click="toggleStatus({{ $doctor->id }})" 
+                                                {{ $doctor->is_active ? 'checked' : '' }} 
+                                                style="width: 40px; height: 20px;">
+                                        </div>
+                                        <span class="fs-10 fw-bold text-uppercase ls-1 {{ $doctor->is_active ? 'text-success' : 'text-danger' }}">
+                                            {{ $doctor->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
@@ -141,8 +153,22 @@
                     </div>
 
                     <form wire:submit.prevent="store">
-                        <div class="modal-body p-4 bg-white">
-                        <div class="row g-4">
+                        <div class="modal-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
+                            <!-- Login Instructions Alert -->
+                            <div class="alert alert-soft-warning border-warning shadow-sm rounded-3 mb-4">
+                                <div class="d-flex gap-2">
+                                    <i class="feather-info flex-shrink-0 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Login Instructions</h6>
+                                        <p class="fs-12 mb-0 opacity-75">
+                                            • <strong>Username:</strong> Mobile, Email, or Name (if both missing).<br>
+                                            • <strong>Default Password:</strong> Mobile number, or <code>password123</code> if mobile is missing.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
                             <div class="col-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Doctor Information</h6></div>
                             
                             <div class="col-md-6">
@@ -152,9 +178,15 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number *</label>
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number</label>
                                 <input type="number" class="form-control" wire:model="phone" placeholder="10-digit mobile number">
                                 @error('phone') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Email Address</label>
+                                <input type="email" class="form-control" wire:model="email" placeholder="doctor@example.com">
+                                @error('email') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-6">
@@ -167,6 +199,12 @@
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Clinic / Hospital Name</label>
                                 <input type="text" class="form-control" wire:model="clinic_name" placeholder="e.g. City Care Hospital">
                                 @error('clinic_name') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">{{ $user_id ? 'Update Password' : 'Login Password' }}</label>
+                                <input type="text" class="form-control border-warning bg-soft-warning" wire:model="password" placeholder="{{ $user_id ? 'Leave blank to keep current' : 'Default is mobile number' }}">
+                                @error('password') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-12 mt-4"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Business & Payout</h6></div>

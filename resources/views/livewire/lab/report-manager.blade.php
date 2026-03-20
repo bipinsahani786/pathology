@@ -14,7 +14,7 @@
 
     {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
-        <div class="card mb-4">
+        <div class="card mb-4" style="overflow: visible !important;">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="card-title mb-0"><i class="feather-flask-conical me-2 text-primary"></i>Test Results & Reports</h6>
             </div>

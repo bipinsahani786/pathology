@@ -9,14 +9,31 @@ use Illuminate\Support\Facades\Auth;
 class PartnerDashboard extends Component
 {
     public $role;
+    public $startDate, $endDate;
     public $stats = [
-        'total_earnings' => 0,
-        'settled_amount' => 0,
-        'pending_balance' => 0,
-        'total_invoices' => 0,
+        'reports_ready' => 0,
+        'pending_collection' => 0,
+        'total_profit' => 0,
+        'lab_dues' => 0,
+        'total_billing' => 0,
     ];
 
     public function mount()
+    {
+        $this->startDate = now()->subDays(30)->format('Y-m-d');
+        $this->endDate = now()->format('Y-m-d');
+        $this->loadData();
+    }
+
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['startDate', 'endDate'])) {
+            $this->loadData();
+            $this->dispatch('chartDataUpdated', $this->getChartData());
+        }
+    }
+
+    public function loadData()
     {
         $user = Auth::user();
         if ($user->hasRole('doctor')) {
@@ -35,46 +52,109 @@ class PartnerDashboard extends Component
 
     private function loadDoctorStats($userId)
     {
-        $invoices = Invoice::where('referred_by_doctor_id', $userId)->where('status', '!=', 'Cancelled')->get();
+        $query = Invoice::where('referred_by_doctor_id', $userId)->where('status', '!=', 'Cancelled');
+        $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
+        $allInvoices = (clone $query)->get();
         
-        $this->stats['total_earnings'] = $invoices->sum('doctor_commission_amount');
+        $this->stats['total_earnings'] = $allInvoices->sum('doctor_commission_amount');
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
         $this->stats['pending_balance'] = $this->stats['total_earnings'] - $this->stats['settled_amount'];
-        $this->stats['total_invoices'] = $invoices->count();
+        $this->stats['total_invoices'] = $rangeInvoices->count();
+
+        $this->stats['this_month_earnings'] = $rangeInvoices->sum('doctor_commission_amount');
+            
+        $this->stats['last_month_earnings'] = Invoice::where('referred_by_doctor_id', $userId)
+            ->whereMonth('invoice_date', now()->subMonth()->month)
+            ->whereYear('invoice_date', now()->subMonth()->year)
+            ->sum('doctor_commission_amount');
     }
 
     private function loadAgentStats($userId)
     {
-        $invoices = Invoice::where('referred_by_agent_id', $userId)->where('status', '!=', 'Cancelled')->get();
+        $query = Invoice::where('referred_by_agent_id', $userId)->where('status', '!=', 'Cancelled');
+        $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
+        $allInvoices = (clone $query)->get();
         
-        $this->stats['total_earnings'] = $invoices->sum('agent_commission_amount');
+        $this->stats['total_earnings'] = $allInvoices->sum('agent_commission_amount');
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
         $this->stats['pending_balance'] = $this->stats['total_earnings'] - $this->stats['settled_amount'];
-        $this->stats['total_invoices'] = $invoices->count();
+        $this->stats['total_invoices'] = $rangeInvoices->count();
+
+        $this->stats['this_month_earnings'] = $rangeInvoices->sum('agent_commission_amount');
+            
+        $this->stats['last_month_earnings'] = Invoice::where('referred_by_agent_id', $userId)
+            ->whereMonth('invoice_date', now()->subMonth()->month)
+            ->whereYear('invoice_date', now()->subMonth()->year)
+            ->sum('agent_commission_amount');
     }
 
     private function loadCollectionCenterStats($userId)
     {
         $user = Auth::user();
         $ccId = $user->collection_center_id;
-        
         if (!$ccId) return;
 
-        $invoices = Invoice::where('collection_center_id', $ccId)->where('status', '!=', 'Cancelled')->get();
+        $query = Invoice::where('collection_center_id', $ccId)->where('status', '!=', 'Cancelled');
+        $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
+        $allInvoices = (clone $query)->get();
         
-        // For CC, we might need a specific commission logic if it's a franchise
-        // For now, let's show total collection and settlement if handled via Settlements table
-        $this->stats['total_earnings'] = $invoices->sum('total_amount'); // Total business
+        $this->stats['total_billing'] = $allInvoices->sum('total_amount');
+        $this->stats['total_profit'] = $allInvoices->sum('cc_profit_amount');
+        $this->stats['lab_dues'] = $allInvoices->sum('total_b2b_amount');
+        
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
-        $this->stats['pending_balance'] = $this->stats['total_earnings'] - $this->stats['settled_amount'];
-        $this->stats['total_invoices'] = $invoices->count();
+        $this->stats['pending_lab_payment'] = $this->stats['lab_dues'] - $this->stats['settled_amount'];
+        $this->stats['total_invoices'] = $rangeInvoices->count();
+
+        $this->stats['this_month_profit'] = $rangeInvoices->sum('cc_profit_amount');
+            
+        $this->stats['last_month_profit'] = Invoice::where('collection_center_id', $ccId)
+            ->whereMonth('invoice_date', now()->subMonth()->month)
+            ->whereYear('invoice_date', now()->subMonth()->year)
+            ->sum('cc_profit_amount');
+
+        $this->stats['samples_collected'] = Invoice::where('collection_center_id', $ccId)
+            ->where('sample_status', 'Collected')
+            ->whereDate('sample_collected_at', today())
+            ->count();
+
+        $this->stats['reports_ready'] = Invoice::where('collection_center_id', $ccId)
+            ->where('status', 'Completed')
+            ->count();
+
+        $this->stats['pending_collection'] = Invoice::where('collection_center_id', $ccId)
+            ->where('sample_status', 'Pending')
+            ->count();
+    }
+
+    private function getChartData()
+    {
+        $user = Auth::user();
+        $column = '';
+        if ($this->role === 'Doctor') $column = 'doctor_commission_amount';
+        elseif ($this->role === 'Agent') $column = 'agent_commission_amount';
+        elseif ($this->role === 'Collection Center') $column = 'cc_profit_amount';
+
+        $data = Invoice::whereBetween('invoice_date', [$this->startDate, $this->endDate])
+            ->where('status', '!=', 'Cancelled')
+            ->when($this->role === 'Doctor', fn($q) => $q->where('referred_by_doctor_id', $user->id))
+            ->when($this->role === 'Agent', fn($q) => $q->where('referred_by_agent_id', $user->id))
+            ->when($this->role === 'Collection Center', fn($q) => $q->where('collection_center_id', $user->collection_center_id))
+            ->selectRaw('DATE(invoice_date) as date, SUM('.$column.') as total')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        return [
+            'labels' => $data->pluck('date')->map(fn($d) => date('d M', strtotime($d))),
+            'data' => $data->pluck('total')
+        ];
     }
 
     public function render()
     {
         $user = Auth::user();
         $recentInvoices = [];
-        $recentSettlements = [];
 
         if ($this->role === 'Doctor') {
             $recentInvoices = Invoice::where('referred_by_doctor_id', $user->id)->latest()->take(10)->get();
@@ -89,6 +169,7 @@ class PartnerDashboard extends Component
         return view('livewire.partner.partner-dashboard', [
             'recentInvoices' => $recentInvoices,
             'recentSettlements' => $recentSettlements,
+            'chartData' => $this->getChartData()
         ]);
     }
 }

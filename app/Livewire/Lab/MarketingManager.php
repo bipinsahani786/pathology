@@ -13,6 +13,11 @@ class MarketingManager extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage marketing');
+    }
+
     public $activeTab = 'memberships'; // Default Tab
 
     // ================= MEMBERSHIP FIELDS =================

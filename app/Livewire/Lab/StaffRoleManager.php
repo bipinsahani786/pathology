@@ -27,7 +27,7 @@ class StaffRoleManager extends Component
 
     public function mount()
     {
-        // Initial state
+        $this->authorize('lab_admin');
     }
 
     // ==========================================

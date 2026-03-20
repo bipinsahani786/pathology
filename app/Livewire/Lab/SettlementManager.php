@@ -13,7 +13,7 @@ class SettlementManager extends Component
 
     protected $paginationTheme = 'bootstrap';
 
-    public $partnerType = 'Doctor'; // Doctor, Agent
+    public $partnerType = 'Doctor'; // Doctor, Agent, Collection Center
     public $searchPartner = '';
     public $selectedPartnerId = null;
     public $selectedPartner = null;
@@ -35,6 +35,7 @@ class SettlementManager extends Component
 
     public function mount()
     {
+        $this->authorize('manage agents');
         $this->payment_date = date('Y-m-d');
         $this->startDate = date('Y-m-01'); // Start of month
         $this->endDate = date('Y-m-d');
@@ -76,7 +77,10 @@ class SettlementManager extends Component
     public function loadPartnerInsights()
     {
         $companyId = auth()->user()->company_id;
-        $partnerIdField = $this->partnerType === 'Doctor' ? 'referred_by_doctor_id' : 'referred_by_agent_id';
+        $partnerIdField = '';
+        if ($this->partnerType === 'Doctor') $partnerIdField = 'referred_by_doctor_id';
+        elseif ($this->partnerType === 'Agent') $partnerIdField = 'referred_by_agent_id';
+        elseif ($this->partnerType === 'Collection Center') $partnerIdField = 'collection_center_id';
 
         $query = Invoice::where('company_id', $companyId)
             ->where($partnerIdField, $this->selectedPartnerId);
@@ -86,7 +90,7 @@ class SettlementManager extends Component
         $this->partnerStats = [
             'total_bills' => (clone $statsQuery)->count(),
             'total_revenue' => (clone $statsQuery)->sum('total_amount'),
-            'total_commission' => (clone $statsQuery)->sum($this->partnerType === 'Doctor' ? 'doctor_commission_amount' : 'agent_commission_amount'),
+            'total_commission' => (clone $statsQuery)->sum($this->partnerType === 'Doctor' ? 'doctor_commission_amount' : ($this->partnerType === 'Agent' ? 'agent_commission_amount' : 'total_amount')),
             'avg_bill' => (clone $statsQuery)->avg('total_amount') ?? 0,
             'settlement_history' => Settlement::where('user_id', $this->selectedPartnerId)
                 ->where('company_id', $companyId)
@@ -131,8 +135,10 @@ class SettlementManager extends Component
         $invoices = Invoice::whereIn('id', $ids)->get();
         if ($this->partnerType === 'Doctor') {
             $this->amount_to_pay = $invoices->sum('doctor_commission_amount');
-        } else {
+        } elseif ($this->partnerType === 'Agent') {
             $this->amount_to_pay = $invoices->sum('agent_commission_amount');
+        } else {
+            $this->amount_to_pay = $invoices->sum('total_amount');
         }
     }
 
@@ -173,7 +179,7 @@ class SettlementManager extends Component
                 'payment_date' => $this->payment_date,
                 'payment_mode' => $this->payment_mode,
                 'reference_no' => $this->reference_no,
-                'type' => $this->partnerType,
+                'type' => $this->partnerType === 'Collection Center' ? 'CollectionCenter' : $this->partnerType,
                 'notes' => $this->notes,
             ]);
 
@@ -184,10 +190,15 @@ class SettlementManager extends Component
                     'doctor_settlement_id' => $settlement->id, 
                     'is_doctor_settled' => true
                 ];
-            } else {
+            } elseif ($this->partnerType === 'Agent') {
                 $updateData = [
                     'agent_settlement_id' => $settlement->id, 
                     'is_agent_settled' => true
+                ];
+            } else {
+                $updateData = [
+                    'cc_settlement_id' => $settlement->id, 
+                    'is_cc_settled' => true
                 ];
             }
 
@@ -207,14 +218,21 @@ class SettlementManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
-        $settledField = $this->partnerType === 'Doctor' ? 'is_doctor_settled' : 'is_agent_settled';
-        $commField = $this->partnerType === 'Doctor' ? 'doctor_commission_amount' : 'agent_commission_amount';
+        $settledField = '';
+        if ($this->partnerType === 'Doctor') $settledField = 'is_doctor_settled';
+        elseif ($this->partnerType === 'Agent') $settledField = 'is_agent_settled';
+        elseif ($this->partnerType === 'Collection Center') $settledField = 'is_cc_settled';
+
+        $commField = '';
+        if ($this->partnerType === 'Doctor') $commField = 'doctor_commission_amount';
+        elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
+        elseif ($this->partnerType === 'Collection Center') $commField = 'total_amount';
 
         // --- Analytics Calculations ---
         $stats = [
             'total_pending' => 0,
             'settled_today' => Settlement::where('company_id', $companyId)
-                ->where('type', $this->partnerType)
+                ->where('type', $this->partnerType === 'Collection Center' ? 'CollectionCenter' : $this->partnerType)
                 ->whereDate('payment_date', date('Y-m-d'))
                 ->sum('amount'),
             'partners_with_pending' => 0,
@@ -226,23 +244,28 @@ class SettlementManager extends Component
             ->where('status', '!=', 'Cancelled')
             ->where($settledField, false);
 
-        $stats['total_pending'] = (clone $pendingBase)->sum($commField);
+        $statsQuery = (clone $pendingBase);
+        $stats['total_pending'] = $statsQuery->sum($commField);
         
-        $stats['partners_with_pending'] = User::role(strtolower($this->partnerType))
+        $stats['partners_with_pending'] = User::role($this->partnerType === 'Collection Center' ? 'collection_center' : strtolower($this->partnerType))
             ->where('company_id', $companyId)
-            ->whereHas('invoicesAs'.$this->partnerType, function($q) use ($settledField) {
-                $q->where($settledField, false)->where('payment_status', 'Paid');
+            ->whereHas($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType, function($q) use ($settledField) {
+                $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             })
             ->count();
 
         // --- Partners Paginated List ---
         $profileRelation = $this->partnerType === 'Doctor' ? 'doctorProfile' : 'agentProfile';
         
-        $partners = User::role(strtolower($this->partnerType))
+        // --- Partners Paginated List ---
+        $partners = User::role($this->partnerType === 'Collection Center' ? 'collection_center' : strtolower($this->partnerType))
             ->where('company_id', $companyId)
-            ->withSum(['invoicesAs'.$this->partnerType . ' as pending_amount' => function($q) use ($settledField) {
+            ->withSum([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as pending_amount' => function($q) use ($settledField) {
                 $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             }], $commField)
+            ->withCount([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as invoice_count' => function($q) use ($settledField) {
+                $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+            }])
             ->when($this->searchPartner, function($q) {
                 $q->where(fn($q2) => $q2->where('name', 'ilike', "%{$this->searchPartner}%")->orWhere('phone', 'ilike', "%{$this->searchPartner}%"));
             })
@@ -253,10 +276,17 @@ class SettlementManager extends Component
         // --- Pending Invoices for selected partner ---
         $pendingInvoices = [];
         if ($this->selectedPartnerId) {
+            $idField = '';
+            if ($this->partnerType === 'Doctor') $idField = 'referred_by_doctor_id';
+            elseif ($this->partnerType === 'Agent') $idField = 'referred_by_agent_id';
+            elseif ($this->partnerType === 'Collection Center') $idField = 'collection_center_id';
+
+            $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
+
             $pendingInvoices = Invoice::where('company_id', $companyId)
                 ->where('payment_status', 'Paid')
                 ->where('status', '!=', 'Cancelled')
-                ->where(($this->partnerType === 'Doctor' ? 'referred_by_doctor_id' : 'referred_by_agent_id'), $this->selectedPartnerId)
+                ->where($idField, $valId)
                 ->where($settledField, false)
                 ->latest()
                 ->get();

@@ -17,6 +17,7 @@ class PackageEditor extends Component
 
     public function mount($id = null)
     {
+        $this->authorize('manage test_packages');
         $labTestService = new LabTestService();
         if ($id) {
             $package = $labTestService->getTestById($id);

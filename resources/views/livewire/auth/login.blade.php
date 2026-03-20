@@ -54,12 +54,12 @@
                 <form wire:submit.prevent="login" class="mt-4">
                     
                     <div class="mb-4 position-relative">
-                        <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Email Address</label>
+                        <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Email or Phone Number</label>
                         <div class="position-relative">
-                            <i class="feather-mail position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                            <input type="email" 
+                            <i class="feather-user position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
+                            <input type="text" 
                                 class="form-control form-control-lg premium-input @error('email') is-invalid @enderror" 
-                                placeholder="admin@laboratory.com" 
+                                placeholder="Email or 10-digit Phone" 
                                 wire:model="email" required>
                         </div>
                         @error('email') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror

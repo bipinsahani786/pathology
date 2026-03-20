@@ -11,6 +11,11 @@ class DepartmentManager extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage lab_tests');
+    }
+
     public $name, $department_id;
     public $is_active = true;
     public $searchTerm = '';

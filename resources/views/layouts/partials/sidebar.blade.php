@@ -173,17 +173,109 @@
                     </li>
 
                     <li class="nxl-item nxl-caption">
-                        <label>Settings</label>
+                        <label>Settings & Account</label>
                     </li>
                     <li class="nxl-item {{ request()->routeIs('lab.settings') ? 'active' : '' }}">
                         <a href="{{ route('lab.settings') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-settings"></i></span>
-                            <span class="nxl-mtext">Settings</span>
+                            <span class="nxl-mtext">Lab Settings</span>
                         </a>
                     </li>
-                @endrole
+                    <li class="nxl-item {{ request()->routeIs('lab.profile') ? 'active' : '' }}">
+                        <a href="{{ route('lab.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item">
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form-lab" class="d-none">
+                            @csrf
+                        </form>
+                        <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-lab').submit();" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-log-out text-danger"></i></span>
+                            <span class="nxl-mtext text-danger">Logout</span>
+                        </a>
+                    </li>
+                    @endrole
+
+                @if(auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']))
+                    <li class="nxl-item nxl-caption">
+                        <label>Partner Portal</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('partner.dashboard') ? 'active' : '' }}">
+                        <a href="{{ route('partner.dashboard') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-airplay"></i></span>
+                            <span class="nxl-mtext">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('partner.patients') ? 'active' : '' }}">
+                        <a href="{{ route('partner.patients') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">My Referrals</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('partner.settlements') ? 'active' : '' }}">
+                        <a href="{{ route('partner.settlements') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
+                            <span class="nxl-mtext">Settlement History</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('partner.invoices') ? 'active' : '' }}">
+                        <a href="{{ route('partner.invoices') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-file-text"></i></span>
+                            <span class="nxl-mtext">Invoice History</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item nxl-caption">
+                        <label>Account Settings</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('partner.profile') ? 'active' : '' }}">
+                        <a href="{{ route('partner.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item">
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form-sidebar" class="d-none">
+                            @csrf
+                        </form>
+                        <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-log-out text-danger"></i></span>
+                            <span class="nxl-mtext text-danger">Logout</span>
+                        </a>
+                    </li>
+                @endif
 
             </ul>
         </div>
     </div>
+    <style>
+        /* Increase main menu font size */
+        .nxl-navigation .nxl-navbar .nxl-item > .nxl-link .nxl-mtext {
+            font-size: 14.5px !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Decrease submenu font size */
+        .nxl-navigation .nxl-navbar .nxl-item .nxl-submenu .nxl-item .nxl-link {
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        /* Adjust icon size in submenu if needed */
+        .nxl-navigation .nxl-navbar .nxl-item .nxl-submenu .nxl-item .nxl-link i {
+            font-size: 11px !important;
+        }
+
+        /* Caption/Label styling */
+        .nxl-navigation .nxl-navbar .nxl-caption label {
+            font-size: 10px !important;
+            letter-spacing: 1px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+        }
+    </style>
 </nav>

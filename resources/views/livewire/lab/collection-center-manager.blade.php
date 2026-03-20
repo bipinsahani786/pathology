@@ -27,7 +27,7 @@
             </div>
         @endif
 
-        <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card stretch stretch-full border-0 shadow-sm rounded-4">
             
             <div class="card-header bg-white py-3 border-bottom-0">
                 <div class="row g-3">
@@ -50,6 +50,7 @@
                         <thead class="bg-light fs-11 fw-bold text-uppercase text-muted">
                             <tr>
                                 <th class="ps-4 py-3">Center Details</th>
+                                <th class="py-3">Login Account</th>
                                 <th class="py-3">Address</th>
                                 <th class="py-3">Status</th>
                                 <th class="text-center pe-4 py-3" style="width: 120px;">Actions</th>
@@ -60,7 +61,7 @@
                                 <tr wire:key="center-{{ $center->id }}" class="border-bottom border-light">
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <div class="bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
                                                 <i class="feather-map-pin fs-5"></i>
                                             </div>
                                             <div>
@@ -70,7 +71,17 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="fs-13 text-muted">{{ Str::limit($center->address, 50) ?? 'No address provided' }}</span>
+                                        @if($center->user)
+                                            <div class="fs-13 text-dark fw-bold mb-1"><i class="feather-user me-1 text-muted"></i>{{ $center->user->name }}</div>
+                                            <div class="fs-12 text-muted">
+                                                <i class="feather-phone me-1"></i>{{ $center->user->phone ?? 'No Phone' }}
+                                            </div>
+                                        @else
+                                            <span class="badge bg-soft-warning text-warning border px-2 py-1 fs-11">No Login Account</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="fs-13 text-muted">{{ Str::limit($center->address, 40) ?? 'No address' }}</span>
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
@@ -145,6 +156,27 @@
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Full Address</label>
                                 <textarea class="form-control" wire:model="address" rows="2" placeholder="Enter complete center address..."></textarea>
                                 @error('address') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-12 mt-4"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Login Credentials</h6></div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number</label>
+                                <input type="number" class="form-control" wire:model="phone" placeholder="10-digit mobile number">
+                                @error('phone') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Email Address</label>
+                                <input type="email" class="form-control" wire:model="email" placeholder="center@example.com">
+                                @error('email') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">{{ $user_id ? 'Update Password' : 'Login Password' }}</label>
+                                <input type="text" class="form-control border-warning bg-soft-warning" wire:model="password" placeholder="{{ $user_id ? 'Leave blank to keep current' : 'Default is mobile number or password123' }}">
+                                @error('password') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                <div class="form-text fs-11 text-muted">User will Use Mobile/Email to login. Role: <b>Collection Center</b></div>
                             </div>
                         </div>
                     </div>

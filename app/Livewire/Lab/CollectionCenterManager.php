@@ -5,6 +5,10 @@ namespace App\Livewire\Lab;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\CollectionCenter;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class CollectionCenterManager extends Component
 {
@@ -12,13 +16,27 @@ class CollectionCenterManager extends Component
     
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage collection_centers');
+    }
+
     // State variables
     public $searchTerm = '';
-    public $center_id = null; // Explicitly null to prevent DB errors
+    public $center_id = null; 
+    public $user_id = null;
+    
+    // Center Fields
     public $name;
     public $center_code;
     public $address;
     public $is_active = true;
+
+    // User Fields
+    public $phone;
+    public $email;
+    public $password;
+
     public $isModalOpen = false;
 
     /**
@@ -44,13 +62,19 @@ class CollectionCenterManager extends Component
     public function edit($id)
     {
         $this->resetFields();
-        $center = CollectionCenter::findOrFail($id);
+        $center = CollectionCenter::with('user')->findOrFail($id);
         
         $this->center_id = $center->id;
         $this->name = $center->name;
         $this->center_code = $center->center_code;
         $this->address = $center->address;
         $this->is_active = $center->is_active;
+
+        if ($center->user) {
+            $this->user_id = $center->user->id;
+            $this->phone = $center->user->phone;
+            $this->email = $center->user->email;
+        }
 
         $this->isModalOpen = true;
     }
@@ -64,31 +88,88 @@ class CollectionCenterManager extends Component
             'name' => 'required|string|max:255',
             'center_code' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'phone' => [
+                'nullable',
+                'numeric',
+                'digits:10',
+                Rule::unique('users', 'phone')->ignore($this->user_id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->user_id),
+            ],
+            'password' => $this->user_id ? 'nullable|min:6' : 'nullable|min:6',
         ]);
 
-        if ($this->center_id) {
-            // Update existing record
-            CollectionCenter::where('id', $this->center_id)->update([
-                'name' => $this->name,
-                'center_code' => $this->center_code,
-                'address' => $this->address,
-                'is_active' => $this->is_active,
-            ]);
-            session()->flash('message', 'Collection Center updated successfully.');
-        } else {
-            // Create new record
-            CollectionCenter::create([
-                'company_id' => auth()->user()->company_id,
-                'name' => $this->name,
-                'center_code' => $this->center_code,
-                'address' => $this->address,
-                'is_active' => $this->is_active,
-                // 'is_main_lab' is ignored here since we use Branches for labs now
-            ]);
-            session()->flash('message', 'Collection Center created successfully.');
-        }
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
 
-        $this->closeModal();
+            // 1. Manage User account
+            if ($this->user_id) {
+                $user = User::findOrFail($this->user_id);
+                $userData = [
+                    'name' => $this->name,
+                    'phone' => $this->phone,
+                    'email' => $this->email,
+                    'is_active' => $this->is_active,
+                ];
+                if ($this->password) {
+                    $userData['password'] = Hash::make($this->password);
+                }
+                $user->update($userData);
+            } else {
+                // If phone or email provided, create a user
+                if ($this->phone || $this->email) {
+                    $user = User::create([
+                        'company_id' => $companyId,
+                        'name' => $this->name,
+                        'phone' => $this->phone,
+                        'email' => $this->email ?? ($this->phone ? $this->phone . '@cc.local' : strtolower(str_replace(' ', '', $this->name)) . rand(100, 999) . '@cc.local'),
+                        'password' => Hash::make($this->password ?? $this->phone ?? 'password123'),
+                        'is_active' => $this->is_active,
+                        'collection_center_id' => null, // Will be updated after center creation
+                    ]);
+                    $user->assignRole('collection_center');
+                    $this->user_id = $user->id;
+                }
+            }
+
+            // 2. Manage Collection Center
+            if ($this->center_id) {
+                CollectionCenter::where('id', $this->center_id)->update([
+                    'name' => $this->name,
+                    'center_code' => $this->center_code,
+                    'address' => $this->address,
+                    'is_active' => $this->is_active,
+                    'user_id' => $this->user_id,
+                ]);
+                session()->flash('message', 'Collection Center updated successfully.');
+            } else {
+                $center = CollectionCenter::create([
+                    'company_id' => $companyId,
+                    'user_id' => $this->user_id,
+                    'name' => $this->name,
+                    'center_code' => $this->center_code,
+                    'address' => $this->address,
+                    'is_active' => $this->is_active,
+                ]);
+                $this->center_id = $center->id;
+                session()->flash('message', 'Collection Center created successfully.');
+            }
+
+            // 3. Update User's collection_center_id back
+            if ($this->user_id) {
+                User::where('id', $this->user_id)->update(['collection_center_id' => $this->center_id]);
+            }
+
+            DB::commit();
+            $this->closeModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -116,7 +197,7 @@ class CollectionCenterManager extends Component
      */
     public function resetFields()
     {
-        $this->reset(['center_id', 'name', 'center_code', 'address']);
+        $this->reset(['center_id', 'user_id', 'name', 'center_code', 'address', 'phone', 'email', 'password']);
         $this->is_active = true;
         $this->resetValidation();
     }
@@ -127,12 +208,15 @@ class CollectionCenterManager extends Component
         $this->resetFields();
     }
 
-    public function render()
+     public function render()
     {
-        $centers = CollectionCenter::where('company_id', auth()->user()->company_id)
+        $centers = CollectionCenter::with('user')->where('company_id', auth()->user()->company_id)
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%');
+                  ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhereHas('user', function($qu) {
+                      $qu->where('phone', 'ilike', '%' . $this->searchTerm . '%');
+                  });
             })
             ->orderBy('id', 'desc')
             ->paginate(10);

@@ -21,6 +21,7 @@ class ResultEntryManager extends Component
 
     public function mount($id)
     {
+        $this->authorize('generate reports');
         $this->invoice = Invoice::with(['patient.patientProfile', 'items.labTest', 'testReport.results'])->findOrFail($id);
         
         // Ensure only users belonging to this company can access

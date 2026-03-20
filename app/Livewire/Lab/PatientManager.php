@@ -15,6 +15,11 @@ class PatientManager extends Component
     use WithPagination;
     
     protected $paginationTheme = 'bootstrap';
+    
+    public function mount()
+    {
+        $this->authorize('manage patients');
+    }
 
     // State variables
     public $searchTerm = '';

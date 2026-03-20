@@ -12,7 +12,7 @@ class SettingsManager extends Component
     use WithFileUploads;
 
     // Active Tab
-    public $activeTab = 'profile'; // profile, invoice, template, pdf, staff
+    public $activeSubTab = 'profile'; // profile, invoice, template, pdf, staff
 
     // ==========================================
     // LAB PROFILE
@@ -58,6 +58,7 @@ class SettingsManager extends Component
 
     public function mount()
     {
+        $this->authorize('lab_admin');
         $company = Company::find(auth()->user()->company_id);
         if ($company) {
             $this->lab_name = $company->name;

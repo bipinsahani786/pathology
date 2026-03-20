@@ -446,3 +446,19 @@ html.app-skin-dark .bg-gray-300 {
 .table-hover tbody tr:hover {
     background-color: rgba(var(--bs-primary-rgb), 0.02) !important;
 }
+
+/* Fix for dropdown menus being clipped in responsive tables and cards */
+.table-responsive {
+    position: relative;
+    /* overflow-x: auto is standard, we keep it for mobile support */
+}
+
+/* Ensure any card intended to hold dropdowns doesn't clip them */
+.card-allow-overflow {
+    overflow: visible !important;
+}
+
+/* Ensure dropdowns are above other elements */
+.dropdown-menu {
+    z-index: 1060 !important;
+}

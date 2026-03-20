@@ -17,6 +17,9 @@
                 <button wire:click="$set('partnerType', 'Agent')" class="btn btn-sm {{ $partnerType == 'Agent' ? 'btn-primary shadow-sm' : 'btn-light border-0 text-muted' }} px-3 fw-bold transition-all">
                     <i class="feather-briefcase me-2"></i>Agents
                 </button>
+                <button wire:click="$set('partnerType', 'Collection Center')" class="btn btn-sm {{ $partnerType == 'Collection Center' ? 'btn-primary shadow-sm' : 'btn-light border-0 text-muted' }} px-3 fw-bold transition-all">
+                    <i class="feather-map-pin me-2"></i>Centers
+                </button>
             </div>
         </div>
     </div>
@@ -127,7 +130,7 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 fw-bold">{{ $p->{('invoicesAs'.$partnerType.'_count') ?? 0} }}</span>
+                                                    <span class="badge bg-soft-secondary text-secondary rounded-pill px-3 fw-bold">{{ $p->invoice_count ?? 0 }}</span>
                                                 </td>
                                                 <td class="text-end fw-bolder text-dark fs-15">
                                                     <span class="{{ $p->pending_amount > 0 ? 'text-danger' : 'text-muted opacity-50' }}">
@@ -176,7 +179,7 @@
                                 @forelse($settlements as $s)
                                     <div class="list-group-item p-3 border-bottom border-light hover-bg-light transition-all">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="badge {{ $s->type == 'Doctor' ? 'bg-soft-primary text-primary' : 'bg-soft-info text-info' }} rounded-pill fs-9 px-2 fw-bold">{{ $s->type }}</span>
+                                            <span class="badge {{ $s->type == 'Doctor' ? 'bg-soft-primary text-primary' : ($s->type == 'Agent' ? 'bg-soft-info text-info' : 'bg-soft-success text-success') }} rounded-pill fs-9 px-2 fw-bold">{{ $s->type }}</span>
                                             <span class="text-muted fs-10 fw-medium text-uppercase">{{ $s->payment_date->format('d M, Y') }}</span>
                                         </div>
                                         <div class="fw-bolder text-dark mb-1 fs-13">{{ $s->user->name }}</div>
@@ -240,7 +243,7 @@
                                                     <div class="fw-bold text-dark">{{ $inv->invoice_number }}</div>
                                                     <div class="text-muted fs-11">{{ $inv->patient->name ?? 'Patient N/A' }} • {{ $inv->invoice_date->format('d M, Y') }}</div>
                                                 </td>
-                                                <td class="text-end pe-4 fw-bolder text-primary">₹{{ number_format($partnerType == 'Doctor' ? $inv->doctor_commission_amount : $inv->agent_commission_amount, 2) }}</td>
+                                                <td class="text-end pe-4 fw-bolder text-primary">₹{{ number_format($partnerType == 'Doctor' ? $inv->doctor_commission_amount : ($partnerType == 'Agent' ? $inv->agent_commission_amount : $inv->total_amount), 2) }}</td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="3" class="text-center py-5 text-muted">No pending commissions found.</td></tr>

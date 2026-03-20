@@ -25,6 +25,7 @@ use App\Livewire\Lab\ReportManager;
 use App\Livewire\Lab\ResultEntryManager;
 use App\Livewire\Lab\DepartmentManager;
 use App\Livewire\Partner\PartnerDashboard;
+use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
 
 
@@ -70,7 +71,7 @@ Route::middleware(['auth'])->group(function () {
     // 2. LAB OWNER / TENANT ROUTES
     // ----------------------------------------------------
     // Apply the 'auth', 'role:lab_admin', and our new subscription check middleware
-    Route::middleware(['role:lab_admin', \App\Http\Middleware\CheckTenantSubscription::class])
+    Route::middleware(['lab_staff', \App\Http\Middleware\CheckTenantSubscription::class])
         ->prefix('lab')
         ->name('lab.')
         ->group(function () {
@@ -127,6 +128,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
+            Route::get('/profile', \App\Livewire\Partner\PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
             
@@ -150,6 +152,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('partner.')
         ->group(function () {
             Route::get('/dashboard', PartnerDashboard::class)->name('dashboard');
+            Route::get('/profile', PartnerProfile::class)->name('profile');
+            Route::get('/patients', \App\Livewire\Partner\PartnerPatientManager::class)->name('patients');
+            Route::get('/settlements', \App\Livewire\Partner\PartnerSettlementManager::class)->name('settlements');
+            Route::get('/invoices', \App\Livewire\Partner\PartnerInvoiceManager::class)->name('invoices');
+            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
         });
 
 

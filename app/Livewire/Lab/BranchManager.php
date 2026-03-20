@@ -12,6 +12,11 @@ class BranchManager extends Component
     
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage branches');
+    }
+
     // State variables
     public $searchTerm = '';
     public $branch_id = null; // Explicitly null to prevent PostgreSQL errors

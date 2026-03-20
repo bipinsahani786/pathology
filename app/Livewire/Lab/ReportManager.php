@@ -13,6 +13,12 @@ class ReportManager extends Component
     use WithPagination;
     
     public $search = '';
+    protected $paginationTheme = 'bootstrap';
+
+    public function mount()
+    {
+        $this->authorize('view reports');
+    }
     public $dateRange = 'all'; // all, today, week, month
     public $statusFilter = 'all'; // all, pending, draft, approved
     public $perPage = 15;

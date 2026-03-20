@@ -20,6 +20,7 @@ class LabTestEditor extends Component
 
     public function mount($id = null)
     {
+        $this->authorize('manage lab_tests');
         $labTestService = new LabTestService();
         if ($id) {
             $test = $labTestService->getTestById($id);
@@ -77,7 +78,7 @@ class LabTestEditor extends Component
 
     public function addRange()
     {
-        if ($this->editingParamIndex !== null) {
+        if ($this->editingParamIndex !== null && isset($this->parameters[$this->editingParamIndex])) {
             $this->parameters[$this->editingParamIndex]['ranges'][] = [
                 'gender' => 'Both',
                 'age_min' => 0,

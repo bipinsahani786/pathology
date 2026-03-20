@@ -13,9 +13,9 @@ class PosManager extends Component
     // ==========================================
     // 1. SELECTIONS & SEARCH
     // ==========================================
-    public $patientSearch = '', $selectedPatient = null, $patientProfileData = null;
-    public $doctorSearch = '', $selectedDoctor = null, $doctorProfileData = null;
-    public $agentSearch = '', $selectedAgent = null, $agentProfileData = null;
+    public $patientSearch = '', $selectedPatient = [], $patientProfileData = null;
+    public $doctorSearch = '', $selectedDoctor = [], $doctorProfileData = null;
+    public $agentSearch = '', $selectedAgent = [], $agentProfileData = null;
 
     // ==========================================
     // 2. LOGISTICS
@@ -29,6 +29,8 @@ class PosManager extends Component
     public $testSearch = '';
     public $cart = [];
     public $subtotal = 0;
+    public $tax_amount = 0;
+    public $final_total = 0;
 
     public $active_membership = null;
     public $membership_discount_amt = 0;
@@ -69,6 +71,7 @@ class PosManager extends Component
 
     public function mount()
     {
+        $this->authorize('manage pos');
         $user = auth()->user();
         $companyId = $user->company_id;
 
@@ -204,7 +207,7 @@ class PosManager extends Component
         try {
             $record = PatientMembership::create([
                 'company_id' => auth()->user()->company_id,
-                'patient_id' => $this->selectedPatient['id'] ?? null,
+                'patient_id' => data_get($this->selectedPatient, 'id'),
                 'membership_id' => $membership->id,
                 'amount_paid' => 0, // Will be marked paid when invoice is fully paid
                 'valid_from' => now()->toDateString(),
@@ -485,6 +488,25 @@ class PosManager extends Component
                 $agentCommission = ($this->net_payable * ($profile->commission_percentage ?? 0)) / 100;
             }
 
+            // ── B2B & Profit Calculation (for Collection Centers) ──
+            $totalB2bAmount = 0;
+            $ccId = $this->collection_center_id;
+            
+            // We need to fetch B2B prices for all tests in cart
+            $cartIds = collect($this->cart)->pluck('id');
+            $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
+
+            foreach ($this->cart as $item) {
+                $b2b = (float)($testPrices[$item['id']]->b2b_price ?? 0);
+                $totalB2bAmount += $b2b;
+            }
+
+            // CC Profit = Final Total (what patient pays) - B2B Total (what lab keeps)
+            $ccProfitAmount = 0;
+            if ($ccId) {
+                $ccProfitAmount = max(0, $this->net_payable - $totalB2bAmount);
+            }
+
             $invoice = Invoice::create([
                 'company_id' => $companyId,
                 'collection_center_id' => $this->collection_center_id,
@@ -506,6 +528,8 @@ class PosManager extends Component
                 'voucher_discount_amount' => $this->voucher_discount_amt,
                 'discount_amount' => $this->manual_discount_amt,
                 'total_amount' => $this->net_payable,
+                'total_b2b_amount' => $totalB2bAmount,
+                'cc_profit_amount' => $ccProfitAmount,
                 'doctor_commission_amount' => $docCommission,
                 'agent_commission_amount' => $agentCommission,
                 'paid_amount' => $this->net_payable - $this->due_amount,
@@ -522,6 +546,7 @@ class PosManager extends Component
                     'is_package' => $item['is_package'],
                     'mrp' => $item['mrp'],
                     'price' => $item['mrp'],
+                    'b2b_price' => $testPrices[$item['id']]->b2b_price ?? 0,
                 ]);
             }
 
@@ -530,7 +555,7 @@ class PosManager extends Component
                     Payment::create([
                         'company_id' => $companyId,
                         'invoice_id' => $invoice->id,
-                        'patient_id' => ($this->selectedPatient ? $this->selectedPatient['id'] : null),
+                        'patient_id' => data_get($this->selectedPatient, 'id'),
                         'collected_by' => auth()->id(),
                         'payment_mode_id' => $payment['mode_id'],
                         'amount' => $payment['amount'],
@@ -550,9 +575,9 @@ class PosManager extends Component
             }
 
             // ── Credit Doctor & Agent Wallets ──
-            if ($docCommission > 0 && $doctorId) {
+            if ($docCommission > 0 && data_get($this->selectedDoctor, 'id')) {
                 $wallet = Wallet::firstOrCreate(
-                    ['user_id' => $doctorId, 'company_id' => $companyId],
+                    ['user_id' => data_get($this->selectedDoctor, 'id'), 'company_id' => $companyId],
                     ['balance' => 0]
                 );
                 $wallet->credit($docCommission, 'Commission from Invoice #' . $invoiceNumber, 'invoice', $invoice->id);

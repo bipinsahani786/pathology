@@ -12,6 +12,11 @@ class LabTestManager extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage lab_tests');
+    }
+
     // List Filters
     public $searchTerm = '';
     public $filterCategory = '';

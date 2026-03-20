@@ -11,6 +11,11 @@ class PackageManager extends Component
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage test_packages');
+    }
+
     public $searchTerm = '';
 
     public function updatingSearchTerm() { $this->resetPage(); }
