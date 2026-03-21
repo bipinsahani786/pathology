@@ -12,6 +12,11 @@ class PaymentModeManager extends Component
     
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage payment_modes');
+    }
+
     // State variables
     public $searchTerm = '';
     public $mode_id = null; // Ensure this is null by default

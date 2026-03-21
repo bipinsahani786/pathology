@@ -253,9 +253,9 @@
                     </div>
                     <div class="card-body pb-0 pt-2">
                         <div class="position-relative mb-2">
-                            <div class="input-group">
-                                <span class="input-group-text border" style="background:rgba(59,113,202,0.08);"><i class="feather-search text-primary"></i></span>
-                                <input type="text" class="form-control border fw-semibold" style="background:rgba(59,113,202,0.08);" wire:model.live.debounce.300ms="testSearch" placeholder="Search Test Name, Profile, or Code...">
+                            <div class="input-group search-group shadow-sm">
+                                <span class="input-group-text"><i class="feather-search text-primary"></i></span>
+                                <input type="text" class="form-control fw-semibold" wire:model.live.debounce.300ms="testSearch" placeholder="Search Test Name, Profile, or Code...">
                             </div>
                             @if (!empty($tests) && count($tests) > 0)
                                 <div class="list-group position-absolute w-100 shadow-lg mt-1 z-3 border rounded-3" style="max-height:280px;overflow-y:auto;">

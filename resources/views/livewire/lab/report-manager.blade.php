@@ -3,19 +3,18 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Lab Reports</h5>
+                <h5 class="text-dark fw-bold">Lab Reports</h5>
             </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item">Lab</li>
-                <li class="breadcrumb-item">Reports</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Reports</li>
             </ul>
         </div>
     </div>
 
     {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
-        <div class="card mb-4">
+        <div class="card mb-4" style="overflow: visible !important;">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="card-title mb-0"><i class="feather-flask-conical me-2 text-primary"></i>Test Results & Reports</h6>
             </div>
@@ -23,9 +22,11 @@
                 
                 {{-- Filters --}}
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white"><i class="feather-search text-muted"></i></span>
+                    <div class="col-md-6">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
+                            </span>
                             <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Search by Invoice, Patient Name, Phone...">
                         </div>
                     </div>

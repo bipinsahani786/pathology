@@ -8,5 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class CollectionCenter extends Model
 {
     use BelongsToCompany;
-    protected $guarded = [];
+
+    protected $fillable = [
+        'company_id',
+        'user_id',
+        'name',
+        'center_code',
+        'address',
+        'is_main_lab',
+        'is_active',
+    ];
+
+    /**
+     * Get the user associated with the collection center.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

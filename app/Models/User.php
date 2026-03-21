@@ -31,6 +31,7 @@ class User extends Authenticatable
         'email_verified_at',
         'company_id',
         'branch_id',
+        'collection_center_id',
         'is_active',
     ];
 
@@ -124,10 +125,34 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the patient's membership records.
+     * Get the collection center associated with the user.
      */
-    public function patientMemberships()
+    public function collectionCenter()
     {
-        return $this->hasMany(PatientMembership::class, 'patient_id');
+        return $this->belongsTo(CollectionCenter::class, 'collection_center_id');
+    }
+
+    /**
+     * Get the settlements for this user.
+     */
+    public function settlements()
+    {
+        return $this->hasMany(Settlement::class);
+    }
+
+    /**
+     * Invoices where this user is the referring doctor.
+     */
+    public function invoicesAsDoctor()
+    {
+        return $this->hasMany(Invoice::class, 'referred_by_doctor_id');
+    }
+
+    /**
+     * Invoices associated with the collection center this user belongs to.
+     */
+    public function collectionCenterInvoices()
+    {
+        return $this->hasMany(Invoice::class, 'collection_center_id', 'collection_center_id');
     }
 }

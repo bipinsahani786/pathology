@@ -29,8 +29,9 @@ class RegisterCompany extends Component
     /**
      * Handle the registration form submission
      */
-    public function register(CompanyRegistrationService $registrationService)
+    public function register()
     {
+        $registrationService = new CompanyRegistrationService();
         $validatedData = $this->validate();
 
         // Trigger the service to setup the database architecture for the new tenant

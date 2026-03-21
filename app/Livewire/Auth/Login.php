@@ -12,7 +12,7 @@ class Login extends Component
     public $remember = false;
 
     protected $rules = [
-        'email' => 'required|email',
+        'email' => 'required|string',
         'password' => 'required|min:6',
     ];
 
@@ -20,14 +20,26 @@ class Login extends Component
     {
         $this->validate();
 
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password, 'is_active' => true], $this->remember)) {
+        // Determine if logging in with email or phone
+        $loginField = filter_var($this->email, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        $credentials = [
+            $loginField => $this->email,
+            'password' => $this->password,
+            'is_active' => true
+        ];
+
+        if (Auth::attempt($credentials, $this->remember)) {
             session()->regenerate();
             $user = Auth::user();
             
             // Redirect based on user role
             if ($user->hasRole('super_admin')) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->hasRole('lab_admin')) {
+            } elseif ($user->hasAnyRole(['doctor', 'agent'])) {
+                return redirect()->route('partner.dashboard');
+            } elseif ($user->company_id) {
+                // Anyone else with a company ID is lab staff (lab_admin, staff, or custom role)
                 return redirect()->route('lab.dashboard');
             }
             return redirect('/');

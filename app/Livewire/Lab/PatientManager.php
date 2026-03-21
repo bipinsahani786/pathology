@@ -15,6 +15,11 @@ class PatientManager extends Component
     use WithPagination;
     
     protected $paginationTheme = 'bootstrap';
+    
+    public function mount()
+    {
+        $this->authorize('manage patients');
+    }
 
     // State variables
     public $searchTerm = '';
@@ -150,7 +155,8 @@ class PatientManager extends Component
                     'address' => $this->address,
                 ]);
 
-                // Optional: $user->assignRole('patient'); if using Spatie
+                // Assign Role
+                $user->assignRole('patient');
 
                 session()->flash('message', 'New patient registered successfully.');
             }

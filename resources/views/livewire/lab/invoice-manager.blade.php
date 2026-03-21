@@ -3,12 +3,11 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Invoices</h5>
+                <h5 class="text-dark fw-bold">Invoices</h5>
             </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item">Lab</li>
-                <li class="breadcrumb-item">Invoices</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Billing</li>
             </ul>
         </div>
         <div class="page-header-right ms-auto">
@@ -70,43 +69,46 @@
         {{-- ═══════ Filters & Search ═══════ --}}
         <div class="card mb-3">
             <div class="card-body py-3">
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Search</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text"><i class="feather-search"></i></span>
-                            <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Invoice#, Patient Name, Phone...">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text"><i class="feather-search text-primary"></i></span>
+                            <input type="text" class="form-control" wire:model.live.debounce.300ms="search" placeholder="Search by Invoice, Patient, or Phone...">
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Payment Status</label>
-                        <select class="form-select form-select-sm" wire:model.live="filterStatus">
-                            <option value="">All</option>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white fs-10 fw-bold">FROM</span>
+                            <input type="date" class="form-control" wire:model.live="filterDateFrom">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white fs-10 fw-bold">TO</span>
+                            <input type="date" class="form-control" wire:model.live="filterDateTo">
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-center mt-1">
+                    <div class="col-md-4">
+                        <select class="form-select" wire:model.live="filterStatus">
+                            <option value="">All Payments</option>
                             <option value="Paid">✅ Paid</option>
                             <option value="Partial">⚠️ Partial</option>
                             <option value="Unpaid">❌ Unpaid</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">From Date</label>
-                        <input type="date" class="form-control form-control-sm" wire:model.live="filterDateFrom">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">To Date</label>
-                        <input type="date" class="form-control form-control-sm" wire:model.live="filterDateTo">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection</label>
-                        <select class="form-select form-select-sm" wire:model.live="filterCollectionType">
-                            <option value="">All</option>
+                    <div class="col-md-4">
+                        <select class="form-select" wire:model.live="filterCollectionType">
+                            <option value="">All Collection Types</option>
                             <option value="Center">🏥 Center</option>
                             <option value="Home Collection">🏠 Home</option>
                             <option value="Hospital">🏨 Hospital</option>
                         </select>
                     </div>
-                    <div class="col-md-1">
-                        <button wire:click="clearFilters" class="btn btn-sm btn-outline-secondary w-100" title="Clear Filters">
-                            <i class="feather-x"></i>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button wire:click="clearFilters" class="btn btn-outline-secondary w-100" title="Clear Filters">
+                            <i class="feather-refresh-cw me-2"></i> Clear All Filters
                         </button>
                     </div>
                 </div>

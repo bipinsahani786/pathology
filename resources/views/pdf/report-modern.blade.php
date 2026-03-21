@@ -175,6 +175,31 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* Interpretation Tables */
+        .interpretation-block table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            font-size: 10px;
+        }
+        .interpretation-block table th {
+            background-color: #f3f4f6;
+            padding: 4px 8px;
+            text-align: left;
+            border: 1px solid #ccc;
+            font-weight: bold;
+            font-size: 10px;
+            color: #333;
+        }
+        .interpretation-block table td {
+            padding: 3px 8px;
+            border: 1px solid #ddd;
+            font-size: 10px;
+        }
+        .interpretation-block table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
         
         /* Clearfix */
         .clearfix::after {
@@ -259,28 +284,45 @@
             <tbody>
                 @foreach($tests as $testName => $results)
                     <tr>
-                        <td colspan="4" class="test-title">{{ $testName }}</td>
+                        <td colspan="4" class="test-title">
+                            {{ $testName }}
+                            @if($results->first()->labTest->method)
+                                <span style="font-size: 10px; font-weight: normal; margin-left: 10px; color: #666;">(Method: {{ $results->first()->labTest->method }})</span>
+                            @endif
+                        </td>
                     </tr>
                     @foreach($results as $r)
                         <tr>
                             <td style="padding-left: 15px;">{{ $r->parameter_name }}</td>
                             <td>
                                 @if($r->is_highlighted)
+                                    @php 
+                                        $flag = substr($r->status, 0, 1);
+                                        $flagText = in_array($flag, ['H', 'L']) ? $flag : '*';
+                                    @endphp
                                     <span class="text-danger bg-abnormal">{{ $r->result_value }}</span>
-                                    <span class="text-danger">*</span>
+                                    <span class="text-danger" style="font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
                                 @else
                                     <span style="font-weight:bold;">{{ $r->result_value }}</span>
                                 @endif
                             </td>
                             <td>{{ $r->unit }}</td>
-                            <td>{{ $r->reference_range }}</td>
+                            <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
                         </tr>
                     @endforeach
                     @if($results->first()->labTest->description)
                         <tr>
-                            <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 10px; color: #555;">
+                            <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: #555;">
                                 <strong>Note:</strong> <br>
                                 {!! nl2br(e($results->first()->labTest->description)) !!}
+                            </td>
+                        </tr>
+                    @endif
+                    @if($results->first()->labTest->interpretation)
+                        <tr>
+                            <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333;">
+                                <strong>Interpretation:</strong> <br>
+                                {!! $results->first()->labTest->interpretation !!}
                             </td>
                         </tr>
                     @endif

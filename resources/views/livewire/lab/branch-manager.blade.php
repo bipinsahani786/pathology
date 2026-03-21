@@ -1,18 +1,18 @@
 <div>
-    <div class="page-header d-flex flex-wrap align-items-center justify-content-between gap-2 gap-md-3 mb-4">
-        <div class="page-header-left d-flex align-items-center flex-wrap">
+    <div class="page-header">
+        <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10 text-dark fw-bold">Processing Branches</h5>
-                <p class="fs-13 text-muted mb-0">Manage your main laboratories and processing hubs.</p>
+                <h5 class="text-dark fw-bold">Processing Branches</h5>
+                <p class="fs-13 text-muted mb-0">Manage your laboratories.</p>
             </div>
-            <ul class="breadcrumb d-none d-md-flex mb-0 ms-3">
-                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate>Home</a></li>
-                <li class="breadcrumb-item active">Branches</li>
+            <ul class="breadcrumb d-none d-md-flex ms-3">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item text-primary fw-medium">Branches</li>
             </ul>
         </div>
-        <div class="page-header-right d-flex gap-2">
-            <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
-                <i class="feather-plus me-1"></i> Add New Branch
+        <div class="page-header-right">
+            <button wire:click="create" class="btn btn-primary px-4">
+                <i class="feather-plus me-2"></i> Add New Branch
             </button>
         </div>
     </div>
@@ -29,19 +29,16 @@
 
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden">
             
-            <div class="card-header bg-white py-4 border-bottom border-light">
-                <div class="row g-3 align-items-center">
-                    <div class="col-12 col-md-8 col-lg-6" style="max-width: 600px;">
-                        <div class="position-relative">
-                            <span class="position-absolute top-50 translate-middle-y text-muted" style="left: 18px; z-index: 10;">
-                                <div wire:loading.remove wire:target="searchTerm"><i class="feather-search fs-5"></i></div>
-                                <div wire:loading wire:target="searchTerm"><span class="spinner-border spinner-border-sm text-primary" role="status"></span></div>
+            <div class="card-header bg-white py-3 border-bottom-0">
+                <div class="row g-3">
+                    <div class="col-md-10">
+                        <div class="input-group search-group shadow-sm">
+                            <span class="input-group-text">
+                                <i class="feather-search text-primary"></i>
                             </span>
-                            
                             <input type="text" wire:model.live.debounce.300ms="searchTerm" 
-                                class="form-control rounded-pill border-light shadow-sm" 
-                                placeholder="Search by branch name or phone..."
-                                style="padding-left: 48px; height: 45px; font-size: 14px; background-color: #f8fafc; transition: all 0.2s;">
+                                class="form-control" 
+                                placeholder="Search by branch name or phone...">
                         </div>
                     </div>
                 </div>
@@ -119,7 +116,7 @@
     @if ($isModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
 
                     <div class="modal-header bg-light border-bottom p-4">
@@ -132,7 +129,8 @@
                         <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
                     </div>
 
-                    <div class="modal-body p-4 bg-white">
+                    <form wire:submit.prevent="store">
+                        <div class="modal-body p-4 bg-white">
                         <div class="row g-4">
                             <div class="col-md-7">
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Branch Name *</label>
@@ -165,11 +163,12 @@
 
                     <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
                         <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
-                        <button type="button" wire:click="store" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                        <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
                             <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Branch</div>
                             <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
                         </button>
                     </div>
+                </form>
 
                 </div>
             </div>

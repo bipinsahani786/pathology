@@ -168,7 +168,7 @@
     @if ($isMembershipModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
                     <div class="modal-header bg-light border-bottom p-4">
                         <h5 class="modal-title fw-bold text-dark"><i class="feather-credit-card text-primary me-2"></i>{{ $membership_id ? 'Edit' : 'New' }} Health Card</h5>
@@ -211,9 +211,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-top p-3">
-                            <button type="submit" class="btn btn-primary px-5 shadow-sm d-flex align-items-center">
-                                <i class="feather-save me-2"></i> Save Card
+                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
+                            <button type="button" wire:click="resetMembershipFields(); $set('isMembershipModalOpen', false)" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                                <div wire:loading.remove wire:target="storeMembership"><i class="feather-save me-2"></i> Save Card</div>
+                                <div wire:loading wire:target="storeMembership"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
                             </button>
                         </div>
                     </form>
@@ -225,7 +227,7 @@
     @if ($isVoucherModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
                     <div class="modal-header bg-light border-bottom p-4">
                         <h5 class="modal-title fw-bold text-dark"><i class="feather-gift text-primary me-2"></i>{{ $voucher_id ? 'Edit' : 'New' }} Promo Code</h5>
@@ -283,9 +285,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer bg-light border-top p-3">
-                            <button type="submit" class="btn btn-primary px-5 shadow-sm d-flex align-items-center">
-                                <i class="feather-save me-2"></i> Save Promo Code
+                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
+                            <button type="button" wire:click="resetVoucherFields(); $set('isVoucherModalOpen', false)" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center transition-all hover-lift">
+                                <div wire:loading.remove wire:target="storeVoucher"><i class="feather-save me-2"></i> Save Promo Code</div>
+                                <div wire:loading wire:target="storeVoucher"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
                             </button>
                         </div>
                     </form>

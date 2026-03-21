@@ -1,0 +1,162 @@
+<?php
+// Thyroid & Diabetes Tests
+return [
+    [
+        'test_code' => 'TFT',
+        'name' => 'Thyroid Function Test (T3, T4, TSH)',
+        'category' => 'Biochemistry',
+        'method' => 'CLIA (Chemiluminescence Immunoassay)',
+        'description' => 'Complete thyroid profile. Early morning sample preferred.',
+        'interpretation' => '<table><tr><th>Pattern</th><th>TSH</th><th>T3/T4</th><th>Diagnosis</th></tr><tr><td>Primary Hypothyroid</td><td>High</td><td>Low</td><td>Hashimoto, Iodine deficiency</td></tr><tr><td>Primary Hyperthyroid</td><td>Low</td><td>High</td><td>Graves disease, Toxic nodule</td></tr><tr><td>Subclinical Hypothyroid</td><td>High</td><td>Normal</td><td>Early thyroid failure</td></tr><tr><td>Subclinical Hyperthyroid</td><td>Low</td><td>Normal</td><td>Early excess</td></tr><tr><td>Secondary Hypothyroid</td><td>Low</td><td>Low</td><td>Pituitary dysfunction</td></tr></table>',
+        'suggested_price' => 500,
+        'default_parameters' => [
+            [
+                'name' => 'Total T3', 'unit' => 'ng/dL', 'short_code' => 'T3', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '60', 'max_val' => '200', 'display_range' => '60 - 200']]
+            ],
+            [
+                'name' => 'Total T4', 'unit' => 'µg/dL', 'short_code' => 'T4', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.5', 'max_val' => '12.5', 'display_range' => '4.5 - 12.5']]
+            ],
+            [
+                'name' => 'TSH', 'unit' => 'µIU/mL', 'short_code' => 'TSH', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.3', 'max_val' => '5.5', 'display_range' => '0.3 - 5.5']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'FT3',
+        'name' => 'Free T3',
+        'category' => 'Biochemistry',
+        'description' => 'Free triiodothyronine — active thyroid hormone.',
+        'interpretation' => 'Elevated: Hyperthyroidism, T3 thyrotoxicosis. Low: Hypothyroidism, Sick euthyroid syndrome.',
+        'suggested_price' => 350,
+        'default_parameters' => [
+            [
+                'name' => 'Free T3', 'unit' => 'pg/mL', 'short_code' => 'FT3', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.0', 'max_val' => '4.4', 'display_range' => '2.0 - 4.4']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'FT4',
+        'name' => 'Free T4',
+        'category' => 'Biochemistry',
+        'description' => 'Free thyroxine — biologically active form not bound to proteins.',
+        'interpretation' => 'Elevated: Hyperthyroidism, Thyroiditis. Low: Hypothyroidism, Pituitary failure.',
+        'suggested_price' => 350,
+        'default_parameters' => [
+            [
+                'name' => 'Free T4', 'unit' => 'ng/dL', 'short_code' => 'FT4', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.93', 'max_val' => '1.70', 'display_range' => '0.93 - 1.70']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'GTT',
+        'name' => 'Glucose Tolerance Test (OGTT)',
+        'category' => 'Biochemistry',
+        'method' => 'GOD-POD Method',
+        'description' => 'Oral Glucose Tolerance Test with 75g glucose load.',
+        'interpretation' => 'One or more abnormal values = Gestational Diabetes Mellitus.',
+        'suggested_price' => 300,
+        'default_parameters' => [
+            [
+                'name' => 'Fasting Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTTF', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '92', 'display_range' => '70 - 92']]
+            ],
+            [
+                'name' => '1 Hour Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTT1', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '180', 'display_range' => '< 180']]
+            ],
+            [
+                'name' => '2 Hour Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTT2', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '153', 'display_range' => '< 153']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'INSULIN-F',
+        'name' => 'Fasting Insulin',
+        'category' => 'Biochemistry',
+        'description' => 'Measures fasting serum insulin.',
+        'interpretation' => 'Use with glucose for HOMA-IR calculation.',
+        'suggested_price' => 600,
+        'default_parameters' => [
+            [
+                'name' => 'Fasting Glucose (for HOMA)', 'unit' => 'mg/dL', 'short_code' => 'GHOMA', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '100', 'display_range' => '70 - 100']]
+            ],
+            [
+                'name' => 'Fasting Insulin', 'unit' => 'µIU/mL', 'short_code' => 'INSF', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.6', 'max_val' => '24.9', 'display_range' => '2.6 - 24.9']]
+            ],
+            [
+                'name' => 'HOMA-IR (Insulin Resistance)', 'unit' => 'index', 'short_code' => 'HOMAIR', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '({INSF} * {GHOMA}) / 405',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '2.5', 'display_range' => '< 2.5']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'CRP',
+        'name' => 'C-Reactive Protein (CRP)',
+        'category' => 'Biochemistry',
+        'description' => 'Marker of inflammation.',
+        'interpretation' => 'Elevated in infection/inflammation.',
+        'suggested_price' => 500,
+        'default_parameters' => [
+            [
+                'name' => 'CRP (Quantitative)', 'unit' => 'mg/L', 'short_code' => 'CRP', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '5.0', 'display_range' => '0 - 5.0']]
+            ],
+        ],
+    ],
+    [
+        'test_code' => 'ELEC',
+        'name' => 'Serum Electrolytes (Na, K, Cl)',
+        'category' => 'Biochemistry',
+        'method' => 'ISE (Ion Selective Electrode)',
+        'description' => 'Essential electrolyte panel.',
+        'interpretation' => 'Critical for fluid balance assessment.',
+        'suggested_price' => 400,
+        'default_parameters' => [
+            [
+                'name' => 'Sodium (Na)', 'unit' => 'mEq/L', 'short_code' => 'NA', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '136', 'max_val' => '146', 'display_range' => '136 - 146']]
+            ],
+            [
+                'name' => 'Potassium (K)', 'unit' => 'mEq/L', 'short_code' => 'K', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.5', 'max_val' => '5.1', 'display_range' => '3.5 - 5.1']]
+            ],
+            [
+                'name' => 'Chloride (Cl)', 'unit' => 'mEq/L', 'short_code' => 'CL', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '98', 'max_val' => '106', 'display_range' => '98 - 106']]
+            ],
+            [
+                'name' => 'Bicarbonate (HCO3)', 'unit' => 'mEq/L', 'short_code' => 'HCO3', 'input_type' => 'numeric',
+                'range_type' => 'flexible', 'formula' => '',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '22', 'max_val' => '28', 'display_range' => '22 - 28']]
+            ],
+            [
+                'name' => 'Anion Gap', 'unit' => 'mEq/L', 'short_code' => 'AGAP', 'input_type' => 'calculated',
+                'range_type' => 'flexible', 'formula' => '{NA} - ({CL} + {HCO3})',
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '8', 'max_val' => '14', 'display_range' => '8 - 14']]
+            ],
+        ],
+    ],
+];

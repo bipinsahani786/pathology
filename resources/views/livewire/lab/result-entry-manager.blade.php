@@ -3,12 +3,12 @@
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
-                <h5 class="m-b-10">Result Entry</h5>
+                <h4 class="fw-bold mb-1 text-dark">Result Entry</h4>
             </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('lab.reports') }}">Reports</a></li>
-                <li class="breadcrumb-item">Result Entry</li>
+            <ul class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" class="text-primary text-decoration-none">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('lab.reports') }}" class="text-primary text-decoration-none">Reports</a></li>
+                <li class="breadcrumb-item active fw-medium">Result Entry</li>
             </ul>
         </div>
     </div>
@@ -104,18 +104,48 @@
                                         @endphp
                                         <tr class="{{ $isHigh ? 'table-danger' : '' }}">
                                             <td class="fw-bold fs-12 ps-4">
-                                                {{ $p['name'] }}
-                                                @if($isHigh)
-                                                    <span class="ms-2 text-danger"><i class="feather-alert-triangle fs-13"></i></span>
+                                                <div class="d-flex align-items-center">
+                                                    {{ $p['name'] }}
+                                                    @if($isHigh)
+                                                        @php $f = $flags[$itemKey] ?? 'Abn'; @endphp
+                                                        <span class="ms-2 badge {{ in_array($f, ['H', 'Abn']) ? 'bg-danger' : 'bg-warning text-dark' }} px-2" style="font-size: 10px;">
+                                                            {{ $f === 'H' ? 'High' : ($f === 'L' ? 'Low' : 'Abnormal') }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                @if(!empty($p['short_code']))
+                                                    <div class="fs-10 text-muted">Code: {{ $p['short_code'] }}</div>
                                                 @endif
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm w-75 {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                       wire:model.live.debounce.500ms="results.{{ $itemKey }}" 
-                                                       placeholder="-">
+                                                <div class="input-group input-group-sm w-100">
+                                                    @if(($p['input_type'] ?? 'numeric') === 'selection')
+                                                        <select class="form-select {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
+                                                                wire:model.live="results.{{ $itemKey }}">
+                                                            <option value="">Select Result</option>
+                                                            @foreach($p['options'] ?? [] as $opt)
+                                                                <option value="{{ $opt }}">{{ $opt }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @elseif(($p['input_type'] ?? 'numeric') === 'calculated')
+                                                        <input type="text" class="form-control bg-light fw-bold text-primary border-primary border-opacity-25" 
+                                                               wire:model="results.{{ $itemKey }}" readonly title="Auto-Calculated">
+                                                        <span class="input-group-text bg-soft-primary"><i class="feather-cpu" style="font-size: 10px;"></i></span>
+                                                    @else
+                                                        <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
+                                                               wire:model.live.debounce.500ms="results.{{ $itemKey }}" 
+                                                               placeholder="-">
+                                                    @endif
+
+                                                    @if($isHigh && isset($flags[$itemKey]) && !in_array($p['input_type'] ?? '', ['selection', 'calculated']))
+                                                        <span class="input-group-text bg-danger text-white border-danger fw-bold fs-11 px-2">
+                                                            {{ $flags[$itemKey] }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td class="fs-12 text-muted">{{ $p['unit'] }}</td>
-                                            <td class="fs-12">{{ $p['ref_range'] }}</td>
+                                            <td class="fs-12 fw-medium text-dark">{{ $p['ref_range'] ?: '-' }}</td>
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex justify-content-center">
                                                     <input class="form-check-input" type="checkbox" 
@@ -132,9 +162,21 @@
                 </div>
                 
                 {{-- Report Comments --}}
-                <div class="px-4 py-3 bg-light border-top">
+                <div class="px-4 py-3 bg-light border-top" wire:ignore>
                     <label class="form-label fw-bold fs-12 text-dark"><i class="feather-message-square me-2 text-primary"></i>Report Comments / Interpretation</label>
-                    <textarea class="form-control text-muted fs-13" rows="3" wire:model.defer="comments" placeholder="Add any final interpretation or general remarks that should appear at the bottom of the printed report..."></textarea>
+                    <textarea class="form-control rich-editor" id="report-comments-editor" rows="3" 
+                        x-data x-init="
+                            ClassicEditor
+                                .create($el, {
+                                    toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', 'insertTable', 'undo', 'redo']
+                                })
+                                .then(editor => {
+                                    editor.model.document.on('change:data', () => {
+                                        @this.set('comments', editor.getData());
+                                    });
+                                    editor.setData(@js($comments));
+                                })
+                        " placeholder="Add final interpretation or remarks..."></textarea>
                 </div>
             </div>
             

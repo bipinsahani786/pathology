@@ -11,9 +11,9 @@ class PlanManager extends Component
     public $plan_id, $name, $price;
     public $duration_in_days = 30;
     public $is_active = true;
-    
+
     // Array to manage dynamic JSONB features
-    public array $features = []; 
+    public array $features = [];
     public $isModalOpen = false;
 
 
@@ -40,7 +40,7 @@ class PlanManager extends Component
     public function create()
     {
         $this->resetFields();
-        $this->addFeature(); 
+        $this->addFeature();
         $this->isModalOpen = true;
     }
 
@@ -76,7 +76,7 @@ class PlanManager extends Component
     public function edit($id)
     {
         $plan = $this->planService()->getPlanById($id);
-        
+
         $this->plan_id = $plan->id;
         $this->name = $plan->name;
         $this->price = $plan->price;
@@ -108,7 +108,7 @@ class PlanManager extends Component
     {
         // Use the service to fetch data
         $plans = $this->planService()->getAllPlans();
-        
+
         return view('livewire.admin.plan-manager', [
             'plans' => $plans
         ])->layout('layouts.app', ['title' => 'Manage Plans']);

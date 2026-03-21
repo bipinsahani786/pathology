@@ -20,6 +20,12 @@ use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\InvoicePrint;
 use App\Livewire\Lab\InvoiceManager;
 use App\Livewire\Lab\PosEditManager;
+use App\Livewire\Lab\SettlementManager;
+use App\Livewire\Lab\ReportManager;
+use App\Livewire\Lab\ResultEntryManager;
+use App\Livewire\Lab\DepartmentManager;
+use App\Livewire\Partner\PartnerDashboard;
+use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
 
 
@@ -48,9 +54,14 @@ Route::middleware(['auth'])->group(function () {
         // URL: /admin/dashboard  |  Route Name: admin.dashboard
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
 
-        // Future Routes  examples:
+        // Global Master Test Library
         Route::get('/global-tests', GlobalTestManager::class)->name('global-tests');
+        Route::get('/global-tests/create', \App\Livewire\Admin\GlobalTestEditor::class)->name('global-tests.create');
+        Route::get('/global-tests/{id}/edit', \App\Livewire\Admin\GlobalTestEditor::class)->name('global-tests.edit');
+
+        Route::get('/departments', \App\Livewire\Admin\DepartmentManager::class)->name('departments');
         Route::get('/plans', PlanManager::class)->name('plans');
+        Route::get('/labs', \App\Livewire\Admin\LabManager::class)->name('labs');
         // Route::get('/manage-labs', ManageLabs::class)->name('manage-labs');
         // Route::get('/subscriptions', ManageSubscriptions::class)->name('subscriptions');
     });
@@ -60,7 +71,7 @@ Route::middleware(['auth'])->group(function () {
     // 2. LAB OWNER / TENANT ROUTES
     // ----------------------------------------------------
     // Apply the 'auth', 'role:lab_admin', and our new subscription check middleware
-    Route::middleware(['role:lab_admin', \App\Http\Middleware\CheckTenantSubscription::class])
+    Route::middleware(['lab_staff', \App\Http\Middleware\CheckTenantSubscription::class])
         ->prefix('lab')
         ->name('lab.')
         ->group(function () {
@@ -75,10 +86,19 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+            // Lab Departments
+            Route::get('/departments', DepartmentManager::class)->name('departments');
+
             // Lab Tests Management
             Route::get('/lab-tests', LabTestManager::class)->name('tests');
+            Route::get('/lab-tests/create', \App\Livewire\Lab\LabTestEditor::class)->name('tests.create');
+            Route::get('/lab-tests/{id}/edit', \App\Livewire\Lab\LabTestEditor::class)->name('tests.edit');
+
             // test packages and profiles
             Route::get('/test-packages', PackageManager::class)->name('packages');
+            Route::get('/test-packages/create', \App\Livewire\Lab\PackageEditor::class)->name('packages.create');
+            Route::get('/test-packages/{id}/edit', \App\Livewire\Lab\PackageEditor::class)->name('packages.edit');
+
             //membership and vouchers
             Route::get('/marketing', MarketingManager::class)->name('marketing');
             // Payment Modes
@@ -97,6 +117,9 @@ Route::middleware(['auth'])->group(function () {
             //Agent
             Route::get('/agents', AgentManager::class)->name('agents');
 
+            // Settlements (Partner Commissions)
+            Route::get('/settlements', SettlementManager::class)->name('settlements');
+
             // Point of Sale (Billing & Invoicing)
             Route::get('/pos', PosManager::class)->name('pos');
 
@@ -105,26 +128,40 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
+            Route::get('/profile', \App\Livewire\Partner\PartnerProfile::class)->name('profile');
+            Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
+            Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
+            
+            // Reports Generation
+            Route::get('/reports', ReportManager::class)->name('reports');
+            Route::get('/reports/entry/{id}', ResultEntryManager::class)->name('reports.entry');
+            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
 
             // Invoice Print (browser)
             Route::get('/invoice/{id}/print', InvoicePrint::class)->name('invoice.print');
 
             // Invoice Edit (POS-style)
             Route::get('/invoice/{id}/edit', PosEditManager::class)->name('invoice.edit');
+        });
 
-            // Invoice PDF (dompdf)
-            Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
-            Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
-            
-            // Reports Generation
-            Route::get('/reports', \App\Livewire\Lab\ReportManager::class)->name('reports');
-            Route::get('/reports/entry/{id}', \App\Livewire\Lab\ResultEntryManager::class)->name('reports.entry');
+    // ----------------------------------------------------
+    // 3. PARTNER ROUTES (Doctor, Agent, Collection Center)
+    // ----------------------------------------------------
+    Route::middleware(['auth', 'role:doctor|agent|collection_center'])
+        ->prefix('partner')
+        ->name('partner.')
+        ->group(function () {
+            Route::get('/dashboard', PartnerDashboard::class)->name('dashboard');
+            Route::get('/profile', PartnerProfile::class)->name('profile');
+            Route::get('/patients', \App\Livewire\Partner\PartnerPatientManager::class)->name('patients');
+            Route::get('/settlements', \App\Livewire\Partner\PartnerSettlementManager::class)->name('settlements');
+            Route::get('/invoices', \App\Livewire\Partner\PartnerInvoiceManager::class)->name('invoices');
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
         });
 
 
     // ----------------------------------------------------
-    // 3. PATIENT PORTAL ROUTES (Future)
+    // 4. PATIENT PORTAL ROUTES (Future)
     // ----------------------------------------------------
     Route::middleware(['role:patient'])->prefix('portal')->name('portal.')->group(function () {
         // Route::get('/dashboard', PatientDashboard::class)->name('dashboard');

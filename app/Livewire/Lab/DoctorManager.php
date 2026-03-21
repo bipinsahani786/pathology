@@ -16,6 +16,11 @@ class DoctorManager extends Component
     
     protected $paginationTheme = 'bootstrap';
 
+    public function mount()
+    {
+        $this->authorize('manage doctors');
+    }
+
     // State variables
     public $searchTerm = '';
     public $user_id = null; // Tracks the User ID for editing
@@ -24,6 +29,7 @@ class DoctorManager extends Component
     public $name;
     public $phone;
     public $email;
+    public $password;
     
     // Doctor Profile Fields
     public $specialization;
@@ -81,7 +87,7 @@ class DoctorManager extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'phone' => [
-                'required',
+                'nullable',
                 'numeric',
                 'digits:10',
                 Rule::unique('users', 'phone')->ignore($this->user_id),
@@ -94,6 +100,7 @@ class DoctorManager extends Component
             'specialization' => 'nullable|string|max:255',
             'clinic_name' => 'nullable|string|max:255',
             'commission_percentage' => 'required|numeric|min:0|max:100',
+            'password' => $this->user_id ? 'nullable|min:6' : 'nullable|min:6',
         ]);
 
         DB::beginTransaction();
@@ -103,11 +110,17 @@ class DoctorManager extends Component
             if ($this->user_id) {
                 // UPDATE EXISTING DOCTOR
                 $user = User::findOrFail($this->user_id);
-                $user->update([
+                $updateData = [
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email,
-                ]);
+                ];
+
+                if ($this->password) {
+                    $updateData['password'] = Hash::make($this->password);
+                }
+
+                $user->update($updateData);
 
                 DoctorProfile::where('user_id', $this->user_id)->update([
                     'specialization' => $this->specialization,
@@ -125,8 +138,8 @@ class DoctorManager extends Component
                 $user = User::create([
                     'name' => $finalName,
                     'phone' => $this->phone,
-                    'email' => $this->email ?? $this->phone . '@doctor.local', 
-                    'password' => Hash::make($this->phone), 
+                    'email' => $this->email ?? ($this->phone ? $this->phone . '@doctor.local' : strtolower(str_replace(' ', '', $this->name)) . rand(100, 999) . '@doctor.local'), 
+                    'password' => Hash::make($this->password ?? $this->phone ?? 'password123'), 
                     'is_active' => true,
                 ]);
 
@@ -139,7 +152,8 @@ class DoctorManager extends Component
                     'commission_percentage' => $this->commission_percentage,
                 ]);
 
-                // Optional: $user->assignRole('doctor'); if using Spatie
+                // Assign Role
+                $user->assignRole('doctor');
 
                 session()->flash('message', 'New referring doctor added successfully.');
             }
@@ -151,6 +165,18 @@ class DoctorManager extends Component
             DB::rollBack();
             session()->flash('error', 'Error saving doctor: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Toggle doctor account status (Active/Inactive)
+     */
+    public function toggleStatus($id)
+    {
+        $user = User::findOrFail($id);
+        $user->is_active = !$user->is_active;
+        $user->save();
+        
+        session()->flash('message', 'Doctor status updated to ' . ($user->is_active ? 'Active' : 'Inactive'));
     }
 
     /**
@@ -167,7 +193,7 @@ class DoctorManager extends Component
      */
     public function resetFields()
     {
-        $this->reset(['user_id', 'name', 'phone', 'email', 'specialization', 'clinic_name']);
+        $this->reset(['user_id', 'name', 'phone', 'email', 'specialization', 'clinic_name', 'password']);
         $this->commission_percentage = 0;
         $this->resetValidation();
     }

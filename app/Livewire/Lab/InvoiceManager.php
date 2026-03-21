@@ -19,6 +19,13 @@ class InvoiceManager extends Component
     public $filterCollectionType = '';
     public $perPage = 15;
 
+    protected $paginationTheme = 'bootstrap';
+
+    public function mount()
+    {
+        $this->authorize('manage pos');
+    }
+
     // Reset pagination when filters change
     public function updatingSearch() { $this->resetPage(); }
     public function updatingFilterStatus() { $this->resetPage(); }

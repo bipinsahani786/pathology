@@ -242,8 +242,8 @@
                     <div class="card-body py-2">
                         <div class="row g-2">
                             <div class="col-md-3 col-6">
-                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center</label>
-                                <select class="form-select form-select-sm" wire:model="collection_center_id">
+                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id" {{ auth()->user()->collection_center_id ? 'disabled' : '' }}>
                                     <option value="">— Select —</option>
                                     @foreach ($centers as $center)
                                         <option value="{{ $center->id }}">
@@ -251,15 +251,21 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('collection_center_id')
+                                    <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-3 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
-                                <select class="form-select form-select-sm" wire:model="branch_id">
+                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id" {{ auth()->user()->branch_id ? 'disabled' : '' }}>
                                     <option value="">— Select —</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
+                                @error('branch_id')
+                                    <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-2 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>
@@ -291,9 +297,9 @@
                     </div>
                     <div class="card-body pb-0 pt-2">
                         <div class="position-relative mb-2">
-                            <div class="input-group">
-                                <span class="input-group-text border" style="background:rgba(59,113,202,0.08);"><i class="feather-search text-primary"></i></span>
-                                <input type="text" class="form-control border fw-semibold" style="background:rgba(59,113,202,0.08);" wire:model.live.debounce.300ms="testSearch" placeholder="Search Test Name, Profile, or Code...">
+                            <div class="input-group search-group shadow-sm">
+                                <span class="input-group-text"><i class="feather-search text-primary"></i></span>
+                                <input type="text" class="form-control fw-semibold" wire:model.live.debounce.300ms="testSearch" placeholder="Search Test Name, Profile, or Code...">
                             </div>
                             @if (!empty($tests) && count($tests) > 0)
                                 <div class="list-group position-absolute w-100 shadow-lg mt-1 z-3 border rounded-3" style="max-height:280px;overflow-y:auto;">
@@ -564,7 +570,7 @@
     @if ($isPatientModalOpen)
         <div class="modal-backdrop fade show" style="z-index:1050;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-user-plus text-primary me-2"></i>Quick Register Patient</h5><button wire:click="$set('isPatientModalOpen', false)" class="btn-close"></button></div>
                     <div class="modal-body">
@@ -590,7 +596,7 @@
     @if ($isDoctorModalOpen)
         <div class="modal-backdrop fade show" style="z-index:1050;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-activity text-success me-2"></i>Quick Add Doctor</h5><button wire:click="$set('isDoctorModalOpen', false)" class="btn-close"></button></div>
                     <div class="modal-body">
@@ -615,7 +621,7 @@
     @if ($isMembershipModalOpen)
         <div class="modal-backdrop fade show" style="z-index:1050;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-award text-warning me-2"></i>Buy Membership for {{ $selectedPatient['name'] ?? 'Patient' }}</h5><button wire:click="$set('isMembershipModalOpen', false)" class="btn-close"></button></div>
                     <div class="modal-body">
@@ -668,7 +674,7 @@
     @if ($isPaymentModeModalOpen)
         <div class="modal-backdrop fade show" style="z-index:1050;"></div>
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-credit-card text-primary me-2"></i>Add Payment Mode</h5><button wire:click="$set('isPaymentModeModalOpen', false)" class="btn-close"></button></div>
                     <div class="modal-body">
