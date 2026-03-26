@@ -12,7 +12,7 @@ class SettingsManager extends Component
     use WithFileUploads;
 
     // Active Tab
-    public $activeSubTab = 'profile'; // profile, invoice, template, pdf, staff
+    public $activeTab = 'profile'; // profile, invoice, template, pdf, staff
 
     // ==========================================
     // LAB PROFILE
