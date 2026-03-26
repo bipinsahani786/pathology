@@ -175,6 +175,46 @@ html.app-skin-dark .form-check-input:checked {
     border-color: var(--bs-primary) !important;
 }
 
+/* CKEditor 5 Dark Mode Fixes */
+html.app-skin-dark .ck.ck-editor__main > .ck-editor__editable,
+html.app-skin-dark .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+    background-color: #1a1a2e !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+}
+
+html.app-skin-dark .ck.ck-toolbar {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.app-skin-dark .ck.ck-button {
+    color: #a0a5b1 !important;
+}
+
+html.app-skin-dark .ck.ck-button:hover,
+html.app-skin-dark .ck.ck-button.ck-on {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #e2e8f0 !important;
+}
+
+html.app-skin-dark .ck-dropdown__panel {
+    background-color: #1a1a2e !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.app-skin-dark .ck-list__item > .ck-button {
+    color: #a0a5b1 !important;
+}
+
+html.app-skin-dark .ck-list__item > .ck-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.app-skin-dark .ck.ck-icon {
+    color: inherit !important;
+}
+
 html.app-skin-dark .page-header h5,
 html.app-skin-dark .page-header h2,
 html.app-skin-dark .page-header h3,
