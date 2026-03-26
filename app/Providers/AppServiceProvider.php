@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +25,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // Define Gate for Lab Admin
+        Gate::define('lab_admin', function ($user) {
+            return $user->hasRole('lab_admin') || $user->hasRole('super_admin');
+        });
+
+        // Implicitly grant "Super Admin" role all permissions
+        // This is useful if we want super_admin to skip all permission checks
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('super_admin') ? true : null;
+        });
     }
 
     /**
