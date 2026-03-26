@@ -608,10 +608,10 @@ class PosManager extends Component
                 'invoice_number' => $invoiceNumber,
                 'barcode' => $barcode,
                 'invoice_date' => now(),
-                'sample_received_at' => $this->sample_received_at,
-                'expected_report_time' => $this->expected_report_date && $this->expected_report_time
-                    ? $this->expected_report_date . ' ' . $this->expected_report_time
-                    : null,
+                // 'sample_received_at' => $this->sample_received_at, // Removed temporarily until DB migration
+                // 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
+                //     ? $this->expected_report_date . ' ' . $this->expected_report_time
+                //     : null,
                 'subtotal' => $this->subtotal,
                 'membership_discount_amount' => $this->membership_discount_amt,
                 'voucher_id' => $this->applied_voucher->id ?? null,
@@ -689,6 +689,8 @@ class PosManager extends Component
             $this->applied_voucher = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null;
             $this->manual_discount_input = 0; $this->expandedCartItems = [];
             $this->payments = []; $this->addPaymentRow(); $this->calculateTotals();
+
+            return redirect()->route('lab.pos.summary', ['invoice' => $invoice->id]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
