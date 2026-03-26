@@ -17,6 +17,7 @@ class InvoiceManager extends Component
     public $filterDateFrom = '';
     public $filterDateTo = '';
     public $filterCollectionType = '';
+    public $filterCC = '';
     public $perPage = 15;
 
     protected $paginationTheme = 'bootstrap';
@@ -32,11 +33,12 @@ class InvoiceManager extends Component
     public function updatingFilterDateFrom() { $this->resetPage(); }
     public function updatingFilterDateTo() { $this->resetPage(); }
     public function updatingFilterCollectionType() { $this->resetPage(); }
+    public function updatingFilterCC() { $this->resetPage(); }
     public function updatingPerPage() { $this->resetPage(); }
 
     public function clearFilters()
     {
-        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType']);
+        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType', 'filterCC']);
         $this->resetPage();
     }
 
@@ -74,9 +76,9 @@ class InvoiceManager extends Component
             $query->whereDate('invoice_date', '<=', $this->filterDateTo);
         }
 
-        // Collection type
-        if ($this->filterCollectionType) {
-            $query->where('collection_type', $this->filterCollectionType);
+        // Collection center
+        if ($this->filterCC) {
+            $query->where('collection_center_id', $this->filterCC);
         }
 
         $invoices = $query->paginate($this->perPage);
@@ -90,7 +92,22 @@ class InvoiceManager extends Component
             'todayRevenue' => Invoice::where('company_id', $companyId)->whereDate('invoice_date', today())->sum('paid_amount'),
         ];
 
-        return view('livewire.lab.invoice-manager', compact('invoices', 'stats'))
+        $collectionCenters = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
+
+        return view('livewire.lab.invoice-manager', compact('invoices', 'stats', 'collectionCenters'))
             ->layout('layouts.app', ['title' => 'Invoices']);
+    }
+
+    public function updateSampleStatus($invoiceId, $status)
+    {
+        $this->authorize('manage pos');
+        $invoice = Invoice::findOrFail($invoiceId);
+        
+        $invoice->update([
+            'sample_status' => $status,
+            'sample_collected_at' => ($status === 'Collected' && !$invoice->sample_collected_at) ? now() : $invoice->sample_collected_at
+        ]);
+
+        session()->flash('message', 'Sample status updated to ' . $status);
     }
 }

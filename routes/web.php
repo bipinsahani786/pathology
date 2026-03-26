@@ -16,6 +16,7 @@ use App\Livewire\Lab\PackageManager;
 use App\Livewire\Lab\PatientManager;
 use App\Livewire\Lab\PaymentModeManager;
 use App\Livewire\Lab\PosManager;
+use App\Livewire\Lab\PosSummary;
 use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\InvoicePrint;
 use App\Livewire\Lab\InvoiceManager;
@@ -122,6 +123,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Point of Sale (Billing & Invoicing)
             Route::get('/pos', PosManager::class)->name('pos');
+            Route::get('/pos/{invoice}/summary', PosSummary::class)->name('pos.summary');
 
             // Invoices Listing
             Route::get('/invoices', InvoiceManager::class)->name('invoices');

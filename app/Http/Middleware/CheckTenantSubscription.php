@@ -24,7 +24,7 @@ class CheckTenantSubscription
 
         // 2. Check subscription status for lab admins or staff members
         if ($user && $user->company_id) {
-            $company = $user->company; 
+            $company = $user->company;
 
             if (!$company) {
                 abort(403, 'Workspace not found. It may have been deleted.');
@@ -36,12 +36,12 @@ class CheckTenantSubscription
 
             // Check if the 15-day trial or active subscription period has expired
             if ($company->trial_ends_at && Carbon::now()->greaterThan($company->trial_ends_at)) {
-                
+
                 // Allow access ONLY to the billing/upgrade page to prevent an infinite redirection loop
                 if ($request->route()->getName() !== 'lab.billing.upgrade') {
-                    
+
                     return redirect()->route('lab.billing.upgrade')
-                        ->with('error', 'Your free trial has expired. Please choose a plan to continue using Zytrixon SaaS.');
+                        ->with('error', 'Your free trial has expired. Please choose a plan to continue using Sws SaaS.');
                 }
             }
         }

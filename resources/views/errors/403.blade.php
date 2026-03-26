@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Access Denied | Zytrixon SaaS</title>
+    <title>Access Denied | Sws SaaS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -249,7 +249,7 @@
             </div>
 
             <div class="footer-note">
-                Having issues? Reach out to <a href="mailto:support@zytrixon.com">support@zytrixon.com</a>
+                Having issues? Reach out to <a href="mailto:support@Sws.com">support@Sws.com</a>
             </div>
         </div>
     </div>

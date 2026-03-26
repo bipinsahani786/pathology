@@ -106,7 +106,7 @@
                                 @else
                                     <div class="position-relative">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
+                                            <span class="input-group-text bg-light"><i class="feather-search text-muted fs-12"></i></span>
                                             <input type="text" class="form-control" wire:model.live.debounce.300ms="doctorSearch" placeholder="Doctor Name / Phone">
                                         </div>
                                         @if (strlen($doctorSearch) >= 2)
@@ -120,7 +120,7 @@
                                                     @endforeach
                                                 </div>
                                             @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
+                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border p-3 text-center" style="top:100%;left:0; background: var(--bs-card-bg);">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found</div>
                                                 </div>
                                             @endif
@@ -162,7 +162,7 @@
                                 @else
                                     <div class="position-relative">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
+                                            <span class="input-group-text bg-light"><i class="feather-search text-muted fs-12"></i></span>
                                             <input type="text" class="form-control" wire:model.live.debounce.300ms="agentSearch" placeholder="Agent Name / Phone">
                                         </div>
                                         @if (strlen($agentSearch) >= 2)
@@ -176,7 +176,7 @@
                                                     @endforeach
                                                 </div>
                                             @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
+                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border p-3 text-center" style="top:100%;left:0; background: var(--bs-card-bg);">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No agent found</div>
                                                 </div>
                                             @endif
@@ -279,7 +279,7 @@
                     {{-- Cart Table --}}
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-gray-100">
+                            <thead class="bg-light">
                                 <tr>
                                     <th class="ps-3 text-uppercase fs-10 text-muted fw-bold" style="width:40px;">#</th>
                                     <th class="text-uppercase fs-10 text-muted fw-bold">Test / Package</th>
@@ -321,12 +321,12 @@
                                     @if(in_array($index, $expandedCartItems))
                                         @if($item['is_package'] && !empty($item['linked_tests']))
                                             <tr>
-                                                <td colspan="5" class="bg-gray-50 ps-4 py-2 border-0">
+                                                <td colspan="5" class="bg-light ps-4 py-2 border-0">
                                                     <div class="fw-bold text-primary fs-11 mb-2"><i class="feather-layers me-1"></i>Included Tests ({{ count($item['linked_tests']) }}):</div>
                                                     <div class="row g-2">
                                                         @foreach($item['linked_tests'] as $lt)
                                                             <div class="col-md-6 col-lg-4">
-                                                                <div class="d-flex align-items-start gap-2 p-2 bg-white rounded border">
+                                                                <div class="d-flex align-items-start gap-2 p-2 rounded border" style="background: var(--bs-card-bg);">
                                                                     <div class="avatar-text avatar-sm bg-soft-primary flex-shrink-0"><i class="feather-activity text-primary fs-12"></i></div>
                                                                     <div class="flex-grow-1">
                                                                         <div class="fw-bold fs-11 text-dark">{{ $lt['name'] }}</div>
@@ -334,7 +334,7 @@
                                                                         @if(!empty($lt['parameters']))
                                                                             <div class="mt-1 d-flex flex-wrap gap-1">
                                                                                 @foreach($lt['parameters'] as $param)
-                                                                                    <span class="badge bg-gray-200 text-dark fs-9">{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
+                                                                                    <span class="badge bg-light text-dark border fs-9">{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
                                                                                 @endforeach
                                                                             </div>
                                                                         @endif
@@ -349,11 +349,11 @@
 
                                         @if(!$item['is_package'] && !empty($item['parameters']))
                                             <tr>
-                                                <td colspan="5" class="bg-gray-50 ps-4 py-2 border-0">
+                                                <td colspan="5" class="bg-light ps-4 py-2 border-0">
                                                     <div class="fw-bold text-muted fs-11 mb-1"><i class="feather-list me-1"></i>Parameters ({{ count($item['parameters']) }}):</div>
                                                     <div class="d-flex flex-wrap gap-1">
                                                         @foreach($item['parameters'] as $param)
-                                                            <span class="badge bg-white border text-dark fs-10 px-2 py-1"><i class="feather-check-circle text-success me-1 fs-9"></i>{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
+                                                            <span class="badge bg-light border text-dark fs-10 px-2 py-1"><i class="feather-check-circle text-success me-1 fs-9"></i>{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
                                                         @endforeach
                                                     </div>
                                                 </td>
@@ -431,7 +431,7 @@
                         </div>
 
                         {{-- Manual Discount --}}
-                        <div class="p-2 rounded-3 bg-gray-100 border mb-2">
+                        <div class="p-2 rounded-3 bg-light border mb-2">
                             <label class="form-label fs-10 text-muted fw-bold text-uppercase mb-1">Manual Discount</label>
                             <div class="input-group input-group-sm">
                                 <select class="form-select fw-bold" wire:model.live="manual_discount_type" style="max-width:90px;">

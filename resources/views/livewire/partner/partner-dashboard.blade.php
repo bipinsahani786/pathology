@@ -76,17 +76,17 @@
                     <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-4">
-                                <div class="avatar-text avatar-lg bg-soft-warning text-warning rounded-4 shadow-sm">
-                                    <i class="feather-clock fs-4"></i>
+                                <div class="avatar-text avatar-lg bg-soft-info text-info rounded-4 shadow-sm">
+                                    <i class="feather-trending-up fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Unsettled Balance</h3>
+                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['total_billing'], 2) }}</div>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Total Revenue</h3>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Pending Payout</span>
-                                <i class="feather-info fs-12 text-warning" title="Amount collected and awaiting settlement with lab"></i>
+                                <span class="fs-11 text-muted">Total Billing Done</span>
+                                <span class="badge bg-soft-info text-info rounded-pill px-2 fw-bold">₹{{ number_format($stats['this_month_profit'] + ($stats['lab_dues'] ?? 0), 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -96,17 +96,57 @@
                     <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-4">
-                                <div class="avatar-text avatar-lg bg-soft-info text-info rounded-4 shadow-sm">
-                                    <i class="feather-shopping-cart fs-4"></i>
+                                <div class="avatar-text avatar-lg bg-soft-success text-success rounded-4 shadow-sm">
+                                    <i class="feather-dollar-sign fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">{{ number_format($stats['total_invoices']) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Total Bills</h3>
+                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['total_profit'], 2) }}</div>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">My Profit</h3>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Value: ₹{{ number_format($stats['total_earnings'], 2) }}</span>
-                                <span class="badge bg-soft-info text-info rounded-pill px-2 fw-bold">Active</span>
+                                <span class="fs-11 text-muted">Take home earnings</span>
+                                <span class="badge bg-soft-success text-success rounded-pill px-2 fw-bold">₹{{ number_format($stats['this_month_profit'], 2) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xxl-3 col-md-6">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="avatar-text avatar-lg bg-soft-danger text-danger rounded-4 shadow-sm">
+                                    <i class="feather-alert-circle fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['lab_dues'], 2) }}</div>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Total Lab Dues</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
+                                <span class="fs-11 text-muted">Amount to pay lab</span>
+                                <span class="badge bg-soft-danger text-danger rounded-pill px-2 fw-bold">Dues</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xxl-3 col-md-6">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white border border-warning border-opacity-25">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="avatar-text avatar-lg bg-soft-warning text-warning rounded-4 shadow-sm">
+                                    <i class="feather-clock fs-4"></i>
+                                </div>
+                                <div>
+                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Unsettled Balance</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
+                                <span class="fs-11 text-muted">Pending Settlement</span>
+                                <a href="{{ route('partner.settlements') }}" wire:navigate class="btn btn-xs btn-warning rounded-pill px-2 py-0 fs-9 fw-bold mt-1">Pay Now</a>
                             </div>
                         </div>
                     </div>
@@ -312,6 +352,7 @@
                                                 $amt = 0;
                                                 if($role === 'Doctor') $amt = $inv->doctor_commission_amount;
                                                 elseif($role === 'Agent') $amt = $inv->agent_commission_amount;
+                                                elseif($role === 'Collection Center') $amt = $inv->cc_profit_amount;
                                                 else $amt = $inv->total_amount;
                                             @endphp
                                             ₹{{ number_format($amt, 2) }}

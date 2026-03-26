@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="mt-4 animate-fade-in-up">
-                    <h3 class="fw-bolder text-dark mb-3" style="letter-spacing: -0.5px;">Grow Your Lab with Zytrixon</h3>
+                    <h3 class="fw-bolder text-dark mb-3" style="letter-spacing: -0.5px;">Grow Your Lab with Sws</h3>
                     <p class="text-muted mx-auto fs-15 lh-lg" style="max-width: 420px;">
                         Manage patients, automate reports, and track billing effortlessly. <strong>Start your free trial today</strong> and digitize your diagnostic center.
                     </p>
@@ -35,7 +35,7 @@
             </div>
 
             <div class="position-absolute bottom-0 start-0 p-4 w-100 text-center" style="z-index: 1;">
-                <span class="fs-12 text-muted fw-medium text-uppercase tracking-wide">© 2026 Zytrixon Pathology SaaS.</span>
+                <span class="fs-12 text-muted fw-medium text-uppercase tracking-wide">© 2026 Sws Pathology SaaS.</span>
             </div>
         </div>
 
@@ -46,7 +46,7 @@
                     <div class="bg-primary rounded-4 p-2 d-inline-flex shadow-sm">
                         <i class="feather-activity text-white fs-3"></i>
                     </div>
-                    <span class="fw-bolder fs-4 tracking-tight text-dark">Zytrixon</span>
+                    <span class="fw-bolder fs-4 tracking-tight text-dark">Sws</span>
                 </div>
 
                 <div class="mb-4">

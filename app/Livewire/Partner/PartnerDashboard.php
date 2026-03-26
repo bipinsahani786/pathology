@@ -16,6 +16,8 @@ class PartnerDashboard extends Component
         'total_profit' => 0,
         'lab_dues' => 0,
         'total_billing' => 0,
+        'pending_balance' => 0,
+        'total_earnings' => 0,
     ];
 
     public function mount()
@@ -101,9 +103,11 @@ class PartnerDashboard extends Component
         $this->stats['total_billing'] = $allInvoices->sum('total_amount');
         $this->stats['total_profit'] = $allInvoices->sum('cc_profit_amount');
         $this->stats['lab_dues'] = $allInvoices->sum('total_b2b_amount');
+        $this->stats['total_earnings'] = $this->stats['total_profit']; // For UI consistency
         
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
         $this->stats['pending_lab_payment'] = $this->stats['lab_dues'] - $this->stats['settled_amount'];
+        $this->stats['pending_balance'] = $this->stats['pending_lab_payment']; // For UI consistency
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
         $this->stats['this_month_profit'] = $rangeInvoices->sum('cc_profit_amount');

@@ -214,6 +214,14 @@
                             <span class="nxl-mtext">My Referrals</span>
                         </a>
                     </li>
+                    @if(auth()->user()->hasRole('collection_center'))
+                    <li class="nxl-item {{ request()->routeIs('lab.pos') ? 'active' : '' }}">
+                        <a href="{{ route('lab.pos') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shopping-cart"></i></span>
+                            <span class="nxl-mtext">Create Bill (POS)</span>
+                        </a>
+                    </li>
+                    @endif
                     <li class="nxl-item {{ request()->routeIs('partner.settlements') ? 'active' : '' }}">
                         <a href="{{ route('partner.settlements') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>

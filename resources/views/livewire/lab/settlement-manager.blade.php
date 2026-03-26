@@ -10,7 +10,7 @@
             </ul>
         </div>
         <div class="page-header-right d-flex gap-2">
-            <div class="btn-group p-1 bg-white border rounded shadow-sm">
+            <div class="btn-group p-1  border rounded shadow-sm">
                 <button wire:click="$set('partnerType', 'Doctor')" class="btn btn-sm {{ $partnerType == 'Doctor' ? 'btn-primary shadow-sm' : 'btn-light border-0 text-muted' }} px-3 fw-bold transition-all">
                     <i class="feather-user me-2"></i>Doctors
                 </button>
@@ -43,7 +43,7 @@
             {{-- Analytics & Stats --}}
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                    <div class="card border-0 shadow-sm rounded-4  h-100">
                         <div class="card-body p-4 d-flex align-items-center gap-3">
                             <div class="avatar-text avatar-lg bg-soft-warning rounded-circle flex-shrink-0">
                                 <i class="feather-clock text-warning fs-4"></i>
@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                    <div class="card border-0 shadow-sm rounded-4  h-100">
                         <div class="card-body p-4 d-flex align-items-center gap-3">
                             <div class="avatar-text avatar-lg bg-soft-success rounded-circle flex-shrink-0">
                                 <i class="feather-check-circle text-success fs-4"></i>
@@ -69,7 +69,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                    <div class="card border-0 shadow-sm rounded-4  h-100">
                         <div class="card-body p-4 d-flex align-items-center gap-3">
                             <div class="avatar-text avatar-lg bg-soft-primary rounded-circle flex-shrink-0">
                                 <i class="feather-users text-primary fs-4"></i>
@@ -86,8 +86,8 @@
             <div class="row g-4">
                 {{-- Partner Listing Table --}}
                 <div class="col-xl-8">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                        <div class="card-header bg-white border-bottom-0 py-4">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden ">
+                        <div class="card-header  border-bottom-0 py-4">
                             <div class="row g-3 align-items-center">
                                 <div class="col-sm-6">
                                     <h5 class="fw-bold mb-0 text-dark">
@@ -96,7 +96,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="input-group search-group shadow-sm">
-                                        <span class="input-group-text bg-white">
+                                        <span class="input-group-text ">
                                             <i class="feather-search text-primary"></i>
                                         </span>
                                         <input type="text" class="form-control" wire:model.live.debounce.300ms="searchPartner" placeholder="Search by name or phone...">
@@ -161,7 +161,7 @@
                             </div>
                         </div>
                         @if($partners->hasPages())
-                            <div class="card-footer bg-white py-3 border-top border-light d-flex justify-content-end pagination-sm">
+                            <div class="card-footer  py-3 border-top border-light d-flex justify-content-end pagination-sm">
                                 {{ $partners->links('livewire::bootstrap') }}
                             </div>
                         @endif
@@ -170,8 +170,8 @@
 
                 {{-- History Sidebar --}}
                 <div class="col-xl-4">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                        <div class="card-header bg-white border-bottom-0 py-4">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden ">
+                        <div class="card-header  border-bottom-0 py-4">
                             <h5 class="card-title mb-0 fw-bold"><i class="feather-clock text-info me-2"></i>Recent Settlements</h5>
                         </div>
                         <div class="card-body p-0">
@@ -179,16 +179,29 @@
                                 @forelse($settlements as $s)
                                     <div class="list-group-item p-3 border-bottom border-light hover-bg-light transition-all">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="badge {{ $s->type == 'Doctor' ? 'bg-soft-primary text-primary' : ($s->type == 'Agent' ? 'bg-soft-info text-info' : 'bg-soft-success text-success') }} rounded-pill fs-9 px-2 fw-bold">{{ $s->type }}</span>
-                                            <span class="text-muted fs-10 fw-medium text-uppercase">{{ $s->payment_date->format('d M, Y') }}</span>
+                                            <span class="badge {{ $s->type == 'Doctor' ? 'bg-soft-primary text-primary' : ($s->type == 'Agent' ? 'bg-soft-info text-info' : 'bg-soft-success text-success') }} rounded-pill fs-9 px-2 fw-bold text-uppercase">{{ $s->type }}</span>
+                                            <span class="text-muted fs-10 fw-bold text-uppercase">{{ $s->payment_date->format('d M, Y') }}</span>
                                         </div>
-                                        <div class="fw-bolder text-dark mb-1 fs-13">{{ $s->user->name }}</div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <div class="fw-bolder text-dark fs-13">{{ $s->user->name }}</div>
+                                            @php
+                                                $st = $s->status ?? 'Approved';
+                                                $stColor = $st === 'Approved' ? 'success' : ($st === 'Pending' ? 'warning' : 'danger');
+                                            @endphp
+                                            <span class="badge bg-soft-{{ $stColor }} text-{{ $stColor }} rounded-pill fs-9 px-2 fw-bold">{{ $st }}</span>
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-end">
                                             <div class="fs-12">
                                                 <div class="text-success fw-bold">₹{{ number_format($s->amount, 2) }}</div>
                                                 <div class="fs-10 text-muted mt-1">{{ $s->payment_mode }}</div>
                                             </div>
-                                            <button class="btn btn-sm btn-light border-0 rounded px-2 py-1 fs-10"><i class="feather-printer"></i></button>
+                                            <div class="d-flex gap-1">
+                                                @if(($s->status ?? 'Approved') === 'Pending')
+                                                    <button wire:click="approveSettlement({{ $s->id }})" class="btn btn-sm btn-success py-1 px-2 fs-9 fw-bold"><i class="feather-check"></i></button>
+                                                    <button wire:click="rejectSettlement({{ $s->id }})" class="btn btn-sm btn-danger py-1 px-2 fs-9 fw-bold"><i class="feather-x"></i></button>
+                                                @endif
+                                                <button class="btn btn-sm btn-light border-0 rounded px-2 py-1 fs-10"><i class="feather-printer"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                 @empty
@@ -197,7 +210,7 @@
                             </div>
                         </div>
                         @if($settlements->hasPages())
-                            <div class="card-footer bg-white p-3 border-top border-light d-flex justify-content-end pagination-xs"> 
+                            <div class="card-footer  p-3 border-top border-light d-flex justify-content-end pagination-xs"> 
                                 {{ $settlements->links('livewire::bootstrap') }} 
                             </div>
                         @endif
@@ -207,8 +220,8 @@
 
         @elseif($viewMode === 'process')
             {{-- Settlement Processing View --}}
-            <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white animated slideInUp-quick">
-                <div class="card-header bg-white border-bottom py-4 d-flex justify-content-between align-items-center">
+            <div class="card stretch stretch-full border-0 shadow-sm rounded-4  animated slideInUp-quick">
+                <div class="card-header  border-bottom py-4 d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
@@ -254,7 +267,7 @@
                         </div>
                         <div class="col-lg-5">
                             <div class="bg-light p-4 rounded-4 border border-light h-100 shadow-inner">
-                                <div class="p-4 bg-white rounded-4 shadow-sm text-center mb-4 border border-primary border-opacity-10">
+                                <div class="p-4  rounded-4 shadow-sm text-center mb-4 border border-primary border-opacity-10">
                                     <p class="text-muted fs-11 text-uppercase fw-bold ls-1 mb-1">Payable Amount</p>
                                     <h2 class="fw-bolder text-primary mb-0">₹{{ number_format($amount_to_pay, 2) }}</h2>
                                 </div>
@@ -280,8 +293,8 @@
 
         @elseif($viewMode === 'insights')
             {{-- Partner Insights Portfolio View --}}
-            <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white animated fadeIn">
-                <div class="card-header bg-white border-bottom py-4 d-flex justify-content-between align-items-center">
+            <div class="card stretch stretch-full border-0 shadow-sm rounded-4  animated fadeIn">
+                <div class="card-header  border-bottom py-4 d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
@@ -304,25 +317,25 @@
                     {{-- Mini Stats Layer --}}
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <div class="bg-white p-4 rounded-4 shadow-sm border-start border-primary border-4">
+                            <div class=" p-4 rounded-4 shadow-sm border-start border-primary border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Patients Referred</p>
                                 <h3 class="fw-bolder text-dark mb-0">{{ $partnerStats['total_bills'] }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="bg-white p-4 rounded-4 shadow-sm border-start border-success border-4">
+                            <div class=" p-4 rounded-4 shadow-sm border-start border-success border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Total Revenue</p>
                                 <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_revenue'], 2) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="bg-white p-4 rounded-4 shadow-sm border-start border-info border-4">
+                            <div class=" p-4 rounded-4 shadow-sm border-start border-info border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Earned Commission</p>
                                 <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_commission'], 2) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="bg-white p-4 rounded-4 shadow-sm border-start border-warning border-4">
+                            <div class=" p-4 rounded-4 shadow-sm border-start border-warning border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Avg Ticket Size</p>
                                 <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['avg_bill'], 2) }}</h3>
                             </div>
@@ -332,7 +345,7 @@
                     <div class="row g-4">
                         <div class="col-lg-8">
                             <h6 class="fw-bold mb-3 d-flex align-items-center"><i class="feather-activity text-primary me-2"></i>Referral Performance History</h6>
-                            <div class="table-responsive bg-white rounded-4 shadow-sm border">
+                            <div class="table-responsive  rounded-4 shadow-sm border">
                                 <table class="table table-hover align-middle mb-0 fs-13">
                                     <thead class="bg-light fs-11 text-muted text-uppercase">
                                         <tr>
@@ -366,7 +379,7 @@
                         </div>
                         <div class="col-lg-4">
                             <h6 class="fw-bold mb-3 d-flex align-items-center"><i class="feather-check-square text-success me-2"></i>Recent Settlements</h6>
-                            <div class="list-group list-group-flush rounded-4 bg-white shadow-sm border overflow-hidden">
+                            <div class="list-group list-group-flush rounded-4  shadow-sm border overflow-hidden">
                                 @forelse($partnerStats['settlement_history'] as $sh)
                                     <div class="list-group-item p-3 hover-bg-light border-bottom">
                                         <div class="d-flex justify-content-between align-items-center mb-1">

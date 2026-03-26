@@ -71,11 +71,20 @@ class PartnerPatientManager extends Component
     {
         $invoice = Invoice::findOrFail($invoiceId);
         
-        // Security check: ensure invoice belongs to this partner
         $user = Auth::user();
-        if ($this->role === 'Collection Center' && $invoice->collection_center_id != $user->collection_center_id) {
-            session()->flash('error', 'Unauthorized access.');
-            return;
+        
+        // Restriction for Collection Centers
+        if ($this->role === 'Collection Center') {
+            if ($invoice->collection_center_id != $user->collection_center_id) {
+                session()->flash('error', 'Unauthorized access.');
+                return;
+            }
+            
+            $allowedStatuses = ['Pending', 'Collected', 'Dispatched'];
+            if (!in_array($status, $allowedStatuses)) {
+                session()->flash('error', 'Collection Centers can only update status up to Dispatched.');
+                return;
+            }
         }
 
         $invoice->update([

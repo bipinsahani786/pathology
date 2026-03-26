@@ -107,7 +107,13 @@
                                                 </span>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 fs-12 p-1 rounded-3">
-                                                @foreach(['Pending', 'Collected', 'Dispatched', 'Received', 'Processing', 'Ready'] as $st)
+                                                @php
+                                                    $statuses = ['Pending', 'Collected', 'Dispatched', 'Received', 'Processing', 'Ready'];
+                                                    if(Auth::user()->hasRole('collection_center')) {
+                                                        $statuses = ['Pending', 'Collected', 'Dispatched'];
+                                                    }
+                                                @endphp
+                                                @foreach($statuses as $st)
                                                     <li>
                                                         <a class="dropdown-item rounded-2 py-2 {{ ($inv->sample_status ?? 'Pending') == $st ? 'bg-primary text-white fw-bold' : '' }}" 
                                                            href="javascript:void(0)" 

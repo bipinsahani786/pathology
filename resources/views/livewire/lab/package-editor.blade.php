@@ -27,7 +27,7 @@
                 <!-- Build Profile Card (Left) -->
                 <div class="col-xl-7">
                     <div class="card stretch stretch-full border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-header bg-white py-3">
+                        <div class="card-header py-3">
                             <h6 class="card-title mb-0 fw-bold text-dark small-caps"><i class="feather-layers text-primary me-2"></i>Step 1: Build Your Profile</h6>
                         </div>
                         <div class="card-body p-4">
@@ -122,7 +122,7 @@
                 <!-- Metadata & Pricing (Right) -->
                 <div class="col-xl-5">
                     <div class="card border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-header bg-white py-3">
+                        <div class="card-header py-3">
                             <h6 class="card-title mb-0 fw-bold text-dark small-caps"><i class="feather-info text-primary me-2"></i>Step 2: Profile Details</h6>
                         </div>
                         <div class="card-body p-4">

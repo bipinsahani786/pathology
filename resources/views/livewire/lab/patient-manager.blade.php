@@ -152,7 +152,7 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number *</label>
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number</label>
                                 <input type="number" class="form-control" wire:model="phone" placeholder="10-digit mobile number">
                                 @error('phone') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>

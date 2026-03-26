@@ -14,6 +14,7 @@ class Settlement extends Model
     protected $casts = [
         'payment_date' => 'datetime',
         'amount' => 'decimal:2',
+        'status' => 'string', // Pending, Approved, Rejected
     ];
 
     /**
@@ -22,6 +23,14 @@ class Settlement extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the collection center linked to this settlement.
+     */
+    public function collectionCenter()
+    {
+        return $this->belongsTo(CollectionCenter::class);
     }
 
     /**

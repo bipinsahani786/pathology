@@ -15,12 +15,17 @@ class Invoice extends Model
         'invoice_date' => 'datetime',
     ];
 
-    /**
-     * The collection center (branch) where this bill was generated.
-     */
     public function collectionCenter() 
     {
         return $this->belongsTo(CollectionCenter::class);
+    }
+
+    /**
+     * The processing branch (Lab) for this invoice.
+     */
+    public function branch() 
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**

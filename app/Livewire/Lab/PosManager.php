@@ -56,43 +56,77 @@ class PosManager extends Component
     // ==========================================
     // 5. MODALS
     // ==========================================
-    public $isPatientModalOpen = false, $isDoctorModalOpen = false;
+    public $isPatientModalOpen = false, $isDoctorModalOpen = false, $isAgentModalOpen = false;
+    public $activeSearchField = null; // null, 'patient', 'doctor', 'agent', 'test'
+    public $paymentModesList = [];
+    public $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
     public $new_name, $new_phone, $new_age, $new_gender = 'Male';
     public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
+    public $new_agent_name, $new_agent_phone, $new_agent_agency, $new_agent_commission = 0;
     public $isMembershipModalOpen = false, $selectedMembershipId = null;
     public $purchasedMembershipRecordId = null;
     public $isPaymentModeModalOpen = false, $new_payment_mode_name = '';
     public $modalError = '';
 
     // ==========================================
-    // 6. CART EXPAND
+    // 6. LOGISTICS EXTRA
+    // ==========================================
+    public $sample_received_at;
+
+    // ==========================================
+    // 7. CART EXPAND
     // ==========================================
     public $expandedCartItems = [];
 
     public function mount()
     {
-        $this->authorize('manage pos');
         $user = auth()->user();
+        
+        // Authorization: Allow Lab Staff OR Collection Center users
+        if (!$user->can('manage pos') && !$user->hasRole('collection_center')) {
+            abort(403, 'Unauthorized access to POS.');
+        }
+
         $companyId = $user->company_id;
 
-        // If user is linked to a collection center, use that. Otherwise use first center.
-        $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
-        $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
+        // If user is a Collection Center, lock the ID and force Branch selection requirement
+        if ($user->hasRole('collection_center')) {
+            $this->collection_center_id = $user->collection_center_id;
+            // CC MUST select a lab branch where they will send samples
+            $this->branch_id = null; 
+        } else {
+            // Lab Staff logic: Use linked CC/Branch or defaults
+            $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
+            $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
+        }
         
         $this->expected_report_date = date('Y-m-d');
         $this->expected_report_time = date('H:i', strtotime('+24 hours'));
+        $this->sample_received_at = now()->format('Y-m-d\TH:i');
         $this->addPaymentRow();
+
+        // Cache static dropdown data once on mount
+        $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
     }
 
     // ==========================================
     // SELECTIONS — FULL PROFILE LOAD
     // ==========================================
+    public function updatedPatientSearch() { $this->activeSearchField = 'patient'; }
+    public function updatedDoctorSearch() { $this->activeSearchField = 'doctor'; }
+    public function updatedAgentSearch() { $this->activeSearchField = 'agent'; }
+    public function updatedTestSearch() { $this->activeSearchField = 'test'; }
+
     public function selectPatient($userId)
     {
         $user = User::with(['patientProfile'])->find($userId);
         $this->selectedPatient = $user->toArray();
         $this->patientProfileData = $user->patientProfile ? $user->patientProfile->toArray() : null;
         $this->patientSearch = '';
+        $this->activeSearchField = null;
 
         // Check active membership — only auto-apply if fully paid
         $record = PatientMembership::where('patient_id', $userId)
@@ -123,6 +157,7 @@ class PosManager extends Component
         $this->selectedDoctor = $user->toArray();
         $this->doctorProfileData = $user->doctorProfile ? $user->doctorProfile->toArray() : null;
         $this->doctorSearch = '';
+        $this->activeSearchField = null;
     }
 
     public function selectAgent($userId)
@@ -131,6 +166,7 @@ class PosManager extends Component
         $this->selectedAgent = $user->toArray();
         $this->agentProfileData = $user->agentProfile ? $user->agentProfile->toArray() : null;
         $this->agentSearch = '';
+        $this->activeSearchField = null;
     }
 
     public function clearPatient() { $this->selectedPatient = null; $this->patientProfileData = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null; $this->calculateTotals(); }
@@ -168,10 +204,11 @@ class PosManager extends Component
                 ])->toArray();
             }
 
-            $this->cart[] = $cartItem;
+            $this->cart[] = array_merge($cartItem, ['price' => $cartItem['mrp']]);
             $this->calculateTotals();
+            $this->testSearch = '';
+            $this->activeSearchField = null;
         }
-        $this->testSearch = '';
     }
 
     public function removeFromCart($index)
@@ -298,11 +335,15 @@ class PosManager extends Component
     public function updatedManualDiscountInput() { $this->calculateTotals(); }
     public function updatedManualDiscountType() { $this->calculateTotals(); }
     public function updatedPayments() { $this->calculateTotals(); }
+    public function updatedCart() { $this->calculateTotals(); }
 
     public function calculateTotals()
     {
         $this->subtotal = collect($this->cart)->sum('mrp');
-        $running = $this->subtotal;
+        $itemTotal = collect($this->cart)->sum('price');
+        $itemDiscount = $this->subtotal - $itemTotal;
+
+        $running = $itemTotal;
 
         $this->membership_discount_amt = 0;
         if ($this->active_membership && $running > 0) {
@@ -331,6 +372,7 @@ class PosManager extends Component
         }
 
         $this->net_payable = max($running, 0) + $this->membership_fee;
+        $this->manual_discount_amt += $itemDiscount; // Total discount reflects item-level reductions
         $this->total_discount = $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
         $this->due_amount = max($this->net_payable - collect($this->payments)->sum('amount'), 0);
     }
@@ -349,18 +391,23 @@ class PosManager extends Component
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
-            'new_phone' => 'required|numeric|digits:10|unique:users,phone',
+            'new_phone' => 'nullable|numeric|digits:10|unique:users,phone',
             'new_age' => 'required|numeric|min:1|max:150',
         ]);
 
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
+
+            // fallback for email/password if phone is missing
+            $fallbackEmail = 'patient_' . time() . rand(10, 99) . '@patient.local';
+            $defaultPass = $this->new_phone ?? '12345678';
+
             $user = User::create([
                 'name' => $this->new_name,
                 'phone' => $this->new_phone,
-                'email' => 'patient_' . $this->new_phone . '@noemail.local',
-                'password' => Hash::make($this->new_phone),
+                'email' => $fallbackEmail,
+                'password' => Hash::make($defaultPass),
                 'is_active' => true,
                 'company_id' => $companyId,
             ]);
@@ -423,6 +470,48 @@ class PosManager extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Quick Add Doctor: " . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
+        }
+    }
+
+    // ==========================================
+    // QUICK ADD AGENT
+    // ==========================================
+    public function quickAddAgent()
+    {
+        $this->modalError = '';
+        $this->validate([
+            'new_agent_name' => 'required|string|max:255',
+            'new_agent_phone' => 'nullable|numeric|digits:10|unique:users,phone',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
+            $phone = $this->new_agent_phone ?: 'AGT' . time() . rand(10, 99);
+            $user = User::create([
+                'name' => $this->new_agent_name,
+                'phone' => $phone,
+                'email' => 'agent_' . $phone . '@noemail.local',
+                'password' => Hash::make($phone),
+                'is_active' => true,
+                'company_id' => $companyId,
+            ]);
+            AgentProfile::create([
+                'company_id' => $companyId,
+                'user_id' => $user->id,
+                'agency_name' => $this->new_agent_agency,
+                'commission_percentage' => $this->new_agent_commission ?: 0,
+            ]);
+            $user->assignRole('agent');
+            DB::commit();
+            $this->selectAgent($user->id);
+            $this->isAgentModalOpen = false;
+            $this->modalError = '';
+            $this->reset(['new_agent_name', 'new_agent_phone', 'new_agent_agency', 'new_agent_commission']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Quick Add Agent: " . $e->getMessage());
             $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
@@ -497,7 +586,7 @@ class PosManager extends Component
             $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
 
             foreach ($this->cart as $item) {
-                $b2b = (float)($testPrices[$item['id']]->b2b_price ?? 0);
+                $b2b = (float)data_get($testPrices->get($item['id']), 'b2b_price', 0);
                 $totalB2bAmount += $b2b;
             }
 
@@ -512,16 +601,17 @@ class PosManager extends Component
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
-                'patient_id' => $this->selectedPatient['id'] ?? null,
+                'patient_id' => data_get($this->selectedPatient, 'id'),
                 'created_by' => auth()->id(),
                 'referred_by_doctor_id' => $doctorId,
                 'referred_by_agent_id' => $agentId,
                 'invoice_number' => $invoiceNumber,
                 'barcode' => $barcode,
                 'invoice_date' => now(),
-                'expected_report_time' => $this->expected_report_date && $this->expected_report_time
-                    ? $this->expected_report_date . ' ' . $this->expected_report_time
-                    : null,
+                // 'sample_received_at' => $this->sample_received_at, // Removed temporarily until DB migration
+                // 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
+                //     ? $this->expected_report_date . ' ' . $this->expected_report_time
+                //     : null,
                 'subtotal' => $this->subtotal,
                 'membership_discount_amount' => $this->membership_discount_amt,
                 'voucher_id' => $this->applied_voucher->id ?? null,
@@ -546,7 +636,7 @@ class PosManager extends Component
                     'is_package' => $item['is_package'],
                     'mrp' => $item['mrp'],
                     'price' => $item['mrp'],
-                    'b2b_price' => $testPrices[$item['id']]->b2b_price ?? 0,
+                    'b2b_price' => data_get($testPrices->get($item['id']), 'b2b_price', 0),
                 ]);
             }
 
@@ -599,6 +689,8 @@ class PosManager extends Component
             $this->applied_voucher = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null;
             $this->manual_discount_input = 0; $this->expandedCartItems = [];
             $this->payments = []; $this->addPaymentRow(); $this->calculateTotals();
+
+            return redirect()->route('lab.pos.summary', ['invoice' => $invoice->id]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -606,7 +698,7 @@ class PosManager extends Component
             Log::error("Invoice Generation Error: " . $e->getMessage(), [
                 'exception' => $e,
                 'user_id' => auth()->id(),
-                'patient_id' => $this->selectedPatient['id'] ?? null,
+                'patient_id' => data_get($this->selectedPatient, 'id'),
                 'cart_count' => count($this->cart)
             ]);
             session()->flash('error', 'Failed to generate bill: ' . $e->getMessage());
@@ -617,49 +709,56 @@ class PosManager extends Component
     {
         $companyId = auth()->user()->company_id;
 
+        // Only query the search that is currently active
         $patients = [];
-        if (strlen($this->patientSearch) >= 2) {
+        if ($this->activeSearchField === 'patient') {
             $s = $this->patientSearch;
-            $patients = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
-                ->where(fn($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"))
-                ->with('patientProfile')
-                ->take(5)->get();
+            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"));
+            }
+            $patients = $query->with('patientProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
         $doctors = [];
-        if (strlen($this->doctorSearch) >= 2) {
+        if ($this->activeSearchField === 'doctor') {
             $s = $this->doctorSearch;
-            $doctors = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"))
-                ->with('doctorProfile')
-                ->take(5)->get();
+            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            }
+            $doctors = $query->with('doctorProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
         $agents = [];
-        if (strlen($this->agentSearch) >= 2) {
+        if ($this->activeSearchField === 'agent') {
             $s = $this->agentSearch;
-            $agents = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"))
-                ->with('agentProfile')
-                ->take(5)->get();
+            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            }
+            $agents = $query->with('agentProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
         $tests = [];
-        if (strlen($this->testSearch) >= 2) {
+        if ($this->activeSearchField === 'test') {
             $s = $this->testSearch;
-            $tests = LabTest::where('company_id', $companyId)->where('is_active', true)
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"))
-                ->take(8)->get();
+            $query = LabTest::where('company_id', $companyId)->where('is_active', true);
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
+            }
+            $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }
 
-        $paymentModes = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
-        $centers = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
-        $branches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
-        $memberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
-
-        return view('livewire.lab.pos-manager', compact(
-            'patients', 'doctors', 'agents', 'tests',
-            'paymentModes', 'centers', 'branches', 'memberships'
-        ))->layout('layouts.app', ['title' => 'Billing POS']);
+        return view('livewire.lab.pos-manager', [
+            'patients' => $patients,
+            'doctors' => $doctors,
+            'agents' => $agents,
+            'tests' => $tests,
+            'paymentModes' => $this->paymentModesList,
+            'centers' => $this->cachedCenters,
+            'branches' => $this->cachedBranches,
+            'memberships' => $this->cachedMemberships,
+        ])->layout('layouts.app', ['title' => 'Billing POS']);
     }
 }

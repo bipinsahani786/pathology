@@ -91,7 +91,7 @@ class PatientManager extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'phone' => [
-                'required',
+                'nullable',
                 'numeric',
                 'digits:10',
                 Rule::unique('users', 'phone')->ignore($this->user_id),
@@ -131,12 +131,16 @@ class PatientManager extends Component
             } else {
                 // CREATE NEW PATIENT
                 
+                // fallback for email/password if phone is missing
+                $fallbackEmail = 'patient_' . time() . rand(10, 99) . '@patient.local';
+                $defaultPass = $this->phone ?? '12345678';
+
                 // 1. Create the User record (Allows them to log in later)
                 $user = User::create([
                     'name' => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email ?? $this->phone . '@patient.local', // Fallback email
-                    'password' => Hash::make($this->phone), // Default password is their phone number
+                    'email' => $this->email ?? $fallbackEmail, 
+                    'password' => Hash::make($defaultPass), 
                     'is_active' => true,
                 ]);
 

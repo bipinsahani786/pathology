@@ -119,13 +119,13 @@ class DemoSeeder extends Seeder
             'is_main_lab' => true,
             'is_active' => true,
         ]);
-        CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Boring Road Center'], [
+        $boringCenter = CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Boring Road Center'], [
             'center_code' => 'CENTER-002',
             'address' => '45, Boring Road, Patna',
             'is_main_lab' => false,
             'is_active' => true,
         ]);
-        CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Rajiv Nagar Center'], [
+        $rajivCenter = CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Rajiv Nagar Center'], [
             'center_code' => 'CENTER-003',
             'address' => '12, Rajiv Nagar, Patna',
             'is_main_lab' => false,
@@ -137,7 +137,30 @@ class DemoSeeder extends Seeder
             'is_main_lab' => false,
             'is_active' => true,
         ]);
-        $this->command->info('✅ Collection Centers created');
+
+        // Create Collection Center Users
+        $ccRole = Role::firstOrCreate(['name' => 'collection_center']);
+        $ccUser1 = User::firstOrCreate(['email' => 'boring@center.com'], [
+            'name' => 'Boring Road CC Admin',
+            'password' => Hash::make('password123'),
+            'phone' => '9988776655',
+            'company_id' => $company->id,
+            'collection_center_id' => $boringCenter->id,
+            'is_active' => true,
+        ]);
+        if (!$ccUser1->hasRole('collection_center')) $ccUser1->assignRole($ccRole);
+
+        $ccUser2 = User::firstOrCreate(['email' => 'rajiv@center.com'], [
+            'name' => 'Rajiv Nagar CC Admin',
+            'password' => Hash::make('password123'),
+            'phone' => '9988776654',
+            'company_id' => $company->id,
+            'collection_center_id' => $rajivCenter->id,
+            'is_active' => true,
+        ]);
+        if (!$ccUser2->hasRole('collection_center')) $ccUser2->assignRole($ccRole);
+
+        $this->command->info('✅ Collection Centers & CC Users created');
 
         // ============================================================
         // 6. PAYMENT MODES
@@ -412,9 +435,13 @@ class DemoSeeder extends Seeder
             $invoiceNumber = 'INV-' . $invoiceDate->format('ym') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $barcode = 'INV' . $invoiceDate->format('ymd') . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
 
+            $selectedCC = rand(0, 1) ? $mainCenter : (rand(0, 1) ? $boringCenter : $rajivCenter);
+            $totalB2b = $selectedTests->sum('b2b_price');
+            $ccProfit = max(0, $total - $totalB2b);
+
             $invoice = Invoice::create([
                 'company_id' => $company->id,
-                'collection_center_id' => $mainCenter->id,
+                'collection_center_id' => $selectedCC->id,
                 'branch_id' => $mainBranch->id,
                 'patient_id' => $patient->id,
                 'created_by' => $labAdmin->id,
@@ -428,10 +455,13 @@ class DemoSeeder extends Seeder
                 'membership_discount_amount' => 0,
                 'voucher_discount_amount' => 0,
                 'total_amount' => $total,
+                'total_b2b_amount' => $totalB2b,
+                'cc_profit_amount' => $ccProfit,
                 'paid_amount' => $paidAmount,
                 'due_amount' => max($due, 0),
                 'payment_status' => $due <= 0 ? 'Paid' : ($paidAmount > 0 ? 'Partial' : 'Unpaid'),
                 'status' => 'Pending',
+                'sample_status' => ['Pending', 'Collected', 'Dispatched', 'Received', 'Ready'][rand(0, 4)],
                 'collection_type' => $collectionTypes[array_rand($collectionTypes)],
                 'expected_report_time' => $invoiceDate->copy()->addHours(24),
                 'doctor_commission_amount' => 0,
@@ -463,6 +493,36 @@ class DemoSeeder extends Seeder
             }
         }
         $this->command->info('✅ 20 Sample Invoices created');
+ 
+        // ============================================================
+        // 16. SAMPLE SETTLEMENTS
+        // ============================================================
+        $pendingSettlement = \App\Models\Settlement::create([
+            'company_id' => $company->id,
+            'user_id' => $ccUser1->id,
+            'collection_center_id' => $boringCenter->id,
+            'amount' => 1500,
+            'payment_date' => now()->subDays(1),
+            'payment_mode' => 'UPI',
+            'reference_no' => 'UPI123456789',
+            'type' => 'CollectionCenter',
+            'status' => 'Pending',
+            'notes' => 'Bulk payment for last week'
+        ]);
+
+        $approvedSettlement = \App\Models\Settlement::create([
+            'company_id' => $company->id,
+            'user_id' => $ccUser2->id,
+            'collection_center_id' => $rajivCenter->id,
+            'amount' => 2500,
+            'payment_date' => now()->subDays(5),
+            'payment_mode' => 'Bank Transfer',
+            'reference_no' => 'TXN987654321',
+            'type' => 'CollectionCenter',
+            'status' => 'Approved',
+            'notes' => 'Monthly settlement'
+        ]);
+        $this->command->info('✅ Sample Settlements created');
 
         // ============================================================
         // DONE!
