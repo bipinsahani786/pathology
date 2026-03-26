@@ -149,6 +149,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Invoices where this user is the referring agent.
+     */
+    public function invoicesAsAgent()
+    {
+        return $this->hasMany(Invoice::class, 'referred_by_agent_id');
+    }
+
+    /**
      * Invoices associated with the collection center this user belongs to.
      */
     public function collectionCenterInvoices()

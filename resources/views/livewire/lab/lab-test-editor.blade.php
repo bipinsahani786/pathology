@@ -27,7 +27,7 @@
                 <!-- Main Details Card -->
                 <div class="col-xl-8">
                     <div class="card stretch stretch-full border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-header bg-white py-3">
+                        <div class="card-header py-3">
                             <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-info text-primary me-2"></i>Primary Details</h6>
                         </div>
                         <div class="card-body p-4">
@@ -102,7 +102,7 @@
 
                             <div class="table-responsive border rounded-4 bg-light p-1 shadow-sm overflow-visible">
                                 <table class="table table-sm align-middle mb-0">
-                                    <thead class="bg-white">
+                                    <thead class="bg-light">
                                         <tr class="fs-10 text-uppercase text-muted fw-bold">
                                             <th class="ps-3 py-3" style="min-width: 200px;">Param Name</th>
                                             <th style="min-width: 80px;">S.Code</th>
@@ -158,7 +158,7 @@
                 <!-- Interpretation Side Card -->
                 <div class="col-xl-4">
                     <div class="card border-0 shadow-sm rounded-4 mb-4">
-                        <div class="card-header bg-white py-3">
+                        <div class="card-header py-3">
                             <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-file-text text-primary me-2"></i>Interpretation Template</h6>
                         </div>
                         <div class="card-body p-4">

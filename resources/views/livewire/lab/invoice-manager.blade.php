@@ -78,13 +78,13 @@
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <span class="input-group-text bg-white fs-10 fw-bold">FROM</span>
+                            <span class="input-group-text bg-light fs-10 fw-bold">FROM</span>
                             <input type="date" class="form-control" wire:model.live="filterDateFrom">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
-                            <span class="input-group-text bg-white fs-10 fw-bold">TO</span>
+                            <span class="input-group-text bg-light fs-10 fw-bold">TO</span>
                             <input type="date" class="form-control" wire:model.live="filterDateTo">
                         </div>
                     </div>
@@ -98,7 +98,7 @@
                             <option value="Unpaid">❌ Unpaid</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select class="form-select" wire:model.live="filterCollectionType">
                             <option value="">All Collection Types</option>
                             <option value="Center">🏥 Center</option>
@@ -106,9 +106,17 @@
                             <option value="Hospital">🏨 Hospital</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex gap-2">
+                    <div class="col-md-3">
+                        <select class="form-select" wire:model.live="filterCC">
+                            <option value="">All Collection Centers</option>
+                            @foreach($collectionCenters as $cc)
+                                <option value="{{ $cc->id }}">🏥 {{ $cc->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
                         <button wire:click="clearFilters" class="btn btn-outline-secondary w-100" title="Clear Filters">
-                            <i class="feather-refresh-cw me-2"></i> Clear All Filters
+                            <i class="feather-refresh-cw me-2"></i> Clear
                         </button>
                     </div>
                 </div>
@@ -131,6 +139,7 @@
                                 <th class="text-end">Due</th>
                                 <th class="text-center">Status</th>
                                 <th>Date</th>
+                                <th class="text-center">Sample Status</th>
                                 <th class="text-center" style="width:120px;">Actions</th>
                             </tr>
                         </thead>
@@ -170,6 +179,29 @@
                                     <td>
                                         <div class="fs-11">{{ $inv->invoice_date->format('d M Y') }}</div>
                                         <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            @php
+                                                $sampleStatusColors = [
+                                                    'Pending' => 'bg-soft-secondary text-secondary',
+                                                    'Collected' => 'bg-soft-info text-info',
+                                                    'Dispatched' => 'bg-soft-warning text-warning',
+                                                    'Received' => 'bg-soft-primary text-primary',
+                                                    'Processing' => 'bg-soft-danger text-danger',
+                                                    'Ready' => 'bg-soft-success text-success',
+                                                ];
+                                                $c = $sampleStatusColors[$inv->sample_status] ?? 'bg-soft-secondary text-secondary';
+                                            @endphp
+                                            <button class="btn btn-sm dropdown-toggle py-0 px-2 fw-bold fs-10 {{ $c }}" type="button" data-bs-toggle="dropdown">
+                                                {{ $inv->sample_status ?? 'Pending' }}
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm fs-11 p-1">
+                                                @foreach(['Pending', 'Collected', 'Dispatched', 'Received', 'Processing', 'Ready'] as $st)
+                                                    <li><a class="dropdown-item rounded-2 py-1 {{ ($inv->sample_status ?? 'Pending') == $st ? 'bg-primary text-white' : '' }}" href="javascript:void(0)" wire:click="updateSampleStatus({{ $inv->id }}, '{{ $st }}')">{{ $st }}</a></li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
@@ -217,7 +249,7 @@
                 </div>
 
                 {{-- Pagination Footer --}}
-                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-top bg-gray-50">
+                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-top bg-light">
                     <div class="d-flex align-items-center gap-2">
                         <span class="fs-11 text-muted">Show</span>
                         <select class="form-select form-select-sm fw-bold" wire:model.live="perPage" style="width:70px;">

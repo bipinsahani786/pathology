@@ -201,12 +201,6 @@
         
         .transition-all { transition: all 0.2s ease-in-out; }
         .hover-lift:hover { transform: translateY(-1px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
-        
-        input.form-control:focus, textarea.form-control:focus {
-            background-color: #ffffff !important;
-            border-color: #3b71ca !important;
-            box-shadow: 0 4px 15px rgba(59, 113, 202, 0.08), 0 0 0 0.25rem rgba(59, 113, 202, 0.15) !important;
-        }
 
         .hover-primary:hover { background-color: #3b71ca !important; color: #fff !important; border-color: #3b71ca !important; }
         .hover-danger:hover { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }

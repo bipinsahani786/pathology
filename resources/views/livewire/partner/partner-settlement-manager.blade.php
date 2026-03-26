@@ -19,6 +19,11 @@
                     <option value="month">📅 This Month</option>
                 </select>
             </div>
+            @if(auth()->user()->hasRole('collection_center'))
+                <button wire:click="openModal" class="btn btn-primary btn-sm rounded-3 px-3 fw-bold fs-11">
+                    <i class="feather-plus me-1"></i>Record Payment to Lab
+                </button>
+            @endif
         </div>
     </div>
 
@@ -61,8 +66,13 @@
                                         <div class="text-dark font-medium">{{ $s->reference_number ?? '---' }}</div>
                                     </td>
                                     <td class="text-center pe-4">
-                                        <span class="badge bg-soft-success text-success rounded-pill px-3 py-1 fs-11 fw-bold">
-                                            <i class="feather-check-circle me-1"></i>Settled
+                                        @php
+                                            $st = $s->status ?? 'Approved';
+                                            $color = $st === 'Approved' ? 'success' : ($st === 'Pending' ? 'warning' : 'danger');
+                                            $icon = $st === 'Approved' ? 'check-circle' : ($st === 'Pending' ? 'clock' : 'x-circle');
+                                        @endphp
+                                        <span class="badge bg-soft-{{ $color }} text-{{ $color }} rounded-pill px-3 py-1 fs-11 fw-bold">
+                                            <i class="feather-{{ $icon }} me-1"></i>{{ $st }}
                                         </span>
                                     </td>
                                 </tr>
@@ -87,7 +97,59 @@
         </div>
     </div>
 
-    <style>
+    {{-- Record Payment Modal --}}
+    @if($isModalOpen)
+        <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+        <div class="modal fade show d-block" style="z-index: 1050;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-light p-4 pb-0">
+                        <h5 class="modal-title fw-bold text-dark"><i class="feather-plus-circle me-2 text-primary"></i>Record Payment to Lab</h5>
+                        <button type="button" class="btn-close" wire:click="$set('isModalOpen', false)"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Amount Paid (₹) <span class="text-danger">*</span></label>
+                                <input type="number" wire:model="amount" class="form-control form-control-lg fw-bold text-primary @error('amount') is-invalid @enderror" placeholder="0.00">
+                                @error('amount') <div class="invalid-feedback fw-bold">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Payment Date <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="payment_date" class="form-control @error('payment_date') is-invalid @enderror">
+                                @error('payment_date') <div class="invalid-feedback fw-bold">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Payment Mode <span class="text-danger">*</span></label>
+                                <select wire:model="payment_mode" class="form-select @error('payment_mode') is-invalid @enderror">
+                                    <option value="UPI">UPI / QR Scan</option>
+                                    <option value="Cash">Cash to Lab</option>
+                                    <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                                    <option value="Check">Check</option>
+                                </select>
+                                @error('payment_mode') <div class="invalid-feedback fw-bold">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Transaction Reference No / UTR</label>
+                                <input type="text" wire:model="reference_no" class="form-control" placeholder="Optional reference number">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Notes</label>
+                                <textarea wire:model="notes" class="form-control" rows="2" placeholder="Any additional details..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-light p-4 pt-0">
+                        <button type="button" class="btn btn-light rounded-3 px-4 fw-bold fs-13" wire:click="$set('isModalOpen', false)">Cancel</button>
+                        <button type="button" class="btn btn-primary rounded-3 px-4 fw-bold fs-13" wire:click="recordPayment">
+                            <span wire:loading.remove wire:target="recordPayment"><i class="feather-save me-1"></i>Save Payment</span>
+                            <span wire:loading wire:target="recordPayment"><span class="spinner-border spinner-border-sm me-1"></span>Processing...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
         .ls-1 { letter-spacing: 0.5px; }
         .font-medium { font-weight: 500; }
         .bg-soft-success { background-color: rgba(16, 185, 129, 0.08) !important; }

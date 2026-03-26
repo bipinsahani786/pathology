@@ -1,4 +1,44 @@
 <div>
+    <style>
+        .search-dropdown {
+            max-height: 250px; /* Shows approx 5 items before scrolling */
+            overflow-y: auto;
+            z-index: 1060;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid var(--bs-border-color, #e0e0e0);
+            background: var(--bs-card-bg, #fff);
+            width: 100%;
+        }
+        .search-dropdown .list-group-item {
+            border-left: 0;
+            border-right: 0;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            color: inherit;
+        }
+        .search-dropdown .list-group-item:hover {
+            background-color: rgba(var(--bs-primary-rgb), 0.08);
+            color: var(--bs-primary);
+        }
+        .search-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+        .search-dropdown::-webkit-scrollbar-thumb {
+            background-color: #ddd;
+            border-radius: 10px;
+        }
+        html.app-skin-dark .search-dropdown::-webkit-scrollbar-thumb {
+            background-color: #323248;
+        }
+        .pos-unit-price-input {
+            background-color: rgba(var(--bs-primary-rgb), 0.05);
+        }
+        .pos-membership-box, .pos-voucher-box {
+            background: rgba(var(--bs-primary-rgb), 0.08);
+        }
+    </style>
     {{-- ======================== PAGE HEADER ======================== --}}
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
@@ -13,7 +53,6 @@
         </div>
     </div>
 
-    {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
 
         {{-- Flash Messages --}}
@@ -77,19 +116,22 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div class="position-relative">
+                                    <div class="position-relative" x-data="{ open: false }" wire:key="patient-search-box" @click.away="open = false" @focusin="open = true; $wire.set('activeSearchField', 'patient')">
                                         <div class="d-flex gap-2 mb-1">
                                             <div class="input-group input-group-sm flex-grow-1">
-                                                <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
-                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="patientSearch" placeholder="Phone / Name">
+                                                <span class="input-group-text bg-light"><i class="feather-search text-muted fs-12"></i></span>
+                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="patientSearch" 
+                                                    @focus="open = true"
+                                                    onclick="this.select()"
+                                                    placeholder="Phone / Name">
                                             </div>
-                                            <button wire:click="$set('isPatientModalOpen', true)" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
+                                            <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
                                         </div>
-                                        @if (strlen($patientSearch) >= 2)
+                                        <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($patients) && count($patients) > 0)
-                                                <div class="list-group position-absolute w-100 shadow-lg z-3 rounded-3 border" style="top:100%;left:0;">
+                                                <div class="list-group position-absolute shadow-lg z-3 rounded-3 search-dropdown" style="top:100%;left:0;">
                                                     @foreach ($patients as $pt)
-                                                        <button wire:click="selectPatient({{ $pt->id }})" class="list-group-item list-group-item-action py-2 px-3">
+                                                        <button wire:click="selectPatient({{ $pt->id }})" @click="open = false" class="list-group-item list-group-item-action py-2 px-3">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
                                                                     <div class="fw-bold fs-12">{{ $pt->name }}</div>
@@ -100,14 +142,14 @@
                                                         </button>
                                                     @endforeach
                                                 </div>
-                                            @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
+                                            @elseif(!empty($patientSearch))
+                                                <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <i class="feather-user-x text-muted fs-3 d-block mb-1"></i>
                                                     <div class="fw-bold text-muted fs-11">No patient found for "{{ $patientSearch }}"</div>
-                                                    <button wire:click="$set('isPatientModalOpen', true)" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
+                                                    <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
                                                 </div>
                                             @endif
-                                        @endif
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -146,31 +188,34 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div class="position-relative">
+                                    <div class="position-relative" x-data="{ open: false }" wire:key="doctor-search-box" @click.away="open = false" @focusin="open = true; $wire.set('activeSearchField', 'doctor')">
                                         <div class="d-flex gap-2 mb-1">
                                             <div class="input-group input-group-sm flex-grow-1">
-                                                <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
-                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="doctorSearch" placeholder="Doctor Name / Phone">
+                                                <span class="input-group-text bg-light"><i class="feather-search text-muted fs-12"></i></span>
+                                                <input type="text" class="form-control" wire:model.live.debounce.300ms="doctorSearch" 
+                                                    @focus="open = true"
+                                                    onclick="this.select()"
+                                                    placeholder="Doctor Name / Phone">
                                             </div>
-                                            <button wire:click="$set('isDoctorModalOpen', true)" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
+                                            <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
                                         </div>
-                                        @if (strlen($doctorSearch) >= 2)
+                                        <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($doctors) && count($doctors) > 0)
-                                                <div class="list-group position-absolute w-100 shadow-lg z-3 rounded-3 border" style="top:100%;left:0;">
+                                                <div class="list-group position-absolute shadow-lg z-3 rounded-3 search-dropdown" style="top:100%;left:0;">
                                                     @foreach ($doctors as $doc)
-                                                        <button wire:click="selectDoctor({{ $doc->id }})" class="list-group-item list-group-item-action py-2 px-3">
+                                                        <button wire:click="selectDoctor({{ $doc->id }})" @click="open = false" class="list-group-item list-group-item-action py-2 px-3">
                                                             <div class="fw-bold fs-12">{{ $doc->name }}</div>
                                                             <div class="text-muted fs-10">{{ $doc->doctorProfile->specialization ?? '' }} · {{ number_format($doc->doctorProfile->commission_percentage ?? 0, 1) }}%</div>
                                                         </button>
                                                     @endforeach
                                                 </div>
-                                            @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
-                                                    <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found</div>
-                                                    <button wire:click="$set('isDoctorModalOpen', true)" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
+                                            @elseif(!empty($doctorSearch))
+                                                <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
+                                                    <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found for "{{ $doctorSearch }}"</div>
+                                                    <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
                                                 </div>
                                             @endif
-                                        @endif
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -206,27 +251,32 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div class="position-relative">
+                                    <div class="position-relative" x-data="{ open: false }" wire:key="agent-search-box" @click.away="open = false" @focusin="open = true; $wire.set('activeSearchField', 'agent')">
                                         <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-gray-100"><i class="feather-search text-muted fs-12"></i></span>
-                                            <input type="text" class="form-control" wire:model.live.debounce.300ms="agentSearch" placeholder="Agent Name / Phone">
+                                            <span class="input-group-text bg-light"><i class="feather-search text-muted fs-12"></i></span>
+                                            <input type="text" class="form-control" wire:model.live.debounce.300ms="agentSearch" 
+                                                @focus="open = true"
+                                                onclick="this.select()"
+                                                placeholder="Agent Name / Phone">
+                                            <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning px-2" title="New Agent"><i class="feather-plus fs-12"></i></button>
                                         </div>
-                                        @if (strlen($agentSearch) >= 2)
+                                        <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($agents) && count($agents) > 0)
-                                                <div class="list-group position-absolute w-100 shadow-lg z-3 rounded-3 border" style="top:100%;left:0;">
+                                                <div class="list-group position-absolute shadow-lg z-3 rounded-3 search-dropdown" style="top:100%;left:0;">
                                                     @foreach ($agents as $agt)
-                                                        <button wire:click="selectAgent({{ $agt->id }})" class="list-group-item list-group-item-action py-2 px-3">
+                                                        <button wire:click="selectAgent({{ $agt->id }})" @click="open = false" class="list-group-item list-group-item-action py-2 px-3">
                                                             <div class="fw-bold fs-12">{{ $agt->name }}</div>
                                                             <div class="text-muted fs-10">{{ $agt->agentProfile->agency_name ?? '' }} · {{ number_format($agt->agentProfile->commission_percentage ?? 0, 1) }}%</div>
                                                         </button>
                                                     @endforeach
                                                 </div>
-                                            @else
-                                                <div class="position-absolute w-100 shadow-lg z-3 rounded-3 border bg-white p-3 text-center" style="top:100%;left:0;">
-                                                    <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No agent found</div>
+                                            @elseif(!empty($agentSearch))
+                                                <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
+                                                    <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No agent found for "{{ $agentSearch }}"</div>
+                                                    <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
                                                 </div>
                                             @endif
-                                        @endif
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -240,10 +290,10 @@
                         <h6 class="card-title fs-12 mb-0"><i class="feather-map-pin text-info me-1"></i>Collection & Logistics</h6>
                     </div>
                     <div class="card-body py-2">
-                        <div class="row g-2">
-                            <div class="col-md-3 col-6">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collection Center <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id" {{ auth()->user()->collection_center_id ? 'disabled' : '' }}>
+                                <select class="form-select form-select-sm @error('collection_center_id') is-invalid @enderror" wire:model.live="collection_center_id" {{ auth()->user()->hasRole('collection_center') ? 'disabled' : '' }}>
                                     <option value="">— Select —</option>
                                     @foreach ($centers as $center)
                                         <option value="{{ $center->id }}">
@@ -255,10 +305,10 @@
                                     <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-3 col-6">
+                            <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
-                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id" {{ auth()->user()->branch_id ? 'disabled' : '' }}>
-                                    <option value="">— Select —</option>
+                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id">
+                                    <option value="">— Select Branch —</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
@@ -267,7 +317,7 @@
                                     <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-md-2 col-6">
+                            <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>
                                 <select class="form-select form-select-sm" wire:model="collection_type">
                                     <option value="Center">🏥 Center</option>
@@ -275,11 +325,17 @@
                                     <option value="Hospital">🏨 Hospital</option>
                                 </select>
                             </div>
-                            <div class="col-md-2 col-6">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-4 col-6">
+                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Sample Received At</label>
+                                <input type="datetime-local" class="form-control form-control-sm" wire:model="sample_received_at">
+                            </div>
+                            <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Report Date</label>
                                 <input type="date" class="form-control form-control-sm" wire:model="expected_report_date">
                             </div>
-                            <div class="col-md-2 col-6">
+                            <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Report Time</label>
                                 <input type="time" class="form-control form-control-sm" wire:model="expected_report_time">
                             </div>
@@ -292,38 +348,54 @@
                     <div class="card-header py-2">
                         <h5 class="card-title fs-13 mb-0"><i class="feather-shopping-cart me-2 text-primary"></i>Lab Tests / Packages</h5>
                         <div class="card-header-action">
-                            <span class="badge bg-primary rounded-pill fs-11">{{ count($cart) }} items · ₹{{ number_format($subtotal, 2) }}</span>
+                            <span class="badge bg-primary rounded-pill fs-11">
+                                <span wire:loading.remove wire:target="removeFromCart, addTestToCart, calculateTotals, cart">
+                                    {{ count($cart) }} items · ₹{{ number_format($subtotal, 2) }}
+                                </span>
+                                <span wire:loading wire:target="removeFromCart, addTestToCart, calculateTotals, cart">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span> Updating...
+                                </span>
+                            </span>
                         </div>
                     </div>
                     <div class="card-body pb-0 pt-2">
-                        <div class="position-relative mb-2">
+                        <div class="position-relative mb-2" x-data="{ open: false }" wire:key="test-search-box" @click.away="open = false" @focusin="open = true; $wire.set('activeSearchField', 'test')">
                             <div class="input-group search-group shadow-sm">
                                 <span class="input-group-text"><i class="feather-search text-primary"></i></span>
-                                <input type="text" class="form-control fw-semibold" wire:model.live.debounce.300ms="testSearch" placeholder="Search Test Name, Profile, or Code...">
+                                <input type="text" class="form-control fw-semibold" wire:model.live.debounce.300ms="testSearch" 
+                                    @focus="open = true"
+                                    onclick="this.select()"
+                                    placeholder="Search Test Name, Profile, or Code...">
                             </div>
-                            @if (!empty($tests) && count($tests) > 0)
-                                <div class="list-group position-absolute w-100 shadow-lg mt-1 z-3 border rounded-3" style="max-height:280px;overflow-y:auto;">
-                                    @foreach ($tests as $test)
-                                        <button wire:click="addTestToCart({{ $test->id }})" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3">
-                                            <div>
-                                                <span class="fw-bold text-dark fs-13">{{ $test->name }}</span>
-                                                @if ($test->is_package)
-                                                    <span class="badge bg-primary ms-1 rounded-pill fs-10">PKG</span>
-                                                @endif
-                                                <div class="fs-11 text-muted">{{ $test->test_code ?? '' }} · {{ $test->department ?? 'General' }} · {{ $test->sample_type ?? 'Blood' }}</div>
-                                            </div>
-                                            <span class="fw-bold text-success fs-14">₹{{ number_format($test->mrp, 0) }}</span>
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @endif
+                            <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
+                                @if(!empty($tests) && count($tests) > 0)
+                                    <div class="list-group position-absolute shadow-lg mt-1 z-3 rounded-3 search-dropdown" style="top:100%;left:0;">
+                                        @foreach ($tests as $test)
+                                            <button wire:click="addTestToCart({{ $test->id }})" @click="open = false" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3">
+                                                <div>
+                                                    <span class="fw-bold text-dark fs-13">{{ $test->name }}</span>
+                                                    @if ($test->is_package)
+                                                        <span class="badge bg-primary ms-1 rounded-pill fs-10">PKG</span>
+                                                    @endif
+                                                    <div class="fs-11 text-muted">{{ $test->test_code ?? '' }} · {{ $test->department ?? 'General' }} · {{ $test->sample_type ?? 'Blood' }}</div>
+                                                </div>
+                                                <span class="fw-bold text-success fs-14">₹{{ number_format($test->mrp, 0) }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                @elseif(!empty($testSearch))
+                                    <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
+                                        <div class="fw-bold text-muted fs-11"><i class="feather-search me-1"></i>No test found for "{{ $testSearch }}"</div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
                     {{-- Cart Table --}}
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-gray-100">
+                            <thead class="bg-light">
                                 <tr>
                                     <th class="ps-3 text-uppercase fs-10 text-muted fw-bold" style="width:40px;">#</th>
                                     <th class="text-uppercase fs-10 text-muted fw-bold">Test / Package</th>
@@ -357,54 +429,61 @@
                                                 <span class="badge bg-soft-success text-success rounded-pill fs-10">Test</span>
                                             @endif
                                         </td>
-                                        <td class="text-end fw-bold text-dark fs-14">₹{{ number_format($item['mrp'], 0) }}</td>
+                                        <td class="text-end" style="width: 140px;">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light border-end-0 fs-11" style="padding: 0 8px;">₹</span>
+                                                <input type="number" class="form-control form-control-sm fw-bold border-start-0 text-end pos-unit-price-input" 
+                                                    wire:model.live.debounce.300ms="cart.{{ $index }}.price" 
+                                                    wire:change="calculateTotals"
+                                                    onclick="event.stopPropagation(); this.select()">
+                                            </div>
+                                            <div class="fs-10 text-muted mt-1">MRP: <del>₹{{ number_format($item['mrp'], 0) }}</del></div>
+                                        </td>
                                         <td class="text-center pe-3">
                                             <button wire:click.stop="removeFromCart({{ $index }})" class="btn btn-sm p-0 text-danger" title="Remove"><i class="feather-trash-2 fs-14"></i></button>
                                         </td>
                                     </tr>
 
-                                    {{-- Expanded: Package Sub-Tests --}}
+                                    {{-- Optimized Expanded Details --}}
                                     @if(in_array($index, $expandedCartItems))
-                                        @if($item['is_package'] && !empty($item['linked_tests']))
-                                            <tr>
-                                                <td colspan="5" class="bg-gray-50 ps-4 py-2 border-0">
-                                                    <div class="fw-bold text-primary fs-11 mb-2"><i class="feather-layers me-1"></i>Included Tests ({{ count($item['linked_tests']) }}):</div>
-                                                    <div class="row g-2">
-                                                        @foreach($item['linked_tests'] as $lt)
-                                                            <div class="col-md-6 col-lg-4">
-                                                                <div class="d-flex align-items-start gap-2 p-2 bg-white rounded border">
-                                                                    <div class="avatar-text avatar-sm bg-soft-primary flex-shrink-0"><i class="feather-activity text-primary fs-12"></i></div>
-                                                                    <div class="flex-grow-1">
-                                                                        <div class="fw-bold fs-11 text-dark">{{ $lt['name'] }}</div>
-                                                                        <div class="fs-10 text-muted">{{ $lt['test_code'] ?? '' }} · ₹{{ number_format($lt['mrp'], 0) }}</div>
-                                                                        @if(!empty($lt['parameters']))
-                                                                            <div class="mt-1 d-flex flex-wrap gap-1">
-                                                                                @foreach($lt['parameters'] as $param)
-                                                                                    <span class="badge bg-gray-200 text-dark fs-9">{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
-                                                                                @endforeach
+                                        <tr>
+                                            <td colspan="5" class="bg-gray-50 border-0 pt-0 pb-3 ps-5 pe-3">
+                                                <div class="card border-dashed bg-white shadow-none mb-0 overflow-hidden">
+                                                    <div class="card-body p-2">
+                                                        @if($item['is_package'] && !empty($item['linked_tests']))
+                                                            <div class="fw-bold text-muted fs-11 mb-2 text-uppercase"><i class="feather-layers me-1"></i>Included Tests ({{ count($item['linked_tests']) }}):</div>
+                                                            <div class="row g-2">
+                                                                @foreach($item['linked_tests'] as $lt)
+                                                                    <div class="col-md-6 col-lg-4">
+                                                                        <div class="d-flex align-items-start gap-2 p-2 border rounded bg-light bg-opacity-50">
+                                                                            <div class="avatar-text avatar-xs bg-soft-primary rounded-circle mt-1"><i class="feather-check text-primary fs-10"></i></div>
+                                                                            <div class="flex-grow-1 min-width-0">
+                                                                                <div class="fw-bold fs-11 text-dark text-truncate">{{ $lt['name'] }}</div>
+                                                                                <div class="fs-10 text-muted">{{ $lt['test_code'] ?? 'N/A' }} · ₹{{ number_format($lt['mrp'], 0) }}</div>
                                                                             </div>
-                                                                        @endif
+                                                                        </div>
                                                                     </div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                        
+                                                        @if(!empty($item['parameters']))
+                                                            <div class="@if($item['is_package']) mt-3 @endif">
+                                                                <div class="fw-bold text-muted fs-11 mb-2 text-uppercase"><i class="feather-activity me-1"></i>Parameters ({{ count($item['parameters']) }}):</div>
+                                                                <div class="d-flex flex-wrap gap-1">
+                                                                    @foreach($item['parameters'] as $param)
+                                                                        <span class="badge bg-soft-secondary text-secondary fs-10 border rounded-pill px-2 py-1">
+                                                                            {{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}
+                                                                            @if(is_array($param) && !empty($param['unit'])) <small class="ms-1">({{ $param['unit'] }})</small> @endif
+                                                                        </span>
+                                                                    @endforeach
                                                                 </div>
                                                             </div>
-                                                        @endforeach
+                                                        @endif
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        @endif
-
-                                        @if(!$item['is_package'] && !empty($item['parameters']))
-                                            <tr>
-                                                <td colspan="5" class="bg-gray-50 ps-4 py-2 border-0">
-                                                    <div class="fw-bold text-muted fs-11 mb-1"><i class="feather-list me-1"></i>Parameters ({{ count($item['parameters']) }}):</div>
-                                                    <div class="d-flex flex-wrap gap-1">
-                                                        @foreach($item['parameters'] as $param)
-                                                            <span class="badge bg-white border text-dark fs-10 px-2 py-1"><i class="feather-check-circle text-success me-1 fs-9"></i>{{ is_array($param) ? ($param['param'] ?? $param['name'] ?? '—') : $param }}{{ is_array($param) && !empty($param['unit']) ? ' ('.$param['unit'].')' : '' }}</span>
-                                                        @endforeach
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endif
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endif
                                 @empty
                                     <tr>
@@ -417,9 +496,12 @@
                             </tbody>
                             @if (count($cart) > 0)
                                 <tfoot>
-                                    <tr style="background:rgba(59,113,202,0.08);">
-                                        <td class="ps-3 fw-bold text-primary fs-13" colspan="3">Subtotal ({{ count($cart) }} items)</td>
-                                        <td class="text-end fw-bold text-primary fs-16">₹{{ number_format($subtotal, 0) }}</td>
+                                    <tr class="pos-cart-footer" style="background:rgba(13,110,253,0.05); border-top: 2px solid rgba(13,110,253,0.1);">
+                                        <td class="ps-4 py-3 fw-bold text-primary fs-14" colspan="3">
+                                            Subtotal ({{ count($cart) }} items)
+                                            <span wire:loading wire:target="cart" class="spinner-border spinner-border-sm text-primary ms-2" role="status"></span>
+                                        </td>
+                                        <td class="text-end py-3 fw-bold text-primary fs-18">₹{{ number_format($subtotal, 2) }}</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -445,7 +527,7 @@
 
                         {{-- Membership --}}
                         @if ($active_membership)
-                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(59,113,202,0.08);border-color:rgba(59,113,202,0.2)!important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border pos-membership-box" style="border-color:rgba(59,113,202,0.2)!important;">
                                 <div>
                                     <span class="fw-bold text-primary fs-11"><i class="feather-award me-1 fs-10"></i>{{ $active_membership['name'] ?? '' }}</span>
                                     <span class="d-block fs-10 text-muted">{{ number_format($active_membership['discount_percentage'] ?? 0, 0) }}% {{ $membership_fee > 0 ? 'applied (new purchase)' : 'auto-applied' }}</span>
@@ -476,7 +558,7 @@
                         {{-- Voucher --}}
                         <div class="mb-2">
                             @if ($applied_voucher)
-                                <div class="d-flex justify-content-between align-items-center p-2 rounded-3 border" style="background:rgba(25,135,84,0.08);border-color:rgba(25,135,84,0.25)!important;">
+                                <div class="d-flex justify-content-between align-items-center p-2 rounded-3 border pos-voucher-box" style="border-color:rgba(25,135,84,0.25)!important;">
                                     <span class="fw-bold fs-11" style="color:#198754;"><i class="feather-tag me-1 fs-10"></i>{{ $applied_voucher->code }}</span>
                                     <div class="d-flex align-items-center gap-1">
                                         <span class="fw-bold fs-12" style="color:#198754;">- ₹{{ number_format($voucher_discount_amt, 0) }}</span>
@@ -578,7 +660,7 @@
                         @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
                         <div class="row g-3">
                             <div class="col-12"><label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label><input type="text" class="form-control" wire:model="new_name" placeholder="Full Name"></div>
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile <span class="text-danger">*</span></label><input type="text" class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
+                            <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile</label><input type="text" class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
                             <div class="col-6"><label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span></label><input type="number" class="form-control" wire:model="new_age" placeholder="Years"></div>
                             <div class="col-6"><label class="form-label fw-semibold fs-11">Gender</label><select class="form-select" wire:model="new_gender"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
                         </div>
@@ -586,6 +668,47 @@
                     <div class="modal-footer">
                         <button wire:click="$set('isPatientModalOpen', false)" class="btn btn-light">Cancel</button>
                         <button wire:click="quickAddPatient" class="btn btn-primary fw-bold"><span wire:loading.remove wire:target="quickAddPatient"><i class="feather-save me-1"></i>Save & Select</span><span wire:loading wire:target="quickAddPatient"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Quick Add Agent --}}
+    @if ($isAgentModalOpen)
+        <div class="modal-backdrop fade show" style="z-index:1050;"></div>
+        <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header">
+                        <h5 class="modal-title fs-14"><i class="feather-briefcase text-warning me-2"></i>Quick Add Agent</h5>
+                        <button wire:click="$set('isAgentModalOpen', false)" class="btn-close"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
+                        @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model="new_agent_name" placeholder="Full Name">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Mobile (Optional)</label>
+                                <input type="text" class="form-control" wire:model="new_agent_phone" placeholder="10 Digit (optional)" maxlength="10">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Agency Name</label>
+                                <input type="text" class="form-control" wire:model="new_agent_agency" placeholder="Agency/Shop Name">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Commission (%)</label>
+                                <input type="number" class="form-control" wire:model="new_agent_commission" placeholder="e.g. 10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button wire:click="$set('isAgentModalOpen', false)" class="btn btn-light">Cancel</button>
+                        <button wire:click="quickAddAgent" class="btn btn-warning fw-bold text-dark"><i class="feather-save me-1"></i>Save & Select</button>
                     </div>
                 </div>
             </div>

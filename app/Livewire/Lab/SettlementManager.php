@@ -137,6 +137,9 @@ class SettlementManager extends Component
             $this->amount_to_pay = $invoices->sum('doctor_commission_amount');
         } elseif ($this->partnerType === 'Agent') {
             $this->amount_to_pay = $invoices->sum('agent_commission_amount');
+        } elseif ($this->partnerType === 'Collection Center') {
+            // For Collection Center, the amount they owe to the Lab is the B2B amount
+            $this->amount_to_pay = $invoices->sum('total_b2b_amount');
         } else {
             $this->amount_to_pay = $invoices->sum('total_amount');
         }
@@ -175,11 +178,13 @@ class SettlementManager extends Component
             $settlement = Settlement::create([
                 'company_id' => $companyId,
                 'user_id' => $this->selectedPartnerId,
+                'collection_center_id' => ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : null,
                 'amount' => $this->amount_to_pay,
                 'payment_date' => $this->payment_date,
                 'payment_mode' => $this->payment_mode,
                 'reference_no' => $this->reference_no,
                 'type' => $this->partnerType === 'Collection Center' ? 'CollectionCenter' : $this->partnerType,
+                'status' => 'Approved', // Lab Admin initiated settlements are auto-approved
                 'notes' => $this->notes,
             ]);
 
@@ -215,6 +220,34 @@ class SettlementManager extends Component
         }
     }
 
+    public function approveSettlement($id)
+    {
+        $this->authorize('manage agents');
+        $settlement = Settlement::findOrFail($id);
+        
+        if ($settlement->status !== 'Pending') {
+            session()->flash('error', 'Only pending settlements can be approved.');
+            return;
+        }
+
+        $settlement->update(['status' => 'Approved']);
+        session()->flash('message', 'Settlement approved successfully.');
+    }
+
+    public function rejectSettlement($id)
+    {
+        $this->authorize('manage agents');
+        $settlement = Settlement::findOrFail($id);
+        
+        if ($settlement->status !== 'Pending') {
+            session()->flash('error', 'Only pending settlements can be rejected.');
+            return;
+        }
+
+        $settlement->update(['status' => 'Rejected']);
+        session()->flash('message', 'Settlement rejected.');
+    }
+
     public function render()
     {
         $companyId = auth()->user()->company_id;
@@ -226,7 +259,8 @@ class SettlementManager extends Component
         $commField = '';
         if ($this->partnerType === 'Doctor') $commField = 'doctor_commission_amount';
         elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
-        elseif ($this->partnerType === 'Collection Center') $commField = 'total_amount';
+        elseif ($this->partnerType === 'Collection Center') $commField = 'total_b2b_amount';
+        else $commField = 'total_amount';
 
         // --- Analytics Calculations ---
         $stats = [

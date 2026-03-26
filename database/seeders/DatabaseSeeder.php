@@ -20,12 +20,12 @@ class DatabaseSeeder extends Seeder
         // 2. Super Admin Account 
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin = User::firstOrCreate(
-            ['email' => 'admin@zytrixon.com'], 
-            [
-                'name' => 'Super Admin',
-                'password' => Hash::make('password123'), 
-                'is_active' => true,
-            ]
+        ['email' => 'admin@sws.com'],
+        [
+            'name' => 'Super Admin',
+            'password' => Hash::make('password123'),
+            'is_active' => true,
+        ]
         );
         if (!$superAdmin->hasRole('super_admin')) {
             $superAdmin->assignRole($superAdminRole);
