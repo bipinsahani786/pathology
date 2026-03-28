@@ -163,25 +163,43 @@
         }
 
         .rank-name {
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: 750;
+            font-size: 0.95rem;
             color: var(--db-text-main);
-            max-width: 220px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-bottom: 2px;
+            display: block;
         }
 
         .rank-sub {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--db-text-muted);
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .rank-val {
-            font-weight: 800;
+            font-weight: 850;
             color: var(--db-primary);
             font-size: 1rem;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+
+        .rank-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .rank-row:hover .rank-icon {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         /* Filter Presets */
@@ -205,20 +223,24 @@
         }
 
         .see-all {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--db-primary);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--db-primary) !important;
             text-decoration: none;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 8px;
-            background: rgba(var(--bs-primary-rgb), 0.1);
-            transition: all 0.3s;
+            background: rgba(var(--bs-primary-rgb), 0.08);
+            border: 1px solid rgba(var(--bs-primary-rgb), 0.05);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .see-all:hover {
             background: var(--db-primary);
-            color: white;
-            box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.2);
+            color: white !important;
+            box-shadow: 0 5px 12px rgba(var(--bs-primary-rgb), 0.25);
+            transform: translateY(-2px);
         }
 
         /* Glass Summary Bar - Enhanced */
@@ -512,14 +534,24 @@
                     <div class="rank-list">
                         @forelse($topPackages as $pkg)
                             <div class="rank-row">
-                                <div>
-                                    <div class="rank-name">{{ $pkg->test_name }}</div>
-                                    <div class="rank-sub">{{ $pkg->total_sold }} Cases Booked</div>
+                                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                    <div class="rank-icon bg-soft-primary text-primary">
+                                        <i class="feather-package"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="rank-name text-truncate">{{ $pkg->test_name }}</div>
+                                        <div class="rank-sub">{{ $pkg->total_sold }} Sales</div>
+                                    </div>
                                 </div>
                                 <div class="rank-val">₹{{ number_format($pkg->total_income, 0) }}</div>
                             </div>
                         @empty
-                            <div class="text-center py-5 text-muted small">No package sales found</div>
+                            <div class="text-center py-5">
+                                <div class="icon-box mx-auto bg-light text-muted opacity-50" style="width: 50px; height: 50px;">
+                                    <i class="feather-box"></i>
+                                </div>
+                                <p class="text-muted small fw-bold mt-2">No package analytics</p>
+                            </div>
                         @endforelse
                     </div>
                 </div>
@@ -535,14 +567,24 @@
                     <div class="rank-list">
                         @forelse($topDoctors as $doc)
                             <div class="rank-row">
-                                <div>
-                                    <div class="rank-name">{{ $doc->doctor->name ?? 'Doctor' }}</div>
-                                    <div class="rank-sub">Referral Performance</div>
+                                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                    <div class="rank-icon bg-soft-success text-success">
+                                        <i class="feather-user-plus"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="rank-name text-truncate">{{ $doc->doctor->name ?? 'Doctor' }}</div>
+                                        <div class="rank-sub">Performance</div>
+                                    </div>
                                 </div>
                                 <div class="rank-val">₹{{ number_format($doc->total_income, 0) }}</div>
                             </div>
                         @empty
-                            <div class="text-center py-5 text-muted small">No doctor referrals found</div>
+                            <div class="text-center py-5">
+                                <div class="icon-box mx-auto bg-light text-muted opacity-50" style="width: 50px; height: 50px;">
+                                    <i class="feather-user-x"></i>
+                                </div>
+                                <p class="text-muted small fw-bold mt-2">No referral data</p>
+                            </div>
                         @endforelse
                     </div>
                 </div>
@@ -558,14 +600,24 @@
                     <div class="rank-list">
                         @forelse($topCCs as $cc)
                             <div class="rank-row">
-                                <div>
-                                    <div class="rank-name">{{ $cc->collectionCenter->name ?? 'In-House' }}</div>
-                                    <div class="rank-sub">{{ $cc->total_bills }} Invoices Generated</div>
+                                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                    <div class="rank-icon bg-soft-info text-info">
+                                        <i class="feather-map-pin"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="rank-name text-truncate">{{ $cc->collectionCenter->name ?? 'In-House' }}</div>
+                                        <div class="rank-sub">{{ $cc->total_bills }} Invoices</div>
+                                    </div>
                                 </div>
                                 <div class="rank-val">₹{{ number_format($cc->total_income, 0) }}</div>
                             </div>
-                        @empty
-                            <div class="text-center py-5 text-muted small">No center revenue recorded</div>
+@empty
+                            <div class="text-center py-5">
+                                <div class="icon-box mx-auto bg-light text-muted opacity-50" style="width: 50px; height: 50px;">
+                                    <i class="feather-map"></i>
+                                </div>
+                                <p class="text-muted small fw-bold mt-2">No center data</p>
+                            </div>
                         @endforelse
                     </div>
                 </div>
@@ -581,14 +633,24 @@
                     <div class="rank-list">
                         @forelse($topTests as $test)
                             <div class="rank-row">
-                                <div>
-                                    <div class="rank-name">{{ $test->test_name }}</div>
-                                    <div class="rank-sub">{{ $test->total_sold }} Tests Sold</div>
+                                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                    <div class="rank-icon bg-soft-danger text-danger">
+                                        <i class="feather-activity"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <div class="rank-name text-truncate">{{ $test->test_name }}</div>
+                                        <div class="rank-sub">{{ $test->total_sold }} Sold</div>
+                                    </div>
                                 </div>
                                 <div class="rank-val">₹{{ number_format($test->total_income, 0) }}</div>
                             </div>
                         @empty
-                            <div class="text-center py-5 text-muted small">No test sales data available</div>
+                            <div class="text-center py-5">
+                                <div class="icon-box mx-auto bg-light text-muted opacity-50" style="width: 50px; height: 50px;">
+                                    <i class="feather-activity"></i>
+                                </div>
+                                <p class="text-muted small fw-bold mt-2">No test analytics</p>
+                            </div>
                         @endforelse
                     </div>
                 </div>

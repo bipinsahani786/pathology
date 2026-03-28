@@ -128,31 +128,51 @@
             <div class="row g-4">
                 {{-- Logo & Branding --}}
                 <div class="col-lg-4">
-                    <div class="card">
+                    <div class="card mb-3">
                         <div class="card-header">
-                            <h6 class="card-title mb-0 fs-13"><i class="feather-image text-primary me-2"></i>Lab Logo & Branding</h6>
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-image text-primary me-2"></i>Lab Logo</h6>
                         </div>
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 @if($lab_logo)
-                                    <img src="{{ asset('storage/' . $lab_logo) }}" alt="Lab Logo" class="rounded border" style="max-height:120px;max-width:200px;object-fit:contain;">
+                                    <img src="{{ asset('storage/' . $lab_logo) }}" alt="Lab Logo" class="rounded border" style="max-height:80px;max-width:140px;object-fit:contain;">
                                 @else
-                                    <div class="avatar-text avatar-xxl mx-auto rounded" style="background:rgba(59,113,202,0.1);">
-                                        <i class="feather-image text-primary" style="font-size:48px;"></i>
+                                    <div class="avatar-text avatar-xl mx-auto rounded" style="background:rgba(59,113,202,0.1);">
+                                        <i class="feather-image text-primary" style="font-size:32px;"></i>
                                     </div>
                                 @endif
                             </div>
-
                             @if($new_logo)
                                 <div class="mb-2">
-                                    <img src="{{ $new_logo->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:100px;">
-                                    <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New logo selected</div>
+                                    <img src="{{ $new_logo->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:80px;">
                                 </div>
                             @endif
-
                             <input type="file" wire:model="new_logo" accept="image/*" class="form-control form-control-sm">
-                            @error('new_logo') <span class="text-danger fs-10">{{ $message }}</span> @enderror
-                            <div class="fs-10 text-muted mt-2">Max 2MB · JPG, PNG, SVG</div>
+                            <div class="fs-10 text-muted mt-1">Main sidebar logo (Max 2MB)</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-compass text-primary me-2"></i>Browser Favicon</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                @if($lab_favicon)
+                                    <img src="{{ asset('storage/' . $lab_favicon) }}" alt="Favicon" class="rounded border p-1" style="height:48px;width:48px;object-fit:contain;">
+                                @else
+                                    <div class="avatar-text avatar-md mx-auto rounded" style="background:rgba(20,184,166,0.1);">
+                                        <i class="feather-compass text-teal" style="font-size:24px;"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            @if($new_favicon)
+                                <div class="mb-2">
+                                    <img src="{{ $new_favicon->temporaryUrl() }}" alt="Preview" class="rounded border p-1" style="height:32px;width:32px;">
+                                </div>
+                            @endif
+                            <input type="file" wire:model="new_favicon" accept="image/*" class="form-control form-control-sm">
+                            <div class="fs-10 text-muted mt-1">Browser tab icon (Square, Max 1MB)</div>
                         </div>
                     </div>
                 </div>
