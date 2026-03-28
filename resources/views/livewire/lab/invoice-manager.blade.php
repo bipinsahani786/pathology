@@ -286,6 +286,10 @@
                                                     class="btn btn-sm btn-outline-warning px-2" title="Edit Invoice">
                                                     <i class="feather-edit-2 fs-12"></i>
                                                 </a>
+                                                <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate
+                                                    class="btn btn-sm btn-outline-info px-2" title="View Summary">
+                                                    <i class="feather-eye fs-12"></i>
+                                                </a>
                                                 <a href="{{ route('lab.reports.entry', $inv->id) }}" wire:navigate
                                                     class="btn btn-sm btn-outline-success px-2" title="Enter Results">
                                                     <i class="feather-edit-3 fs-12"></i>
