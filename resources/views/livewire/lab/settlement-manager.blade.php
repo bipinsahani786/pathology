@@ -302,8 +302,8 @@
                     <div class="d-flex align-items-center gap-3">
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
-                            <h5 class="card-title mb-0 fw-bold">{{ $selectedPartner->name }} Portfolio</h5>
-                            <p class="text-muted small mb-0">{{ $partnerType }} Insights • {{ $selectedPartner->phone }}</p>
+                            <h5 class="card-title mb-0 fw-bold">{{ $selectedPartner->name ?? 'Partner' }} Portfolio</h5>
+                            <p class="text-muted small mb-0">{{ $partnerType }} Insights • {{ $selectedPartner->phone ?? '' }}</p>
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
@@ -321,27 +321,27 @@
                     {{-- Mini Stats Layer --}}
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <div class=" p-4 rounded-4 shadow-sm border-start border-primary border-4">
+                            <div class="stat-card-inner p-4 rounded-4  border-start border-primary border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Patients Referred</p>
-                                <h3 class="fw-bolder text-dark mb-0">{{ $partnerStats['total_bills'] }}</h3>
+                                <h3 class="fw-bolder text-dark mb-0">{{ $partnerStats['total_bills'] ?? 0 }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class=" p-4 rounded-4 shadow-sm border-start border-success border-4">
+                            <div class="stat-card-inner p-4 rounded-4  border-start border-success border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Total Revenue</p>
-                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_revenue'], 2) }}</h3>
+                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_revenue'] ?? 0, 2) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class=" p-4 rounded-4 shadow-sm border-start border-info border-4">
+                            <div class="stat-card-inner p-4 rounded-4  border-start border-info border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Earned Commission</p>
-                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_commission'], 2) }}</h3>
+                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_commission'] ?? 0, 2) }}</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class=" p-4 rounded-4 shadow-sm border-start border-warning border-4">
+                            <div class="stat-card-inner p-4 rounded-4  border-start border-warning border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Avg Ticket Size</p>
-                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['avg_bill'], 2) }}</h3>
+                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['avg_bill'] ?? 0, 2) }}</h3>
                             </div>
                         </div>
                     </div>
@@ -419,12 +419,21 @@
     .bg-soft-info { background-color: rgba(23, 162, 184, 0.08) !important; }
     .bg-soft-danger { background-color: rgba(220, 53, 69, 0.08) !important; }
     .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.08) !important; }
+    
     .bg-soft-light { background-color: #f8fafc !important; }
+    html.app-skin-dark .bg-soft-light { background-color: rgba(255, 255, 255, 0.02) !important; }
+
+    .stat-card-inner { background-color: #fff; transition: all 0.3s; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important; }
+    html.app-skin-dark .stat-card-inner { background-color: #1a1a2e !important; border: 1px solid rgba(255,255,255,0.05) !important; }
+    
     .hover-bg-light:hover { background-color: #f1f5f9 !important; }
+    html.app-skin-dark .hover-bg-light:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+
     .transition-all { transition: all 0.2s ease-in-out; }
     .custom-check .form-check-input:checked { background-color: var(--bs-primary); border-color: var(--bs-primary); }
     .pointer { cursor: pointer; }
     .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02); }
+    html.app-skin-dark .shadow-inner { box-shadow: none; }
     .ls-1 { letter-spacing: 0.5px; }
     .pagination { margin-bottom: 0; gap: 2px; }
     .page-item .page-link { border-radius: 6px !important; margin: 0 2px; border: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 600; padding: 0.4rem 0.8rem; }

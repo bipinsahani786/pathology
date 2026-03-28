@@ -29,6 +29,38 @@
                         @endif
 
                         <form wire:submit.prevent="updateProfile" class="row g-3">
+                            <!-- Profile Photo Section -->
+                            <div class="col-12 mb-4">
+                                <label class="form-label fw-bold text-dark fs-12 mb-3 d-block">Profile Photo</label>
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="position-relative profile-upload-container">
+                                        <div class="avatar-preview-wrapper border-dashed border-2 rounded-circle p-1">
+                                            @if ($new_photo)
+                                                <img src="{{ $new_photo->temporaryUrl() }}" class="avatar-initials rounded-circle border object-fit-cover shadow-sm" style="width: 100px; height: 100px;">
+                                            @elseif ($profile_photo_url)
+                                                <img src="{{ $profile_photo_url }}" class="avatar-initials rounded-circle border object-fit-cover shadow-sm" style="width: 100px; height: 100px;">
+                                            @else
+                                                <div class="avatar-text bg-soft-primary text-primary rounded-circle border shadow-sm fw-black" style="width: 100px; height: 100px; font-size: 2rem;">
+                                                    {{ auth()->user()->initials() }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <label for="profilePhotoInput" class="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle shadow-lg cursor-pointer hover-scale transition-all" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid white;">
+                                            <i class="feather-camera fs-12"></i>
+                                            <input type="file" id="profilePhotoInput" wire:model="new_photo" class="d-none" accept="image/*">
+                                        </label>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-bold text-dark mb-1 fs-14">Your Avatar</h6>
+                                        <p class="text-muted small mb-2 font-medium">Clear photos with 1:1 aspect ratio work best.</p>
+                                        <div wire:loading wire:target="new_photo" class="text-primary small fw-bold">
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span> Uploading...
+                                        </div>
+                                        @error('new_photo') <span class="text-danger fs-11 mt-1 d-block fw-bold">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label fw-bold text-dark fs-12 mb-1">Full Name</label>
                                 <div class="input-group shadow-sm border rounded-3 overflow-hidden bg-white">

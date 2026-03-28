@@ -19,8 +19,8 @@ class SettingsManager extends Component
     // ==========================================
     public $lab_name, $lab_email, $lab_phone, $lab_address;
     public $lab_website, $lab_gst_number, $lab_tagline;
-    public $lab_logo;
-    public $new_logo;
+    public $lab_logo, $lab_favicon;
+    public $new_logo, $new_favicon;
     public $profileSaved = false;
 
     // ==========================================
@@ -84,6 +84,7 @@ class SettingsManager extends Component
             $this->lab_gst_number = $company->gst_number;
             $this->lab_tagline = $company->tagline;
             $this->lab_logo = $company->logo;
+            $this->lab_favicon = Configuration::getFor('lab_favicon');
         }
 
         // Load invoice settings from configurations table
@@ -129,6 +130,7 @@ class SettingsManager extends Component
             'lab_gst_number' => 'nullable|string|max:50',
             'lab_tagline' => 'nullable|string|max:255',
             'new_logo' => 'nullable|image|max:2048',
+            'new_favicon' => 'nullable|image|max:1024',
         ]);
 
         $company = Company::find(auth()->user()->company_id);
@@ -137,6 +139,13 @@ class SettingsManager extends Component
         $logoPath = $company->logo;
         if (is_object($this->new_logo) && method_exists($this->new_logo, 'store')) {
             $logoPath = $this->new_logo->store('logos', 'public');
+        }
+
+        // Handle favicon upload
+        $faviconPath = $this->lab_favicon;
+        if (is_object($this->new_favicon) && method_exists($this->new_favicon, 'store')) {
+            $faviconPath = $this->new_favicon->store('favicons', 'public');
+            Configuration::setFor('lab_favicon', $faviconPath);
         }
 
         $company->update([
@@ -151,7 +160,9 @@ class SettingsManager extends Component
         ]);
 
         $this->lab_logo = $logoPath;
+        $this->lab_favicon = $faviconPath;
         $this->new_logo = null;
+        $this->new_favicon = null;
         $this->profileSaved = true;
     }
 

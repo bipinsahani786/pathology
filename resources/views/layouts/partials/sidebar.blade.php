@@ -2,8 +2,12 @@
     <div class="navbar-wrapper">
         <div class="m-header">
             <a href="{{ url('/') }}" wire:navigate class="b-brand">
-                <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
-                <img src="{{ asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
+                @if(auth()->user()->company && auth()->user()->company->logo)
+                    <img src="{{ asset('storage/' . auth()->user()->company->logo) }}" alt="Logo" height="50px" class="logo logo-lg" style="object-fit: contain;" />
+                @else
+                    <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
+                @endif
+                <img src="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
             </a>
         </div>
         <div class="navbar-content">
