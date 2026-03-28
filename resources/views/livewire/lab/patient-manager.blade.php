@@ -11,9 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right">
-            <button wire:click="create" class="btn btn-primary px-4">
-                <i class="feather-user-plus me-2"></i> Add New Patient
-            </button>
+            @can('create patients')
+                <button wire:click="create" class="btn btn-primary px-4">
+                    <i class="feather-user-plus me-2"></i> Add New Patient
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -74,7 +76,7 @@
                                             <div>
                                                 <div class="fw-bold text-dark fs-14">{{ $patient->name }}</div>
                                                 <div class="fs-12 mt-1">
-                                                    <span class="badge bg-light text-primary border border-primary border-opacity-25">{{ $patient->patientProfile->patient_id_string ?? 'N/A' }}</span>
+                                                    <span class="badge bg-soft-info text-info border border-info border-opacity-25">{{ $patient->formatted_id }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -96,12 +98,16 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="edit({{ $patient->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Profile">
-                                                <i class="feather-edit-2 fs-14"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $patient->id }})" wire:confirm="Warning: This will delete the patient and all associated data. Continue?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Patient">
-                                                <i class="feather-trash-2 fs-14"></i>
-                                            </button>
+                                            @can('edit patients')
+                                                <button wire:click="edit({{ $patient->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Profile">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete patients')
+                                                <button wire:click="delete({{ $patient->id }})" wire:confirm="Warning: This will delete the patient and all associated data. Continue?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Patient">
+                                                    <i class="feather-trash-2 fs-14"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

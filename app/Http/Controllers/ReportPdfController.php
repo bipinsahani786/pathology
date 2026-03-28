@@ -35,7 +35,15 @@ class ReportPdfController extends Controller
         ];
 
         // Format data for view: Group by Department => Test Name => Results
-        $groupedResults = $report->results->groupBy(function($result) {
+        $results = $report->results;
+        
+        // Filter by selected tests if provided in request
+        if ($request->has('tests')) {
+            $testIds = explode(',', $request->tests);
+            $results = $results->whereIn('invoice_item_id', $testIds);
+        }
+
+        $groupedResults = $results->groupBy(function($result) {
             return $result->labTest->department ?? 'General';
         })->map(function($deptGroup) {
             return $deptGroup->groupBy(function($result) {

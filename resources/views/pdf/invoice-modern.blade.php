@@ -113,7 +113,7 @@
                     <td width="32%" valign="top">
                         <div class="card card-accent">
                             <div class="card-label">👤 Patient</div>
-                            <div class="card-value">{{ $invoice->patient->name ?? 'N/A' }}</div>
+                            <div class="card-value">{{ $invoice->patient->name ?? 'N/A' }} <small style="font-weight:normal;opacity:0.7;">({{ $invoice->patient->formatted_id }})</small></div>
                             <div class="card-sub">📞 {{ $invoice->patient->phone ?? '—' }}</div>
                             @if($invoice->patient->patientProfile)
                                 <div class="card-sub">{{ $invoice->patient->patientProfile->age ?? '' }} {{ $invoice->patient->patientProfile->age_type ?? 'Yrs' }} · {{ $invoice->patient->patientProfile->gender ?? '' }}</div>

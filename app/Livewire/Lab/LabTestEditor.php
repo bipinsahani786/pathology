@@ -20,7 +20,7 @@ class LabTestEditor extends Component
 
     public function mount($id = null)
     {
-        $this->authorize('manage lab_tests');
+        $this->authorize('view lab_tests');
         $labTestService = new LabTestService();
         if ($id) {
             $test = $labTestService->getTestById($id);

@@ -18,27 +18,58 @@ class InvoiceManager extends Component
     public $filterDateTo = '';
     public $filterCollectionType = '';
     public $filterCC = '';
+    public $filterDoctor = '';
+    public $filterAgent = '';
     public $perPage = 15;
 
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
-        $this->authorize('manage pos');
+        $this->authorize('view invoices');
     }
 
     // Reset pagination when filters change
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatingFilterStatus() { $this->resetPage(); }
-    public function updatingFilterDateFrom() { $this->resetPage(); }
-    public function updatingFilterDateTo() { $this->resetPage(); }
-    public function updatingFilterCollectionType() { $this->resetPage(); }
-    public function updatingFilterCC() { $this->resetPage(); }
-    public function updatingPerPage() { $this->resetPage(); }
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterDateFrom()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterDateTo()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterCollectionType()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterCC()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterDoctor()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterAgent()
+    {
+        $this->resetPage();
+    }
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function clearFilters()
     {
-        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType', 'filterCC']);
+        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType', 'filterCC', 'filterDoctor', 'filterAgent']);
         $this->resetPage();
     }
 
@@ -55,11 +86,11 @@ class InvoiceManager extends Component
             $s = $this->search;
             $query->where(function ($q) use ($s) {
                 $q->where('invoice_number', 'ilike', "%{$s}%")
-                  ->orWhere('barcode', 'ilike', "%{$s}%")
-                  ->orWhereHas('patient', function ($pq) use ($s) {
-                      $pq->where('name', 'ilike', "%{$s}%")
-                         ->orWhere('phone', 'ilike', "%{$s}%");
-                  });
+                    ->orWhere('barcode', 'ilike', "%{$s}%")
+                    ->orWhereHas('patient', function ($pq) use ($s) {
+                        $pq->where('name', 'ilike', "%{$s}%")
+                            ->orWhere('phone', 'ilike', "%{$s}%");
+                    });
             });
         }
 
@@ -81,6 +112,16 @@ class InvoiceManager extends Component
             $query->where('collection_center_id', $this->filterCC);
         }
 
+        // Doctor Filter
+        if ($this->filterDoctor) {
+            $query->where('referred_by_doctor_id', $this->filterDoctor);
+        }
+
+        // Agent Filter
+        if ($this->filterAgent) {
+            $query->where('referred_by_agent_id', $this->filterAgent);
+        }
+
         $invoices = $query->paginate($this->perPage);
 
         // Stats
@@ -90,24 +131,44 @@ class InvoiceManager extends Component
             'paid' => Invoice::where('company_id', $companyId)->where('payment_status', 'Paid')->count(),
             'due' => Invoice::where('company_id', $companyId)->where('payment_status', '!=', 'Paid')->sum('due_amount'),
             'todayRevenue' => Invoice::where('company_id', $companyId)->whereDate('invoice_date', today())->sum('paid_amount'),
+            'totalRevenue' => Invoice::where('company_id', $companyId)->sum('paid_amount'),
         ];
 
         $collectionCenters = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
+        $doctors = \App\Models\DoctorProfile::where('company_id', $companyId)->with('user')->get();
+        $agents = \App\Models\AgentProfile::where('company_id', $companyId)->with('user')->get();
 
-        return view('livewire.lab.invoice-manager', compact('invoices', 'stats', 'collectionCenters'))
+        return view('livewire.lab.invoice-manager', compact('invoices', 'stats', 'collectionCenters', 'doctors', 'agents'))
             ->layout('layouts.app', ['title' => 'Invoices']);
     }
 
     public function updateSampleStatus($invoiceId, $status)
     {
-        $this->authorize('manage pos');
+        $this->authorize('edit invoices');
         $invoice = Invoice::findOrFail($invoiceId);
-        
+
         $invoice->update([
             'sample_status' => $status,
             'sample_collected_at' => ($status === 'Collected' && !$invoice->sample_collected_at) ? now() : $invoice->sample_collected_at
         ]);
 
         session()->flash('message', 'Sample status updated to ' . $status);
+    }
+
+    public function cancelInvoice($invoiceId)
+    {
+        try {
+            $this->authorize('delete invoices');
+            $invoice = Invoice::findOrFail($invoiceId);
+            $result = $invoice->cancel();
+            
+            if ($result['status']) {
+                session()->flash('message', $result['message']);
+            } else {
+                session()->flash('error', $result['message']);
+            }
+        } catch (\Throwable $th) {
+            session()->flash('error', 'Critical Error: ' . $th->getMessage());
+        }
     }
 }

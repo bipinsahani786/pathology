@@ -11,9 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right">
-            <button wire:click="create" class="btn btn-primary px-4">
-                <i class="feather-plus me-2"></i> Add New Branch
-            </button>
+            @can('create branches')
+                <button wire:click="create" class="btn btn-primary px-4">
+                    <i class="feather-plus me-2"></i> Add New Branch
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -80,17 +82,25 @@
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" role="switch" wire:click="toggleStatus({{ $branch->id }})" {{ $branch->is_active ? 'checked' : '' }} style="cursor: pointer;">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                wire:click="toggleStatus({{ $branch->id }})" 
+                                                {{ $branch->is_active ? 'checked' : '' }} 
+                                                style="cursor: pointer;"
+                                                @cannot('edit branches') disabled @endcannot>
                                         </div>
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="edit({{ $branch->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit">
-                                                <i class="feather-edit-2 fs-14"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $branch->id }})" wire:confirm="Delete this processing branch?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete">
-                                                <i class="feather-trash-2 fs-14"></i>
-                                            </button>
+                                            @can('edit branches')
+                                                <button wire:click="edit({{ $branch->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete branches')
+                                                <button wire:click="delete({{ $branch->id }})" wire:confirm="Delete this processing branch?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete">
+                                                    <i class="feather-trash-2 fs-14"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

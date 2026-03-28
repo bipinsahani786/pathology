@@ -144,6 +144,9 @@ Route::middleware(['auth'])->group(function () {
 
             // Invoice Edit (POS-style)
             Route::get('/invoice/{id}/edit', PosEditManager::class)->name('invoice.edit');
+
+            // Barcode Stickers
+            Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
         });
 
     // ----------------------------------------------------

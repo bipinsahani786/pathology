@@ -11,9 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right d-flex gap-2">
-            <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
-                <i class="feather-user-plus me-1"></i> Add New Agent
-            </button>
+            @can('create agents')
+                <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
+                    <i class="feather-user-plus me-1"></i> Add New Agent
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -97,7 +99,8 @@
                                             <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" 
                                                 wire:click="toggleStatus({{ $agent->id }})" 
                                                 {{ $agent->is_active ? 'checked' : '' }} 
-                                                style="width: 40px; height: 20px;">
+                                                style="width: 40px; height: 20px;"
+                                                @cannot('edit agents') disabled @endcannot>
                                         </div>
                                         <span class="fs-10 fw-bold text-uppercase ls-1 {{ $agent->is_active ? 'text-success' : 'text-danger' }}">
                                             {{ $agent->is_active ? 'Active' : 'Inactive' }}
@@ -105,12 +108,16 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="edit({{ $agent->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Agent">
-                                                <i class="feather-edit-2 fs-14"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $agent->id }})" wire:confirm="Delete this agent? This will also remove their profile." class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Agent">
-                                                <i class="feather-trash-2 fs-14"></i>
-                                            </button>
+                                            @can('edit agents')
+                                                <button wire:click="edit({{ $agent->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Agent">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete agents')
+                                                <button wire:click="delete({{ $agent->id }})" wire:confirm="Delete this agent? This will also remove their profile." class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Agent">
+                                                    <i class="feather-trash-2 fs-14"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

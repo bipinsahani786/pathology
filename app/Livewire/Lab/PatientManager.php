@@ -18,7 +18,7 @@ class PatientManager extends Component
     
     public function mount()
     {
-        $this->authorize('manage patients');
+        $this->authorize('view patients');
     }
 
     // State variables
@@ -52,6 +52,7 @@ class PatientManager extends Component
      */
     public function create()
     {
+        $this->authorize('create patients');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -61,6 +62,7 @@ class PatientManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit patients');
         $this->resetFields();
         
         // Eager load the profile to avoid N+1 query issues
@@ -108,6 +110,12 @@ class PatientManager extends Component
 
         DB::beginTransaction();
         try {
+            if ($this->user_id) {
+                $this->authorize('edit patients');
+            } else {
+                $this->authorize('create patients');
+            }
+
             $companyId = auth()->user()->company_id;
 
             if ($this->user_id) {
@@ -179,6 +187,7 @@ class PatientManager extends Component
      */
     public function delete($id)
     {
+        $this->authorize('delete patients');
         // Because of 'cascadeOnDelete' in migration, deleting the user deletes the profile too.
         User::findOrFail($id)->delete();
         session()->flash('message', 'Patient deleted successfully.');

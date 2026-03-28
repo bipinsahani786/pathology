@@ -18,6 +18,11 @@
         {{-- Tab Navigation --}}
         <ul class="nav nav-tabs mb-4" role="tablist">
             <li class="nav-item">
+                <button wire:click="$set('activeTab', 'general')" class="nav-link {{ $activeTab === 'general' ? 'active' : '' }}">
+                    <i class="feather-settings me-1"></i> General
+                </button>
+            </li>
+            <li class="nav-item">
                 <button wire:click="$set('activeTab', 'profile')" class="nav-link {{ $activeTab === 'profile' ? 'active' : '' }}">
                     <i class="feather-home me-1"></i> Lab Profile
                 </button>
@@ -38,15 +43,87 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button wire:click="$set('activeTab', 'barcode')" class="nav-link {{ $activeTab === 'barcode' ? 'active' : '' }}">
+                    <i class="feather-maximize me-1"></i> Barcode Settings
+                </button>
+            </li>
+            @can('view staff_roles')
+            <li class="nav-item">
                 <button wire:click="$set('activeTab', 'staff')" class="nav-link {{ $activeTab === 'staff' ? 'active' : '' }}">
                     <i class="feather-users me-1"></i> Staff & Roles
                 </button>
             </li>
+            @endcan
         </ul>
 
         {{-- ═══════════════════════════════════════════════════════ --}}
-        {{-- TAB 1: LAB PROFILE --}}
+        {{-- TAB 0: GENERAL SETTINGS --}}
         {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'general')
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-user text-primary me-2"></i>Patient ID Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            @if($patientSettingsSaved)
+                                <div class="alert alert-success py-2 fs-12 mb-3 d-flex align-items-center gap-2">
+                                    <i class="feather-check-circle"></i> Patient settings saved!
+                                </div>
+                            @endif
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Patient ID Prefix <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.live.debounce.500ms="patient_id_prefix" placeholder="e.g. PAT, REG, PT">
+                                    <div class="fs-10 text-muted mt-1">Text at the start of Patient ID. Default: PAT</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Counter Digits</label>
+                                    <select class="form-select" wire:model.live="patient_id_digits">
+                                        <option value="4">4 digits (0001)</option>
+                                        <option value="5">5 digits (00001)</option>
+                                        <option value="6">6 digits (000001)</option>
+                                        <option value="8">8 digits (00000001)</option>
+                                    </select>
+                                    <div class="fs-10 text-muted mt-1">Number of zero-padded digits in the ID.</div>
+                                </div>
+                            </div>
+
+                            @can('edit settings')
+                            <hr class="my-3">
+                            <div class="text-end">
+                                <button wire:click="savePatientSettings" class="btn btn-primary fw-bold px-4">
+                                    <span wire:loading.remove wire:target="savePatientSettings"><i class="feather-save me-1"></i>Save Patient Settings</span>
+                                    <span wire:loading wire:target="savePatientSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                                </button>
+                            </div>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-primary h-100">
+                        <div class="card-header" style="background:rgba(59,113,202,0.08);">
+                            <h6 class="card-title mb-0 fs-13 text-primary"><i class="feather-eye me-2"></i>Patient ID Preview</h6>
+                        </div>
+                        <div class="card-body text-center py-5 d-flex flex-column justify-content-center">
+                            <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Sample Patient ID:</div>
+                            <div class="fs-3 fw-bold text-dark py-3 px-3 rounded-3 border bg-light font-monospace" style="letter-spacing:1px;">
+                                {{ $this->patientIdPreview }}
+                            </div>
+                            <div class="mt-4">
+                                <div class="fs-10 text-muted px-3 text-start">
+                                    <p><i class="feather-info me-1"></i> This pattern will be used for all patient records. Existing IDs will also reflect this change.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         @if($activeTab === 'profile')
             <div class="row g-4">
                 {{-- Logo & Branding --}}
@@ -127,6 +204,7 @@
                                 </div>
                             </div>
 
+                            @can('edit settings')
                             <hr class="my-3">
                             <div class="text-end">
                                 <button wire:click="saveProfile" class="btn btn-primary fw-bold px-4">
@@ -134,6 +212,7 @@
                                     <span wire:loading wire:target="saveProfile"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                                 </button>
                             </div>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -202,6 +281,7 @@
                                 </div>
                             </div>
 
+                            @can('edit settings')
                             <hr class="my-3">
                             <div class="text-end">
                                 <button wire:click="saveInvoiceSettings" class="btn btn-primary fw-bold px-4">
@@ -209,6 +289,7 @@
                                     <span wire:loading wire:target="saveInvoiceSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                                 </button>
                             </div>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -296,6 +377,7 @@
                         @endforeach
                     </div>
 
+                    @can('edit settings')
                     <hr class="my-3">
                     <div class="text-end">
                         <button wire:click="saveTemplate" class="btn btn-primary fw-bold px-4">
@@ -303,6 +385,7 @@
                             <span wire:loading wire:target="saveTemplate"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                         </button>
                     </div>
+                    @endcan
                 </div>
             </div>
         @endif
@@ -408,12 +491,14 @@
                                 <div class="fs-10 text-muted mt-1">Max 3MB · JPG, PNG</div>
                             </div>
 
+                            @can('edit settings')
                             <div class="text-end">
                                 <button wire:click="savePdfSettings" class="btn btn-primary fw-bold px-4">
                                     <span wire:loading.remove wire:target="savePdfSettings"><i class="feather-save me-1"></i>Save PDF Settings</span>
                                     <span wire:loading wire:target="savePdfSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                                 </button>
                             </div>
+                            @endcan
                         </div>
                     </div>
                 </div>
@@ -450,7 +535,89 @@
         @endif
 
         {{-- ═══════════════════════════════════════════════════════ --}}
-        {{-- TAB 5: STAFF & ROLES --}}
+        {{-- TAB 5: BARCODE SETTINGS --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'barcode')
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-maximize text-primary me-2"></i>Barcode Label Pattern</h6>
+                        </div>
+                        <div class="card-body">
+                            @if($barcodeSaved)
+                                <div class="alert alert-success py-2 fs-12 mb-3 d-flex align-items-center gap-2">
+                                    <i class="feather-check-circle"></i> Barcode settings saved!
+                                </div>
+                            @endif
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Barcode Prefix <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" wire:model.live.debounce.500ms="barcode_prefix" placeholder="e.g. BC, LAB, UID">
+                                    <div class="fs-10 text-muted mt-1">Text at the start of barcode. Default: LAB</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Date Format</label>
+                                    <select class="form-select" wire:model.live="barcode_date_format">
+                                        <option value="ym">YYMM ({{ date('ym') }})</option>
+                                        <option value="ymd">YYMMDD ({{ date('ymd') }})</option>
+                                        <option value="Ymd">YYYYMMDD ({{ date('Ymd') }})</option>
+                                        <option value="Y">YYYY ({{ date('Y') }})</option>
+                                        <option value="none">No Date</option>
+                                    </select>
+                                    <div class="fs-10 text-muted mt-1">Included after prefix</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Counter Digits</label>
+                                    <select class="form-select" wire:model.live="barcode_counter_digits">
+                                        <option value="4">4 digits (0001)</option>
+                                        <option value="5">5 digits (00001)</option>
+                                        <option value="6">6 digits (000001)</option>
+                                        <option value="8">8 digits (00000001)</option>
+                                        <option value="10">10 digits (0000000001)</option>
+                                    </select>
+                                    <div class="fs-10 text-muted mt-1">Length of the unique serial number</div>
+                                </div>
+                            </div>
+
+                            @can('edit settings')
+                            <hr class="my-3">
+                            <div class="text-end">
+                                <button wire:click="saveBarcodeSettings" class="btn btn-primary fw-bold px-4">
+                                    <span wire:loading.remove wire:target="saveBarcodeSettings"><i class="feather-save me-1"></i>Save Barcode Settings</span>
+                                    <span wire:loading wire:target="saveBarcodeSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+                                </button>
+                            </div>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Live Preview --}}
+                <div class="col-lg-4">
+                    <div class="card border-primary h-100">
+                        <div class="card-header" style="background:rgba(59,113,202,0.08);">
+                            <h6 class="card-title mb-0 fs-13 text-primary"><i class="feather-eye me-2"></i>Barcode Preview</h6>
+                        </div>
+                        <div class="card-body text-center py-5 d-flex flex-column justify-content-center">
+                            <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Sample Barcode ID:</div>
+                            <div class="fs-3 fw-bold text-dark py-3 px-3 rounded-3 border bg-light font-monospace" style="letter-spacing:1px;">
+                                {{ $this->barcodePreview }}
+                            </div>
+                            <div class="mt-4">
+                                <div class="fs-10 text-muted px-3 text-start">
+                                    <p><i class="feather-info me-1"></i> This ID is unique for every invoice and is printed on all sample stickers associated with the bill.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB 6: STAFF & ROLES --}}
         {{-- ═══════════════════════════════════════════════════════ --}}
         @if($activeTab === 'staff')
             @livewire('lab.staff-role-manager')

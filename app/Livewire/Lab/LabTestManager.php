@@ -14,7 +14,7 @@ class LabTestManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage lab_tests');
+        $this->authorize('view lab_tests');
     }
 
     // List Filters
@@ -31,6 +31,7 @@ class LabTestManager extends Component
 
     public function openImportModal()
     {
+        $this->authorize('create lab_tests');
         $this->globalSearch = '';
         $this->globalLimit = 15;
         $this->isImportModalOpen = true;
@@ -48,6 +49,7 @@ class LabTestManager extends Component
 
     public function importGlobalTest($globalTestId)
     {
+        $this->authorize('create lab_tests');
         $labTestService = new LabTestService();
         try {
             $newTest = $labTestService->importFromGlobal($globalTestId, auth()->user()->company_id);
@@ -63,6 +65,7 @@ class LabTestManager extends Component
 
     public function delete($id)
     {
+        $this->authorize('delete lab_tests');
         $labTestService = new LabTestService();
         $labTestService->deleteTest($id);
         session()->flash('message', 'Lab test deleted successfully.');
@@ -70,6 +73,7 @@ class LabTestManager extends Component
 
     public function toggleStatus($id)
     {
+        $this->authorize('edit lab_tests');
         $labTestService = new LabTestService();
         $labTestService->toggleStatus($id);
     }

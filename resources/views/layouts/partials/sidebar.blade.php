@@ -85,7 +85,7 @@
 
                     <li class="nxl-item {{ request()->routeIs('lab.reports') || request()->routeIs('lab.reports.entry') ? 'active' : '' }}">
                         <a href="{{ route('lab.reports') }}" class="nxl-link" wire:navigate>
-                            <span class="nxl-micon"><i class="feather-flask-conical"></i></span>
+                            <span class="nxl-micon"><i class="feather-clipboard"></i></span>
                             <span class="nxl-mtext">Test Reports</span>
                         </a>
                     </li>

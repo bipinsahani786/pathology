@@ -223,22 +223,81 @@
                         </div>
 
                         <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-3 d-block border-bottom pb-2">Assign Permissions</label>
-                        <div class="row g-3">
-                            @foreach($permissions->groupBy(fn($p) => explode(' ', $p->name)[1] ?? 'general') as $group => $perms)
-                                <div class="col-md-6 mb-3">
-                                    <h6 class="fs-10 fw-bold text-primary text-uppercase mb-2">{{ ucfirst(str_replace('_', ' ', $group)) }}</h6>
-                                    <div class="p-3 bg-light rounded-3 border">
-                                        @foreach($perms as $p)
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" value="{{ $p->name }}" wire:model="selectedPermissions" id="p-{{ $p->id }}">
-                                                <label class="form-check-label fs-12 text-dark c-pointer" for="p-{{ $p->id }}">
-                                                    {{ ucfirst(str_replace(['manage ', '_'], ['', ' '], $p->name)) }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless align-middle">
+                                <thead>
+                                    <tr class="fs-10 text-muted fw-bold text-uppercase border-bottom">
+                                        <th style="min-width: 150px;">Module / Feature</th>
+                                        <th class="text-center">View</th>
+                                        <th class="text-center">Create</th>
+                                        <th class="text-center">Edit</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        // Improved grouping logic
+                                        $grouped = $permissions->groupBy(function($p) {
+                                            $parts = explode(' ', $p->name);
+                                            // Action is parts[0], Module is parts[1]
+                                            return $parts[1] ?? 'misc';
+                                        });
+                                        
+                                        $modulesGrouped = $grouped->filter(fn($val, $key) => $key !== 'misc');
+                                        $misc = $grouped->get('misc', collect());
+                                    @endphp
+
+                                    @foreach($modulesGrouped as $module => $perms)
+                                        <tr class="border-bottom">
+                                            <td class="py-2">
+                                                <div class="fw-bold text-dark fs-12">{{ ucfirst(str_replace('_', ' ', $module)) }}</div>
+                                            </td>
+                                            @foreach(['view', 'create', 'edit', 'delete'] as $action)
+                                                <td class="text-center py-2">
+                                                    @php 
+                                                        $p = $perms->first(function($item) use ($action) {
+                                                            $parts = explode(' ', $item->name);
+                                                            return ($parts[0] ?? '') === $action;
+                                                        }); 
+                                                    @endphp
+                                                    @if($p)
+                                                        <div class="form-check d-inline-block">
+                                                            <input class="form-check-input" type="checkbox" value="{{ $p->name }}" wire:model="selectedPermissions" id="p-{{ $p->id }}">
+                                                        </div>
+                                                    @else
+                                                        <span class="text-muted opacity-25">-</span>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+
+                                    @if($misc->count() > 0)
+                                        <tr>
+                                            <td colspan="5" class="pt-4 pb-2">
+                                                <div class="fs-10 fw-bold text-primary text-uppercase">Other Special Permissions</div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="row g-2">
+                                                    @foreach($misc as $p)
+                                                        <div class="col-md-4">
+                                                            <div class="p-2 bg-light rounded border d-flex align-items-center gap-2">
+                                                                <input class="form-check-input ms-0" type="checkbox" value="{{ $p->name }}" wire:model="selectedPermissions" id="p-{{ $p->id }}">
+                                                                <label class="form-check-label fs-11 text-dark mb-0 c-pointer" for="p-{{ $p->id }}">
+                                                                    {{ ucfirst(str_replace(['manage ', '_'], ['', ' '], $p->name)) }}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
                         </div>
 
                         <div class="mt-4 text-end">

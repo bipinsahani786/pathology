@@ -13,7 +13,7 @@ class PackageManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage test_packages');
+        $this->authorize('view test_packages');
     }
 
     public $searchTerm = '';
@@ -22,6 +22,7 @@ class PackageManager extends Component
 
     public function delete($id)
     {
+        $this->authorize('delete test_packages');
         $labTestService = new LabTestService();
         $labTestService->deleteTest($id);
         session()->flash('message', 'Package deleted successfully.');
@@ -29,6 +30,7 @@ class PackageManager extends Component
 
     public function toggleStatus($id)
     {
+        $this->authorize('edit test_packages');
         $labTestService = new LabTestService();
         $labTestService->toggleStatus($id);
     }

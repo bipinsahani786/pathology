@@ -16,12 +16,13 @@ class ResultEntryManager extends Component
     
     public $results = [];
     public $highlights = [];
-    public $flags = []; // New array to hold 'H' or 'L' flags
+    public $flags = []; 
     public $parametersList = [];
+    public $selectedTests = []; // For selective printing from here
 
     public function mount($id)
     {
-        $this->authorize('generate reports');
+        $this->authorize('view reports');
         $this->invoice = Invoice::with(['patient.patientProfile', 'items.labTest', 'testReport.results'])->findOrFail($id);
         
         // Ensure only users belonging to this company can access
@@ -69,7 +70,12 @@ class ResultEntryManager extends Component
         $existingResultsMap = [];
         if ($this->testReport && $this->testReport->results) {
             foreach ($this->testReport->results as $r) {
-                $key = $r->lab_test_id . '_' . md5($r->parameter_name);
+                // Try matching by invoice_item_id first (new way), then fallback to lab_test_id (old way)
+                if ($r->invoice_item_id) {
+                    $key = $r->invoice_item_id . '_' . md5($r->parameter_name);
+                } else {
+                    $key = $r->lab_test_id . '_' . md5($r->parameter_name);
+                }
                 $existingResultsMap[$key] = $r;
             }
         }
@@ -78,7 +84,7 @@ class ResultEntryManager extends Component
             if ($item->labTest && $item->labTest->parameters) {
                 foreach ($item->labTest->parameters as $param) {
                     $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
-                    $key = $item->labTest->id . '_' . md5($paramName);
+                    $key = $item->id . '_' . md5($paramName); // Use invoice_item_id for unique mapping
                     
                     // NEW: Smart Range Matching
                     $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
@@ -97,7 +103,9 @@ class ResultEntryManager extends Component
                         : '';
                     
                     $this->parametersList[$key] = [
+                        'key' => $key,
                         'lab_test_id' => $item->labTest->id,
+                        'invoice_item_id' => $item->id,
                         'name' => $paramName,
                         'short_code' => $param['short_code'] ?? '',
                         'unit' => is_array($param) ? ($param['unit'] ?? '') : '',
@@ -143,44 +151,52 @@ class ResultEntryManager extends Component
 
     private function autoCalculateFormulas()
     {
-        // 1. Build a code-to-value map
-        $codeMap = [];
+        // Group parameters by invoice_item_id to isolate calculation scope
+        $groupedParams = [];
         foreach ($this->parametersList as $k => $p) {
-            if (!empty($p['short_code'])) {
-                $codeMap[strtoupper($p['short_code'])] = (float)($this->results[$k] ?: 0);
-            }
+            $itemId = $p['invoice_item_id'];
+            $groupedParams[$itemId][$k] = $p;
         }
 
-        // 2. Process all calculated parameters
-        foreach ($this->parametersList as $k => $p) {
-            if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
-                $formula = strtoupper($p['formula']);
-                
-                // Replace codes like {HB} with values
-                foreach ($codeMap as $code => $val) {
-                    $formula = str_replace('{'.$code.'}', $val, $formula);
+        foreach ($groupedParams as $itemId => $params) {
+            // 1. Build a local code-to-value map for this test
+            $localCodeMap = [];
+            foreach ($params as $k => $p) {
+                if (!empty($p['short_code'])) {
+                    $localCodeMap[strtoupper($p['short_code'])] = (float)($this->results[$k] ?: 0);
                 }
+            }
 
-                // Clean up any remaining braces or invalid chars
-                $formula = preg_replace('/[^{}0-9\+\-\*\/\.\(\) ]/', '', $formula);
-                
-                try {
-                    // Basic evaluation if formula looks safe
-                    if (!empty($formula) && !str_contains($formula, '{')) {
-                        // Prevent DivisionByZeroError by checking if '/ 0' exists in the string (approximate)
-                        // Note: This is a simple protection for common cases.
-                        if (preg_match('/\/ *0(\.0*)?($|[^0-9])/', $formula)) {
-                             Log::warning("Division by zero in formula: $formula");
-                             continue;
-                        }
-
-                        $result = @eval("return $formula;");
-                        if ($result !== false && is_numeric($result)) {
-                            $this->results[$k] = round($result, 2);
-                        }
+            // 2. Process all calculated parameters for this test
+            foreach ($params as $k => $p) {
+                if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
+                    $formula = strtoupper($p['formula']);
+                    
+                    // Replace codes like {HB} with values
+                    foreach ($localCodeMap as $code => $val) {
+                        $formula = str_replace('{'.$code.'}', $val, $formula);
                     }
-                } catch (\Throwable $e) {
-                     Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
+
+                    // Clean up any remaining braces or invalid chars
+                    $formula = preg_replace('/[^{}0-9\+\-\*\/\.\(\) ]/', '', $formula);
+                    
+                    try {
+                        // Basic evaluation if formula looks safe
+                        if (!empty($formula) && !str_contains($formula, '{')) {
+                            // Prevent DivisionByZeroError
+                            if (preg_match('/\/ *0(\.0*)?($|[^0-9])/', $formula)) {
+                                 Log::warning("Division by zero in formula: $formula");
+                                 continue;
+                            }
+
+                            $result = @eval("return $formula;");
+                            if ($result !== false && is_numeric($result)) {
+                                $this->results[$k] = round($result, 2);
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                         Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
+                    }
                 }
             }
         }
@@ -194,6 +210,10 @@ class ResultEntryManager extends Component
                 continue;
             }
             
+            if (!isset($this->parametersList[$key])) {
+                continue;
+            }
+
             $param = $this->parametersList[$key];
             $range = $param['matched_range_details'] ?? null;
             $inputType = $param['input_type'] ?? 'numeric';
@@ -232,6 +252,7 @@ class ResultEntryManager extends Component
 
     public function saveReport($status = 'Draft')
     {
+        $this->authorize('edit reports');
         if (!$this->testReport) {
             $this->testReport = TestReport::create([
                 'company_id' => $this->invoice->company_id,
@@ -265,10 +286,11 @@ class ResultEntryManager extends Component
             ReportResult::updateOrCreate(
                 [
                     'test_report_id' => $this->testReport->id,
-                    'lab_test_id' => $details['lab_test_id'],
+                    'invoice_item_id' => $details['invoice_item_id'],
                     'parameter_name' => $details['name'],
                 ],
                 [
+                    'lab_test_id' => $details['lab_test_id'],
                     'result_value' => $val,
                     'status' => $stat,
                     'is_highlighted' => $highlight,
@@ -279,6 +301,7 @@ class ResultEntryManager extends Component
         }
 
         if ($status === 'Approved') {
+            $this->invoice->update(['sample_status' => 'Ready']);
             session()->flash('success', 'Report Approved Successfully and ready for printing.');
             return redirect()->route('lab.reports');
         } else {
@@ -286,11 +309,37 @@ class ResultEntryManager extends Component
         }
     }
 
+    public function toggleTestStatus($itemId)
+    {
+        $this->authorize('edit reports');
+        $item = \App\Models\InvoiceItem::findOrFail($itemId);
+        $newStatus = $item->status === 'Completed' ? 'Pending' : 'Completed';
+        $item->update(['status' => $newStatus]);
+        
+        // Refresh invoice to get updated status
+        $this->invoice->load('items');
+        
+        session()->flash('success', "Test status updated to {$newStatus}.");
+    }
+
+    public function printSelected()
+    {
+        if (empty($this->selectedTests)) {
+            session()->flash('error', 'Please select at least one test to print.');
+            return;
+        }
+
+        $testIds = implode(',', $this->selectedTests);
+        $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'modern']) . '?tests=' . $testIds;
+        
+        $this->dispatch('open-new-tab', ['url' => $url]);
+    }
+
     public function render()
     {
-        // Group parameters by Department and then by Test Name for rendering
+        // Group parameters by Department and then by Invoice Item ID to keep separate tests distinct
         $groupedParams = collect($this->parametersList)->groupBy('department')->map(function ($items) {
-            return collect($items)->groupBy('test_name');
+            return collect($items)->groupBy('invoice_item_id');
         });
 
         return view('livewire.lab.result-entry-manager', [

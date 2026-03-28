@@ -17,30 +17,35 @@ class RoleSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 1. Permissions List
-        $permissions = [
-            // Admin Permissions
-            'manage global_tests',
-            'manage plans',
-            'manage subscriptions',
-            // Lab Permissions
-            'manage lab_tests',
-            'manage test_packages',
-            'manage patients',
-            'manage doctors',
-            'manage agents',
-            'manage collection_centers',
-            'manage branches',
-            'manage marketing',
-            'manage payment_modes',
-            'manage pos',
-            'view reports',
+        // 1. Module-based Granular Permissions
+        $modules = [
+            'patients', 'doctors', 'agents', 'lab_tests', 'test_packages', 
+            'departments', 'invoices', 'reports', 'settlements', 'branches', 
+            'collection_centers', 'payment_modes', 'marketing', 'staff_roles', 'settings',
+            'pos', 'wallets'
+        ];
+        $actions = ['view', 'create', 'edit', 'delete'];
+
+        $granularPermissions = [];
+        foreach ($modules as $module) {
+            foreach ($actions as $action) {
+                $granularPermissions[] = "$action $module";
+            }
+        }
+
+        // Additional Special Permissions
+        $specialPermissions = [
+            'manage global_tests', // Super Admin
+            'manage plans',        // Super Admin
+            'manage subscriptions', // Super Admin
             'generate reports',
             'download reports'
         ];
 
+        $allPermissions = array_merge($granularPermissions, $specialPermissions);
+
         // 2. Permissions Create
-        foreach ($permissions as $permission) {
+        foreach ($allPermissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
@@ -56,30 +61,26 @@ class RoleSeeder extends Seeder
 
         // Lab Admin (Tenant Owner)
         $labAdmin = Role::firstOrCreate(['name' => 'lab_admin']);
-        $labAdmin->syncPermissions([
-            'manage lab_tests',
-            'manage test_packages',
-            'manage patients',
-            'manage doctors',
-            'manage agents',
-            'manage collection_centers',
-            'manage branches',
-            'manage marketing',
-            'manage payment_modes',
-            'manage pos',
-            'view reports',
-            'generate reports',
-            'download reports'
-        ]);
+        // Lab Admin gets everything except super admin stuff
+        $labAdmin->syncPermissions($granularPermissions);
+        $labAdmin->givePermissionTo(['generate reports', 'download reports']);
 
-        // Lab Staff
+        // Lab Staff (Default Permissions)
         $staff = Role::firstOrCreate(['name' => 'staff']);
         $staff->syncPermissions([
-            'manage patients',
-            'manage pos',
-            'view reports',
-            'generate reports',
-            'download reports'
+            'view patients', 'create patients', 'edit patients',
+            'view invoices', 'create invoices',
+            'view reports', 'generate reports', 'download reports',
+            'view pos', 'create pos'
+        ]);
+
+        // Collection Center User
+        $collector = Role::firstOrCreate(['name' => 'collection_center']);
+        $collector->syncPermissions([
+            'view patients', 'create patients',
+            'view invoices', 'create invoices',
+            'view reports', 'generate reports', 'download reports',
+            'view pos', 'create pos'
         ]);
 
         // Customer (Patient)
@@ -100,16 +101,6 @@ class RoleSeeder extends Seeder
         $agent = Role::firstOrCreate(['name' => 'agent']);
         $agent->syncPermissions([
             'view reports',
-            'download reports'
-        ]);
-
-        // Collection Center User
-        $collector = Role::firstOrCreate(['name' => 'collection_center']);
-        $collector->syncPermissions([
-            'manage patients',
-            'manage pos',
-            'view reports',
-            'generate reports',
             'download reports'
         ]);
         

@@ -16,7 +16,7 @@
     <div class="main-content">
         <div class="card mb-4" style="overflow: visible !important;">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0"><i class="feather-flask-conical me-2 text-primary"></i>Test Results & Reports</h6>
+                <h6 class="card-title mb-0"><i class="feather-flask me-2 text-primary"></i>Test Results & Reports</h6>
             </div>
             <div class="card-body">
                 
@@ -44,6 +44,43 @@
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
+                            <option value="custom">Custom Date</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Row 2 Filters --}}
+                <div class="row g-3 mb-4">
+                    @if($dateRange === 'custom')
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" wire:model.live="filterDateFrom">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" wire:model.live="filterDateTo">
+                        </div>
+                    @endif
+                    <div class="col-md-3">
+                        <select class="form-select" wire:model.live="filterDoctor">
+                            <option value="">All Doctors</option>
+                            @foreach($doctors as $doc)
+                                <option value="{{ $doc->user_id }}">{{ $doc->user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" wire:model.live="filterAgent">
+                            <option value="">All Agents</option>
+                            @foreach($agents as $agent)
+                                <option value="{{ $agent->user_id }}">{{ $agent->user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" wire:model.live="filterCC">
+                            <option value="">All Centers</option>
+                            @foreach($centers as $center)
+                                <option value="{{ $center->id }}">{{ $center->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -53,9 +90,11 @@
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Invoice Details</th>
+                                <th style="width:140px;">Invoice & Br.</th>
                                 <th>Patient Info</th>
-                                <th>Total Tests</th>
+                                <th>Doctor / Agent</th>
+                                <th>Center</th>
+                                <th>Test List</th>
                                 <th>Status</th>
                                 <th class="text-end">Action</th>
                             </tr>
@@ -65,40 +104,83 @@
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-primary">{{ $invoice->invoice_number }}</div>
-                                        <div class="fs-11 text-muted">{{ $invoice->created_at->format('d M, Y h:i A') }}</div>
+                                        <div class="fs-11 fw-bold text-dark mb-1">{{ $invoice->barcode }}</div>
+                                        <div class="fs-10 text-muted">{{ $invoice->created_at->format('d/m/y h:i A') }}</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold">{{ $invoice->patient->name }}</div>
-                                        <div class="fs-12 text-muted">
+                                        <div class="fw-bold fs-13">{{ $invoice->patient->name }}</div>
+                                        <div class="badge bg-soft-info text-info fs-10 fw-bold px-2 py-1 mb-1">{{ $invoice->patient->formatted_id }}</div>
+                                        <div class="fs-10 text-muted">
                                             {{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-soft-primary text-primary fs-12 rounded-pill px-3">{{ $invoice->items->count() }} Tests</span>
+                                        <div class="fs-11">
+                                            <div class="fw-semibold text-dark"><i class="feather-user me-1 fs-10"></i>{{ $invoice->doctor->name ?? 'Self' }}</div>
+                                            @if($invoice->agent)
+                                                <div class="text-muted"><i class="feather-user-check me-1 fs-10"></i>{{ $invoice->agent->name }}</div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="badge bg-light text-dark fw-normal fs-10">{{ $invoice->collectionCenter->name ?? 'Main Lab' }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach($invoice->items as $item)
+                                                @php
+                                                    $isComplete = $item->status === 'Completed';
+                                                @endphp
+                                                <div class="form-check form-check-inline m-0 p-0">
+                                                    <input class="form-check-input ms-0 me-1" type="checkbox" 
+                                                           wire:model.live="selectedTests" 
+                                                           value="{{ $item->id }}"
+                                                           {{ !$isComplete ? 'disabled' : '' }}>
+                                                    <span class="badge {{ $isComplete ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} border fs-9 fw-normal" title="{{ $isComplete ? 'Result Entered' : 'Pending' }}">
+                                                        {{ $item->labTest->name }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </td>
                                     <td>
                                         @if(!$invoice->testReport)
-                                            <span class="badge bg-soft-warning text-warning"><i class="feather-clock me-1"></i> Pending Entry</span>
+                                            <span class="badge bg-soft-warning text-warning fs-10"><i class="feather-clock me-1"></i> Pending Entry</span>
                                         @elseif($invoice->testReport->status === 'Draft')
-                                            <span class="badge bg-soft-info text-info"><i class="feather-edit-2 me-1"></i> Draft</span>
+                                            <span class="badge bg-soft-info text-info fs-10"><i class="feather-edit-2 me-1"></i> Draft</span>
                                         @elseif($invoice->testReport->status === 'Approved')
-                                            <span class="badge bg-soft-success text-success"><i class="feather-check-circle me-1"></i> Approved</span>
+                                            <span class="badge bg-soft-success text-success fs-10"><i class="feather-check-circle me-1"></i> Approved</span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                     <td class="text-end">
                                         @if(!$invoice->testReport || $invoice->testReport->status !== 'Approved')
-                                            <a href="{{ route('lab.reports.entry', $invoice->id) }}" class="btn btn-sm btn-primary">
-                                                <i class="feather-edit me-1"></i> Enter Results
-                                            </a>
+                                            <div class="d-flex justify-content-end gap-1">
+                                                @can('edit reports')
+                                                    <a href="{{ route('lab.reports.entry', $invoice->id) }}" class="btn btn-sm btn-primary py-1 px-2" title="Enter Results">
+                                                        <i class="feather-edit fs-12"></i>
+                                                    </a>
+                                                @endcan
+                                                @can('edit invoices')
+                                                    <a href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate class="btn btn-sm btn-outline-warning py-1 px-2" title="Modify Invoice">
+                                                        <i class="feather-edit-3 fs-12"></i>
+                                                    </a>
+                                                @endcan
+                                            </div>
                                         @else
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown">
                                                     <i class="feather-printer me-1"></i> Print / Edit
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end">
-                                                    <li><a class="dropdown-item" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2"></i> Edit Results</a></li>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                    @can('edit reports')
+                                                        <li><a class="dropdown-item fs-12" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
+                                                    @endcan
+                                                    @can('edit invoices')
+                                                        <li><a class="dropdown-item fs-12" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
+                                                    @endcan
                                                     <li><hr class="dropdown-divider"></li>
-                                                    <li><a class="dropdown-item text-primary fw-bold" href="{{ route('lab.reports.print', [$invoice->id, 'modern']) }}" target="_blank"><i class="feather-file-text me-2"></i> Print Report (Modern)</a></li>
+                                                    <li><button type="button" class="dropdown-item fs-12 text-success fw-bold" wire:click="printSelected({{ $invoice->id }})"><i class="feather-check-square me-2"></i> Print Selected Tests</button></li>
+                                                    <li><a class="dropdown-item fs-12 text-primary" href="{{ route('lab.reports.print', [$invoice->id, 'modern']) }}" target="_blank"><i class="feather-file-text me-2"></i> Print All (Modern)</a></li>
                                                 </ul>
                                             </div>
                                         @endif
@@ -106,7 +188,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="avatar-text avatar-xl rounded-circle bg-soft-secondary mx-auto mb-3">
                                             <i class="feather-file-text fs-2"></i>
                                         </div>
@@ -189,4 +271,12 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('open-new-tab', (event) => {
+                window.open(event[0].url, '_blank');
+            });
+        });
+    </script>
 </div>

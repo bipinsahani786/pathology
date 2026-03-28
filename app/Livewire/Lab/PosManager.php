@@ -58,6 +58,7 @@ class PosManager extends Component
     // ==========================================
     public $isPatientModalOpen = false, $isDoctorModalOpen = false, $isAgentModalOpen = false;
     public $activeSearchField = null; // null, 'patient', 'doctor', 'agent', 'test'
+    public $overpaymentError = false;
     public $paymentModesList = [];
     public $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
     public $new_name, $new_phone, $new_age, $new_gender = 'Male';
@@ -81,9 +82,9 @@ class PosManager extends Component
     public function mount()
     {
         $user = auth()->user();
-        
-        // Authorization: Allow Lab Staff OR Collection Center users
-        if (!$user->can('manage pos') && !$user->hasRole('collection_center')) {
+
+        // Authorization: Allow specific granular permission to access POS
+        if (!$user->can('create pos')) {
             abort(403, 'Unauthorized access to POS.');
         }
 
@@ -93,13 +94,13 @@ class PosManager extends Component
         if ($user->hasRole('collection_center')) {
             $this->collection_center_id = $user->collection_center_id;
             // CC MUST select a lab branch where they will send samples
-            $this->branch_id = null; 
+            $this->branch_id = null;
         } else {
             // Lab Staff logic: Use linked CC/Branch or defaults
             $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
             $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
         }
-        
+
         $this->expected_report_date = date('Y-m-d');
         $this->expected_report_time = date('H:i', strtotime('+24 hours'));
         $this->sample_received_at = now()->format('Y-m-d\TH:i');
@@ -115,10 +116,22 @@ class PosManager extends Component
     // ==========================================
     // SELECTIONS — FULL PROFILE LOAD
     // ==========================================
-    public function updatedPatientSearch() { $this->activeSearchField = 'patient'; }
-    public function updatedDoctorSearch() { $this->activeSearchField = 'doctor'; }
-    public function updatedAgentSearch() { $this->activeSearchField = 'agent'; }
-    public function updatedTestSearch() { $this->activeSearchField = 'test'; }
+    public function updatedPatientSearch()
+    {
+        $this->activeSearchField = 'patient';
+    }
+    public function updatedDoctorSearch()
+    {
+        $this->activeSearchField = 'doctor';
+    }
+    public function updatedAgentSearch()
+    {
+        $this->activeSearchField = 'agent';
+    }
+    public function updatedTestSearch()
+    {
+        $this->activeSearchField = 'test';
+    }
 
     public function selectPatient($userId)
     {
@@ -169,9 +182,25 @@ class PosManager extends Component
         $this->activeSearchField = null;
     }
 
-    public function clearPatient() { $this->selectedPatient = null; $this->patientProfileData = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null; $this->calculateTotals(); }
-    public function clearDoctor() { $this->selectedDoctor = null; $this->doctorProfileData = null; }
-    public function clearAgent() { $this->selectedAgent = null; $this->agentProfileData = null; }
+    public function clearPatient()
+    {
+        $this->selectedPatient = null;
+        $this->patientProfileData = null;
+        $this->active_membership = null;
+        $this->membership_fee = 0;
+        $this->purchasedMembershipRecordId = null;
+        $this->calculateTotals();
+    }
+    public function clearDoctor()
+    {
+        $this->selectedDoctor = null;
+        $this->doctorProfileData = null;
+    }
+    public function clearAgent()
+    {
+        $this->selectedAgent = null;
+        $this->agentProfileData = null;
+    }
 
     // ==========================================
     // CART LOGIC
@@ -184,8 +213,8 @@ class PosManager extends Component
                 'id' => $test->id,
                 'name' => $test->name,
                 'test_code' => $test->test_code,
-                'mrp' => (float)$test->mrp,
-                'is_package' => (bool)$test->is_package,
+                'mrp' => (float) $test->mrp,
+                'is_package' => (bool) $test->is_package,
                 'department' => $test->department,
                 'sample_type' => $test->sample_type,
                 'parameters' => $test->parameters ?? [],
@@ -198,7 +227,7 @@ class PosManager extends Component
                     'id' => $lt->id,
                     'name' => $lt->name,
                     'test_code' => $lt->test_code,
-                    'mrp' => (float)$lt->mrp,
+                    'mrp' => (float) $lt->mrp,
                     'department' => $lt->department,
                     'parameters' => $lt->parameters ?? [],
                 ])->toArray();
@@ -233,12 +262,22 @@ class PosManager extends Component
     // ==========================================
     public function purchaseMembership()
     {
+        $this->authorize('create marketing');
         $this->modalError = '';
-        if (!$this->selectedPatient) { $this->modalError = 'Select a patient first.'; return; }
-        if (!$this->selectedMembershipId) { $this->modalError = 'Select a plan.'; return; }
+        if (!$this->selectedPatient) {
+            $this->modalError = 'Select a patient first.';
+            return;
+        }
+        if (!$this->selectedMembershipId) {
+            $this->modalError = 'Select a plan.';
+            return;
+        }
 
         $membership = Membership::find($this->selectedMembershipId);
-        if (!$membership) { $this->modalError = 'Invalid membership.'; return; }
+        if (!$membership) {
+            $this->modalError = 'Invalid membership.';
+            return;
+        }
 
         DB::beginTransaction();
         try {
@@ -287,8 +326,12 @@ class PosManager extends Component
     // ==========================================
     public function quickAddPaymentMode()
     {
+        $this->authorize('edit settings');
         $this->modalError = '';
-        if (empty(trim($this->new_payment_mode_name))) { $this->modalError = 'Name is required.'; return; }
+        if (empty(trim($this->new_payment_mode_name))) {
+            $this->modalError = 'Name is required.';
+            return;
+        }
         try {
             PaymentMode::create(['company_id' => auth()->user()->company_id, 'name' => trim($this->new_payment_mode_name), 'is_active' => true]);
             $this->isPaymentModeModalOpen = false;
@@ -307,7 +350,10 @@ class PosManager extends Component
     public function applyVoucher()
     {
         $this->resetErrorBag('voucher_code');
-        if (empty($this->voucher_code)) { $this->addError('voucher_code', 'Enter a voucher code.'); return; }
+        if (empty($this->voucher_code)) {
+            $this->addError('voucher_code', 'Enter a voucher code.');
+            return;
+        }
 
         $voucher = Voucher::where('company_id', auth()->user()->company_id)
             ->where('code', strtoupper($this->voucher_code))
@@ -315,8 +361,14 @@ class PosManager extends Component
             ->where(fn($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()))
             ->first();
 
-        if (!$voucher) { $this->addError('voucher_code', 'Invalid or expired voucher.'); return; }
-        if ($this->subtotal < $voucher->min_bill_amount) { $this->addError('voucher_code', 'Min ₹' . $voucher->min_bill_amount); return; }
+        if (!$voucher) {
+            $this->addError('voucher_code', 'Invalid or expired voucher.');
+            return;
+        }
+        if ($this->subtotal < $voucher->min_bill_amount) {
+            $this->addError('voucher_code', 'Min ₹' . $voucher->min_bill_amount);
+            return;
+        }
 
         $this->applied_voucher = $voucher;
         $this->calculateTotals();
@@ -332,31 +384,52 @@ class PosManager extends Component
     // ==========================================
     // CALCULATOR ENGINE
     // ==========================================
-    public function updatedManualDiscountInput() { $this->calculateTotals(); }
-    public function updatedManualDiscountType() { $this->calculateTotals(); }
-    public function updatedPayments() { $this->calculateTotals(); }
-    public function updatedCart() { $this->calculateTotals(); }
+    public function updatedManualDiscountInput()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedManualDiscountType()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedPayments()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedCart()
+    {
+        $this->calculateTotals();
+    }
 
     public function calculateTotals()
     {
-        $this->subtotal = collect($this->cart)->sum('mrp');
-        $itemTotal = collect($this->cart)->sum('price');
+        // 1. Recalculate Subtotal from MRP
+        $this->subtotal = collect($this->cart)->sum(fn($item) => (float) ($item['mrp'] ?? 0));
+        
+        // 2. Initial Running Total is the sum of current item prices
+        $itemTotal = collect($this->cart)->sum(fn($item) => (float) ($item['price'] ?? 0));
+        
+        // 3. Implicit Item Discount (e.g. if price was manually reduced per line)
         $itemDiscount = $this->subtotal - $itemTotal;
-
+        
         $running = $itemTotal;
 
+        // 4. Membership Discount
         $this->membership_discount_amt = 0;
         if ($this->active_membership && $running > 0) {
-            $pct = is_array($this->active_membership) ? ($this->active_membership['discount_percentage'] ?? 0) : $this->active_membership->discount_percentage;
+            $pct = data_get($this->active_membership, 'discount_percentage', 0);
             $this->membership_discount_amt = ($running * $pct) / 100;
             $running -= $this->membership_discount_amt;
         }
 
+        // 5. Voucher Discount
         $this->voucher_discount_amt = 0;
         if ($this->applied_voucher && $running > 0) {
             if ($this->applied_voucher->discount_type === 'percentage') {
                 $v = ($running * $this->applied_voucher->discount_value) / 100;
-                if ($this->applied_voucher->max_discount_amount > 0) $v = min($v, $this->applied_voucher->max_discount_amount);
+                if ($this->applied_voucher->max_discount_amount > 0) {
+                    $v = min($v, $this->applied_voucher->max_discount_amount);
+                }
                 $this->voucher_discount_amt = $v;
             } else {
                 $this->voucher_discount_amt = $this->applied_voucher->discount_value;
@@ -364,30 +437,47 @@ class PosManager extends Component
             $running -= $this->voucher_discount_amt;
         }
 
+        // 6. Manual Overall Discount
         $this->manual_discount_amt = 0;
         $manualVal = (float) $this->manual_discount_input;
         if ($manualVal > 0 && $running > 0) {
-            $this->manual_discount_amt = $this->manual_discount_type === 'percent' ? ($running * $manualVal) / 100 : $manualVal;
+            $calcManual = $this->manual_discount_type === 'percent' ? ($running * $manualVal) / 100 : $manualVal;
+            $this->manual_discount_amt = min($calcManual, $running);
             $running -= $this->manual_discount_amt;
         }
 
+        // 7. Net Payable
         $this->net_payable = max($running, 0) + $this->membership_fee;
-        $this->manual_discount_amt += $itemDiscount; // Total discount reflects item-level reductions
-        $this->total_discount = $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
-        $this->due_amount = max($this->net_payable - collect($this->payments)->sum('amount'), 0);
+        
+        // 8. Total Savings shown in UI (Implicit + Explicit)
+        $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
+        
+        // 9. Due calculation
+        $totalCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
+        $this->due_amount = max($this->net_payable - $totalCollected, 0);
+        $this->overpaymentError = $totalCollected > $this->net_payable;
     }
 
     // ==========================================
     // SPLIT PAYMENTS
     // ==========================================
-    public function addPaymentRow() { $this->payments[] = ['mode_id' => '', 'amount' => 0, 'transaction_id' => '']; }
-    public function removePaymentRow($index) { unset($this->payments[$index]); $this->payments = array_values($this->payments); $this->calculateTotals(); }
+    public function addPaymentRow()
+    {
+        $this->payments[] = ['mode_id' => '', 'amount' => 0, 'transaction_id' => ''];
+    }
+    public function removePaymentRow($index)
+    {
+        unset($this->payments[$index]);
+        $this->payments = array_values($this->payments);
+        $this->calculateTotals();
+    }
 
     // ==========================================
     // QUICK ADD PATIENT
     // ==========================================
     public function quickAddPatient()
     {
+        $this->authorize('create patients');
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
@@ -437,6 +527,7 @@ class PosManager extends Component
     // ==========================================
     public function quickAddDoctor()
     {
+        $this->authorize('create doctors');
         $this->modalError = '';
         $this->validate([
             'new_doc_name' => 'required|string|max:255',
@@ -479,6 +570,7 @@ class PosManager extends Component
     // ==========================================
     public function quickAddAgent()
     {
+        $this->authorize('create agents');
         $this->modalError = '';
         $this->validate([
             'new_agent_name' => 'required|string|max:255',
@@ -521,16 +613,28 @@ class PosManager extends Component
     // ==========================================
     public function generateBill()
     {
-        if (!$this->selectedPatient) { session()->flash('error', 'Select a patient.'); return; }
-        if (empty($this->cart)) { session()->flash('error', 'Add at least one test.'); return; }
+        $this->authorize('create pos');
+        if (!$this->selectedPatient) {
+            session()->flash('error', 'Select a patient.');
+            return;
+        }
+        if (empty($this->cart)) {
+            session()->flash('error', 'Add at least one test.');
+            return;
+        }
+
+        if ($this->overpaymentError) {
+            session()->flash('error', 'Total payment cannot exceed Net Payable amount.');
+            return;
+        }
 
         $this->validate([
             'collection_center_id' => 'required|exists:collection_centers,id',
-            'branch_id'            => 'nullable|exists:branches,id',
-            'collection_type'      => 'required|string',
+            'branch_id' => 'nullable|exists:branches,id',
+            'collection_type' => 'required|string',
         ], [
             'collection_center_id.required' => 'Please select a Collection Center.',
-            'collection_center_id.exists'   => 'The selected Collection Center is invalid.',
+            'collection_center_id.exists' => 'The selected Collection Center is invalid.',
         ]);
 
         DB::beginTransaction();
@@ -550,9 +654,15 @@ class PosManager extends Component
             // Count existing invoices in current period for counter
             $counterQuery = Invoice::where('company_id', $companyId);
             switch ($counterReset) {
-                case 'daily':   $counterQuery->whereDate('created_at', today()); break;
-                case 'monthly': $counterQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year); break;
-                case 'yearly':  $counterQuery->whereYear('created_at', now()->year); break;
+                case 'daily':
+                    $counterQuery->whereDate('created_at', today());
+                    break;
+                case 'monthly':
+                    $counterQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    break;
+                case 'yearly':
+                    $counterQuery->whereYear('created_at', now()->year);
+                    break;
                 // 'never' — no filter, continuous count
             }
             $nextId = $counterQuery->count() + 1;
@@ -560,7 +670,21 @@ class PosManager extends Component
             $counter = str_pad($nextId, $counterDigits, '0', STR_PAD_LEFT);
             $parts = array_filter([$prefix, $datePart, $counter]);
             $invoiceNumber = implode($separator, $parts);
-            $barcode = $prefix . date('ymd') . str_pad($nextId, $counterDigits, '0', STR_PAD_LEFT);
+
+            // Barcode generation based on settings
+            $bcPrefix = Configuration::getFor('barcode_prefix', 'LAB');
+            $bcDateFormat = Configuration::getFor('barcode_date_format', 'ymd');
+            $bcCounterDigits = (int) Configuration::getFor('barcode_counter_digits', 6);
+
+            $bcDateMap = [
+                'ym' => date('ym'),
+                'ymd' => date('ymd'),
+                'Ymd' => date('Ymd'),
+                'Y' => date('Y'),
+                'none' => '',
+            ];
+            $bcDatePart = $bcDateMap[$bcDateFormat] ?? date('ymd');
+            $barcode = $bcPrefix . $bcDatePart . str_pad($nextId, $bcCounterDigits, '0', STR_PAD_LEFT);
 
             // ── Commission Calculation ──
             $docCommission = 0;
@@ -580,13 +704,13 @@ class PosManager extends Component
             // ── B2B & Profit Calculation (for Collection Centers) ──
             $totalB2bAmount = 0;
             $ccId = $this->collection_center_id;
-            
+
             // We need to fetch B2B prices for all tests in cart
             $cartIds = collect($this->cart)->pluck('id');
             $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
 
             foreach ($this->cart as $item) {
-                $b2b = (float)data_get($testPrices->get($item['id']), 'b2b_price', 0);
+                $b2b = (float) data_get($testPrices->get($item['id']), 'b2b_price', 0);
                 $totalB2bAmount += $b2b;
             }
 
@@ -654,7 +778,8 @@ class PosManager extends Component
                 }
             }
 
-            if ($this->applied_voucher) $this->applied_voucher->increment('used_count');
+            if ($this->applied_voucher)
+                $this->applied_voucher->increment('used_count');
 
             // ── Mark membership as paid if bill is fully paid ──
             if ($this->purchasedMembershipRecordId && $this->due_amount <= 0) {
@@ -683,12 +808,22 @@ class PosManager extends Component
             DB::commit();
             session()->flash('message', '✅ Bill Generated! Invoice: ' . $invoiceNumber);
 
-            $this->cart = []; $this->selectedPatient = null; $this->patientProfileData = null;
-            $this->selectedDoctor = null; $this->doctorProfileData = null;
-            $this->selectedAgent = null; $this->agentProfileData = null;
-            $this->applied_voucher = null; $this->active_membership = null; $this->membership_fee = 0; $this->purchasedMembershipRecordId = null;
-            $this->manual_discount_input = 0; $this->expandedCartItems = [];
-            $this->payments = []; $this->addPaymentRow(); $this->calculateTotals();
+            $this->cart = [];
+            $this->selectedPatient = null;
+            $this->patientProfileData = null;
+            $this->selectedDoctor = null;
+            $this->doctorProfileData = null;
+            $this->selectedAgent = null;
+            $this->agentProfileData = null;
+            $this->applied_voucher = null;
+            $this->active_membership = null;
+            $this->membership_fee = 0;
+            $this->purchasedMembershipRecordId = null;
+            $this->manual_discount_input = 0;
+            $this->expandedCartItems = [];
+            $this->payments = [];
+            $this->addPaymentRow();
+            $this->calculateTotals();
 
             return redirect()->route('lab.pos.summary', ['invoice' => $invoice->id]);
         } catch (\Illuminate\Validation\ValidationException $e) {

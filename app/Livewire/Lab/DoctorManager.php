@@ -18,7 +18,7 @@ class DoctorManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage doctors');
+        $this->authorize('view doctors');
     }
 
     // State variables
@@ -51,6 +51,7 @@ class DoctorManager extends Component
      */
     public function create()
     {
+        $this->authorize('create doctors');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -60,6 +61,7 @@ class DoctorManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit doctors');
         $this->resetFields();
         
         // Eager load the profile to avoid N+1 query issues
@@ -105,9 +107,8 @@ class DoctorManager extends Component
 
         DB::beginTransaction();
         try {
-            $companyId = auth()->user()->company_id;
-
             if ($this->user_id) {
+                $this->authorize('edit doctors');
                 // UPDATE EXISTING DOCTOR
                 $user = User::findOrFail($this->user_id);
                 $updateData = [
@@ -130,6 +131,8 @@ class DoctorManager extends Component
 
                 session()->flash('message', 'Doctor details updated successfully.');
             } else {
+                $this->authorize('create doctors');
+                $companyId = auth()->user()->company_id;
                 // CREATE NEW DOCTOR
                 
                 // 1. Create the base User record (Prefixing Dr. if not provided can be done here)
@@ -172,6 +175,7 @@ class DoctorManager extends Component
      */
     public function toggleStatus($id)
     {
+        $this->authorize('edit doctors');
         $user = User::findOrFail($id);
         $user->is_active = !$user->is_active;
         $user->save();
@@ -184,6 +188,7 @@ class DoctorManager extends Component
      */
     public function delete($id)
     {
+        $this->authorize('delete doctors');
         User::findOrFail($id)->delete();
         session()->flash('message', 'Doctor deleted successfully.');
     }

@@ -11,9 +11,11 @@
                 </ul>
             </div>
             <div class="page-header-right ms-auto">
-                <button wire:click="create" class="btn btn-primary px-4 py-2 shadow-sm rounded-pill">
-                    <i class="feather-plus me-2"></i>New Lab Department
-                </button>
+                @can('create departments')
+                    <button wire:click="create" class="btn btn-primary px-4 py-2 shadow-sm rounded-pill">
+                        <i class="feather-plus me-2"></i>New Lab Department
+                    </button>
+                @endcan
             </div>
         </div>
 
@@ -76,20 +78,25 @@
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" 
                                                             wire:click="toggleStatus({{ $dept->id }})" 
-                                                            {{ $dept->is_active ? 'checked' : '' }}>
+                                                            {{ $dept->is_active ? 'checked' : '' }}
+                                                            @cannot('edit departments') disabled @endcannot>
                                                     </div>
                                                 @endif
                                             </td>
                                             <td class="text-end pe-4">
                                                 @if(!$dept->is_system)
-                                                    <button wire:click="edit({{ $dept->id }})" class="btn btn-sm btn-light-primary me-2 shadow-none border" title="Edit">
-                                                        <i class="feather-edit-3"></i>
-                                                    </button>
-                                                    <button wire:click="delete({{ $dept->id }})" 
-                                                        onclick="confirm('Are you sure you want to delete this department?') || event.stopImmediatePropagation()" 
-                                                        class="btn btn-sm btn-light-danger shadow-none border" title="Delete">
-                                                        <i class="feather-trash-2"></i>
-                                                    </button>
+                                                    @can('edit departments')
+                                                        <button wire:click="edit({{ $dept->id }})" class="btn btn-sm btn-light-primary me-2 shadow-none border" title="Edit">
+                                                            <i class="feather-edit-3"></i>
+                                                        </button>
+                                                    @endcan
+                                                    @can('delete departments')
+                                                        <button wire:click="delete({{ $dept->id }})" 
+                                                            onclick="confirm('Are you sure you want to delete this department?') || event.stopImmediatePropagation()" 
+                                                            class="btn btn-sm btn-light-danger shadow-none border" title="Delete">
+                                                            <i class="feather-trash-2"></i>
+                                                        </button>
+                                                    @endcan
                                                 @else
                                                     <button class="btn btn-sm btn-light-secondary opacity-50 px-3 fs-10" disabled>
                                                         <i class="feather-lock me-1"></i>Protected

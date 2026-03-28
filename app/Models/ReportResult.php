@@ -8,6 +8,7 @@ class ReportResult extends Model
 {
     protected $fillable = [
         'test_report_id',
+        'invoice_item_id',
         'lab_test_id',
         'parameter_name',
         'short_code',

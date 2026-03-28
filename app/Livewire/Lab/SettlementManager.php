@@ -35,7 +35,7 @@ class SettlementManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage agents');
+        $this->authorize('view settlements');
         $this->payment_date = date('Y-m-d');
         $this->startDate = date('Y-m-01'); // Start of month
         $this->endDate = date('Y-m-d');
@@ -147,17 +147,7 @@ class SettlementManager extends Component
 
     public function processSettlement()
     {
-        if (empty($this->selectedInvoices)) {
-            session()->flash('error', 'Select at least one invoice.');
-            return;
-        }
-
-        $this->validate([
-            'payment_date' => 'required|date',
-            'payment_mode' => 'required|string',
-            'amount_to_pay' => 'required|numeric|min:1',
-        ]);
-
+        $this->authorize('create settlements');
         $companyId = auth()->user()->company_id;
         $partnerIdField = $this->partnerType === 'Doctor' ? 'referred_by_doctor_id' : 'referred_by_agent_id';
 
@@ -222,7 +212,7 @@ class SettlementManager extends Component
 
     public function approveSettlement($id)
     {
-        $this->authorize('manage agents');
+        $this->authorize('edit settlements');
         $settlement = Settlement::findOrFail($id);
         
         if ($settlement->status !== 'Pending') {
@@ -236,7 +226,7 @@ class SettlementManager extends Component
 
     public function rejectSettlement($id)
     {
-        $this->authorize('manage agents');
+        $this->authorize('edit settlements');
         $settlement = Settlement::findOrFail($id);
         
         if ($settlement->status !== 'Pending') {

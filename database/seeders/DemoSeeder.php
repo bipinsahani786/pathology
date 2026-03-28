@@ -7,7 +7,7 @@ use App\Models\{
     Plan, Company, Branch, CollectionCenter, PaymentMode,
     GlobalTest, LabTest, Membership, Voucher, Configuration,
     User, PatientProfile, DoctorProfile, AgentProfile,
-    Invoice, InvoiceItem, Payment
+    Invoice, InvoiceItem, Payment, TestReport, ReportResult
 };
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -470,13 +470,47 @@ class DemoSeeder extends Seeder
 
             // Invoice Items
             foreach ($selectedTests as $test) {
-                InvoiceItem::create([
+                $isCompleted = rand(0, 1); // 50% chance the test is done
+                $item = InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'lab_test_id' => $test->id,
                     'test_name' => $test->name,
                     'mrp' => $test->mrp,
                     'is_package' => $test->is_package,
+                    'status' => $isCompleted ? 'Completed' : 'Pending',
                 ]);
+
+                if ($isCompleted) {
+                    // Create a TestReport if not exists
+                    $testReport = TestReport::firstOrCreate(
+                        ['invoice_id' => $invoice->id],
+                        [
+                            'company_id' => $company->id,
+                            'patient_id' => $patient->id,
+                            'status' => 'Approved',
+                            'approved_by' => $labAdmin->id,
+                            'approved_at' => now(),
+                        ]
+                    );
+
+                    // Create results based on test parameters
+                    $params = is_string($test->parameters) ? json_decode($test->parameters, true) : $test->parameters;
+                    if (is_array($params)) {
+                        foreach ($params as $param) {
+                            ReportResult::create([
+                                'test_report_id' => $testReport->id,
+                                'invoice_item_id' => $item->id,
+                                'lab_test_id' => $test->id,
+                                'parameter_name' => $param['name'] ?? 'Result',
+                                'short_code' => $param['short_code'] ?? null,
+                                'result_value' => $param['input_type'] === 'numeric' ? (string)rand(10, 100) : 'Normal',
+                                'unit' => $param['unit'] ?? '',
+                                'reference_range' => $param['general_range'] ?? '',
+                                'status' => 'Normal',
+                            ]);
+                        }
+                    }
+                }
             }
 
             // Payment record

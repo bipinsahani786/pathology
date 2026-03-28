@@ -14,7 +14,7 @@ class PosEditManager extends Component
     public $invoice;
 
     // Selections
-    public $selectedPatient = null, $patientProfileData = null;
+    public $patientSearch = '', $selectedPatient = null, $patientProfileData = null;
     public $doctorSearch = '', $selectedDoctor = null, $doctorProfileData = null;
     public $agentSearch = '', $selectedAgent = null, $agentProfileData = null;
 
@@ -45,14 +45,30 @@ class PosEditManager extends Component
     // Payments
     public $payments = [];
 
+    // ==========================================
+    // MODALS & QUICK ADD
+    // ==========================================
+    public $isPatientModalOpen = false, $isDoctorModalOpen = false, $isAgentModalOpen = false;
+    public $activeSearchField = null; // null, 'patient', 'doctor', 'agent', 'test'
+    public $overpaymentError = false;
+    public $paymentModesList = [], $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
+    public $new_name, $new_phone, $new_age, $new_gender = 'Male';
+    public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
+    public $new_agent_name, $new_agent_phone, $new_agent_agency, $new_agent_commission = 0;
+    public $isMembershipModalOpen = false, $selectedMembershipId = null;
+    public $isPaymentModeModalOpen = false, $new_payment_mode_name = '';
+    public $modalError = '';
+    public $membership_fee = 0;
+
+    // Logistics EXTRA
+    public $sample_received_at;
+
     // Cart expansion
     public $expandedCartItems = [];
 
-    // Status
-    public $invoiceStatus;
-
     public function mount($id)
     {
+        $this->authorize('edit pos');
         $companyId = auth()->user()->company_id;
         $this->invoiceId = $id;
 
@@ -61,7 +77,6 @@ class PosEditManager extends Component
             ->findOrFail($id);
 
         $this->invoice = $invoice;
-        $this->invoiceStatus = $invoice->status;
 
         // Load patient
         $patient = $invoice->patient;
@@ -104,8 +119,9 @@ class PosEditManager extends Component
         $this->collection_center_id = $invoice->collection_center_id;
         $this->branch_id = $invoice->branch_id;
         $this->collection_type = $invoice->collection_type;
-        $this->expected_report_date = $invoice->expected_report_time ? date('Y-m-d', strtotime($invoice->expected_report_time)) : date('Y-m-d');
-        $this->expected_report_time = $invoice->expected_report_time ? date('H:i', strtotime($invoice->expected_report_time)) : date('H:i', strtotime('+24 hours'));
+        $this->sample_received_at = $this->invoice->sample_received_at ? $this->invoice->sample_received_at->format('Y-m-d\TH:i') : null;
+        $this->expected_report_date = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('Y-m-d') : date('Y-m-d');
+        $this->expected_report_time = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('H:i') : date('H:i', strtotime('+24 hours'));
 
         // Load cart from invoice items
         foreach ($invoice->items as $item) {
@@ -115,6 +131,7 @@ class PosEditManager extends Component
                 'name' => $item->test_name,
                 'test_code' => $test->test_code ?? '',
                 'mrp' => (float) $item->mrp,
+                'price' => (float) ($item->price > 0 ? $item->price : $item->mrp),
                 'is_package' => (bool) $item->is_package,
                 'department' => $test->department ?? '',
                 'sample_type' => $test->sample_type ?? '',
@@ -163,18 +180,64 @@ class PosEditManager extends Component
             }
         }
 
+        // Cache static data
+        $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
+        $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
+
         $this->calculateTotals();
     }
 
     // ==========================================
     // SEARCH HELPERS (doctor, agent, tests)
     // ==========================================
+    public function updatedPatientSearch()
+    {
+        $this->activeSearchField = 'patient';
+    }
+    public function updatedDoctorSearch()
+    {
+        $this->activeSearchField = 'doctor';
+    }
+    public function updatedAgentSearch()
+    {
+        $this->activeSearchField = 'agent';
+    }
+    public function updatedTestSearch()
+    {
+        $this->activeSearchField = 'test';
+    }
+
+    public function selectPatient($userId)
+    {
+        $user = User::with(['patientProfile'])->find($userId);
+        $this->selectedPatient = $user->toArray();
+        $this->patientProfileData = $user->patientProfile ? $user->patientProfile->toArray() : null;
+        $this->patientSearch = '';
+        $this->activeSearchField = null;
+
+        // Check active membership
+        $record = PatientMembership::where('patient_id', $userId)
+            ->where('is_active', true)
+            ->where('valid_until', '>=', now())
+            ->latest()->first();
+        if ($record) {
+            $membership = Membership::find($record->membership_id);
+            if ($membership && $record->amount_paid >= $membership->price) {
+                $this->active_membership = $membership->toArray();
+            }
+        }
+        $this->calculateTotals();
+    }
+
     public function selectDoctor($userId)
     {
         $user = User::with(['doctorProfile'])->find($userId);
         $this->selectedDoctor = $user->toArray();
         $this->doctorProfileData = $user->doctorProfile ? $user->doctorProfile->toArray() : null;
         $this->doctorSearch = '';
+        $this->activeSearchField = null;
     }
 
     public function selectAgent($userId)
@@ -183,10 +246,26 @@ class PosEditManager extends Component
         $this->selectedAgent = $user->toArray();
         $this->agentProfileData = $user->agentProfile ? $user->agentProfile->toArray() : null;
         $this->agentSearch = '';
+        $this->activeSearchField = null;
     }
 
-    public function clearDoctor() { $this->selectedDoctor = null; $this->doctorProfileData = null; }
-    public function clearAgent() { $this->selectedAgent = null; $this->agentProfileData = null; }
+    public function clearPatient()
+    {
+        $this->selectedPatient = null;
+        $this->patientProfileData = null;
+        $this->active_membership = null;
+        $this->calculateTotals();
+    }
+    public function clearDoctor()
+    {
+        $this->selectedDoctor = null;
+        $this->doctorProfileData = null;
+    }
+    public function clearAgent()
+    {
+        $this->selectedAgent = null;
+        $this->agentProfileData = null;
+    }
 
     // ==========================================
     // CART LOGIC
@@ -200,6 +279,7 @@ class PosEditManager extends Component
                 'name' => $test->name,
                 'test_code' => $test->test_code,
                 'mrp' => (float) $test->mrp,
+                'price' => (float) $test->mrp,
                 'is_package' => (bool) $test->is_package,
                 'department' => $test->department,
                 'sample_type' => $test->sample_type,
@@ -210,8 +290,12 @@ class PosEditManager extends Component
             if ($test->is_package && !empty($test->linked_test_ids)) {
                 $linkedTests = LabTest::whereIn('id', $test->linked_test_ids)->get();
                 $cartItem['linked_tests'] = $linkedTests->map(fn($lt) => [
-                    'id' => $lt->id, 'name' => $lt->name, 'test_code' => $lt->test_code,
-                    'mrp' => (float) $lt->mrp, 'department' => $lt->department, 'parameters' => $lt->parameters ?? [],
+                    'id' => $lt->id,
+                    'name' => $lt->name,
+                    'test_code' => $lt->test_code,
+                    'mrp' => (float) $lt->mrp,
+                    'department' => $lt->department,
+                    'parameters' => $lt->parameters ?? [],
                 ])->toArray();
             }
 
@@ -219,6 +303,7 @@ class PosEditManager extends Component
             $this->calculateTotals();
         }
         $this->testSearch = '';
+        $this->activeSearchField = null;
     }
 
     public function removeFromCart($index)
@@ -239,12 +324,15 @@ class PosEditManager extends Component
     }
 
     // ==========================================
-    // VOUCHER
+    // VOUCHER & MEMBERSHIP
     // ==========================================
     public function applyVoucher()
     {
         $this->resetErrorBag('voucher_code');
-        if (empty($this->voucher_code)) { $this->addError('voucher_code', 'Enter a voucher code.'); return; }
+        if (empty($this->voucher_code)) {
+            $this->addError('voucher_code', 'Enter a voucher code.');
+            return;
+        }
 
         $voucher = Voucher::where('company_id', auth()->user()->company_id)
             ->where('code', strtoupper($this->voucher_code))
@@ -252,8 +340,14 @@ class PosEditManager extends Component
             ->where(fn($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()))
             ->first();
 
-        if (!$voucher) { $this->addError('voucher_code', 'Invalid or expired voucher.'); return; }
-        if ($this->subtotal < $voucher->min_bill_amount) { $this->addError('voucher_code', 'Min ₹' . $voucher->min_bill_amount); return; }
+        if (!$voucher) {
+            $this->addError('voucher_code', 'Invalid or expired voucher.');
+            return;
+        }
+        if ($this->subtotal < $voucher->min_bill_amount) {
+            $this->addError('voucher_code', 'Min ₹' . $voucher->min_bill_amount);
+            return;
+        }
 
         $this->applied_voucher = $voucher;
         $this->calculateTotals();
@@ -266,30 +360,76 @@ class PosEditManager extends Component
         $this->calculateTotals();
     }
 
+    public function purchaseMembership()
+    {
+        $this->authorize('create marketing');
+        if (!$this->selectedMembershipId)
+            return;
+        $membership = Membership::find($this->selectedMembershipId);
+        if ($membership) {
+            $this->active_membership = $membership->toArray();
+            $this->membership_fee = $membership->price;
+            $this->isMembershipModalOpen = false;
+            $this->calculateTotals();
+        }
+    }
+
+    public function removeMembership()
+    {
+        $this->active_membership = null;
+        $this->membership_fee = 0;
+        $this->calculateTotals();
+    }
+
     // ==========================================
     // CALCULATOR ENGINE
     // ==========================================
-    public function updatedManualDiscountInput() { $this->calculateTotals(); }
-    public function updatedManualDiscountType() { $this->calculateTotals(); }
-    public function updatedPayments() { $this->calculateTotals(); }
+    public function updatedManualDiscountInput()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedManualDiscountType()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedPayments()
+    {
+        $this->calculateTotals();
+    }
+    public function updatedCart()
+    {
+        $this->calculateTotals();
+    }
 
     public function calculateTotals()
     {
-        $this->subtotal = collect($this->cart)->sum('mrp');
-        $running = $this->subtotal;
+        // 1. Recalculate Subtotal from MRP
+        $this->subtotal = collect($this->cart)->sum(fn($item) => (float) ($item['mrp'] ?? 0));
+        
+        // 2. Initial Running Total is the sum of current item prices
+        $itemTotal = collect($this->cart)->sum(fn($item) => (float) ($item['price'] ?? 0));
+        
+        // 3. Implicit Item Discount (e.g. if price was manually reduced per line)
+        $itemDiscount = $this->subtotal - $itemTotal;
+        
+        $running = $itemTotal;
 
+        // 4. Membership Discount
         $this->membership_discount_amt = 0;
         if ($this->active_membership && $running > 0) {
-            $pct = is_array($this->active_membership) ? ($this->active_membership['discount_percentage'] ?? 0) : $this->active_membership->discount_percentage;
+            $pct = data_get($this->active_membership, 'discount_percentage', 0);
             $this->membership_discount_amt = ($running * $pct) / 100;
             $running -= $this->membership_discount_amt;
         }
 
+        // 5. Voucher Discount
         $this->voucher_discount_amt = 0;
         if ($this->applied_voucher && $running > 0) {
             if ($this->applied_voucher->discount_type === 'percentage') {
                 $v = ($running * $this->applied_voucher->discount_value) / 100;
-                if ($this->applied_voucher->max_discount_amount > 0) $v = min($v, $this->applied_voucher->max_discount_amount);
+                if ($this->applied_voucher->max_discount_amount > 0) {
+                    $v = min($v, $this->applied_voucher->max_discount_amount);
+                }
                 $this->voucher_discount_amt = $v;
             } else {
                 $this->voucher_discount_amt = $this->applied_voucher->discount_value;
@@ -297,37 +437,187 @@ class PosEditManager extends Component
             $running -= $this->voucher_discount_amt;
         }
 
+        // 6. Manual Overall Discount
         $this->manual_discount_amt = 0;
         $manualVal = (float) $this->manual_discount_input;
         if ($manualVal > 0 && $running > 0) {
-            $this->manual_discount_amt = $this->manual_discount_type === 'percent' ? ($running * $manualVal) / 100 : $manualVal;
+            $calcManual = $this->manual_discount_type === 'percent' ? ($running * $manualVal) / 100 : $manualVal;
+            $this->manual_discount_amt = min($calcManual, $running);
             $running -= $this->manual_discount_amt;
         }
 
-        $this->net_payable = max($running, 0);
-        $this->total_discount = $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
-        $this->due_amount = max($this->net_payable - collect($this->payments)->sum('amount'), 0);
+        // 7. Net Payable
+        $this->net_payable = max($running, 0) + $this->membership_fee;
+        
+        // 8. Total Savings shown in UI (Implicit + Explicit)
+        $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
+        
+        // 9. Due calculation
+        $totalCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
+        $this->due_amount = max($this->net_payable - $totalCollected, 0);
+        $this->overpaymentError = $totalCollected > $this->net_payable;
     }
 
     // ==========================================
     // SPLIT PAYMENTS
     // ==========================================
-    public function addPaymentRow() { $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => 0, 'transaction_id' => '']; }
-    public function removePaymentRow($index) { unset($this->payments[$index]); $this->payments = array_values($this->payments); $this->calculateTotals(); }
+    public function addPaymentRow()
+    {
+        $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => 0, 'transaction_id' => ''];
+    }
+    public function removePaymentRow($index)
+    {
+        unset($this->payments[$index]);
+        $this->payments = array_values($this->payments);
+        $this->calculateTotals();
+    }
+
+    // ==========================================
+    // QUICK ADD MODALS
+    // ==========================================
+    public function quickAddPatient()
+    {
+        $this->authorize('create patients');
+        $this->modalError = '';
+        $this->validate(['new_name' => 'required|string|max:255', 'new_phone' => 'nullable|numeric|digits:10|unique:users,phone', 'new_age' => 'required|numeric|min:0']);
+
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
+            $user = User::create([
+                'name' => $this->new_name,
+                'phone' => $this->new_phone ?: 'P' . time(),
+                'email' => 'p' . time() . '@patient.local',
+                'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
+                'is_active' => true,
+                'company_id' => $companyId,
+            ]);
+            PatientProfile::create([
+                'company_id' => $companyId,
+                'user_id' => $user->id,
+                'patient_id_string' => 'PAT-' . date('ym') . str_pad(PatientProfile::where('company_id', $companyId)->count() + 1, 4, '0', STR_PAD_LEFT),
+                'age' => $this->new_age,
+                'gender' => $this->new_gender,
+            ]);
+            $user->assignRole('patient');
+            DB::commit();
+            $this->selectPatient($user->id);
+            $this->isPatientModalOpen = false;
+            $this->reset(['new_name', 'new_phone', 'new_age']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->modalError = $e->getMessage();
+        }
+    }
+
+    public function quickAddDoctor()
+    {
+        $this->authorize('create doctors');
+        $this->modalError = '';
+        $this->validate(['new_doc_name' => 'required|string|max:255']);
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
+            $finalName = str_starts_with(strtolower($this->new_doc_name), 'dr') ? $this->new_doc_name : 'Dr. ' . $this->new_doc_name;
+            $user = User::create([
+                'name' => $finalName,
+                'phone' => $this->new_doc_phone ?: 'D' . time(),
+                'email' => 'd' . time() . '@doctor.local',
+                'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
+                'is_active' => true,
+                'company_id' => $companyId,
+            ]);
+            DoctorProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'commission_percentage' => $this->new_doc_commission ?: 0]);
+            $user->assignRole('doctor');
+            DB::commit();
+            $this->selectDoctor($user->id);
+            $this->isDoctorModalOpen = false;
+            $this->reset(['new_doc_name', 'new_doc_phone', 'new_doc_commission']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->modalError = $e->getMessage();
+        }
+    }
+
+    public function quickAddAgent()
+    {
+        $this->authorize('create agents');
+        $this->modalError = '';
+        $this->validate(['new_agent_name' => 'required|string|max:255']);
+        DB::beginTransaction();
+        try {
+            $companyId = auth()->user()->company_id;
+            $user = User::create([
+                'name' => $this->new_agent_name,
+                'phone' => $this->new_agent_phone ?: 'A' . time(),
+                'email' => 'a' . time() . '@agent.local',
+                'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
+                'is_active' => true,
+                'company_id' => $companyId,
+            ]);
+            AgentProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'agency_name' => $this->new_agent_agency, 'commission_percentage' => $this->new_agent_commission ?: 0]);
+            $user->assignRole('agent');
+            DB::commit();
+            $this->selectAgent($user->id);
+            $this->isAgentModalOpen = false;
+            $this->reset(['new_agent_name', 'new_agent_phone', 'new_agent_agency', 'new_agent_commission']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->modalError = $e->getMessage();
+        }
+    }
+
+    public function quickAddPaymentMode()
+    {
+        $this->authorize('edit settings');
+        if (empty($this->new_payment_mode_name))
+            return;
+        PaymentMode::create(['company_id' => auth()->user()->company_id, 'name' => $this->new_payment_mode_name, 'is_active' => true]);
+        $this->paymentModesList = PaymentMode::where('company_id', auth()->user()->company_id)->where('is_active', true)->get();
+        $this->new_payment_mode_name = '';
+        $this->isPaymentModeModalOpen = false;
+    }
 
     // ==========================================
     // UPDATE BILL
     // ==========================================
     public function updateBill()
     {
-        if (empty($this->cart)) { session()->flash('error', 'Add at least one test.'); return; }
+        $this->authorize('edit pos');
+        if (!$this->selectedPatient) {
+            session()->flash('error', 'Select a patient.');
+            return;
+        }
+        if (empty($this->cart)) {
+            session()->flash('error', 'Add at least one test.');
+            return;
+        }
+
+        if ($this->overpaymentError) {
+            session()->flash('error', 'Total payment cannot exceed Net Payable amount.');
+            return;
+        }
 
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
             $invoice = Invoice::where('company_id', $companyId)->findOrFail($this->invoiceId);
 
-            // Commission
+            // 1. Reverse old commissions if they existed
+            if ($invoice->referred_by_doctor_id && $invoice->doctor_commission_amount > 0) {
+                $oldWallet = Wallet::where('user_id', $invoice->referred_by_doctor_id)->first();
+                if ($oldWallet) {
+                    $oldWallet->debit($invoice->doctor_commission_amount, 'Commission Reversal (Invoice Update) #' . $invoice->invoice_number, 'invoice', $invoice->id);
+                }
+            }
+            if ($invoice->referred_by_agent_id && $invoice->agent_commission_amount > 0) {
+                $oldWallet = Wallet::where('user_id', $invoice->referred_by_agent_id)->first();
+                if ($oldWallet) {
+                    $oldWallet->debit($invoice->agent_commission_amount, 'Commission Reversal (Invoice Update) #' . $invoice->invoice_number, 'invoice', $invoice->id);
+                }
+            }
+
+            // 2. Recalculate Commissions
             $docCommission = 0;
             $agentCommission = 0;
             $doctorId = $this->selectedDoctor['id'] ?? null;
@@ -342,11 +632,28 @@ class PosEditManager extends Component
                 $agentCommission = ($this->net_payable * ($profile->commission_percentage ?? 0)) / 100;
             }
 
+            // 3. B2B & Profit Calculation
+            $totalB2bAmount = 0;
+            $cartIds = collect($this->cart)->pluck('id');
+            $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
+
+            foreach ($this->cart as $item) {
+                $b2b = (float) data_get($testPrices->get($item['id']), 'b2b_price', 0);
+                $totalB2bAmount += $b2b;
+            }
+
+            $ccProfitAmount = 0;
+            if ($this->collection_center_id) {
+                $ccProfitAmount = max(0, $this->net_payable - $totalB2bAmount);
+            }
+
             // Update invoice
             $invoice->update([
+                'patient_id' => $this->selectedPatient['id'],
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
+                'sample_received_at' => $this->sample_received_at,
                 'referred_by_doctor_id' => $doctorId,
                 'referred_by_agent_id' => $agentId,
                 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
@@ -358,12 +665,13 @@ class PosEditManager extends Component
                 'voucher_discount_amount' => $this->voucher_discount_amt,
                 'discount_amount' => $this->manual_discount_amt,
                 'total_amount' => $this->net_payable,
+                'total_b2b_amount' => $totalB2bAmount,
+                'cc_profit_amount' => $ccProfitAmount,
                 'doctor_commission_amount' => $docCommission,
                 'agent_commission_amount' => $agentCommission,
                 'paid_amount' => $this->net_payable - $this->due_amount,
                 'due_amount' => $this->due_amount,
                 'payment_status' => $this->due_amount <= 0 ? 'Paid' : ($this->due_amount == $this->net_payable ? 'Unpaid' : 'Partial'),
-                'status' => $this->invoiceStatus,
             ]);
 
             // Replace invoice items
@@ -375,7 +683,8 @@ class PosEditManager extends Component
                     'test_name' => $item['name'],
                     'is_package' => $item['is_package'],
                     'mrp' => $item['mrp'],
-                    'price' => $item['mrp'],
+                    'price' => $item['price'],
+                    'b2b_price' => data_get($testPrices->get($item['id']), 'b2b_price', 0),
                 ]);
             }
 
@@ -395,52 +704,116 @@ class PosEditManager extends Component
                 }
             }
 
+            // Handle Membership purchase if applicable
+            if ($this->membership_fee > 0 && $this->active_membership) {
+                PatientMembership::create([
+                    'patient_id' => $this->selectedPatient['id'],
+                    'membership_id' => $this->active_membership['id'],
+                    'purchase_date' => now(),
+                    'valid_until' => now()->addDays($this->active_membership['validity_days'] ?? 365),
+                    'amount_paid' => $this->membership_fee,
+                    'is_active' => true,
+                ]);
+            }
+
+            // 4. Credit new Commissions to wallets
+            if ($docCommission > 0 && $doctorId) {
+                $wallet = Wallet::firstOrCreate(
+                    ['user_id' => $doctorId, 'company_id' => $companyId],
+                    ['balance' => 0]
+                );
+                $wallet->credit($docCommission, 'Commission from Invoice Update #' . $invoice->invoice_number, 'invoice', $invoice->id);
+            }
+            if ($agentCommission > 0 && $agentId) {
+                $wallet = Wallet::firstOrCreate(
+                    ['user_id' => $agentId, 'company_id' => $companyId],
+                    ['balance' => 0]
+                );
+                $wallet->credit($agentCommission, 'Commission from Invoice Update #' . $invoice->invoice_number, 'invoice', $invoice->id);
+            }
+
             DB::commit();
-            session()->flash('message', '✅ Invoice #' . $invoice->invoice_number . ' updated successfully!');
-            $this->invoice = $invoice->fresh();
+            session()->flash('message', '✅ Invoice updated successfully!');
+            return redirect()->route('lab.pos.summary', $invoice->id);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Invoice Update Error: " . $e->getMessage());
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            Log::error('Update Bill Error: ' . $e->getMessage());
+            $this->addError('general', 'Failed to update invoice: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelInvoice()
+    {
+        try {
+            $this->authorize('delete pos');
+            $invoice = Invoice::findOrFail($this->invoiceId);
+            $result = $invoice->cancel();
+
+            if ($result['status']) {
+                session()->flash('message', '🔴 ' . $result['message']);
+                return redirect()->route('lab.pos.summary', $invoice->id);
+            } else {
+                session()->flash('error', $result['message']);
+            }
+        } catch (\Throwable $th) {
+            session()->flash('error', 'Critical Error: ' . $th->getMessage());
         }
     }
 
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $patients = $doctors = $agents = $tests = [];
 
-        $doctors = [];
-        if (strlen($this->doctorSearch) >= 2) {
+        // Patient suggestions
+        if ($this->activeSearchField === 'patient') {
+            $s = $this->patientSearch;
+            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            }
+            $patients = $query->with('patientProfile')->orderBy('id', 'desc')->take(15)->get();
+        }
+
+        // Doctor suggestions
+        if ($this->activeSearchField === 'doctor') {
             $s = $this->doctorSearch;
-            $doctors = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"))
-                ->with('doctorProfile')
-                ->take(5)->get();
+            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            }
+            $doctors = $query->with('doctorProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
-        $agents = [];
-        if (strlen($this->agentSearch) >= 2) {
+        // Agent suggestions
+        if ($this->activeSearchField === 'agent') {
             $s = $this->agentSearch;
-            $agents = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"))
-                ->with('agentProfile')
-                ->take(5)->get();
+            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            }
+            $agents = $query->with('agentProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
-        $tests = [];
-        if (strlen($this->testSearch) >= 2) {
+        // Test suggestions
+        if ($this->activeSearchField === 'test') {
             $s = $this->testSearch;
-            $tests = LabTest::where('company_id', $companyId)->where('is_active', true)
-                ->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"))
-                ->take(8)->get();
+            $query = LabTest::where('company_id', $companyId)->where('is_active', true);
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
+            }
+            $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }
 
-        $paymentModes = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
-        $centers = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
-        $branches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
-
-        return view('livewire.lab.pos-edit-manager', compact(
-            'doctors', 'agents', 'tests', 'paymentModes', 'centers', 'branches'
-        ))->layout('layouts.app', ['title' => 'Edit Invoice #' . ($this->invoice->invoice_number ?? '')]);
+        return view('livewire.lab.pos-edit-manager', [
+            'doctors' => $doctors,
+            'agents' => $agents,
+            'tests' => $tests,
+            'patients' => $patients,
+            'paymentModes' => $this->paymentModesList,
+            'centers' => $this->cachedCenters,
+            'branches' => $this->cachedBranches,
+            'memberships' => $this->cachedMemberships
+        ])->layout('layouts.app', ['title' => 'Edit Invoice #' . ($this->invoice->invoice_number ?? '')]);
     }
 }

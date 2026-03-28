@@ -142,9 +142,11 @@
                                                         <button wire:click="selectPartner({{ $p->id }}, 'insights')" class="btn btn-sm btn-icon btn-outline-info rounded-pill" title="Insights">
                                                             <i class="feather-pie-chart"></i>
                                                         </button>
-                                                        <button wire:click="selectPartner({{ $p->id }}, 'process')" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" {{ ($p->pending_amount ?? 0) <= 0 ? 'disabled' : '' }}>
-                                                            Settle <i class="feather-arrow-right ms-1"></i>
-                                                        </button>
+                                                        @can('create settlements')
+                                                            <button wire:click="selectPartner({{ $p->id }}, 'process')" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" {{ ($p->pending_amount ?? 0) <= 0 ? 'disabled' : '' }}>
+                                                                Settle <i class="feather-arrow-right ms-1"></i>
+                                                            </button>
+                                                        @endcan
                                                     </div>
                                                 </td>
                                             </tr>
@@ -197,8 +199,10 @@
                                             </div>
                                             <div class="d-flex gap-1">
                                                 @if(($s->status ?? 'Approved') === 'Pending')
-                                                    <button wire:click="approveSettlement({{ $s->id }})" class="btn btn-sm btn-success py-1 px-2 fs-9 fw-bold"><i class="feather-check"></i></button>
-                                                    <button wire:click="rejectSettlement({{ $s->id }})" class="btn btn-sm btn-danger py-1 px-2 fs-9 fw-bold"><i class="feather-x"></i></button>
+                                                    @can('edit settlements')
+                                                        <button wire:click="approveSettlement({{ $s->id }})" class="btn btn-sm btn-success py-1 px-2 fs-9 fw-bold"><i class="feather-check"></i></button>
+                                                        <button wire:click="rejectSettlement({{ $s->id }})" class="btn btn-sm btn-danger py-1 px-2 fs-9 fw-bold"><i class="feather-x"></i></button>
+                                                    @endcan
                                                 @endif
                                                 <button class="btn btn-sm btn-light border-0 rounded px-2 py-1 fs-10"><i class="feather-printer"></i></button>
                                             </div>
