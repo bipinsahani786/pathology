@@ -83,20 +83,28 @@
                 </div>
 
                 <div class="dropdown nxl-h-item">
+                    @php
+                        $userPhoto = auth()->user()->details->profile_photo ?? null;
+                        $avatarUrl = $userPhoto 
+                            ? Storage::url($userPhoto) 
+                            : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) . '&background=3b71ca&color=fff&bold=true';
+                    @endphp
                     <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=3b71ca&color=fff&bold=true" alt="user-image"
-                            class="img-fluid user-avtar me-0 rounded-2 border shadow-sm" style="width: 38px; height: 38px;" />
+                        <img src="{{ $avatarUrl }}" alt="user-image"
+                            class="img-fluid user-avtar me-0 rounded-2 border shadow-sm" style="width: 38px; height: 38px; object-fit: cover;" />
                     </a>
                     <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown shadow-lg border-0 rounded-3 overflow-hidden">
                         <div class="dropdown-header p-4" style="background: linear-gradient(135deg, rgba(59,113,202,0.05) 0%, rgba(124,58,237,0.05) 100%);">
                             <div class="d-flex align-items-center gap-3">
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=3b71ca&color=fff&bold=true" alt="user-image"
-                                    class="img-fluid user-avtar rounded-2 border border-white border-4" style="width:50px; height:50px;" />
+                                <img src="{{ $avatarUrl }}" alt="user-image"
+                                    class="img-fluid user-avtar rounded-2 border border-white border-4 shadow-sm" style="width:50px; height:50px; object-fit: cover;" />
                                 <div>
-                                    <h6 class="text-dark fw-bold mb-0 fs-14">{{ auth()->user()->name }} 
-                                        <span class="badge bg-soft-success text-success ms-1 fs-9">PRO</span>
+                                    <h6 class="text-dark fw-bold mb-0 fs-14 text-truncate" style="max-width: 150px;">{{ auth()->user()->name }} 
+                                        <span class="badge bg-soft-success text-success ms-1 fs-9 text-uppercase">
+                                            {{ $company->plan->name ?? 'Free' }}
+                                        </span>
                                     </h6>
-                                    <span class="fs-12 fw-medium text-muted">{{ auth()->user()->email }}</span>
+                                    <span class="fs-12 fw-medium text-muted d-block text-truncate" style="max-width: 150px;">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>
                         </div>
@@ -158,10 +166,24 @@
         .ls-2 { letter-spacing: 1px; }
         .transition-all { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* Dropdown Alignment: Ensure no gap between toggle and menu */
+        /* Dropdown Alignment: Eliminate hover 'dead zone' with a pseudo-element bridge */
         .nxl-user-dropdown {
-            margin-top: 5px !important;
+            margin-top: 10px !important;
             border: 1px solid rgba(0,0,0,0.05) !important;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+            border-radius: 12px !important;
+            overflow: visible !important; /* Allow pseudo-element to overflow */
+            background: white !important;
+        }
+        
+        .nxl-user-dropdown::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 100%;
+            height: 15px;
+            background: transparent;
         }
 
         /* Pulse Animation for Expiring Subscription */
