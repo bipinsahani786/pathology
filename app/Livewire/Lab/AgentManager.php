@@ -18,7 +18,7 @@ class AgentManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage agents');
+        $this->authorize('view agents');
     }
 
     // State variables
@@ -50,6 +50,7 @@ class AgentManager extends Component
      */
     public function create()
     {
+        $this->authorize('create agents');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -59,6 +60,7 @@ class AgentManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit agents');
         $this->resetFields();
         
         // Eager load the profile to avoid N+1 query issues
@@ -102,9 +104,8 @@ class AgentManager extends Component
 
         DB::beginTransaction();
         try {
-            $companyId = auth()->user()->company_id;
-
             if ($this->user_id) {
+                $this->authorize('edit agents');
                 // UPDATE EXISTING AGENT
                 $user = User::findOrFail($this->user_id);
                 $updateData = [
@@ -126,6 +127,8 @@ class AgentManager extends Component
 
                 session()->flash('message', 'Agent details updated successfully.');
             } else {
+                $this->authorize('create agents');
+                $companyId = auth()->user()->company_id;
                 // CREATE NEW AGENT
                 
                 // 1. Create the base User record
@@ -165,11 +168,19 @@ class AgentManager extends Component
      */
     public function toggleStatus($id)
     {
+        $this->authorize('edit agents');
         $user = User::findOrFail($id);
         $user->is_active = !$user->is_active;
         $user->save();
         
         session()->flash('message', 'Agent status updated to ' . ($user->is_active ? 'Active' : 'Inactive'));
+    }
+
+    public function delete($id)
+    {
+        $this->authorize('delete agents');
+        User::findOrFail($id)->delete();
+        session()->flash('message', 'Agent deleted successfully.');
     }
 
     /**

@@ -34,6 +34,21 @@ class SettingsManager extends Component
     public $invoiceSaved = false;
 
     // ==========================================
+    // PATIENT SETTINGS
+    // ==========================================
+    public $patient_id_prefix = 'PAT';
+    public $patient_id_digits = 4;
+    public $patientSettingsSaved = false;
+
+    // ==========================================
+    // BARCODE SETTINGS
+    // ==========================================
+    public $barcode_prefix = 'LAB';
+    public $barcode_date_format = 'ymd';
+    public $barcode_counter_digits = 6;
+    public $barcodeSaved = false;
+
+    // ==========================================
     // BILL TEMPLATE
     // ==========================================
     public $bill_template = 'classic';
@@ -58,7 +73,7 @@ class SettingsManager extends Component
 
     public function mount()
     {
-        $this->authorize('lab_admin');
+        $this->authorize('view settings');
         $company = Company::find(auth()->user()->company_id);
         if ($company) {
             $this->lab_name = $company->name;
@@ -79,6 +94,10 @@ class SettingsManager extends Component
         $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
         $this->bill_template = Configuration::getFor('bill_template', 'classic');
 
+        // Patient ID settings
+        $this->patient_id_prefix = Configuration::getFor('patient_id_prefix', 'PAT');
+        $this->patient_id_digits = (int) Configuration::getFor('patient_id_digits', 4);
+
         // PDF header/footer
         $this->pdf_show_header = Configuration::getFor('pdf_show_header', '1') === '1';
         $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1') === '1';
@@ -88,6 +107,11 @@ class SettingsManager extends Component
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
         $this->signature_image = Configuration::getFor('signature_image', null);
+
+        // Barcode settings
+        $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB');
+        $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd');
+        $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6);
     }
 
     // ==========================================
@@ -95,6 +119,7 @@ class SettingsManager extends Component
     // ==========================================
     public function saveProfile()
     {
+        $this->authorize('edit settings');
         $this->validate([
             'lab_name' => 'required|string|max:255',
             'lab_email' => 'nullable|email|max:255',
@@ -135,6 +160,7 @@ class SettingsManager extends Component
     // ==========================================
     public function saveInvoiceSettings()
     {
+        $this->authorize('edit settings');
         $this->validate([
             'invoice_prefix' => 'required|string|max:20',
             'invoice_separator' => 'nullable|string|max:5',
@@ -153,10 +179,47 @@ class SettingsManager extends Component
     }
 
     // ==========================================
+    // SAVE PATIENT SETTINGS
+    // ==========================================
+    public function savePatientSettings()
+    {
+        $this->authorize('edit settings');
+        $this->validate([
+            'patient_id_prefix' => 'required|string|max:10',
+            'patient_id_digits' => 'required|integer|min:2|max:10',
+        ]);
+
+        Configuration::setFor('patient_id_prefix', $this->patient_id_prefix);
+        Configuration::setFor('patient_id_digits', $this->patient_id_digits);
+
+        $this->patientSettingsSaved = true;
+    }
+
+    // ==========================================
+    // SAVE BARCODE SETTINGS
+    // ==========================================
+    public function saveBarcodeSettings()
+    {
+        $this->authorize('edit settings');
+        $this->validate([
+            'barcode_prefix' => 'required|string|max:10',
+            'barcode_date_format' => 'required|string|in:ym,ymd,Ymd,Y,none',
+            'barcode_counter_digits' => 'required|integer|min:2|max:12',
+        ]);
+
+        Configuration::setFor('barcode_prefix', $this->barcode_prefix);
+        Configuration::setFor('barcode_date_format', $this->barcode_date_format);
+        Configuration::setFor('barcode_counter_digits', $this->barcode_counter_digits);
+
+        $this->barcodeSaved = true;
+    }
+
+    // ==========================================
     // SAVE BILL TEMPLATE
     // ==========================================
     public function saveTemplate()
     {
+        $this->authorize('edit settings');
         Configuration::setFor('bill_template', $this->bill_template);
         $this->templateSaved = true;
     }
@@ -166,6 +229,7 @@ class SettingsManager extends Component
     // ==========================================
     public function savePdfSettings()
     {
+        $this->authorize('edit settings');
         $this->validate([
             'new_header_image' => 'nullable|image|max:3072',
             'new_footer_image' => 'nullable|image|max:3072',
@@ -234,6 +298,35 @@ class SettingsManager extends Component
 
         $parts = array_filter([$prefix, $datePart, $counter]);
         return implode($sep, $parts);
+    }
+
+    /**
+     * Generate a preview of the barcode format.
+     */
+    public function getBarcodePreviewProperty(): string
+    {
+        $prefix = $this->barcode_prefix ?: 'LAB';
+        $dateMap = [
+            'ym' => date('ym'),
+            'ymd' => date('ymd'),
+            'Ymd' => date('Ymd'),
+            'Y' => date('Y'),
+            'none' => '',
+        ];
+        $datePart = $dateMap[$this->barcode_date_format] ?? date('ymd');
+        $counter = str_pad(1, max((int)$this->barcode_counter_digits, 2), '0', STR_PAD_LEFT);
+
+        return $prefix . $datePart . $counter;
+    }
+
+    /**
+     * Generate a preview of the Patient ID format.
+     */
+    public function getPatientIdPreviewProperty(): string
+    {
+        $prefix = $this->patient_id_prefix ?: 'PAT';
+        $counter = str_pad(1, max((int)$this->patient_id_digits, 2), '0', STR_PAD_LEFT);
+        return $prefix . $counter;
     }
 
     public function render()

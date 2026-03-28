@@ -9,4 +9,9 @@ class AgentProfile extends Model
 {
     use BelongsToCompany;
     protected $guarded = [];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -11,9 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right">
-            <button wire:click="create" class="btn btn-primary px-4">
-                <i class="feather-user-plus me-2"></i> Add New Doctor
-            </button>
+            @can('create doctors')
+                <button wire:click="create" class="btn btn-primary px-4">
+                    <i class="feather-user-plus me-2"></i> Add New Doctor
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -100,7 +102,8 @@
                                             <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" 
                                                 wire:click="toggleStatus({{ $doctor->id }})" 
                                                 {{ $doctor->is_active ? 'checked' : '' }} 
-                                                style="width: 40px; height: 20px;">
+                                                style="width: 40px; height: 20px;"
+                                                @cannot('edit doctors') disabled @endcannot>
                                         </div>
                                         <span class="fs-10 fw-bold text-uppercase ls-1 {{ $doctor->is_active ? 'text-success' : 'text-danger' }}">
                                             {{ $doctor->is_active ? 'Active' : 'Inactive' }}
@@ -108,12 +111,16 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="edit({{ $doctor->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Doctor">
-                                                <i class="feather-edit-2 fs-14"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $doctor->id }})" wire:confirm="Delete this doctor? This will also remove their profile." class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Doctor">
-                                                <i class="feather-trash-2 fs-14"></i>
-                                            </button>
+                                            @can('edit doctors')
+                                                <button wire:click="edit({{ $doctor->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Doctor">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete doctors')
+                                                <button wire:click="delete({{ $doctor->id }})" wire:confirm="Delete this doctor? This will also remove their profile." class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Doctor">
+                                                    <i class="feather-trash-2 fs-14"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

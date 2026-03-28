@@ -48,6 +48,11 @@ class User extends Authenticatable
     ];
 
     /**
+     * Attributes to append to the model's array form.
+     */
+    protected $appends = ['formatted_id'];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -70,6 +75,16 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Get the user's formatted ID (e.g., PAT-1015)
+     */
+    public function getFormattedIdAttribute()
+    {
+        $prefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
+        $digits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
+        return $prefix . str_pad($this->id, $digits, '0', STR_PAD_LEFT);
     }
 
     /**

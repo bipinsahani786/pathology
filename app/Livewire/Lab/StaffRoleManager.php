@@ -27,7 +27,7 @@ class StaffRoleManager extends Component
 
     public function mount()
     {
-        $this->authorize('lab_admin');
+        $this->authorize('view staff_roles');
     }
 
     // ==========================================
@@ -36,12 +36,14 @@ class StaffRoleManager extends Component
     
     public function createStaff()
     {
+        $this->authorize('create staff_roles');
         $this->resetStaffFields();
         $this->isStaffModalOpen = true;
     }
 
     public function editStaff($id)
     {
+        $this->authorize('edit staff_roles');
         $this->resetStaffFields();
         $user = User::findOrFail($id);
         $this->staff_id = $user->id;
@@ -68,6 +70,8 @@ class StaffRoleManager extends Component
             'role_id' => 'required|exists:roles,id',
         ]);
 
+        $this->authorize($this->staff_id ? 'edit staff_roles' : 'create staff_roles');
+
         DB::beginTransaction();
         try {
             $data = [
@@ -84,6 +88,7 @@ class StaffRoleManager extends Component
             }
 
             if ($this->staff_id) {
+                $this->authorize('edit staff_roles');
                 $user = User::findOrFail($this->staff_id);
                 $user->update($data);
             } else {
@@ -106,6 +111,7 @@ class StaffRoleManager extends Component
 
     public function deleteStaff($id)
     {
+        $this->authorize('delete staff_roles');
         if ($id == auth()->id()) {
             session()->flash('error', 'You cannot delete yourself.');
             return;
@@ -125,12 +131,14 @@ class StaffRoleManager extends Component
 
     public function createRole()
     {
+        $this->authorize('create staff_roles');
         $this->resetRoleFields();
         $this->isRoleModalOpen = true;
     }
 
     public function editRole($id)
     {
+        $this->authorize('edit staff_roles');
         $this->resetRoleFields();
         $role = Role::findOrFail($id);
         
@@ -157,9 +165,11 @@ class StaffRoleManager extends Component
             $internalName = 'lab_' . auth()->user()->company_id . '_' . $cleanName;
 
             if ($this->role_id_to_edit) {
+                $this->authorize('edit staff_roles');
                 $role = Role::findOrFail($this->role_id_to_edit);
                 $role->update(['name' => $internalName]);
             } else {
+                $this->authorize('create staff_roles');
                 $role = Role::create([
                     'name' => $internalName,
                     'guard_name' => 'web'
@@ -221,11 +231,9 @@ class StaffRoleManager extends Component
             'manage departments' // System departments
         ];
 
+        // Fetch all permissions except those excluded
         $permissions = Permission::whereNotIn('name', $excludedPermissions)
-            ->where(function($query) {
-                $query->where('name', 'like', 'manage %')
-                      ->orWhere('name', 'like', '%reports');
-            })
+            ->orderBy('name', 'asc')
             ->get();
 
         return view('livewire.lab.staff-role-manager', [

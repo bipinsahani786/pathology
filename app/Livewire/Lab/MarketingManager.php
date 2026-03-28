@@ -15,7 +15,7 @@ class MarketingManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage marketing');
+        $this->authorize('view marketing');
     }
 
     public $activeTab = 'memberships'; // Default Tab
@@ -39,12 +39,14 @@ class MarketingManager extends Component
     // ----------------- MEMBERSHIP LOGIC -----------------
     public function createMembership()
     {
+        $this->authorize('create marketing');
         $this->resetMembershipFields();
         $this->isMembershipModalOpen = true;
     }
 
     public function editMembership($id)
     {
+        $this->authorize('edit marketing');
         $this->resetMembershipFields();
         $membership = Membership::findOrFail($id);
 
@@ -62,6 +64,7 @@ class MarketingManager extends Component
 
     public function storeMembership()
     {
+        $this->authorize($this->membership_id ? 'edit marketing' : 'create marketing');
         $this->validate([
             'm_name' => 'required|string|max:255',
             'm_price' => 'required|numeric|min:0',
@@ -90,12 +93,14 @@ class MarketingManager extends Component
 
     public function deleteMembership($id)
     {
+        $this->authorize('delete marketing');
         Membership::findOrFail($id)->delete();
         session()->flash('message', 'Membership deleted.');
     }
 
     public function toggleMembershipStatus($id)
     {
+        $this->authorize('edit marketing');
         $m = Membership::findOrFail($id);
         $m->update(['is_active' => !$m->is_active]);
     }
@@ -109,12 +114,14 @@ class MarketingManager extends Component
     // ----------------- VOUCHER LOGIC -----------------
     public function createVoucher()
     {
+        $this->authorize('create marketing');
         $this->resetVoucherFields();
         $this->isVoucherModalOpen = true;
     }
 
     public function editVoucher($id)
     {
+        $this->authorize('edit marketing');
         $this->resetVoucherFields();
         $voucher = Voucher::findOrFail($id);
 
@@ -124,8 +131,8 @@ class MarketingManager extends Component
         $this->v_discount_value = $voucher->discount_value;
         $this->v_min_bill_amount = $voucher->min_bill_amount;
         $this->v_max_discount_amount = $voucher->max_discount_amount;
-        $this->v_valid_from = $voucher->valid_from ? $voucher->valid_from->format('Y-m-d') : null;
-        $this->v_valid_until = $voucher->valid_until ? $voucher->valid_until->format('Y-m-d') : null;
+        $this->v_valid_from = $voucher->valid_from ? \Carbon\Carbon::parse($voucher->valid_from)->format('Y-m-d\TH:i') : null;
+        $this->v_valid_until = $voucher->valid_until ? \Carbon\Carbon::parse($voucher->valid_until)->format('Y-m-d\TH:i') : null;
         $this->v_usage_limit = $voucher->usage_limit;
         $this->v_is_active = $voucher->is_active;
 
@@ -134,6 +141,7 @@ class MarketingManager extends Component
 
     public function storeVoucher()
     {
+        $this->authorize($this->voucher_id ? 'edit marketing' : 'create marketing');
         $this->v_code = strtoupper(trim($this->v_code)); // Ensure code is uppercase
 
         $this->validate([
@@ -174,12 +182,14 @@ class MarketingManager extends Component
 
     public function deleteVoucher($id)
     {
+        $this->authorize('delete marketing');
         Voucher::findOrFail($id)->delete();
         session()->flash('message', 'Voucher deleted.');
     }
 
     public function toggleVoucherStatus($id)
     {
+        $this->authorize('edit marketing');
         $v = Voucher::findOrFail($id);
         $v->update(['is_active' => !$v->is_active]);
     }

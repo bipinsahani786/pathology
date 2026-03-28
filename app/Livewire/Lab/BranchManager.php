@@ -14,7 +14,7 @@ class BranchManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage branches');
+        $this->authorize('view branches');
     }
 
     // State variables
@@ -40,6 +40,7 @@ class BranchManager extends Component
      */
     public function create()
     {
+        $this->authorize('create branches');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -49,6 +50,7 @@ class BranchManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit branches');
         $this->resetFields();
         $branch = Branch::findOrFail($id);
         
@@ -76,6 +78,7 @@ class BranchManager extends Component
 
         // Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
         if ($this->branch_id) {
+            $this->authorize('edit branches');
             Branch::where('id', $this->branch_id)->update([
                 'name' => $this->name,
                 'type' => $this->type,
@@ -85,6 +88,7 @@ class BranchManager extends Component
             ]);
             session()->flash('message', 'Branch updated successfully.');
         } else {
+            $this->authorize('create branches');
             Branch::create([
                 'company_id' => auth()->user()->company_id,
                 'name' => $this->name,
@@ -104,6 +108,7 @@ class BranchManager extends Component
      */
     public function toggleStatus($id)
     {
+        $this->authorize('edit branches');
         $branch = Branch::findOrFail($id);
         $branch->update(['is_active' => !$branch->is_active]);
         
@@ -115,6 +120,7 @@ class BranchManager extends Component
      */
     public function delete($id)
     {
+        $this->authorize('delete branches');
         Branch::findOrFail($id)->delete();
         session()->flash('message', 'Branch deleted successfully.');
     }

@@ -14,7 +14,7 @@ class PaymentModeManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage payment_modes');
+        $this->authorize('view payment_modes');
     }
 
     // State variables
@@ -37,6 +37,7 @@ class PaymentModeManager extends Component
      */
     public function create()
     {
+        $this->authorize('create payment_modes');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -46,6 +47,7 @@ class PaymentModeManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit payment_modes');
         $this->resetFields();
         $mode = PaymentMode::findOrFail($id);
         
@@ -67,6 +69,7 @@ class PaymentModeManager extends Component
 
         // FIX: Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
         if ($this->mode_id) {
+            $this->authorize('edit payment_modes');
             // Update existing record
             PaymentMode::where('id', $this->mode_id)->update([
                 'name' => $this->name,
@@ -74,6 +77,7 @@ class PaymentModeManager extends Component
             ]);
             session()->flash('message', 'Payment Mode updated successfully.');
         } else {
+            $this->authorize('create payment_modes');
             // Create new record
             PaymentMode::create([
                 'company_id' => auth()->user()->company_id, // Link to current lab
@@ -91,6 +95,7 @@ class PaymentModeManager extends Component
      */
     public function toggleStatus($id)
     {
+        $this->authorize('edit payment_modes');
         $mode = PaymentMode::findOrFail($id);
         $mode->update(['is_active' => !$mode->is_active]);
         
@@ -102,6 +107,7 @@ class PaymentModeManager extends Component
      */
     public function delete($id)
     {
+        $this->authorize('delete payment_modes');
         PaymentMode::findOrFail($id)->delete();
         session()->flash('message', 'Payment Mode deleted successfully.');
     }

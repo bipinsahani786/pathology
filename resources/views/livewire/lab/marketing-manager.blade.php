@@ -12,13 +12,17 @@
         </div>
         <div class="page-header-right d-flex gap-2">
             @if($activeTab === 'memberships')
-                <button wire:click="createMembership" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center">
-                    <i class="feather-plus me-1"></i> New Membership
-                </button>
+                @can('create marketing')
+                    <button wire:click="createMembership" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center">
+                        <i class="feather-plus me-1"></i> New Membership
+                    </button>
+                @endcan
             @else
-                <button wire:click="createVoucher" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center">
-                    <i class="feather-plus me-1"></i> New Promo Code
-                </button>
+                @can('create marketing')
+                    <button wire:click="createVoucher" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center">
+                        <i class="feather-plus me-1"></i> New Promo Code
+                    </button>
+                @endcan
             @endif
         </div>
     </div>
@@ -75,17 +79,25 @@
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" role="switch" wire:click="toggleMembershipStatus({{ $m->id }})" {{ $m->is_active ? 'checked' : '' }} style="cursor: pointer;">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                wire:click="toggleMembershipStatus({{ $m->id }})" 
+                                                {{ $m->is_active ? 'checked' : '' }} 
+                                                style="cursor: pointer;"
+                                                @cannot('edit marketing') disabled @endcannot>
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="editMembership({{ $m->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" data-bs-toggle="tooltip" title="Edit">
-                                                <i class="feather-edit-2"></i>
-                                            </button>
-                                            <button wire:click="deleteMembership({{ $m->id }})" wire:confirm="Delete this membership?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" data-bs-toggle="tooltip" title="Delete">
-                                                <i class="feather-trash-2"></i>
-                                            </button>
+                                            @can('edit marketing')
+                                                <button wire:click="editMembership({{ $m->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" data-bs-toggle="tooltip" title="Edit">
+                                                    <i class="feather-edit-2"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete marketing')
+                                                <button wire:click="deleteMembership({{ $m->id }})" wire:confirm="Delete this membership?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" data-bs-toggle="tooltip" title="Delete">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
@@ -138,17 +150,25 @@
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" role="switch" wire:click="toggleVoucherStatus({{ $v->id }})" {{ $v->is_active ? 'checked' : '' }} style="cursor: pointer;">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                wire:click="toggleVoucherStatus({{ $v->id }})" 
+                                                {{ $v->is_active ? 'checked' : '' }} 
+                                                style="cursor: pointer;"
+                                                @cannot('edit marketing') disabled @endcannot>
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="editVoucher({{ $v->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" data-bs-toggle="tooltip" title="Edit">
-                                                <i class="feather-edit-2"></i>
-                                            </button>
-                                            <button wire:click="deleteVoucher({{ $v->id }})" wire:confirm="Delete this promo code?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" data-bs-toggle="tooltip" title="Delete">
-                                                <i class="feather-trash-2"></i>
-                                            </button>
+                                            @can('edit marketing')
+                                                <button wire:click="editVoucher({{ $v->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" data-bs-toggle="tooltip" title="Edit">
+                                                    <i class="feather-edit-2"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete marketing')
+                                                <button wire:click="deleteVoucher({{ $v->id }})" wire:confirm="Delete this promo code?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" data-bs-toggle="tooltip" title="Delete">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

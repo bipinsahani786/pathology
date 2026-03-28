@@ -39,7 +39,7 @@
     <div style="font-size:9px;">
         <div class="row"><span class="left">Bill #:</span><span class="right">{{ $invoice->invoice_number }}</span></div>
         <div class="row"><span class="left">Date:</span><span class="right">{{ $invoice->invoice_date->format('d/m/Y H:i') }}</span></div>
-        <div class="row"><span class="left">Patient:</span><span class="right">{{ Str::limit($invoice->patient->name ?? 'N/A', 18) }}</span></div>
+        <div class="row"><span class="left">Patient:</span><span class="right">{{ Str::limit($invoice->patient->name ?? 'N/A', 15) }} ({{ $invoice->patient->formatted_id }})</span></div>
         <div class="row"><span class="left">Phone:</span><span class="right">{{ $invoice->patient->phone ?? '' }}</span></div>
         @if($invoice->doctor)
             <div class="row"><span class="left">Ref:</span><span class="right">{{ Str::limit($invoice->doctor->name, 18) }}</span></div>

@@ -13,7 +13,7 @@ class DepartmentManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage lab_tests');
+        $this->authorize('view departments');
     }
 
     public $name, $department_id;
@@ -37,12 +37,14 @@ class DepartmentManager extends Component
 
     public function create()
     {
+        $this->authorize('create departments');
         $this->resetFields();
         $this->isModalOpen = true;
     }
 
     public function edit($id)
     {
+        $this->authorize('edit departments');
         $department = Department::findOrFail($id);
         
         // Prevent editing system departments
@@ -71,6 +73,7 @@ class DepartmentManager extends Component
 
     public function store()
     {
+        $this->authorize($this->department_id ? 'edit departments' : 'create departments');
         $this->validate([
             'name' => 'required|string|max:255',
         ]);
@@ -91,6 +94,7 @@ class DepartmentManager extends Component
 
     public function toggleStatus($id)
     {
+        $this->authorize('edit departments');
         $department = Department::findOrFail($id);
         if ($department->is_system) return; // Protect system depts
         
@@ -99,6 +103,7 @@ class DepartmentManager extends Component
 
     public function delete($id)
     {
+        $this->authorize('delete departments');
         $department = Department::findOrFail($id);
         if ($department->is_system) {
             session()->flash('error', 'System departments cannot be deleted.');

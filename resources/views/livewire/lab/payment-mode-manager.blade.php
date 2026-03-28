@@ -11,9 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right d-flex gap-2">
-            <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
-                <i class="feather-plus me-1"></i> Add Payment Mode
-            </button>
+            @can('create payment_modes')
+                <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
+                    <i class="feather-plus me-1"></i> Add Payment Mode
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -67,7 +69,7 @@
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" role="switch" wire:click="toggleStatus({{ $mode->id }})" {{ $mode->is_active ? 'checked' : '' }} style="cursor: pointer;">
+                                            <input class="form-check-input" type="checkbox" role="switch" wire:click="toggleStatus({{ $mode->id }})" {{ $mode->is_active ? 'checked' : '' }} @cannot('edit payment_modes') disabled @endcannot style="cursor: pointer;">
                                             <span class="fs-12 ms-2 fw-medium {{ $mode->is_active ? 'text-success' : 'text-danger' }}">
                                                 {{ $mode->is_active ? 'Active' : 'Inactive' }}
                                             </span>
@@ -75,12 +77,16 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button wire:click="edit({{ $mode->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit">
-                                                <i class="feather-edit-2 fs-14"></i>
-                                            </button>
-                                            <button wire:click="delete({{ $mode->id }})" wire:confirm="Are you sure you want to delete this payment mode?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete">
-                                                <i class="feather-trash-2 fs-14"></i>
-                                            </button>
+                                            @can('edit payment_modes')
+                                                <button wire:click="edit({{ $mode->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete payment_modes')
+                                                <button wire:click="delete({{ $mode->id }})" wire:confirm="Are you sure you want to delete this payment mode?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete">
+                                                    <i class="feather-trash-2 fs-14"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

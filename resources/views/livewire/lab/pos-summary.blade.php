@@ -32,9 +32,9 @@
                     <li><a class="dropdown-item py-2" href="{{ route('lab.reports.print', $invoice->id) }}" target="_blank"><i class="feather-book-open me-2 text-primary"></i>Print Report</a></li>
                 </ul>
             </div>
-            <button class="btn btn-outline-dark fw-bold me-2">
+            <a href="{{ route('lab.invoice.barcode.stickers', $invoice->id) }}" target="_blank" class="btn btn-outline-dark fw-bold me-2">
                 <i class="feather-code me-2"></i>Print Barcode
-            </button>
+            </a>
             <button class="btn btn-outline-success fw-bold" disabled title="Feature coming soon">
                 <i class="bi bi-whatsapp me-2"></i>WhatsApp
             </button>
@@ -66,7 +66,7 @@
                                         {{ strtoupper(substr($invoice->patient->name ?? 'P', 0, 1)) }}
                                     </div>
                                     <div>
-                                        <h6 class="fw-bold mb-1 text-dark">{{ $invoice->patient->name ?? 'Walk-in Patient' }}</h6>
+                                        <h6 class="fw-bold mb-1 text-dark">{{ $invoice->patient->name ?? 'Walk-in Patient' }} <span class="badge bg-soft-info text-info ms-1">{{ $invoice->patient->formatted_id ?? '' }}</span></h6>
                                         <div class="text-muted fs-12">
                                             {{ $invoice->patient->patientProfile->age ?? 'N/A' }} YRS / {{ $invoice->patient->patientProfile->gender ?? 'N/A' }} 
                                             | 📞 {{ $invoice->patient->phone ?? 'No Phone' }}

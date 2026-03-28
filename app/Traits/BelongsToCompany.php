@@ -11,7 +11,8 @@ trait BelongsToCompany
         // If the user is logged in and is not a super admin
         if (auth()->check() && !auth()->user()->hasRole('super_admin')) {
             static::addGlobalScope('company', function (Builder $builder) {
-                $builder->where('company_id', auth()->user()->company_id);
+                $model = $builder->getModel();
+                $builder->where($model->getTable() . '.company_id', auth()->user()->company_id);
             });
         }
     }

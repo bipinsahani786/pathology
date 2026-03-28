@@ -18,7 +18,7 @@ class CollectionCenterManager extends Component
 
     public function mount()
     {
-        $this->authorize('manage collection_centers');
+        $this->authorize('view collection_centers');
     }
 
     // State variables
@@ -52,6 +52,7 @@ class CollectionCenterManager extends Component
      */
     public function create()
     {
+        $this->authorize('create collection_centers');
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -61,6 +62,7 @@ class CollectionCenterManager extends Component
      */
     public function edit($id)
     {
+        $this->authorize('edit collection_centers');
         $this->resetFields();
         $center = CollectionCenter::with('user')->findOrFail($id);
         
@@ -104,10 +106,8 @@ class CollectionCenterManager extends Component
 
         DB::beginTransaction();
         try {
-            $companyId = auth()->user()->company_id;
-
-            // 1. Manage User account
-            if ($this->user_id) {
+            if ($this->center_id) {
+                $this->authorize('edit collection_centers');
                 $user = User::findOrFail($this->user_id);
                 $userData = [
                     'name' => $this->name,
@@ -120,6 +120,8 @@ class CollectionCenterManager extends Component
                 }
                 $user->update($userData);
             } else {
+                $this->authorize('create collection_centers');
+                $companyId = auth()->user()->company_id;
                 // If phone or email provided, create a user
                 if ($this->phone || $this->email) {
                     $user = User::create([
@@ -177,6 +179,7 @@ class CollectionCenterManager extends Component
      */
     public function toggleStatus($id)
     {
+        $this->authorize('edit collection_centers');
         $center = CollectionCenter::findOrFail($id);
         $center->update(['is_active' => !$center->is_active]);
         
@@ -188,6 +191,7 @@ class CollectionCenterManager extends Component
      */
     public function delete($id)
     {
+        $this->authorize('delete collection_centers');
         CollectionCenter::findOrFail($id)->delete();
         session()->flash('message', 'Collection Center deleted successfully.');
     }

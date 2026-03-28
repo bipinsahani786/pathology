@@ -249,7 +249,7 @@
     <table class="patient-box">
         <tr>
             <td class="lbl">Patient Name</td>
-            <td class="val" style="font-size:14px;">{{ $patient->name }}</td>
+            <td class="val" style="font-size:14px;">{{ $patient->name }} <small style="font-weight:normal;opacity:0.7;">({{ $patient->formatted_id }})</small></td>
             <td class="lbl">Registered</td>
             <td class="val">{{ $invoice->created_at->format('d M, Y h:i A') }}</td>
         </tr>

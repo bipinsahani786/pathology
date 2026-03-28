@@ -25,11 +25,10 @@
                             <div class="avatar-text avatar-lg rounded-circle" style="background:rgba(59,113,202,0.1);">
                                 <i class="feather-user text-primary fs-3"></i>
                             </div>
-                            <div>
-                                <h5 class="mb-1 fw-bold">{{ $invoice->patient->name }}</h5>
-                                <div class="fs-12 text-muted">
-                                    {{ $invoice->patient->phone }} | {{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} / {{ $invoice->patient->patientProfile->gender ?? '--' }}
-                                </div>
+                            <div class="col-md-3">
+                                <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Patient Info</div>
+                                <div class="fw-bold fs-13">{{ $invoice->patient->name }} <span class="badge bg-soft-info text-info ms-1">{{ $invoice->patient->formatted_id }}</span></div>
+                                <div class="fs-11 text-muted">{{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}</div>
                             </div>
                         </div>
                     </div>
@@ -61,9 +60,11 @@
             <div class="card-header bg-light">
                 <div class="d-flex justify-content-between align-items-center">
                     <h6 class="card-title mb-0 fs-13"><i class="feather-edit-3 text-primary me-2"></i>Enter Test Values</h6>
-                    <div>
-                        <span class="badge bg-soft-info text-info fs-11"><i class="feather-cpu me-1"></i>Auto-Calc Enabled</span>
-                        <span class="badge bg-soft-warning text-warning fs-11 ms-2"><i class="feather-alert-circle me-1"></i>Auto-Flag Ranges</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <button wire:click="printSelected" class="btn btn-sm btn-outline-info shadow-sm">
+                            <i class="feather-printer me-1"></i>Print Selected
+                        </button>
+                        <span class="badge bg-soft-info text-info fs-11"><i class="feather-cpu me-1"></i>Auto-Calc</span>
                     </div>
                 </div>
             </div>
@@ -89,25 +90,47 @@
                                     </td>
                                 </tr>
                                 
-                                @foreach($tests as $testName => $params)
+                                @foreach($tests as $itemId => $params)
+                                    @php
+                                        $testName = $params->first()['test_name'] ?? 'Unknown Test';
+                                        $testItem = $invoice->items->where('id', $itemId)->first();
+                                        $isTestComplete = $testItem && $testItem->status === 'Completed';
+                                    @endphp
                                     {{-- Test Name Subheader --}}
                                     <tr>
                                         <td colspan="5" class="bg-light py-2 fs-12 fw-bold text-dark border-bottom">
-                                            <i class="feather-activity text-muted me-2"></i>{{ $testName }}
+                                            <div class="d-flex align-items-center justify-content-between px-2">
+                                                <div class="d-flex align-items-center">
+                                                    <input type="checkbox" class="form-check-input me-2" 
+                                                           wire:model.live="selectedTests" value="{{ $itemId }}">
+                                                    <i class="feather-activity text-muted me-2"></i>{{ $testName }}
+                                                    <span class="ms-2 badge {{ $isTestComplete ? 'bg-success' : 'bg-warning text-dark' }} fs-9">
+                                                        {{ $isTestComplete ? 'Completed' : 'Pending' }}
+                                                    </span>
+                                                </div>
+                                                @can('edit reports')
+                                                    <button wire:click="toggleTestStatus({{ $itemId }})" 
+                                                            class="btn btn-xs {{ $isTestComplete ? 'btn-outline-danger' : 'btn-outline-success' }} py-0 px-2"
+                                                            style="font-size: 10px;">
+                                                        <i class="feather-{{ $isTestComplete ? 'x-circle' : 'check-circle' }} me-1"></i>
+                                                        Mark {{ $isTestComplete ? 'Pending' : 'Complete' }}
+                                                    </button>
+                                                @endcan
+                                            </div>
                                         </td>
                                     </tr>
 
-                                    @foreach($params as $k => $p)
+                                    @foreach($params as $p)
                                         @php
-                                            $itemKey = $p['lab_test_id'] . '_' . md5($p['name']);
-                                            $isHigh = $highlights[$itemKey] ?? false;
+                                            $paramKey = $p['key'];
+                                            $isHigh = $highlights[$paramKey] ?? false;
                                         @endphp
-                                        <tr class="{{ $isHigh ? 'table-danger' : '' }}">
+                                        <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
                                             <td class="fw-bold fs-12 ps-4">
                                                 <div class="d-flex align-items-center">
                                                     {{ $p['name'] }}
                                                     @if($isHigh)
-                                                        @php $f = $flags[$itemKey] ?? 'Abn'; @endphp
+                                                        @php $f = $flags[$paramKey] ?? 'Abn'; @endphp
                                                         <span class="ms-2 badge {{ in_array($f, ['H', 'Abn']) ? 'bg-danger' : 'bg-warning text-dark' }} px-2" style="font-size: 10px;">
                                                             {{ $f === 'H' ? 'High' : ($f === 'L' ? 'Low' : 'Abnormal') }}
                                                         </span>
@@ -121,7 +144,7 @@
                                                 <div class="input-group input-group-sm w-100">
                                                     @if(($p['input_type'] ?? 'numeric') === 'selection')
                                                         <select class="form-select {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                                wire:model.live="results.{{ $itemKey }}">
+                                                                wire:model.live="results.{{ $paramKey }}">
                                                             <option value="">Select Result</option>
                                                             @foreach($p['options'] ?? [] as $opt)
                                                                 <option value="{{ $opt }}">{{ $opt }}</option>
@@ -129,17 +152,17 @@
                                                         </select>
                                                     @elseif(($p['input_type'] ?? 'numeric') === 'calculated')
                                                         <input type="text" class="form-control bg-light fw-bold text-primary border-primary border-opacity-25" 
-                                                               wire:model="results.{{ $itemKey }}" readonly title="Auto-Calculated">
+                                                               wire:model="results.{{ $paramKey }}" readonly title="Auto-Calculated">
                                                         <span class="input-group-text bg-soft-primary"><i class="feather-cpu" style="font-size: 10px;"></i></span>
                                                     @else
                                                         <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                               wire:model.live.debounce.500ms="results.{{ $itemKey }}" 
+                                                               wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
                                                                placeholder="-">
                                                     @endif
 
-                                                    @if($isHigh && isset($flags[$itemKey]) && !in_array($p['input_type'] ?? '', ['selection', 'calculated']))
+                                                    @if($isHigh && isset($flags[$paramKey]) && !in_array($p['input_type'] ?? '', ['selection', 'calculated']))
                                                         <span class="input-group-text bg-danger text-white border-danger fw-bold fs-11 px-2">
-                                                            {{ $flags[$itemKey] }}
+                                                            {{ $flags[$paramKey] }}
                                                         </span>
                                                     @endif
                                                 </div>
@@ -149,7 +172,7 @@
                                             <td class="text-center">
                                                 <div class="form-check form-switch d-flex justify-content-center">
                                                     <input class="form-check-input" type="checkbox" 
-                                                           wire:model.live="highlights.{{ $itemKey }}" 
+                                                           wire:model.live="highlights.{{ $paramKey }}" 
                                                            style="width: 2.5em; height: 1.25em;">
                                                 </div>
                                             </td>
@@ -191,12 +214,14 @@
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button wire:click="saveReport('Draft')" class="btn btn-outline-primary fw-bold">
-                            <i class="feather-save me-1"></i> Save Draft
-                        </button>
-                        <button wire:click="saveReport('Approved')" class="btn btn-success fw-bold px-4" {{ ($testReport && $testReport->status === 'Approved') ? 'disabled' : '' }}>
-                            <i class="feather-check me-1"></i> Approve & Finalize
-                        </button>
+                        @can('edit reports')
+                            <button wire:click="saveReport('Draft')" class="btn btn-outline-primary fw-bold">
+                                <i class="feather-save me-1"></i> Save Draft
+                            </button>
+                            <button wire:click="saveReport('Approved')" class="btn btn-success fw-bold px-4" {{ ($testReport && $testReport->status === 'Approved') ? 'disabled' : '' }}>
+                                <i class="feather-check me-1"></i> Approve & Finalize
+                            </button>
+                        @endcan
                     </div>
                 </div>
             </div>

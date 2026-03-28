@@ -93,11 +93,10 @@
                                             <span class="fw-bold text-primary">{{ strtoupper(substr($selectedPatient['name'], 0, 2)) }}</span>
                                         </div>
                                         <div class="flex-grow-1 min-width-0">
-                                            <div class="fw-bold text-dark fs-13">{{ $selectedPatient['name'] }}</div>
-                                            <div class="fs-11 text-muted"><i class="feather-phone fs-10 me-1"></i>{{ $selectedPatient['phone'] }}</div>
+                                            <h6 class="mb-0 fw-bold">{{ $selectedPatient['name'] ?? '' }} <span class="badge bg-soft-info text-info ms-1">{{ $selectedPatient['formatted_id'] ?? '' }}</span></h6>
+                                            <div class="fs-11 text-muted"><i class="feather-phone me-1 fs-10"></i>{{ $selectedPatient['phone'] ?? '' }}</div>
                                             @if($patientProfileData)
                                                 <div class="d-flex flex-wrap gap-1 mt-1">
-                                                    <span class="badge bg-soft-primary text-primary fs-10">{{ $patientProfileData['patient_id_string'] ?? '—' }}</span>
                                                     <span class="badge bg-soft-info text-info fs-10">{{ $patientProfileData['age'] ?? '' }} {{ $patientProfileData['age_type'] ?? 'Yrs' }}</span>
                                                     <span class="badge bg-soft-{{ ($patientProfileData['gender'] ?? '') == 'Male' ? 'primary' : (($patientProfileData['gender'] ?? '') == 'Female' ? 'danger' : 'warning') }} fs-10">{{ $patientProfileData['gender'] ?? '—' }}</span>
                                                     @if(!empty($patientProfileData['blood_group']))
@@ -125,7 +124,9 @@
                                                     onclick="this.select()"
                                                     placeholder="Phone / Name">
                                             </div>
-                                            <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
+                                            @can('create patients')
+                                                <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
+                                            @endcan
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($patients) && count($patients) > 0)
@@ -134,8 +135,8 @@
                                                         <button wire:click="selectPatient({{ $pt->id }})" @click="open = false" class="list-group-item list-group-item-action py-2 px-3">
                                                             <div class="d-flex justify-content-between align-items-center">
                                                                 <div>
-                                                                    <div class="fw-bold fs-12">{{ $pt->name }}</div>
-                                                                    <div class="text-muted fs-10">{{ $pt->phone }} · {{ $pt->patientProfile->patient_id_string ?? '' }}</div>
+                                                                        <div class="fw-bold fs-12">{{ $pt->name }} <span class="badge bg-soft-info text-info ms-1">{{ $pt->formatted_id }}</span></div>
+                                                                        <div class="text-muted fs-10">{{ $pt->phone }}</div>
                                                                 </div>
                                                                 <span class="badge bg-soft-info text-info fs-10">{{ $pt->patientProfile->age ?? '' }}{{ $pt->patientProfile->age_type == 'Years' ? 'Y' : ($pt->patientProfile->age_type == 'Months' ? 'M' : 'D') }}/{{ substr($pt->patientProfile->gender ?? '', 0, 1) }}</span>
                                                             </div>
@@ -146,7 +147,9 @@
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <i class="feather-user-x text-muted fs-3 d-block mb-1"></i>
                                                     <div class="fw-bold text-muted fs-11">No patient found for "{{ $patientSearch }}"</div>
-                                                    <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
+                                                    @can('create patients')
+                                                        <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
+                                                    @endcan
                                                 </div>
                                             @endif
                                         </div>
@@ -197,7 +200,9 @@
                                                     onclick="this.select()"
                                                     placeholder="Doctor Name / Phone">
                                             </div>
-                                            <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
+                                            @can('create doctors')
+                                                <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
+                                            @endcan
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($doctors) && count($doctors) > 0)
@@ -212,7 +217,9 @@
                                             @elseif(!empty($doctorSearch))
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found for "{{ $doctorSearch }}"</div>
-                                                    <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
+                                                    @can('create doctors')
+                                                        <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
+                                                    @endcan
                                                 </div>
                                             @endif
                                         </div>
@@ -258,7 +265,9 @@
                                                 @focus="open = true"
                                                 onclick="this.select()"
                                                 placeholder="Agent Name / Phone">
-                                            <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning px-2" title="New Agent"><i class="feather-plus fs-12"></i></button>
+                                            @can('create agents')
+                                                <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning px-2" title="New Agent"><i class="feather-plus fs-12"></i></button>
+                                            @endcan
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($agents) && count($agents) > 0)
@@ -273,7 +282,9 @@
                                             @elseif(!empty($agentSearch))
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No agent found for "{{ $agentSearch }}"</div>
-                                                    <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
+                                                    @can('create agents')
+                                                        <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
+                                                    @endcan
                                                 </div>
                                             @endif
                                         </div>
@@ -540,7 +551,12 @@
                         @elseif($selectedPatient)
                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(255,193,7,0.1);border-color:rgba(255,193,7,0.3)!important;">
                                 <span class="fw-bold fs-11" style="color:#8a6d00;"><i class="feather-award me-1 fs-10"></i>No Membership</span>
-                                <button wire:click="$set('isMembershipModalOpen', true)" class="btn btn-sm btn-warning fw-bold fs-10 px-2 py-1" style="color:#000;"><i class="feather-plus fs-10 me-1"></i>Buy</button>
+                                @can('create marketing')
+                                    <button wire:click="$set('isMembershipModalOpen', true)" class="btn btn-sm btn-warning fw-bold fs-10 px-2 py-1" style="color:#000;"><i class="feather-plus fs-10 me-1"></i>Buy</button>
+                                @endcan
+                                @cannot('create marketing')
+                                    <span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1">Contact Admin</span>
+                                @endcannot
                             </div>
                         @endif
 
@@ -610,7 +626,9 @@
                         {{-- Payment --}}
                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
                             <h6 class="fw-bold text-dark fs-11 text-uppercase mb-0"><i class="feather-credit-card me-1"></i>Payment</h6>
-                            <button wire:click="$set('isPaymentModeModalOpen', true)" class="btn btn-sm btn-outline-dark fs-10 py-0 px-2"><i class="feather-plus fs-10 me-1"></i>Mode</button>
+                            @can('edit settings')
+                                <button wire:click="$set('isPaymentModeModalOpen', true)" class="btn btn-sm btn-outline-dark fs-10 py-0 px-2"><i class="feather-plus fs-10 me-1"></i>Mode</button>
+                            @endcan
                         </div>
 
                         @foreach ($payments as $index => $payment)
@@ -629,6 +647,14 @@
                         @endforeach
                         <button wire:click="addPaymentRow" class="btn btn-sm btn-outline-primary w-100 mt-1 fs-10 fw-bold"><i class="feather-plus me-1"></i>Split Payment</button>
 
+                        {{-- Overpayment Error --}}
+                        @if ($overpaymentError)
+                            <div class="alert alert-danger py-2 mt-2 mb-0 d-flex align-items-center gap-2">
+                                <i class="feather-alert-octagon fs-14"></i>
+                                <span class="fs-11 fw-bold">Payment exceeds Net Payable!</span>
+                            </div>
+                        @endif
+
                         {{-- Due --}}
                         <div class="d-flex justify-content-between align-items-center mt-3 p-2 rounded-3 border" style="background:{{ $due_amount > 0 ? 'rgba(220,53,69,0.08)' : 'rgba(25,135,84,0.08)' }};border-color:{{ $due_amount > 0 ? 'rgba(220,53,69,0.25)' : 'rgba(25,135,84,0.25)' }}!important;">
                             <span class="fw-bold fs-12" style="color:{{ $due_amount > 0 ? '#dc3545' : '#198754' }};">{{ $due_amount > 0 ? 'Balance Due' : 'Fully Paid' }}</span>
@@ -636,7 +662,8 @@
                         </div>
 
                         {{-- Generate --}}
-                        <button wire:click="generateBill" class="btn btn-primary w-100 py-3 fw-bold mt-3 fs-13">
+                        <button wire:click="generateBill" class="btn btn-primary w-100 py-3 fw-bold mt-3 fs-13" 
+                            @if($overpaymentError) disabled @endif>
                             <span wire:loading.remove wire:target="generateBill"><i class="feather-check-circle me-1"></i>GENERATE INVOICE</span>
                             <span wire:loading wire:target="generateBill"><span class="spinner-border spinner-border-sm me-1"></span>PROCESSING...</span>
                         </button>

@@ -11,12 +11,14 @@
             </ul>
         </div>
         <div class="page-header-right">
-            <button wire:click="openImportModal" class="btn btn-soft-primary px-4 me-2">
-                <i class="feather-download me-2"></i>Import Global
-            </button>
-            <a href="{{ route('lab.tests.create') }}" wire:navigate class="btn btn-primary px-4">
-                <i class="feather-plus me-2"></i>Add Custom Test
-            </a>
+            @can('create lab_tests')
+                <button wire:click="openImportModal" class="btn btn-soft-primary px-4 me-2">
+                    <i class="feather-download me-2"></i>Import Global
+                </button>
+                <a href="{{ route('lab.tests.create') }}" wire:navigate class="btn btn-primary px-4">
+                    <i class="feather-plus me-2"></i>Add Custom Test
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -95,19 +97,24 @@
                                         <div class="form-check form-switch m-0">
                                             <input class="form-check-input shadow-none" type="checkbox" 
                                                 wire:click="toggleStatus({{ $test->id }})" 
-                                                {{ $test->is_active ? 'checked' : '' }}>
+                                                {{ $test->is_active ? 'checked' : '' }}
+                                                @cannot('edit lab_tests') disabled @endcannot>
                                         </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">
-                                            <a href="{{ route('lab.tests.edit', $test->id) }}" wire:navigate class="btn btn-icon btn-soft-info btn-sm" data-bs-toggle="tooltip" title="Edit">
-                                                <i class="feather-edit-3"></i>
-                                            </a>
-                                            <button wire:click="delete({{ $test->id }})" 
-                                                wire:confirm="Are you sure you want to delete this test?" 
-                                                class="btn btn-icon btn-soft-danger btn-sm" data-bs-toggle="tooltip" title="Delete">
-                                                <i class="feather-trash-2"></i>
-                                            </button>
+                                            @can('edit lab_tests')
+                                                <a href="{{ route('lab.tests.edit', $test->id) }}" wire:navigate class="btn btn-icon btn-soft-info btn-sm" data-bs-toggle="tooltip" title="Edit">
+                                                    <i class="feather-edit-3"></i>
+                                                </a>
+                                            @endcan
+                                            @can('delete lab_tests')
+                                                <button wire:click="delete({{ $test->id }})" 
+                                                    wire:confirm="Are you sure you want to delete this test?" 
+                                                    class="btn btn-icon btn-soft-danger btn-sm" data-bs-toggle="tooltip" title="Delete">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>
