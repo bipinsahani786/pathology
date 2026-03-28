@@ -28,7 +28,13 @@ class SettlementManager extends Component
     // Insights Filters & Stats
     public $startDate;
     public $endDate;
-    public $partnerStats = [];
+    public $partnerStats = [
+        'total_bills' => 0,
+        'total_revenue' => 0,
+        'total_commission' => 0,
+        'avg_bill' => 0,
+        'settlement_history' => []
+    ];
     public $partnerHistory = [];
 
     protected $queryString = ['partnerType'];
@@ -82,15 +88,24 @@ class SettlementManager extends Component
         elseif ($this->partnerType === 'Agent') $partnerIdField = 'referred_by_agent_id';
         elseif ($this->partnerType === 'Collection Center') $partnerIdField = 'collection_center_id';
 
+        $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
+
         $query = Invoice::where('company_id', $companyId)
-            ->where($partnerIdField, $this->selectedPartnerId);
+            ->where($partnerIdField, $valId)
+            ->where('status', '!=', 'Cancelled');
 
         $statsQuery = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate]);
+
+        // Define which field represents the commission/due for this partner
+        $commField = '';
+        if ($this->partnerType === 'Doctor') $commField = 'doctor_commission_amount';
+        elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
+        elseif ($this->partnerType === 'Collection Center') $commField = 'total_b2b_amount';
 
         $this->partnerStats = [
             'total_bills' => (clone $statsQuery)->count(),
             'total_revenue' => (clone $statsQuery)->sum('total_amount'),
-            'total_commission' => (clone $statsQuery)->sum($this->partnerType === 'Doctor' ? 'doctor_commission_amount' : ($this->partnerType === 'Agent' ? 'agent_commission_amount' : 'total_amount')),
+            'total_commission' => (clone $statsQuery)->where('payment_status', 'Paid')->sum($commField),
             'avg_bill' => (clone $statsQuery)->avg('total_amount') ?? 0,
             'settlement_history' => Settlement::where('user_id', $this->selectedPartnerId)
                 ->where('company_id', $companyId)
@@ -101,7 +116,7 @@ class SettlementManager extends Component
 
         // Fetch Detailed History for the Table (using the date filter)
         $this->partnerHistory = (clone $statsQuery)
-            ->with('patient')
+            ->with(['patient', 'doctor', 'collectionCenter'])
             ->latest()
             ->take(20)
             ->get();
@@ -251,6 +266,11 @@ class SettlementManager extends Component
         elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
         elseif ($this->partnerType === 'Collection Center') $commField = 'total_b2b_amount';
         else $commField = 'total_amount';
+
+        // Re-hydrate selected partner if missing
+        if ($this->selectedPartnerId && !$this->selectedPartner) {
+            $this->selectedPartner = User::find($this->selectedPartnerId);
+        }
 
         // --- Analytics Calculations ---
         $stats = [

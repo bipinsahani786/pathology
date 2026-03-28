@@ -20,6 +20,8 @@ class InvoiceManager extends Component
     public $filterCC = '';
     public $filterDoctor = '';
     public $filterAgent = '';
+    public $filterInvoiceStatus = ''; // Active, Cancelled
+    public $filterSampleStatus = '';  // Pending, Collected, etc.
     public $perPage = 15;
 
     protected $paginationTheme = 'bootstrap';
@@ -62,6 +64,14 @@ class InvoiceManager extends Component
     {
         $this->resetPage();
     }
+    public function updatingFilterInvoiceStatus()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterSampleStatus()
+    {
+        $this->resetPage();
+    }
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -69,7 +79,7 @@ class InvoiceManager extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType', 'filterCC', 'filterDoctor', 'filterAgent']);
+        $this->reset(['search', 'filterStatus', 'filterDateFrom', 'filterDateTo', 'filterCollectionType', 'filterCC', 'filterDoctor', 'filterAgent', 'filterInvoiceStatus', 'filterSampleStatus']);
         $this->resetPage();
     }
 
@@ -94,9 +104,19 @@ class InvoiceManager extends Component
             });
         }
 
-        // Status filter
+        // Payment Status filter
         if ($this->filterStatus) {
             $query->where('payment_status', $this->filterStatus);
+        }
+
+        // Invoice Status (Active/Cancelled)
+        if ($this->filterInvoiceStatus) {
+            $query->where('status', $this->filterInvoiceStatus);
+        }
+
+        // Sample Status
+        if ($this->filterSampleStatus) {
+            $query->where('sample_status', $this->filterSampleStatus);
         }
 
         // Date range

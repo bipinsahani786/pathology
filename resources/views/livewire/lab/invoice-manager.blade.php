@@ -99,12 +99,20 @@
         <div class="card mb-3">
             <div class="card-body py-3">
                 <div class="row g-3 align-items-center">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="input-group search-group shadow-sm">
                             <span class="input-group-text"><i class="feather-search text-primary"></i></span>
                             <input type="text" class="form-control" wire:model.live.debounce.300ms="search"
                                 placeholder="Search by Invoice, Patient, or Phone...">
                         </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select border-0 shadow-sm" wire:model.live="filterCC">
+                            <option value="">All Centers</option>
+                            @foreach($collectionCenters as $cc)
+                                <option value="{{ $cc->id }}">🏥 {{ \Illuminate\Support\Str::limit($cc->name, 12) }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
@@ -120,7 +128,7 @@
                     </div>
                 </div>
                 <div class="row g-3 align-items-center mt-1">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select class="form-select" wire:model.live="filterStatus">
                             <option value="">All Payments</option>
                             <option value="Paid">✅ Paid</option>
@@ -128,7 +136,22 @@
                             <option value="Unpaid">❌ Unpaid</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <select class="form-select" wire:model.live="filterInvoiceStatus">
+                            <option value="">All Active/Cancelled</option>
+                            <option value="Active">🔓 Active</option>
+                            <option value="Cancelled">🚫 Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" wire:model.live="filterSampleStatus">
+                            <option value="">All Sample Status</option>
+                            @foreach(['Pending', 'Collected', 'Dispatched', 'Received', 'Processing', 'Ready'] as $st)
+                                <option value="{{ $st }}">{{ $st }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <select class="form-select" wire:model.live="filterDoctor">
                             <option value="">All Doctors</option>
                             @foreach($doctors as $dr)
@@ -141,14 +164,6 @@
                             <option value="">All Agents</option>
                             @foreach($agents as $ag)
                                 <option value="{{ $ag->id }}">🤝 {{ $ag->user->name ?? 'Agent' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <select class="form-select" wire:model.live="filterCC">
-                            <option value="">All Centers</option>
-                            @foreach($collectionCenters as $cc)
-                                <option value="{{ $cc->id }}">🏥 {{ $cc->name }}</option>
                             @endforeach
                         </select>
                     </div>
