@@ -318,8 +318,14 @@
                             </div>
                             <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Lab Branch</label>
-                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" wire:model.live="branch_id">
-                                    <option value="">— Select Branch —</option>
+                                @php
+                                    $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+                                    $canSwitch = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') || !$restrictAccess;
+                                @endphp
+                                <select class="form-select form-select-sm @error('branch_id') is-invalid @enderror" 
+                                    wire:model.live="branch_id"
+                                    @if(!$canSwitch) disabled @endif>
+                                    @if($canSwitch) <option value="">— Select Branch —</option> @endif
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach

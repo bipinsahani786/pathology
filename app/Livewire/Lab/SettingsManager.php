@@ -65,6 +65,16 @@ class SettingsManager extends Component
     public $new_footer_image;       // upload
     public $pdfSaved = false;
 
+    // ==========================================
+    // BRANCH CONTROLS
+    // ==========================================
+    public $branch_share_patients = true;
+    public $branch_share_doctors = true;
+    public $branch_share_agents = true;
+    public $branch_share_tests = true;
+    public $restrict_branch_access = true;
+    public $branchControlsSaved = false;
+
     // Report Signatory
     public $authorized_signatory_name;
     public $authorized_signatory_designation;
@@ -113,6 +123,18 @@ class SettingsManager extends Component
         $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB');
         $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd');
         $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6);
+        
+        // Branch Controls
+        $this->branch_share_patients = Configuration::getFor('branch_share_patients', '1') === '1';
+        $this->branch_share_doctors = Configuration::getFor('branch_share_doctors', '1') === '1';
+        $this->branch_share_agents = Configuration::getFor('branch_share_agents', '1') === '1';
+        $this->branch_share_tests = Configuration::getFor('branch_share_tests', '1') === '1';
+        $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1') === '1';
+
+        // Branch Admin Restriction: Force default tab to staff
+        if (auth()->user()->hasRole('branch_admin')) {
+            $this->activeTab = 'staff';
+        }
     }
 
     // ==========================================
@@ -274,6 +296,22 @@ class SettingsManager extends Component
         Configuration::setFor('signature_image', $this->signature_image);
 
         $this->pdfSaved = true;
+    }
+
+    // ==========================================
+    // SAVE BRANCH CONTROLS
+    // ==========================================
+    public function saveBranchControls()
+    {
+        $this->authorize('edit settings');
+
+        Configuration::setFor('branch_share_patients', $this->branch_share_patients ? '1' : '0');
+        Configuration::setFor('branch_share_doctors', $this->branch_share_doctors ? '1' : '0');
+        Configuration::setFor('branch_share_agents', $this->branch_share_agents ? '1' : '0');
+        Configuration::setFor('branch_share_tests', $this->branch_share_tests ? '1' : '0');
+        Configuration::setFor('restrict_branch_access', $this->restrict_branch_access ? '1' : '0');
+
+        $this->branchControlsSaved = true;
     }
 
     public function removeHeaderImage()

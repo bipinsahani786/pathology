@@ -90,7 +90,13 @@ class SettlementManager extends Component
 
         $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
 
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+
         $query = Invoice::where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where($partnerIdField, $valId)
             ->where('status', '!=', 'Cancelled');
 
@@ -109,6 +115,7 @@ class SettlementManager extends Component
             'avg_bill' => (clone $statsQuery)->avg('total_amount') ?? 0,
             'settlement_history' => Settlement::where('user_id', $this->selectedPartnerId)
                 ->where('company_id', $companyId)
+                ->when($myBranchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $myBranchId)))
                 ->latest()
                 ->take(10)
                 ->get()
@@ -272,10 +279,16 @@ class SettlementManager extends Component
             $this->selectedPartner = User::find($this->selectedPartnerId);
         }
 
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+
         // --- Analytics Calculations ---
         $stats = [
             'total_pending' => 0,
             'settled_today' => Settlement::where('company_id', $companyId)
+                ->when($myBranchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $myBranchId)))
                 ->where('type', $this->partnerType === 'Collection Center' ? 'CollectionCenter' : $this->partnerType)
                 ->whereDate('payment_date', date('Y-m-d'))
                 ->sum('amount'),
@@ -284,6 +297,7 @@ class SettlementManager extends Component
 
         // Global Analytics Query
         $pendingBase = Invoice::where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where('payment_status', 'Paid')
             ->where('status', '!=', 'Cancelled')
             ->where($settledField, false);
@@ -304,11 +318,12 @@ class SettlementManager extends Component
         // --- Partners Paginated List ---
         $partners = User::role($this->partnerType === 'Collection Center' ? 'collection_center' : strtolower($this->partnerType))
             ->where('company_id', $companyId)
-            ->withSum([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as pending_amount' => function($q) use ($settledField) {
-                $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+            ->when($myBranchId && ($this->partnerType !== 'Collection Center'), fn($q) => $q->where('branch_id', $myBranchId))
+            ->withSum([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as pending_amount' => function($q) use ($settledField, $myBranchId) {
+                $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             }], $commField)
-            ->withCount([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as invoice_count' => function($q) use ($settledField) {
-                $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+            ->withCount([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as invoice_count' => function($q) use ($settledField, $myBranchId) {
+                $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             }])
             ->when($this->searchPartner, function($q) {
                 $q->where(fn($q2) => $q2->where('name', 'ilike', "%{$this->searchPartner}%")->orWhere('phone', 'ilike', "%{$this->searchPartner}%"));
@@ -328,6 +343,7 @@ class SettlementManager extends Component
             $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
 
             $pendingInvoices = Invoice::where('company_id', $companyId)
+                ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
                 ->where('payment_status', 'Paid')
                 ->where('status', '!=', 'Cancelled')
                 ->where($idField, $valId)
@@ -338,6 +354,7 @@ class SettlementManager extends Component
 
         // --- Settlement History ---
         $settlements = Settlement::where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $myBranchId)))
             ->with('user')
             ->latest()
             ->paginate(10, ['*'], 'historyPage');

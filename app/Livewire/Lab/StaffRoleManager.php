@@ -92,6 +92,10 @@ class StaffRoleManager extends Component
                 $user = User::findOrFail($this->staff_id);
                 $user->update($data);
             } else {
+                // Auto-assign branch_id for branch admins
+                if (auth()->user()->hasRole('branch_admin')) {
+                    $data['branch_id'] = auth()->user()->branch_id;
+                }
                 $user = User::create($data);
             }
 
@@ -146,7 +150,14 @@ class StaffRoleManager extends Component
         // For now, allow everything
         
         $this->role_id_to_edit = $role->id;
-        $this->role_name = str_replace('lab_' . auth()->user()->company_id . '_', '', $role->name);
+        // Clean up name for editing (strip lab_CID_ or lab_CID_BID_)
+        $user = auth()->user();
+        if ($user->hasRole('branch_admin')) {
+            $prefix = 'lab_' . $user->company_id . '_' . $user->branch_id . '_';
+        } else {
+            $prefix = 'lab_' . $user->company_id . '_';
+        }
+        $this->role_name = str_replace($prefix, '', $role->name);
         $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
         $this->isRoleModalOpen = true;
     }
@@ -160,9 +171,16 @@ class StaffRoleManager extends Component
 
         DB::beginTransaction();
         try {
-            // Lab specific role name to avoid global collisions
+            // Branch specific role name logic
             $cleanName = strtolower(str_replace(' ', '_', $this->role_name));
-            $internalName = 'lab_' . auth()->user()->company_id . '_' . $cleanName;
+            $user = auth()->user();
+            
+            if ($user->hasRole('branch_admin')) {
+                // Branch specific naming: lab_CID_BID_rolename
+                $internalName = 'lab_' . $user->company_id . '_' . $user->branch_id . '_' . $cleanName;
+            } else {
+                $internalName = 'lab_' . $user->company_id . '_' . $cleanName;
+            }
 
             if ($this->role_id_to_edit) {
                 $this->authorize('edit staff_roles');
@@ -197,14 +215,19 @@ class StaffRoleManager extends Component
     {
         $labId = auth()->user()->company_id;
 
-        // Get staff: Only show users with staff-related roles or NO role yet (to catch new staff)
-        // EXCLUDE patients, doctors, and agents from this view
-        $staff = User::where('company_id', $labId)
+        $user = auth()->user();
+        $query = User::where('company_id', $labId)
             ->where('id', '!=', auth()->id()) // Hide self from list
             ->whereDoesntHave('roles', function($query) {
                 $query->whereIn('name', ['patient', 'doctor', 'agent']);
-            })
-            ->where(function($query) {
+            });
+
+        // Filter by branch for branch admins
+        if ($user->hasRole('branch_admin')) {
+            $query->where('branch_id', $user->branch_id);
+        }
+
+        $staff = $query->where(function($query) {
                 // Either they have a role (and it's not excluded above)
                 // OR they have no role but also NO profile (patient/doctor/agent)
                 $query->has('roles')
@@ -218,10 +241,19 @@ class StaffRoleManager extends Component
             ->get();
 
         // Get roles: Lab specific roles + base staff role
-        $roles = Role::where('name', 'like', 'lab_' . $labId . '_%')
-            ->orWhereIn('name', ['staff', 'lab_admin']) 
-            ->orderBy('id', 'asc')
-            ->get();
+        if ($user->hasRole('branch_admin')) {
+            // Show branch specific roles + the generic staff role
+            $roles = Role::where('name', 'like', 'lab_' . $labId . '_' . $user->branch_id . '_%')
+                ->orWhere('name', 'staff')
+                ->orderBy('id', 'asc')
+                ->get();
+        } else {
+            // Main Admin: Show all lab roles + global lab_admin/staff
+            $roles = Role::where('name', 'like', 'lab_' . $labId . '_%')
+                ->orWhereIn('name', ['staff', 'lab_admin']) 
+                ->orderBy('id', 'asc')
+                ->get();
+        }
 
         // Filter permissions: Exclude Super Admin only permissions
         $excludedPermissions = [

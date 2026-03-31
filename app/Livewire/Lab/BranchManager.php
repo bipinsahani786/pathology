@@ -25,6 +25,8 @@ class BranchManager extends Component
     public $contact_number;
     public $address;
     public $is_active = true;
+    public $email;
+    public $password;
     public $isModalOpen = false;
 
     /**
@@ -61,6 +63,15 @@ class BranchManager extends Component
         $this->address = $branch->address;
         $this->is_active = $branch->is_active;
 
+        // Try to fetch existing branch admin user
+        $branchUser = \App\Models\User::where('branch_id', $this->branch_id)
+            ->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))
+            ->first();
+            
+        if ($branchUser) {
+            $this->email = $branchUser->email;
+        }
+
         $this->isModalOpen = true;
     }
 
@@ -69,36 +80,95 @@ class BranchManager extends Component
      */
     public function store()
     {
-        $this->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:30',
             'contact_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
-        ]);
+            'email' => 'required|email|max:255',
+        ];
 
-        // Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
         if ($this->branch_id) {
-            $this->authorize('edit branches');
-            Branch::where('id', $this->branch_id)->update([
-                'name' => $this->name,
-                'type' => $this->type,
-                'contact_number' => $this->contact_number,
-                'address' => $this->address,
-                'is_active' => $this->is_active,
-            ]);
-            session()->flash('message', 'Branch updated successfully.');
+            // Edit: email uniqueness except for the existing user for this branch
+            $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))->first();
+            if ($branchUser) {
+                $rules['email'] .= '|unique:users,email,' . $branchUser->id;
+            } else {
+                $rules['email'] .= '|unique:users,email';
+            }
+            if ($this->password) {
+                $rules['password'] = 'min:6';
+            }
         } else {
-            $this->authorize('create branches');
-            Branch::create([
-                'company_id' => auth()->user()->company_id,
-                'name' => $this->name,
-                'type' => $this->type,
-                'contact_number' => $this->contact_number,
-                'address' => $this->address,
-                'is_active' => $this->is_active,
-            ]);
-            session()->flash('message', 'Branch created successfully.');
+            // Create
+            $rules['email'] .= '|unique:users,email';
+            $rules['password'] = 'required|min:6';
         }
+
+        $this->validate($rules);
+
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            // Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
+            if ($this->branch_id) {
+                $this->authorize('edit branches');
+                Branch::where('id', $this->branch_id)->update([
+                    'name' => $this->name,
+                    'type' => $this->type,
+                    'contact_number' => $this->contact_number,
+                    'address' => $this->address,
+                    'is_active' => $this->is_active,
+                ]);
+
+                $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))->first();
+                if ($branchUser) {
+                    $branchUser->update(['email' => $this->email, 'name' => $this->name . ' Admin']);
+                    if ($this->password) {
+                        $branchUser->update(['password' => bcrypt($this->password)]);
+                    }
+                } else {
+                    // Create if missing
+                    $user = \App\Models\User::create([
+                        'name' => $this->name . ' Admin',
+                        'email' => $this->email,
+                        'password' => bcrypt($this->password ?: 'password123'),
+                        'company_id' => auth()->user()->company_id,
+                        'branch_id' => $this->branch_id,
+                        'is_active' => true,
+                    ]);
+                    // Auto-assign branch_admin role
+                    $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'branch_admin']);
+                    $user->assignRole($role);
+                }
+
+                session()->flash('message', 'Branch updated successfully.');
+            } else {
+                $this->authorize('create branches');
+                $branch = Branch::create([
+                    'company_id' => auth()->user()->company_id,
+                    'name' => $this->name,
+                    'type' => $this->type,
+                    'contact_number' => $this->contact_number,
+                    'address' => $this->address,
+                    'is_active' => $this->is_active,
+                ]);
+
+                // Create branch admin user
+                $user = \App\Models\User::create([
+                    'name' => $this->name . ' Admin',
+                    'email' => $this->email,
+                    'password' => bcrypt($this->password),
+                    'company_id' => auth()->user()->company_id,
+                    'branch_id' => $branch->id,
+                    'is_active' => true,
+                ]);
+                
+                // Ensure branch_admin role exists and assign it
+                $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'branch_admin']);
+                $user->assignRole($role);
+
+                session()->flash('message', 'Branch and Admin account created successfully.');
+            }
+        });
 
         $this->closeModal();
     }
@@ -121,8 +191,13 @@ class BranchManager extends Component
     public function delete($id)
     {
         $this->authorize('delete branches');
-        Branch::findOrFail($id)->delete();
-        session()->flash('message', 'Branch deleted successfully.');
+        $branch = Branch::findOrFail($id);
+        
+        // Also delete the branch admin accounts? Yes, cascade should handle it or manually delete
+        \App\Models\User::where('branch_id', $branch->id)->delete();
+        $branch->delete();
+        
+        session()->flash('message', 'Branch and its accounts deleted successfully.');
     }
 
     /**
@@ -130,7 +205,7 @@ class BranchManager extends Component
      */
     public function resetFields()
     {
-        $this->reset(['branch_id', 'name', 'contact_number', 'address']);
+        $this->reset(['branch_id', 'name', 'contact_number', 'address', 'email', 'password']);
         $this->type = 'main_lab';
         $this->is_active = true;
         $this->resetValidation();

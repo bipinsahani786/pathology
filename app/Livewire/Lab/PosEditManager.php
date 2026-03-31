@@ -182,9 +182,17 @@ class PosEditManager extends Component
 
         // Cache static data
         $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
-        $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
-        $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
         $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
+
+        $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
+        if (auth()->user()->hasRole('branch_admin') && $restrictAccess) {
+            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', auth()->user()->branch_id)->where('is_active', true)->get();
+            $this->cachedBranches = Branch::where('id', auth()->user()->branch_id)->get();
+            $this->branch_id = auth()->user()->branch_id;
+        } else {
+            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
+            $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
+        }
 
         $this->calculateTotals();
     }
@@ -491,6 +499,7 @@ class PosEditManager extends Component
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             PatientProfile::create([
                 'company_id' => $companyId,
@@ -526,6 +535,7 @@ class PosEditManager extends Component
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             DoctorProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'commission_percentage' => $this->new_doc_commission ?: 0]);
             $user->assignRole('doctor');
@@ -554,6 +564,7 @@ class PosEditManager extends Component
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             AgentProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'agency_name' => $this->new_agent_agency, 'commission_percentage' => $this->new_agent_commission ?: 0]);
             $user->assignRole('agent');
@@ -763,12 +774,23 @@ class PosEditManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+        $myBranchId = (auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') || !$restrictAccess) 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+
+        $sharePatients = \App\Models\Configuration::getFor('branch_share_patients', '1') === '1';
+        $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
+        $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
+        
         $patients = $doctors = $agents = $tests = [];
 
         // Patient suggestions
         if ($this->activeSearchField === 'patient') {
             $s = $this->patientSearch;
-            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = clone \App\Models\User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
@@ -778,7 +800,8 @@ class PosEditManager extends Component
         // Doctor suggestions
         if ($this->activeSearchField === 'doctor') {
             $s = $this->doctorSearch;
-            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = clone \App\Models\User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareDoctors, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
@@ -788,7 +811,8 @@ class PosEditManager extends Component
         // Agent suggestions
         if ($this->activeSearchField === 'agent') {
             $s = $this->agentSearch;
-            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = clone \App\Models\User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareAgents, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }

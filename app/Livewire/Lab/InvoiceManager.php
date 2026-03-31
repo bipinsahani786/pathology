@@ -86,8 +86,13 @@ class InvoiceManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
 
         $query = Invoice::where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->with(['patient', 'doctor', 'collectionCenter', 'items', 'creator'])
             ->latest('invoice_date');
 
@@ -146,12 +151,12 @@ class InvoiceManager extends Component
 
         // Stats
         $stats = [
-            'total' => Invoice::where('company_id', $companyId)->count(),
-            'today' => Invoice::where('company_id', $companyId)->whereDate('invoice_date', today())->count(),
-            'paid' => Invoice::where('company_id', $companyId)->where('payment_status', 'Paid')->count(),
-            'due' => Invoice::where('company_id', $companyId)->where('payment_status', '!=', 'Paid')->sum('due_amount'),
-            'todayRevenue' => Invoice::where('company_id', $companyId)->whereDate('invoice_date', today())->sum('paid_amount'),
-            'totalRevenue' => Invoice::where('company_id', $companyId)->sum('paid_amount'),
+            'total' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->count(),
+            'today' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->whereDate('invoice_date', today())->count(),
+            'paid' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->where('payment_status', 'Paid')->count(),
+            'due' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->where('payment_status', '!=', 'Paid')->sum('due_amount'),
+            'todayRevenue' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->whereDate('invoice_date', today())->sum('paid_amount'),
+            'totalRevenue' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->sum('paid_amount'),
         ];
 
         $collectionCenters = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
