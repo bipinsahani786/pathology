@@ -75,15 +75,15 @@ class Dashboard extends Component
         // 2. Operational Stats (Date Filtered)
         $ops = [
             'pending_tests' => Invoice::where('company_id', $companyId)
-                ->whereIn('status', ['Pending', 'Sample Collected', 'Processing'])
+                ->whereIn('sample_status', ['Pending', 'Collected', 'Processing'])
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
             'completed_tests' => Invoice::where('company_id', $companyId)
-                ->where('status', 'Completed')
+                ->where('sample_status', 'Ready')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
             'home_visits' => Invoice::where('company_id', $companyId)
-                ->where('collection_type', 'Home')
+                ->where('collection_type', 'Home Collection')
                 ->whereBetween('created_at', [$start, $end])
                 ->count(),
         ];
