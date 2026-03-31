@@ -293,7 +293,12 @@
                     </tr>
                     @foreach($results as $r)
                         <tr>
-                            <td style="padding-left: 15px;">{{ $r->parameter_name }}</td>
+                            <td style="padding-left: 15px;">
+                                <div>{{ $r->parameter_name }}</div>
+                                @if($r->method)
+                                    <div style="font-size: 8px; color: #777; font-style: italic;">Method: {{ $r->method }}</div>
+                                @endif
+                            </td>
                             <td>
                                 @if($r->is_highlighted)
                                     @php 

@@ -89,16 +89,21 @@ class PosManager extends Component
         }
 
         $companyId = $user->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
 
-        // If user is a Collection Center, lock the ID and force Branch selection requirement
-        if ($user->hasRole('collection_center')) {
+        // Logic for Branch Selection
+        if ($user->hasRole('branch_admin') && $restrictAccess) {
+            // Locked to their own branch
+            $this->branch_id = $user->branch_id;
+        } elseif ($user->hasRole('collection_center')) {
             $this->collection_center_id = $user->collection_center_id;
-            // CC MUST select a lab branch where they will send samples
-            $this->branch_id = null;
+            $cc = CollectionCenter::find($this->collection_center_id);
+            $this->branch_id = $cc->branch_id ?? $this->branch_id;
         } else {
-            // Lab Staff logic: Use linked CC/Branch or defaults
+            // Global/Main Admin - Use session context or default
+            $this->branch_id = ($activeBranchId === 'all') ? (Branch::where('company_id', $companyId)->first()->id ?? null) : $activeBranchId;
             $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
-            $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
         }
 
         $this->expected_report_date = date('Y-m-d');
@@ -108,9 +113,16 @@ class PosManager extends Component
 
         // Cache static dropdown data once on mount
         $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
-        $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
-        $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
         $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
+
+        // Branch-Aware Dropdowns
+        if ($user->hasRole('branch_admin') && $restrictAccess) {
+            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', $user->branch_id)->where('is_active', true)->get();
+            $this->cachedBranches = Branch::where('id', $user->branch_id)->get();
+        } else {
+            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
+            $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
+        }
     }
 
     // ==========================================
@@ -120,14 +132,17 @@ class PosManager extends Component
     {
         $this->activeSearchField = 'patient';
     }
+
     public function updatedDoctorSearch()
     {
         $this->activeSearchField = 'doctor';
     }
+
     public function updatedAgentSearch()
     {
         $this->activeSearchField = 'agent';
     }
+
     public function updatedTestSearch()
     {
         $this->activeSearchField = 'test';
@@ -500,6 +515,7 @@ class PosManager extends Component
                 'password' => Hash::make($defaultPass),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             PatientProfile::create([
                 'company_id' => $companyId,
@@ -546,6 +562,7 @@ class PosManager extends Component
                 'password' => Hash::make($phone),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             DoctorProfile::create([
                 'company_id' => $companyId,
@@ -588,6 +605,7 @@ class PosManager extends Component
                 'password' => Hash::make($phone),
                 'is_active' => true,
                 'company_id' => $companyId,
+                'branch_id' => $this->branch_id,
             ]);
             AgentProfile::create([
                 'company_id' => $companyId,
@@ -843,12 +861,24 @@ class PosManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
+        $myBranchId = (auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') || !$restrictAccess) 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+
+        // Fetch configs
+        $sharePatients = Configuration::getFor('branch_share_patients', '1') === '1';
+        $shareDoctors = Configuration::getFor('branch_share_doctors', '1') === '1';
+        $shareAgents = Configuration::getFor('branch_share_agents', '1') === '1';
+        $shareTests = Configuration::getFor('branch_share_tests', '1') === '1';
 
         // Only query the search that is currently active
         $patients = [];
         if ($this->activeSearchField === 'patient') {
             $s = $this->patientSearch;
-            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"));
             }
@@ -858,7 +888,8 @@ class PosManager extends Component
         $doctors = [];
         if ($this->activeSearchField === 'doctor') {
             $s = $this->doctorSearch;
-            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareDoctors, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
@@ -868,7 +899,8 @@ class PosManager extends Component
         $agents = [];
         if ($this->activeSearchField === 'agent') {
             $s = $this->agentSearch;
-            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId));
+            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareAgents, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
@@ -878,6 +910,13 @@ class PosManager extends Component
         $tests = [];
         if ($this->activeSearchField === 'test') {
             $s = $this->testSearch;
+            // Lab Tests do not have branch_id on them natively. They are global.
+            // If they shouldn't share lab tests, we might need a mapping table. 
+            // For now, if shareTests is false, branches might not be able to search tests at all. But usually tests are company wide.
+            // Wait, LabTest table doesn't have branch_id. It's only company_id. 
+            // So if sharing is off, they only get an empty list unless we added it?
+            // Since we don't have branch_id on tests, we won't strictly enforce test siloing at db level for now, 
+            // or we just show them anyway if there's no way to create branch tests.
             $query = LabTest::where('company_id', $companyId)->where('is_active', true);
             if (!empty($s)) {
                 $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));

@@ -539,11 +539,14 @@
                                         <i class="feather-package"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="rank-name text-truncate">{{ $pkg->test_name }}</div>
-                                        <div class="rank-sub">{{ $pkg->total_sold }} Sales</div>
+                                        <div class="rank-name text-truncate" title="{{ $pkg->test_name }}">{{ $pkg->test_name }}</div>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <div class="fw-bold" style="font-size: 0.85rem; color: var(--db-primary);">₹{{ number_format($pkg->total_income, 0) }}</div>
+                                            <span class="text-muted" style="font-size: 0.7rem;">•</span>
+                                            <div class="rank-sub" style="margin-bottom: 0;">{{ $pkg->total_sold }} Sales</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="rank-val">₹{{ number_format($pkg->total_income, 0) }}</div>
                             </div>
                         @empty
                             <div class="text-center py-5">
@@ -572,11 +575,14 @@
                                         <i class="feather-user-plus"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="rank-name text-truncate">{{ $doc->doctor->name ?? 'Doctor' }}</div>
-                                        <div class="rank-sub">Performance</div>
+                                        <div class="rank-name text-truncate" title="{{ $doc->doctor->name ?? 'Doctor' }}">{{ $doc->doctor->name ?? 'Doctor' }}</div>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <div class="fw-bold text-success" style="font-size: 0.85rem;">₹{{ number_format($doc->total_income, 0) }}</div>
+                                            <span class="text-muted" style="font-size: 0.7rem;">•</span>
+                                            <div class="rank-sub" style="margin-bottom: 0;">Performance</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="rank-val">₹{{ number_format($doc->total_income, 0) }}</div>
                             </div>
                         @empty
                             <div class="text-center py-5">
@@ -605,11 +611,14 @@
                                         <i class="feather-map-pin"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="rank-name text-truncate">{{ $cc->collectionCenter->name ?? 'In-House' }}</div>
-                                        <div class="rank-sub">{{ $cc->total_bills }} Invoices</div>
+                                        <div class="rank-name text-truncate" title="{{ $cc->collectionCenter->name ?? 'In-House' }}">{{ $cc->collectionCenter->name ?? 'In-House' }}</div>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <div class="fw-bold text-info" style="font-size: 0.85rem;">₹{{ number_format($cc->total_income, 0) }}</div>
+                                            <span class="text-muted" style="font-size: 0.7rem;">•</span>
+                                            <div class="rank-sub" style="margin-bottom: 0;">{{ $cc->total_bills }} Invoices</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="rank-val">₹{{ number_format($cc->total_income, 0) }}</div>
                             </div>
 @empty
                             <div class="text-center py-5">
@@ -638,11 +647,14 @@
                                         <i class="feather-activity"></i>
                                     </div>
                                     <div class="overflow-hidden">
-                                        <div class="rank-name text-truncate">{{ $test->test_name }}</div>
-                                        <div class="rank-sub">{{ $test->total_sold }} Sold</div>
+                                        <div class="rank-name text-truncate" title="{{ $test->test_name }}">{{ $test->test_name }}</div>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <div class="fw-bold text-danger" style="font-size: 0.85rem;">₹{{ number_format($test->total_income, 0) }}</div>
+                                            <span class="text-muted" style="font-size: 0.7rem;">•</span>
+                                            <div class="rank-sub" style="margin-bottom: 0;">{{ $test->total_sold }} Sold</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="rank-val">₹{{ number_format($test->total_income, 0) }}</div>
                             </div>
                         @empty
                             <div class="text-center py-5">

@@ -108,7 +108,21 @@ class DemoSeeder extends Seeder
         $labAdmin->update(['branch_id' => $mainBranch->id]);
         $staff1->update(['branch_id' => $mainBranch->id]);
 
-        $this->command->info('✅ Branches created');
+        // Create a Branch Admin for Boring Road
+        $branchAdminRole = Role::firstOrCreate(['name' => 'branch_admin']);
+        $boringAdmin = User::firstOrCreate(['email' => 'boring.admin@sahanipathology.in'], [
+            'name' => 'Amit Sharma (Boring Road)',
+            'password' => Hash::make('password123'),
+            'phone' => '9876543215',
+            'company_id' => $company->id,
+            'branch_id' => $branch2->id,
+            'is_active' => true,
+        ]);
+        if (!$boringAdmin->hasRole('branch_admin')) {
+            $boringAdmin->assignRole($branchAdminRole);
+        }
+
+        $this->command->info('✅ Branches & Branch Admin created');
 
         // ============================================================
         // 5. COLLECTION CENTERS
@@ -117,24 +131,28 @@ class DemoSeeder extends Seeder
             'center_code' => 'CENTER-001',
             'address' => '123, Main Road, Kankarbagh, Patna - 800020',
             'is_main_lab' => true,
+            'branch_id' => $mainBranch->id,
             'is_active' => true,
         ]);
         $boringCenter = CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Boring Road Center'], [
             'center_code' => 'CENTER-002',
             'address' => '45, Boring Road, Patna',
             'is_main_lab' => false,
+            'branch_id' => $branch2->id,
             'is_active' => true,
         ]);
         $rajivCenter = CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'Rajiv Nagar Center'], [
             'center_code' => 'CENTER-003',
             'address' => '12, Rajiv Nagar, Patna',
             'is_main_lab' => false,
+            'branch_id' => $branch2->id,
             'is_active' => true,
         ]);
         CollectionCenter::firstOrCreate(['company_id' => $company->id, 'name' => 'City Mall Kiosk'], [
             'center_code' => 'CENTER-004',
             'address' => 'Ground Floor, City Mall, Kankarbagh',
             'is_main_lab' => false,
+            'branch_id' => $mainBranch->id,
             'is_active' => true,
         ]);
 
@@ -145,6 +163,7 @@ class DemoSeeder extends Seeder
             'password' => Hash::make('password123'),
             'phone' => '9988776655',
             'company_id' => $company->id,
+            'branch_id' => $branch2->id,
             'collection_center_id' => $boringCenter->id,
             'is_active' => true,
         ]);
@@ -155,6 +174,7 @@ class DemoSeeder extends Seeder
             'password' => Hash::make('password123'),
             'phone' => '9988776654',
             'company_id' => $company->id,
+            'branch_id' => $branch2->id,
             'collection_center_id' => $rajivCenter->id,
             'is_active' => true,
         ]);
@@ -186,7 +206,7 @@ class DemoSeeder extends Seeder
 
         $createdLabTests = [];
         foreach (GlobalTest::all() as $gt) {
-            $labTest = LabTest::firstOrCreate(['company_id' => $company->id, 'test_code' => $gt->test_code], [
+            $labTest = LabTest::updateOrCreate(['company_id' => $company->id, 'test_code' => $gt->test_code], [
                 'global_test_id' => $gt->id,
                 'name' => $gt->name,
                 'department_id' => $gt->department_id,
@@ -197,6 +217,7 @@ class DemoSeeder extends Seeder
                 'parameters' => $gt->default_parameters,
                 'description' => $gt->description,
                 'interpretation' => $gt->interpretation,
+                'method' => $gt->method,
                 'is_active' => true,
                 'is_package' => false,
             ]);
@@ -262,6 +283,7 @@ class DemoSeeder extends Seeder
                 'email' => strtolower(str_replace([' ', 'Dr.'], ['', ''], $doc['name'])) . '@doctor.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
+                'branch_id' => (rand(0, 1) ? $mainBranch->id : $branch2->id),
                 'is_active' => true,
             ]);
             DoctorProfile::firstOrCreate(['user_id' => $user->id], [
@@ -294,6 +316,7 @@ class DemoSeeder extends Seeder
                 'email' => strtolower(str_replace(' ', '', $agt['agency'])) . '@agent.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
+                'branch_id' => (rand(0, 1) ? $mainBranch->id : $branch3->id),
                 'is_active' => true,
             ]);
             AgentProfile::firstOrCreate(['user_id' => $user->id], [
@@ -337,6 +360,7 @@ class DemoSeeder extends Seeder
                 'email' => strtolower(str_replace(' ', '', $pat['name'])) . '@patient.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
+                'branch_id' => (rand(0, 2) === 0 ? $mainBranch->id : (rand(0, 1) ? $branch2->id : $branch3->id)),
                 'is_active' => true,
             ]);
             PatientProfile::firstOrCreate(['user_id' => $user->id], [
@@ -435,14 +459,15 @@ class DemoSeeder extends Seeder
             $invoiceNumber = 'INV-' . $invoiceDate->format('ym') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $barcode = 'INV' . $invoiceDate->format('ymd') . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
 
-            $selectedCC = rand(0, 1) ? $mainCenter : (rand(0, 1) ? $boringCenter : $rajivCenter);
+            $selectedBranch = rand(0, 2) === 0 ? $mainBranch : (rand(0, 1) ? $branch2 : $branch3);
+            $selectedCC = $selectedBranch->id === $mainBranch->id ? $mainCenter : (rand(0, 1) ? $boringCenter : $rajivCenter);
             $totalB2b = $selectedTests->sum('b2b_price');
             $ccProfit = max(0, $total - $totalB2b);
 
             $invoice = Invoice::create([
                 'company_id' => $company->id,
                 'collection_center_id' => $selectedCC->id,
-                'branch_id' => $mainBranch->id,
+                'branch_id' => $selectedBranch->id,
                 'patient_id' => $patient->id,
                 'created_by' => $labAdmin->id,
                 'referred_by_doctor_id' => $doctor?->id,
@@ -519,7 +544,7 @@ class DemoSeeder extends Seeder
                     'company_id' => $company->id,
                     'invoice_id' => $invoice->id,
                     'patient_id' => $patient->id,
-                    'collected_by' => $labAdmin->id,
+                    'collected_by' => $selectedBranch->id === $mainBranch->id ? $labAdmin->id : $boringAdmin->id,
                     'payment_mode_id' => rand(0, 1) ? $cashMode->id : ($upiMode->id ?? $cashMode->id),
                     'amount' => $paidAmount,
                     'transaction_id' => rand(0, 1) ? 'TXN' . strtoupper(substr(md5(rand()), 0, 8)) : null,
@@ -533,6 +558,7 @@ class DemoSeeder extends Seeder
         // ============================================================
         $pendingSettlement = \App\Models\Settlement::create([
             'company_id' => $company->id,
+            'branch_id' => $branch2->id,
             'user_id' => $ccUser1->id,
             'collection_center_id' => $boringCenter->id,
             'amount' => 1500,
@@ -546,6 +572,7 @@ class DemoSeeder extends Seeder
 
         $approvedSettlement = \App\Models\Settlement::create([
             'company_id' => $company->id,
+            'branch_id' => $branch2->id,
             'user_id' => $ccUser2->id,
             'collection_center_id' => $rajivCenter->id,
             'amount' => 2500,
@@ -564,6 +591,7 @@ class DemoSeeder extends Seeder
         $this->command->newLine();
         $this->command->info('🎉 Demo data seeded successfully!');
         $this->command->info('   Lab Admin Login: lab@sahanipathology.in / password123');
+        $this->command->info('   Branch Admin Login: boring.admin@sahanipathology.in / password123');
         $this->command->info('   Staff Login: rahul@sahanipathology.in / password123');
         $this->command->newLine();
     }

@@ -144,12 +144,19 @@ class PatientManager extends Component
                 $defaultPass = $this->phone ?? '12345678';
 
                 // 1. Create the User record (Allows them to log in later)
+                $activeBranchId = session('active_branch_id', 'all');
+                $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+                    ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+                    : auth()->user()->branch_id;
+
                 $user = User::create([
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email ?? $fallbackEmail, 
                     'password' => Hash::make($defaultPass), 
                     'is_active' => true,
+                    'company_id' => $companyId,
+                    'branch_id' => $myBranchId,
                 ]);
 
                 // 2. Generate a unique Patient ID (e.g., PAT-2603-0001)
@@ -212,10 +219,19 @@ class PatientManager extends Component
 
     public function render()
     {
+        $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+        
+        $sharePatients = \App\Models\Configuration::getFor('branch_share_patients', '1') === '1';
+
         // Fetch only users who have a PatientProfile attached to the current company
-        $patients = User::whereHas('patientProfile', function($query) {
-                $query->where('company_id', auth()->user()->company_id);
+        $patients = User::whereHas('patientProfile', function($query) use ($companyId) {
+                $query->where('company_id', $companyId);
             })
+            ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId))
             ->with('patientProfile') // Eager load to prevent slow queries
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')

@@ -12,6 +12,7 @@ class ReportResult extends Model
         'lab_test_id',
         'parameter_name',
         'short_code',
+        'method',
         'result_value',
         'status',
         'is_highlighted',

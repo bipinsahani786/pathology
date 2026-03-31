@@ -60,7 +60,7 @@ class LabTestEditor extends Component
                     'is_critical' => false
                 ]
             ],
-            'short_code' => '', 'input_type' => 'numeric', 'formula' => ''
+            'short_code' => '', 'input_type' => 'numeric', 'formula' => '', 'method' => ''
         ];
     }
 
@@ -138,6 +138,7 @@ class LabTestEditor extends Component
             'department_id' => 'required|exists:departments,id',
             'parameters.*.name' => 'required|string|max:255',
             'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
+            'parameters.*.method' => 'nullable|string|max:100',
         ], [
             'parameters.*.name.required' => 'Parameter name is required.'
         ]);

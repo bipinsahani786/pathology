@@ -18,6 +18,11 @@ class SystemDepartmentSeeder extends Seeder
             'Molecular Biology',
             'Histopathology',
             'Cytopathology',
+            'Hormones',
+            'Immunology',
+            'Special Tests',
+            'Vitamins',
+            'Molecular Diagnostics',
             'Other'
         ];
 

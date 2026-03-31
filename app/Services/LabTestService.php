@@ -93,6 +93,7 @@ class LabTestService
                 'short_code' => $p['short_code'] ?? $p['code'] ?? '',
                 'input_type' => $p['input_type'] ?? 'numeric',
                 'formula' => $p['formula'] ?? '',
+                'method' => $p['method'] ?? '',
             ];
         }, $globalParams);
 

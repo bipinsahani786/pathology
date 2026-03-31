@@ -89,8 +89,13 @@ class ReportManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
 
         $invoicesQuery = Invoice::where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->with([
                 'patient.patientProfile', 
                 'testReport.results', 
@@ -169,7 +174,7 @@ class ReportManager extends Component
         // Dropdown lists
         $doctors = \App\Models\DoctorProfile::with('user:id,name')->get();
         $agents = \App\Models\AgentProfile::with('user:id,name')->get();
-        $centers = \App\Models\CollectionCenter::all();
+        $centers = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
 
         return view('livewire.lab.report-manager', [
             'invoices' => $invoicesQuery->paginate($this->perPage),

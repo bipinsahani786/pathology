@@ -37,6 +37,9 @@
 
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center gap-2">
+                {{-- Branch Switcher --}}
+                <livewire:lab.branch-switcher />
+
                 {{-- Subscription Timer --}}
                 @php
                     $company = auth()->user()->company;

@@ -168,6 +168,23 @@
                                 <textarea class="form-control" wire:model="address" rows="2" placeholder="Enter complete branch address..."></textarea>
                                 @error('address') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
+
+                            <div class="col-md-12 mt-4 mb-2">
+                                <h6 class="fw-bold text-dark border-bottom pb-2"><i class="feather-lock me-2 text-primary"></i>Branch Administrator Credentials</h6>
+                                <p class="fs-12 text-muted mb-0">Use these to log into the branch-specific dashboard.</p>
+                            </div>
+
+                            <div class="col-md-6 mt-0">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Login Email</label>
+                                <input type="email" class="form-control" wire:model="email" placeholder="branch@yourlab.com">
+                                @error('email') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6 mt-0">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Password</label>
+                                <input type="password" class="form-control" wire:model="password" placeholder="{{ $branch_id ? '(Leave blank to keep unchanged)' : 'Strong Password' }}">
+                                @error('password') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
                         </div>
                     </div>
 

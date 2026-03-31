@@ -30,6 +30,7 @@ class CollectionCenterManager extends Component
     public $name;
     public $center_code;
     public $address;
+    public $branch_id;
     public $is_active = true;
 
     // User Fields
@@ -70,6 +71,7 @@ class CollectionCenterManager extends Component
         $this->name = $center->name;
         $this->center_code = $center->center_code;
         $this->address = $center->address;
+        $this->branch_id = $center->branch_id;
         $this->is_active = $center->is_active;
 
         if ($center->user) {
@@ -90,6 +92,7 @@ class CollectionCenterManager extends Component
             'name' => 'required|string|max:255',
             'center_code' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'branch_id' => 'required|exists:branches,id',
             'phone' => [
                 'nullable',
                 'numeric',
@@ -144,6 +147,7 @@ class CollectionCenterManager extends Component
                     'name' => $this->name,
                     'center_code' => $this->center_code,
                     'address' => $this->address,
+                    'branch_id' => $this->branch_id,
                     'is_active' => $this->is_active,
                     'user_id' => $this->user_id,
                 ]);
@@ -152,6 +156,7 @@ class CollectionCenterManager extends Component
                 $center = CollectionCenter::create([
                     'company_id' => $companyId,
                     'user_id' => $this->user_id,
+                    'branch_id' => $this->branch_id,
                     'name' => $this->name,
                     'center_code' => $this->center_code,
                     'address' => $this->address,
@@ -212,9 +217,16 @@ class CollectionCenterManager extends Component
         $this->resetFields();
     }
 
-     public function render()
+    public function render()
     {
-        $centers = CollectionCenter::with('user')->where('company_id', auth()->user()->company_id)
+        $companyId = auth()->user()->company_id;
+        $activeBranchId = session('active_branch_id', 'all');
+        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+
+        $centers = CollectionCenter::with('user')->where('company_id', $companyId)
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%')
@@ -226,7 +238,8 @@ class CollectionCenterManager extends Component
             ->paginate(10);
 
         return view('livewire.lab.collection-center-manager', [
-            'centers' => $centers
+            'centers' => $centers,
+            'branches' => \App\Models\Branch::where('company_id', $companyId)->get()
         ])->layout('layouts.app', ['title' => 'Manage Collection Centers']);
     }
 }

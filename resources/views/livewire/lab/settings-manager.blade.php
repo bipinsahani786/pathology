@@ -17,6 +17,7 @@
 
         {{-- Tab Navigation --}}
         <ul class="nav nav-tabs mb-4" role="tablist">
+            @role('lab_admin|super_admin')
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'general')" class="nav-link {{ $activeTab === 'general' ? 'active' : '' }}">
                     <i class="feather-settings me-1"></i> General
@@ -47,6 +48,8 @@
                     <i class="feather-maximize me-1"></i> Barcode Settings
                 </button>
             </li>
+            @endrole
+
             @can('view staff_roles')
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'staff')" class="nav-link {{ $activeTab === 'staff' ? 'active' : '' }}">
@@ -54,6 +57,16 @@
                 </button>
             </li>
             @endcan
+
+            @role('lab_admin|super_admin')
+            @if(\App\Models\Configuration::getFor('restrict_branch_access', '1') === '1')
+            <li class="nav-item">
+                <button wire:click="$set('activeTab', 'branch')" class="nav-link {{ $activeTab === 'branch' ? 'active' : '' }}">
+                    <i class="feather-git-merge me-1"></i> Branch Controls
+                </button>
+            </li>
+            @endif
+            @endrole
         </ul>
 
         {{-- ═══════════════════════════════════════════════════════ --}}
@@ -641,6 +654,107 @@
         {{-- ═══════════════════════════════════════════════════════ --}}
         @if($activeTab === 'staff')
             @livewire('lab.staff-role-manager')
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB 7: BRANCH CONTROLS --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'branch')
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="card-title mb-0 fs-14 fw-bold text-dark"><i class="feather-git-merge text-primary me-2"></i>Global Data Sharing Policies</h6>
+                            <p class="fs-12 text-muted mb-0 mt-1">Configure what global company data your sub-branches are allowed to interact with.</p>
+                        </div>
+                        <div class="card-body">
+                            @if($branchControlsSaved)
+                                <div class="alert alert-success py-2 fs-12 mb-4 d-flex align-items-center gap-2">
+                                    <i class="feather-check-circle"></i> Branch sharing policy saved successfully!
+                                </div>
+                            @endif
+
+                            <div class="list-group list-group-flush border-0">
+                                {{-- Share Patients --}}
+                                <div class="list-group-item px-0 py-3 border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13"><i class="feather-users me-2 text-primary"></i>Share Patient Registry</div>
+                                        <div class="fs-11 text-muted mt-1" style="max-width: 80%;">If ON, sub-branches can search and bill any patient registered in the main database. If OFF, each branch can only see patients they registered themselves.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model.defer="branch_share_patients" style="width: 2.5em; height: 1.3em;">
+                                    </div>
+                                </div>
+
+                                {{-- Share Doctors --}}
+                                <div class="list-group-item px-0 py-3 border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13"><i class="feather-user-plus me-2 text-info"></i>Share Referral Doctors</div>
+                                        <div class="fs-11 text-muted mt-1" style="max-width: 80%;">If ON, sub-branches can select referral doctors from the global company list. If OFF, branches must add their own local doctors.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model.defer="branch_share_doctors" style="width: 2.5em; height: 1.3em;">
+                                    </div>
+                                </div>
+
+                                {{-- Share Agents --}}
+                                <div class="list-group-item px-0 py-3 border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13"><i class="feather-briefcase me-2 text-warning"></i>Share Referral Agents</div>
+                                        <div class="fs-11 text-muted mt-1" style="max-width: 80%;">If ON, sub-branches can use global agents. If OFF, agents are strictly siloed to the branch that created them.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model.defer="branch_share_agents" style="width: 2.5em; height: 1.3em;">
+                                    </div>
+                                </div>
+
+                                {{-- Share Lab Tests --}}
+                                <div class="list-group-item px-0 py-3 border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13"><i class="feather-activity me-2 text-danger"></i>Share Lab Test Catalog</div>
+                                        <div class="fs-11 text-muted mt-1" style="max-width: 80%;">If ON, sub-branches use the company's master lab test templates and pricing. Recommended to keep ON for consistency.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model.defer="branch_share_tests" style="width: 2.5em; height: 1.3em;">
+                                    </div>
+                                </div>
+
+                                {{-- Restrict Branch Admins --}}
+                                <div class="list-group-item px-0 py-3 border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13"><i class="feather-lock me-2 text-dark"></i>Lock Branch Admins to Assigned Branch</div>
+                                        <div class="fs-11 text-muted mt-1" style="max-width: 80%;">If ON, branch-level admins can ONLY create and edit bills for their assigned branch. If OFF, they can switch branches freely.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model.defer="restrict_branch_access" style="width: 2.5em; height: 1.3em;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light border-top py-3 text-end">
+                            <button wire:click="saveBranchControls" class="btn btn-primary px-4 fw-bold shadow-sm">
+                                <span wire:loading.remove wire:target="saveBranchControls"><i class="feather-save me-2"></i>Save Access Policies</span>
+                                <span wire:loading wire:target="saveBranchControls"><span class="spinner-border spinner-border-sm me-2"></span>Saving Policies...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card border-0 bg-primary-subtle shadow-sm rounded-4 h-100">
+                        <div class="card-body p-4 text-center d-flex flex-column justify-content-center align-items-center">
+                            <div class="bg-white p-3 rounded-circle shadow-sm mb-3">
+                                <i class="feather-shield text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2">Data Siloing</h5>
+                            <p class="fs-12 text-muted mb-4">
+                                Turning off sharing toggles will strictly isolate the sub-branch records. <br><br>
+                                E.g. If Patient Sharing is OFF, a patient created by Branch A will be completely invisible to Branch B when searching during billing.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endif
     </div>
 </div>

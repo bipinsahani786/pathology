@@ -52,6 +52,7 @@
                         <thead class="bg-light fs-11 fw-bold text-uppercase text-muted">
                             <tr>
                                 <th class="ps-4 py-3">Center Details</th>
+                                <th class="py-3">Branch</th>
                                 <th class="py-3">Login Account</th>
                                 <th class="py-3">Address</th>
                                 <th class="py-3">Status</th>
@@ -71,6 +72,11 @@
                                                 <div class="fs-12 text-muted">Code: <span class="fw-medium text-dark">{{ $center->center_code ?? 'N/A' }}</span></div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-soft-info text-info border px-2 py-1 fs-11 fw-bold">
+                                            <i class="feather-git-merge me-1 text-info"></i>{{ $center->branch->name ?? 'Global' }}
+                                        </span>
                                     </td>
                                     <td>
                                         @if($center->user)
@@ -160,6 +166,17 @@
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Center Code</label>
                                 <input type="text" class="form-control" wire:model="center_code" placeholder="e.g., KB-01">
                                 @error('center_code') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Associated Branch *</label>
+                                <select class="form-select fw-medium text-dark" wire:model="branch_id">
+                                    <option value="">Select Branch</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('branch_id') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-12">

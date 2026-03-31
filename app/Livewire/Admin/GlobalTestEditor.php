@@ -43,6 +43,7 @@ class GlobalTestEditor extends Component
             'input_type' => 'numeric',
             'options' => [], // For selection type
             'range_type' => 'flexible', // Default to the new flexible system
+            'method' => '', // Analytical method for this specific parameter
             'ranges' => [
                 [
                     'gender' => 'Both',
@@ -142,6 +143,7 @@ class GlobalTestEditor extends Component
             'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
             'parameters.*.range_type' => 'required|in:general,gender,value,flexible',
             'parameters.*.unit' => 'nullable|string|max:50',
+            'parameters.*.method' => 'nullable|string|max:100',
         ]);
 
         // Basic cleanup for non-calculated types

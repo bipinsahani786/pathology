@@ -65,6 +65,13 @@ class RoleSeeder extends Seeder
         $labAdmin->syncPermissions($granularPermissions);
         $labAdmin->givePermissionTo(['generate reports', 'download reports']);
 
+        // Branch Admin (Siloed Tenant Manager)
+        $branchAdmin = Role::firstOrCreate(['name' => 'branch_admin']);
+        // Branch Admin: Deny branch management, but ALLOW settings (restricted view) and staff_roles
+        $branchAdminPermissions = array_diff($granularPermissions, ['view branches', 'create branches', 'edit branches', 'delete branches']);
+        $branchAdmin->syncPermissions($branchAdminPermissions);
+        $branchAdmin->givePermissionTo(['generate reports', 'download reports']);
+
         // Lab Staff (Default Permissions)
         $staff = Role::firstOrCreate(['name' => 'staff']);
         $staff->syncPermissions([

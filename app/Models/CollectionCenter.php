@@ -11,6 +11,7 @@ class CollectionCenter extends Model
 
     protected $fillable = [
         'company_id',
+        'branch_id',
         'user_id',
         'name',
         'center_code',
@@ -18,6 +19,14 @@ class CollectionCenter extends Model
         'is_main_lab',
         'is_active',
     ];
+
+    /**
+     * Get the branch that owns the collection center.
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 
     /**
      * Get the user associated with the collection center.
