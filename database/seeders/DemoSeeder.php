@@ -206,7 +206,7 @@ class DemoSeeder extends Seeder
 
         $createdLabTests = [];
         foreach (GlobalTest::all() as $gt) {
-            $labTest = LabTest::firstOrCreate(['company_id' => $company->id, 'test_code' => $gt->test_code], [
+            $labTest = LabTest::updateOrCreate(['company_id' => $company->id, 'test_code' => $gt->test_code], [
                 'global_test_id' => $gt->id,
                 'name' => $gt->name,
                 'department_id' => $gt->department_id,
@@ -217,6 +217,7 @@ class DemoSeeder extends Seeder
                 'parameters' => $gt->default_parameters,
                 'description' => $gt->description,
                 'interpretation' => $gt->interpretation,
+                'method' => $gt->method,
                 'is_active' => true,
                 'is_package' => false,
             ]);

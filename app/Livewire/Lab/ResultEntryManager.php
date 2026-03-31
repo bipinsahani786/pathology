@@ -112,6 +112,7 @@ class ResultEntryManager extends Component
                         'input_type' => $param['input_type'] ?? 'numeric',
                         'options' => $param['options'] ?? [],
                         'formula' => $param['formula'] ?? '',
+                        'method' => $param['method'] ?? '',
                         'ref_range' => $refText,
                         'matched_range_details' => $matchedRange, // Keep for evaluation
                         'department' => $item->labTest->department,
@@ -296,6 +297,7 @@ class ResultEntryManager extends Component
                     'is_highlighted' => $highlight,
                     'reference_range' => $details['ref_range'],
                     'unit' => $details['unit'],
+                    'method' => $details['method'] ?? null,
                 ]
             );
         }

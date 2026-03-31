@@ -32,18 +32,18 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-3 mb-4">
-                                <div class="col-md-4">
+                                <div class="col-4 col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Code <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('test_code') is-invalid @enderror" wire:model="test_code" placeholder="E.G. CBC-01">
                                     @error('test_code') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-8">
+                                <div class="col-8 col-md-8">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name" placeholder="E.G. Complete Blood Count">
                                     @error('name') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">System Department <span class="text-danger">*</span></label>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Department <span class="text-danger">*</span></label>
                                     <select class="form-select @error('department_id') is-invalid @enderror" wire:model="department_id">
                                         <option value="">Select Department</option>
                                         @foreach($departments as $dept)
@@ -52,15 +52,15 @@
                                     </select>
                                     @error('department_id') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-6 col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Suggested Price (₹)</label>
                                     <input type="number" step="0.01" class="form-control" wire:model="suggested_price" placeholder="0.00">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Test Method (e.g. HPLC)</label>
-                                    <input type="text" class="form-control" wire:model="method" placeholder="CLIA, ELISA, HPLC, etc.">
+                                <div class="col-6 col-md-4">
+                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Method</label>
+                                    <input type="text" class="form-control" wire:model="method" placeholder="CLIA, HPLC…">
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-12">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Short Description</label>
                                     <textarea class="form-control" wire:model="description" rows="2" placeholder="Reference for administrators..."></textarea>
                                 </div>
@@ -79,21 +79,23 @@
                                 </button>
                             </div>
 
-                            <div class="table-responsive border rounded-4 bg-light p-1 shadow-sm overflow-visible">
+                            {{-- Desktop Table (hidden on small screens) --}}
+                            <div class="d-none d-lg-block border rounded-4 bg-light p-1 shadow-sm">
+                                <div class="table-responsive">
                                 <table class="table table-sm align-middle mb-0">
                                     <thead class="bg-white">
                                         <tr class="fs-10 text-uppercase text-muted fw-bold">
-                                            <th class="ps-3 py-3" style="min-width: 200px;">Internal Name</th>
-                                            <th style="min-width: 100px;">Code</th>
-                                            <th style="min-width: 120px;">Mode</th>
-                                            <th style="min-width: 140px;">Range Type</th>
-                                            <th style="min-width: 300px;">Reference Logic & Units</th>
+                                            <th class="ps-3 py-3" style="min-width: 180px;">Name</th>
+                                            <th style="min-width: 70px;">Code</th>
+                                            <th style="min-width: 120px;">Method</th>
+                                            <th style="min-width: 100px;">Mode</th>
+                                            <th style="min-width: 250px;">Unit & Config</th>
                                             <th class="text-end pe-3" style="width: 50px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($parameters as $index => $param)
-                                    <tr wire:key="param-{{ $index }}" class="border-bottom border-white">
+                                    <tr wire:key="param-d-{{ $index }}" class="border-bottom border-white">
                                         <td class="ps-3 py-2">
                                             <input type="text" class="form-control form-control-sm @error('parameters.'.$index.'.name') is-invalid @enderror" 
                                                 wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
@@ -101,6 +103,10 @@
                                         <td>
                                             <input type="text" class="form-control form-control-sm text-center fw-bold text-primary" 
                                                 wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                wire:model="parameters.{{ $index }}.method" placeholder="Method">
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
@@ -111,14 +117,11 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit (e.g. mg/dL)">
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <input type="text" class="form-control form-control-sm" style="width: 80px;" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
                                                 <button type="button" wire:click="openRangeModal({{ $index }})" 
-                                                    class="btn btn-sm {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} w-100 py-1 rounded-pill">
-                                                    <i class="feather-settings me-1"></i>
-                                                    {{ count($parameters[$index]['ranges'] ?? []) }} Range(s) / Config
+                                                    class="btn btn-sm {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} flex-grow-1 py-1 rounded-pill">
+                                                    <i class="feather-settings me-1"></i>Config
                                                 </button>
                                             </div>
                                         </td>
@@ -131,6 +134,68 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                </div>
+                            </div>
+
+                            {{-- Mobile Card Layout (visible only on small screens) --}}
+                            <div class="d-lg-none">
+                                @foreach($parameters as $index => $param)
+                                    <div wire:key="param-m-{{ $index }}" class="card border shadow-sm rounded-3 mb-2">
+                                        <div class="card-body p-3">
+                                            {{-- Row 1: Name + Delete --}}
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold fs-10 px-2">{{ $index + 1 }}</span>
+                                                <input type="text" class="form-control form-control-sm flex-grow-1 @error('parameters.'.$index.'.name') is-invalid @enderror" 
+                                                    wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
+                                                <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0 flex-shrink-0">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            </div>
+                                            {{-- Row 2: Code + Method --}}
+                                            <div class="row g-2 mb-2">
+                                                <div class="col-4">
+                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Code</label>
+                                                    <input type="text" class="form-control form-control-sm text-center fw-bold text-primary" 
+                                                        wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
+                                                </div>
+                                                <div class="col-8">
+                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Method</label>
+                                                    <input type="text" class="form-control form-control-sm" 
+                                                        wire:model="parameters.{{ $index }}.method" placeholder="e.g. CLIA, HPLC">
+                                                </div>
+                                            </div>
+                                            {{-- Row 3: Input Type + Unit + Config --}}
+                                            <div class="row g-2">
+                                                <div class="col-5">
+                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Input</label>
+                                                    <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
+                                                        <option value="numeric">Numerical</option>
+                                                        <option value="text">Text</option>
+                                                        <option value="selection">Dropdown</option>
+                                                        <option value="calculated">Formula</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-3">
+                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Unit</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
+                                                </div>
+                                                <div class="col-4">
+                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Range</label>
+                                                    <button type="button" wire:click="openRangeModal({{ $index }})" 
+                                                        class="btn btn-sm w-100 {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} py-1 rounded-pill">
+                                                        <i class="feather-settings me-1"></i>Config
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                                @if(count($parameters) === 0)
+                                    <div class="text-center text-muted py-4 bg-light rounded-3">
+                                        <i class="feather-info fs-3 d-block mb-2 opacity-50"></i>
+                                        <p class="fs-12 mb-0">No parameters added. Tap "Add Field" above.</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

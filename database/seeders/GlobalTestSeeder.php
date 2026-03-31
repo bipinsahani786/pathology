@@ -31,7 +31,10 @@ class GlobalTestSeeder extends Seeder
 
                 GlobalTest::updateOrCreate(
                     ['test_code' => $test['test_code']],
-                    array_merge($test, ['department_id' => $department?->id])
+                    array_merge($test, [
+                        'department_id' => $department?->id,
+                        'default_parameters' => $test['default_parameters'] ?? [],
+                    ])
                 );
             }
         }
