@@ -128,18 +128,20 @@
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
                                             @foreach($invoice->items as $item)
-                                                @php
-                                                    $isComplete = $item->status === 'Completed';
-                                                @endphp
-                                                <div class="form-check form-check-inline m-0 p-0">
-                                                    <input class="form-check-input ms-0 me-1" type="checkbox" 
-                                                           wire:model.live="selectedTests" 
-                                                           value="{{ $item->id }}"
-                                                           {{ !$isComplete ? 'disabled' : '' }}>
-                                                    <span class="badge {{ $isComplete ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} border fs-9 fw-normal" title="{{ $isComplete ? 'Result Entered' : 'Pending' }}">
-                                                        {{ $item->labTest->name }}
-                                                    </span>
-                                                </div>
+                                                @if($item->lab_test_id)
+                                                    @php
+                                                        $isComplete = $item->status === 'Completed';
+                                                    @endphp
+                                                    <div class="form-check form-check-inline m-0 p-0">
+                                                        <input class="form-check-input ms-0 me-1" type="checkbox" 
+                                                            wire:model.live="selectedTests" 
+                                                            value="{{ $item->id }}"
+                                                            {{ !$isComplete ? 'disabled' : '' }}>
+                                                        <span class="badge {{ $isComplete ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} border fs-9 fw-normal" title="{{ $isComplete ? 'Result Entered' : 'Pending' }}">
+                                                            {{ $item->labTest->name }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </td>

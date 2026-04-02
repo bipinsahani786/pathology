@@ -172,7 +172,13 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td style="font-weight:bold;">{{ $item->test_name }}</td>
-                    <td style="text-align:center;"><span class="type-badge {{ $item->is_package ? 'pkg-badge' : '' }}">{{ $item->is_package ? 'PKG' : 'TEST' }}</span></td>
+                    <td style="text-align:center;">
+                        @if($item->lab_test_id)
+                            <span class="type-badge {{ $item->is_package ? 'pkg-badge' : '' }}">{{ $item->is_package ? 'PKG' : 'TEST' }}</span>
+                        @else
+                            <span class="type-badge" style="background:#dcfce7;color:#16a34a;">PLAN</span>
+                        @endif
+                    </td>
                     <td class="amount">₹{{ number_format($item->mrp, 2) }}</td>
                 </tr>
             @endforeach
@@ -184,7 +190,12 @@
         <div class="totals-box">
             <div class="total-row clearfix"><span class="total-label">Subtotal</span><span class="total-value">₹{{ number_format($invoice->subtotal, 2) }}</span></div>
             @if($invoice->membership_discount_amount > 0)
-                <div class="total-row clearfix"><span class="total-label">Membership Discount</span><span class="total-value discount">- ₹{{ number_format($invoice->membership_discount_amount, 2) }}</span></div>
+                <div class="total-row clearfix">
+                    <span class="total-label">
+                        Discount ({{ $invoice->membership->name ?? 'Membership' }})
+                    </span>
+                    <span class="total-value discount">- ₹{{ number_format($invoice->membership_discount_amount, 2) }}</span>
+                </div>
             @endif
             @if($invoice->voucher_discount_amount > 0)
                 <div class="total-row clearfix"><span class="total-label">Voucher Discount</span><span class="total-value discount">- ₹{{ number_format($invoice->voucher_discount_amount, 2) }}</span></div>

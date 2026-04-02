@@ -48,6 +48,6 @@ class RegisterCompany extends Component
     public function render()
     {
         return view('livewire.auth.register-company')
-            ->layout('layouts.guest', ['title' => 'Register Your Lab']);
+            ->layout('layouts.auth', ['title' => 'Register Your Lab']);
     }
 }

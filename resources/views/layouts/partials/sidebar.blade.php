@@ -310,7 +310,7 @@
                     </li>
                 @endrole
 
-                @if(auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']))
+                @if(auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) || auth()->user()->collection_center_id || auth()->user()->doctorProfile || auth()->user()->agentProfile)
                     <li class="nxl-item nxl-caption">
                         <label>Partner Portal</label>
                     </li>

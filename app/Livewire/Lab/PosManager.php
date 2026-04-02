@@ -65,7 +65,8 @@ class PosManager extends Component
     public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
     public $new_agent_name, $new_agent_phone, $new_agent_agency, $new_agent_commission = 0;
     public $isMembershipModalOpen = false, $selectedMembershipId = null;
-    public $purchasedMembershipRecordId = null;
+    public $purchasedMembershipRecordId = null; // Still useful to track if it was a NEW purchase
+    public $patient_membership_id = null; // The ID of the PatientMembership record (new or existing)
     public $isPaymentModeModalOpen = false, $new_payment_mode_name = '';
     public $modalError = '';
 
@@ -167,11 +168,14 @@ class PosManager extends Component
             // Only auto-apply if membership fee was fully paid
             if ($membership && $record->amount_paid >= $membership->price) {
                 $this->active_membership = $membership->toArray();
+                $this->patient_membership_id = $record->id;
             } else {
                 $this->active_membership = null;
+                $this->patient_membership_id = null;
             }
         } else {
             $this->active_membership = null;
+            $this->patient_membership_id = null;
         }
 
         $this->membership_fee = 0;
@@ -310,6 +314,7 @@ class PosManager extends Component
             $this->active_membership = $membership->toArray();
             $this->membership_fee = (float) $membership->price;
             $this->purchasedMembershipRecordId = $record->id;
+            $this->patient_membership_id = $record->id;
             $this->isMembershipModalOpen = false;
             $this->selectedMembershipId = null;
             $this->modalError = '';
@@ -747,6 +752,8 @@ class PosManager extends Component
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
                 'patient_id' => data_get($this->selectedPatient, 'id'),
+                'membership_id' => $this->active_membership['id'] ?? null,
+                'patient_membership_id' => $this->patient_membership_id,
                 'created_by' => auth()->id(),
                 'referred_by_doctor_id' => $doctorId,
                 'referred_by_agent_id' => $agentId,
@@ -772,6 +779,19 @@ class PosManager extends Component
                 'payment_status' => $this->due_amount <= 0 ? 'Paid' : ($this->due_amount == $this->net_payable ? 'Unpaid' : 'Partial'),
                 'status' => 'Pending',
             ]);
+
+            // Add Membership Purchase as a line item if applicable
+            if ($this->membership_fee > 0 && $this->active_membership) {
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'lab_test_id' => null, // Not a test
+                    'test_name' => 'Membership: ' . ($this->active_membership['name'] ?? 'Plan'),
+                    'is_package' => false,
+                    'mrp' => $this->membership_fee,
+                    'price' => $this->membership_fee,
+                    'b2b_price' => 0, // Membership fee belongs entirely to the lab
+                ]);
+            }
 
             foreach ($this->cart as $item) {
                 InvoiceItem::create([

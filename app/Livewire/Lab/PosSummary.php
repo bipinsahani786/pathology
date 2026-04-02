@@ -26,7 +26,9 @@ class PosSummary extends Component
             'doctor.doctorProfile', 
             'items', 
             'payments',
-            'branch'
+            'branch',
+            'membership',
+            'patientMembership'
         ])
         ->where('company_id', $companyId)
         ->findOrFail($this->invoiceId);
