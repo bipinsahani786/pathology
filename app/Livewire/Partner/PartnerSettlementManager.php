@@ -5,13 +5,18 @@ namespace App\Livewire\Partner;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Settlement;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
 
 class PartnerSettlementManager extends Component
 {
     use WithPagination;
 
-    public $dateRange = 'all';
+    public $search = '';
+    public $perPage = 10;
+    public $filterDateFrom;
+    public $filterDateTo;
+    public $stats = [];
     
     // Payment Recording Fields
     public $isModalOpen = false;
@@ -24,6 +29,8 @@ class PartnerSettlementManager extends Component
     public function mount()
     {
         $this->payment_date = date('Y-m-d');
+        $this->filterDateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->filterDateTo = now()->format('Y-m-d');
     }
 
     public function openModal()
@@ -70,19 +77,53 @@ class PartnerSettlementManager extends Component
         $user = Auth::user();
         $query = Settlement::where('user_id', $user->id);
 
-        if ($this->dateRange !== 'all') {
-            if ($this->dateRange === 'today') {
-                $query->whereDate('payment_date', today());
-            } elseif ($this->dateRange === 'week') {
-                $query->whereBetween('payment_date', [now()->startOfWeek(), now()->endOfWeek()]);
-            } elseif ($this->dateRange === 'month') {
-                $query->whereMonth('payment_date', now()->month)
-                      ->whereYear('payment_date', now()->year);
-            }
+        if ($this->search) {
+            $query->where('reference_no', 'like', '%' . $this->search . '%');
         }
 
+        if ($this->filterDateFrom) {
+            $query->whereDate('payment_date', '>=', $this->filterDateFrom);
+        }
+        if ($this->filterDateTo) {
+            $query->whereDate('payment_date', '<=', $this->filterDateTo);
+        }
+
+        // Stats calculation
+        $invoices = Invoice::where('status', '!=', 'Cancelled');
+        if ($user->hasRole('collection_center')) {
+            $invoices->where('collection_center_id', $user->collection_center_id);
+        } elseif ($user->hasRole('doctor')) {
+            $invoices->where('referred_by_doctor_id', $user->id);
+        } elseif ($user->hasRole('agent')) {
+            $invoices->where('referred_by_agent_id', $user->id);
+        }
+
+        $totalDuesBill = $invoices->sum('total_amount');
+        if ($user->hasRole('collection_center')) {
+             // For CC, dues = total billing minus their profit
+            $totalDuesBill = $invoices->sum('total_amount') - $invoices->sum('cc_profit_amount');
+        }
+
+        $paidApproved = Settlement::where('user_id', $user->id)->where('status', 'Approved')->sum('amount');
+        $paidPending = Settlement::where('user_id', $user->id)->where('status', 'Pending')->sum('amount');
+
+        $this->stats = [
+            'total_dues' => $totalDuesBill,
+            'paid_confirmed' => $paidApproved,
+            'balance' => max(0, $totalDuesBill - $paidApproved),
+            'awaiting_verification' => $paidPending,
+        ];
+
         return view('livewire.partner.partner-settlement-manager', [
-            'settlements' => $query->latest()->paginate(10)
+            'settlements' => $query->latest()->paginate($this->perPage)
         ]);
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->filterDateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->filterDateTo = now()->format('Y-m-d');
+        $this->resetPage();
     }
 }

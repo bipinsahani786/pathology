@@ -87,22 +87,51 @@
                     <div class="fs-10 fw-bold text-muted text-uppercase mb-3 ls-2">Common Destinations</div>
                     <div class="row g-4" id="navigationLinks">
                         @php
-                            $navItems = [
-                                ['name' => 'Dashboard', 'route' => 'lab.dashboard', 'icon' => 'feather-airplay', 'desc' => 'Overview & Analytics', 'color' => 'primary'],
-                                ['name' => 'New Bill (POS)', 'route' => 'lab.pos', 'icon' => 'feather-plus-circle', 'desc' => 'Quick Billing', 'color' => 'success'],
-                                ['name' => 'All Invoices', 'route' => 'lab.invoices', 'icon' => 'feather-file-text', 'desc' => 'Manage Bills', 'color' => 'info'],
-                                ['name' => 'Test Reports', 'route' => 'lab.reports', 'icon' => 'feather-clipboard', 'desc' => 'Process & Print', 'color' => 'warning'],
-                                ['name' => 'Patients List', 'route' => 'lab.patients', 'icon' => 'feather-users', 'desc' => 'Patient Registry', 'color' => 'purple'],
-                                ['name' => 'Lab Tests', 'route' => 'lab.tests', 'icon' => 'feather-activity', 'desc' => 'Manage Tests', 'color' => 'danger'],
-                                ['name' => 'Test Packages', 'route' => 'lab.packages', 'icon' => 'feather-package', 'desc' => 'Bundle Tests', 'color' => 'teal'],
-                                ['name' => 'Collection Centers', 'route' => 'lab.collection.centers', 'icon' => 'feather-map', 'desc' => 'Manage CCs', 'color' => 'orange'],
-                                ['name' => 'Main Branches', 'route' => 'lab.branches', 'icon' => 'feather-home', 'desc' => 'Lab Locations', 'color' => 'indigo'],
-                                ['name' => 'Referral Doctors', 'route' => 'lab.doctors', 'icon' => 'feather-user-check', 'desc' => 'Doctor Partners', 'color' => 'blue'],
-                                ['name' => 'Referral Agents', 'route' => 'lab.agents', 'icon' => 'feather-briefcase', 'desc' => 'Agent Partners', 'color' => 'pink'],
-                                ['name' => 'Partner Settlements', 'route' => 'lab.settlements', 'icon' => 'feather-dollar-sign', 'desc' => 'Commissions', 'color' => 'cyan'],
-                                ['name' => 'Lab Settings', 'route' => 'lab.settings', 'icon' => 'feather-settings', 'desc' => 'Configurations', 'color' => 'gray'],
-                                ['name' => 'My Profile', 'route' => 'lab.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
-                            ];
+                            $user = auth()->user();
+                            $isLabStaff = $user->hasAnyRole(['lab_admin', 'staff', 'branch_admin']);
+                            $isCollectionCenter = $user->hasRole('collection_center');
+                            $isDoctorAgent = $user->hasAnyRole(['doctor', 'agent']);
+
+                            $navItems = [];
+
+                            if ($isLabStaff) {
+                                // Internal Lab Admin/Staff View
+                                $navItems = [
+                                    ['name' => 'Dashboard', 'route' => 'lab.dashboard', 'icon' => 'feather-airplay', 'desc' => 'Overview & Analytics', 'color' => 'primary'],
+                                    ['name' => 'New Bill (POS)', 'route' => 'lab.pos', 'icon' => 'feather-plus-circle', 'desc' => 'Quick Billing', 'color' => 'success'],
+                                    ['name' => 'All Invoices', 'route' => 'lab.invoices', 'icon' => 'feather-file-text', 'desc' => 'Manage Bills', 'color' => 'info'],
+                                    ['name' => 'Test Reports', 'route' => 'lab.reports', 'icon' => 'feather-clipboard', 'desc' => 'Process & Print', 'color' => 'warning'],
+                                    ['name' => 'Patients List', 'route' => 'lab.patients', 'icon' => 'feather-users', 'desc' => 'Patient Registry', 'color' => 'purple'],
+                                    ['name' => 'Lab Tests', 'route' => 'lab.tests', 'icon' => 'feather-activity', 'desc' => 'Manage Tests', 'color' => 'danger'],
+                                    ['name' => 'Test Packages', 'route' => 'lab.packages', 'icon' => 'feather-package', 'desc' => 'Bundle Tests', 'color' => 'teal'],
+                                    ['name' => 'Collection Centers', 'route' => 'lab.collection.centers', 'icon' => 'feather-map', 'desc' => 'Manage CCs', 'color' => 'orange'],
+                                    ['name' => 'Main Branches', 'route' => 'lab.branches', 'icon' => 'feather-home', 'desc' => 'Lab Locations', 'color' => 'indigo'],
+                                    ['name' => 'Referral Doctors', 'route' => 'lab.doctors', 'icon' => 'feather-user-check', 'desc' => 'Doctor Partners', 'color' => 'blue'],
+                                    ['name' => 'Referral Agents', 'route' => 'lab.agents', 'icon' => 'feather-briefcase', 'desc' => 'Agent Partners', 'color' => 'pink'],
+                                    ['name' => 'Partner Settlements', 'route' => 'lab.settlements', 'icon' => 'feather-dollar-sign', 'desc' => 'Commissions', 'color' => 'cyan'],
+                                    ['name' => 'Lab Settings', 'route' => 'lab.settings', 'icon' => 'feather-settings', 'desc' => 'Configurations', 'color' => 'gray'],
+                                    ['name' => 'My Profile', 'route' => 'lab.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
+                                ];
+                            } elseif ($isCollectionCenter) {
+                                // Collection Center View
+                                $navItems = [
+                                    ['name' => 'Center Dashboard', 'route' => 'partner.dashboard', 'icon' => 'feather-airplay', 'desc' => 'My Dashboard', 'color' => 'primary'],
+                                    ['name' => 'New Bill (POS)', 'route' => 'lab.pos', 'icon' => 'feather-plus-circle', 'desc' => 'Billing Portal', 'color' => 'success'],
+                                    ['name' => 'Center Invoices', 'route' => 'partner.invoices', 'icon' => 'feather-file-text', 'desc' => 'My Billings', 'color' => 'info'],
+                                    ['name' => 'Patients List', 'route' => 'partner.patients', 'icon' => 'feather-users', 'desc' => 'My Patients', 'color' => 'purple'],
+                                    ['name' => 'Profit Settlements', 'route' => 'partner.settlements', 'icon' => 'feather-dollar-sign', 'desc' => 'Earnings', 'color' => 'cyan'],
+                                    ['name' => 'My Profile', 'route' => 'partner.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
+                                ];
+                            } elseif ($isDoctorAgent) {
+                                // Referral Partners View
+                                $navItems = [
+                                    ['name' => 'Partner Dashboard', 'route' => 'partner.dashboard', 'icon' => 'feather-airplay', 'desc' => 'My Dashboard', 'color' => 'primary'],
+                                    ['name' => 'Referred Invoices', 'route' => 'partner.invoices', 'icon' => 'feather-file-text', 'desc' => 'My Billings', 'color' => 'info'],
+                                    ['name' => 'My Patients', 'route' => 'partner.patients', 'icon' => 'feather-users', 'desc' => 'Patient Registry', 'color' => 'purple'],
+                                    ['name' => 'Settlements', 'route' => 'partner.settlements', 'icon' => 'feather-dollar-sign', 'desc' => 'Commissions', 'color' => 'cyan'],
+                                    ['name' => 'My Profile', 'route' => 'partner.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
+                                ];
+                            }
                         @endphp
 
                         @foreach($navItems as $item)
@@ -200,6 +229,20 @@
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+        });
+
+        // GLOBAL LIVEWIRE LISTENERS
+        document.addEventListener('livewire:init', () => {
+            // Open URL in new tab
+            Livewire.on('open-new-tab', (data) => {
+                const url = Array.isArray(data) ? data[0].url : data.url;
+                if (url) window.open(url, '_blank');
+            });
+
+            // Trigger browser print
+            Livewire.on('print-window', () => {
+                window.print();
+            });
         });
     </script>
 </body>

@@ -139,7 +139,7 @@
 
     @if ($isModalOpen)
         <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
-        <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
+        <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050; display: block; overflow-y: auto;">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg rounded-4">
 
@@ -154,7 +154,7 @@
                     </div>
 
                     <form wire:submit.prevent="store">
-                        <div class="modal-body p-4 bg-white">
+                        <div class="modal-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
                         <div class="row g-4">
                             <div class="col-md-7">
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Center Name *</label>

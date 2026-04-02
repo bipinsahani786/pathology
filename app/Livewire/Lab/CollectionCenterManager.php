@@ -104,13 +104,16 @@ class CollectionCenterManager extends Component
                 'email',
                 Rule::unique('users', 'email')->ignore($this->user_id),
             ],
-            'password' => $this->user_id ? 'nullable|min:6' : 'nullable|min:6',
+            'password' => 'nullable|min:6',
         ]);
 
         DB::beginTransaction();
         try {
-            if ($this->center_id) {
-                $this->authorize('edit collection_centers');
+            $companyId = auth()->user()->company_id;
+
+            // 1. Manage User (Login Account)
+            if ($this->user_id) {
+                // Update existing user
                 $user = User::findOrFail($this->user_id);
                 $userData = [
                     'name' => $this->name,
@@ -122,27 +125,23 @@ class CollectionCenterManager extends Component
                     $userData['password'] = Hash::make($this->password);
                 }
                 $user->update($userData);
-            } else {
-                $this->authorize('create collection_centers');
-                $companyId = auth()->user()->company_id;
-                // If phone or email provided, create a user
-                if ($this->phone || $this->email) {
-                    $user = User::create([
-                        'company_id' => $companyId,
-                        'name' => $this->name,
-                        'phone' => $this->phone,
-                        'email' => $this->email ?? ($this->phone ? $this->phone . '@cc.local' : strtolower(str_replace(' ', '', $this->name)) . rand(100, 999) . '@cc.local'),
-                        'password' => Hash::make($this->password ?? $this->phone ?? 'password123'),
-                        'is_active' => $this->is_active,
-                        'collection_center_id' => null, // Will be updated after center creation
-                    ]);
-                    $user->assignRole('collection_center');
-                    $this->user_id = $user->id;
-                }
+            } elseif ($this->phone || $this->email) {
+                // Create new user if phone/email provided
+                $user = User::create([
+                    'company_id' => $companyId,
+                    'name' => $this->name,
+                    'phone' => $this->phone,
+                    'email' => $this->email ?: null,
+                    'password' => Hash::make($this->password ?? $this->phone ?? '12345678'),
+                    'is_active' => $this->is_active,
+                ]);
+                $user->assignRole('collection_center');
+                $this->user_id = $user->id;
             }
 
             // 2. Manage Collection Center
             if ($this->center_id) {
+                $this->authorize('edit collection_centers');
                 CollectionCenter::where('id', $this->center_id)->update([
                     'name' => $this->name,
                     'center_code' => $this->center_code,
@@ -153,6 +152,7 @@ class CollectionCenterManager extends Component
                 ]);
                 session()->flash('message', 'Collection Center updated successfully.');
             } else {
+                $this->authorize('create collection_centers');
                 $center = CollectionCenter::create([
                     'company_id' => $companyId,
                     'user_id' => $this->user_id,
@@ -166,7 +166,7 @@ class CollectionCenterManager extends Component
                 session()->flash('message', 'Collection Center created successfully.');
             }
 
-            // 3. Update User's collection_center_id back
+            // 3. Link back center ID to user
             if ($this->user_id) {
                 User::where('id', $this->user_id)->update(['collection_center_id' => $this->center_id]);
             }

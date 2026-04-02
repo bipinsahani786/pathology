@@ -58,7 +58,7 @@
                 @endrole
 
 
-                @if(auth()->user()->hasAnyRole(['lab_admin', 'staff']) || str_contains(auth()->user()->roles->first()?->name ?? '', 'lab_'))
+                @if(auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']))
                     <li class="nxl-item nxl-caption">
                         <label>Main</label>
                     </li>
@@ -346,6 +346,22 @@
                             <span class="nxl-mtext">Invoice History</span>
                         </a>
                     </li>
+                    @if(auth()->user()->hasRole('collection_center'))
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('partner.doctors') || request()->routeIs('partner.agents') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">Referral Network</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('partner.doctors') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('partner.doctors') }}" wire:navigate><i class="feather-user-check me-2 fs-12"></i>Manage Doctors</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('partner.agents') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('partner.agents') }}" wire:navigate><i class="feather-briefcase me-2 fs-12"></i>Manage Agents</a>
+                            </li>
+                        </ul>
+                    </li>
+                    @endif
 
                     <li class="nxl-item nxl-caption">
                         <label>Account Settings</label>

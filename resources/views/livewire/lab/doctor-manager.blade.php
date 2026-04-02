@@ -1,4 +1,7 @@
 <div>
+    @php
+        $dashboardRoute = auth()->user()->hasRole('collection_center') ? 'partner.dashboard' : 'lab.dashboard';
+    @endphp
     <div class="page-header">
         <div class="page-header-left d-flex align-items-center">
             <div class="page-header-title">
@@ -6,7 +9,7 @@
                 <p class="fs-13 text-muted mb-0">Manage doctor referrals.</p>
             </div>
             <ul class="breadcrumb d-none d-md-flex ms-3">
-                <li class="breadcrumb-item"><a href="{{ route('lab.dashboard') }}" wire:navigate class="text-muted">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route($dashboardRoute) }}" wire:navigate class="text-muted">Home</a></li>
                 <li class="breadcrumb-item text-primary fw-medium">Doctors</li>
             </ul>
         </div>

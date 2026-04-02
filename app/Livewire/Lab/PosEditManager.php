@@ -495,7 +495,7 @@ class PosEditManager extends Component
             $user = User::create([
                 'name' => $this->new_name,
                 'phone' => $this->new_phone ?: 'P' . time(),
-                'email' => 'p' . time() . '@patient.local',
+                'email' => null,
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
@@ -531,7 +531,7 @@ class PosEditManager extends Component
             $user = User::create([
                 'name' => $finalName,
                 'phone' => $this->new_doc_phone ?: 'D' . time(),
-                'email' => 'd' . time() . '@doctor.local',
+                'email' => null,
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
@@ -560,7 +560,7 @@ class PosEditManager extends Component
             $user = User::create([
                 'name' => $this->new_agent_name,
                 'phone' => $this->new_agent_phone ?: 'A' . time(),
-                'email' => 'a' . time() . '@agent.local',
+                'email' => null,
                 'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
                 'is_active' => true,
                 'company_id' => $companyId,
@@ -614,19 +614,9 @@ class PosEditManager extends Component
             $companyId = auth()->user()->company_id;
             $invoice = Invoice::where('company_id', $companyId)->findOrFail($this->invoiceId);
 
-            // 1. Reverse old commissions if they existed
-            if ($invoice->referred_by_doctor_id && $invoice->doctor_commission_amount > 0) {
-                $oldWallet = Wallet::where('user_id', $invoice->referred_by_doctor_id)->first();
-                if ($oldWallet) {
-                    $oldWallet->debit($invoice->doctor_commission_amount, 'Commission Reversal (Invoice Update) #' . $invoice->invoice_number, 'invoice', $invoice->id);
-                }
-            }
-            if ($invoice->referred_by_agent_id && $invoice->agent_commission_amount > 0) {
-                $oldWallet = Wallet::where('user_id', $invoice->referred_by_agent_id)->first();
-                if ($oldWallet) {
-                    $oldWallet->debit($invoice->agent_commission_amount, 'Commission Reversal (Invoice Update) #' . $invoice->invoice_number, 'invoice', $invoice->id);
-                }
-            }
+            // 1. Reverse old commissions using service
+            $commissionService = new \App\Services\CommissionService();
+            $commissionService->reverseCommissions($invoice, "Invoice Updated");
 
             // 2. Recalculate Commissions
             $docCommission = 0;
@@ -727,21 +717,8 @@ class PosEditManager extends Component
                 ]);
             }
 
-            // 4. Credit new Commissions to wallets
-            if ($docCommission > 0 && $doctorId) {
-                $wallet = Wallet::firstOrCreate(
-                    ['user_id' => $doctorId, 'company_id' => $companyId],
-                    ['balance' => 0]
-                );
-                $wallet->credit($docCommission, 'Commission from Invoice Update #' . $invoice->invoice_number, 'invoice', $invoice->id);
-            }
-            if ($agentCommission > 0 && $agentId) {
-                $wallet = Wallet::firstOrCreate(
-                    ['user_id' => $agentId, 'company_id' => $companyId],
-                    ['balance' => 0]
-                );
-                $wallet->credit($agentCommission, 'Commission from Invoice Update #' . $invoice->invoice_number, 'invoice', $invoice->id);
-            }
+            // 4. Apply new Commissions using service
+            $commissionService->applyCommissions($invoice);
 
             DB::commit();
             session()->flash('message', '✅ Invoice updated successfully!');

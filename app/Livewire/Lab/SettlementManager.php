@@ -171,14 +171,19 @@ class SettlementManager extends Component
     {
         $this->authorize('create settlements');
         $companyId = auth()->user()->company_id;
-        $partnerIdField = $this->partnerType === 'Doctor' ? 'referred_by_doctor_id' : 'referred_by_agent_id';
+        $partnerIdField = '';
+        if ($this->partnerType === 'Doctor') $partnerIdField = 'referred_by_doctor_id';
+        elseif ($this->partnerType === 'Agent') $partnerIdField = 'referred_by_agent_id';
+        elseif ($this->partnerType === 'Collection Center') $partnerIdField = 'collection_center_id';
+
+        $partnerValId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
 
         DB::beginTransaction();
         try {
             // Verify all selected invoices actually belong to this partner and company
             $ids = array_values(array_filter($this->selectedInvoices, fn($v) => is_numeric($v)));
             $validInvoices = Invoice::where('company_id', $companyId)
-                ->where($partnerIdField, $this->selectedPartnerId)
+                ->where($partnerIdField, $partnerValId)
                 ->whereIn('id', $ids)
                 ->pluck('id')
                 ->toArray();

@@ -13,8 +13,12 @@ class PartnerPatientManager extends Component
     use WithPagination;
 
     public $search = '';
-    public $dateRange = 'all'; // all, today, week, month
+    public $perPage = 10;
+    public $filterDateFrom;
+    public $filterDateTo;
+    public $filterStatus = '';
     public $role;
+    public $stats = [];
 
     public function mount()
     {
@@ -28,6 +32,9 @@ class PartnerPatientManager extends Component
         } else {
             abort(403);
         }
+
+        $this->filterDateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->filterDateTo = now()->format('Y-m-d');
     }
 
     public function render()
@@ -45,41 +52,70 @@ class PartnerPatientManager extends Component
         }
 
         if ($this->search) {
-            $query->whereHas('patient', function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('phone', 'like', '%' . $this->search . '%');
-            })->orWhere('invoice_number', 'like', '%' . $this->search . '%');
+            $searchTerm = '%' . $this->search . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('invoice_number', 'like', $searchTerm)
+                    ->orWhereHas('patient', function ($pq) use ($searchTerm) {
+                        $pq->where('name', 'like', $searchTerm)
+                            ->orWhere('phone', 'like', $searchTerm);
+                    });
+            });
         }
 
-        if ($this->dateRange !== 'all') {
-            if ($this->dateRange === 'today') {
-                $query->whereDate('invoice_date', today());
-            } elseif ($this->dateRange === 'week') {
-                $query->whereBetween('invoice_date', [now()->startOfWeek(), now()->endOfWeek()]);
-            } elseif ($this->dateRange === 'month') {
-                $query->whereMonth('invoice_date', now()->month)
-                      ->whereYear('invoice_date', now()->year);
-            }
+        if ($this->filterDateFrom) {
+            $query->whereDate('invoice_date', '>=', $this->filterDateFrom);
         }
- 
+        if ($this->filterDateTo) {
+            $query->whereDate('invoice_date', '<=', $this->filterDateTo);
+        }
+        if ($this->filterStatus) {
+            $query->where('sample_status', $this->filterStatus);
+        }
+
+        // Stats calculation
+        $statsQuery = Invoice::where('status', '!=', 'Cancelled');
+        if ($this->role === 'Doctor') {
+            $statsQuery->where('referred_by_doctor_id', $user->id);
+        } elseif ($this->role === 'Agent') {
+            $statsQuery->where('referred_by_agent_id', $user->id);
+        } elseif ($this->role === 'Collection Center') {
+            $statsQuery->where('collection_center_id', $user->collection_center_id);
+        }
+
+        $this->stats = [
+            'total_patients' => (clone $statsQuery)->distinct('patient_id')->count(),
+            'collected_today' => (clone $statsQuery)->whereDate('sample_collected_at', today())->count(),
+            'awaiting_pickup' => (clone $statsQuery)->where('sample_status', 'Pending')->count(),
+            'processing' => (clone $statsQuery)->where('sample_status', 'Processing')->count(),
+        ];
+
         return view('livewire.partner.partner-patient-manager', [
-            'invoices' => $query->latest()->paginate(10)
+            'invoices' => $query->latest()->paginate($this->perPage)
         ]);
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->filterDateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->filterDateTo = now()->format('Y-m-d');
+        $this->filterStatus = '';
+        $this->resetPage();
     }
 
     public function updateSampleStatus($invoiceId, $status)
     {
         $invoice = Invoice::findOrFail($invoiceId);
-        
+
         $user = Auth::user();
-        
+
         // Restriction for Collection Centers
         if ($this->role === 'Collection Center') {
             if ($invoice->collection_center_id != $user->collection_center_id) {
                 session()->flash('error', 'Unauthorized access.');
                 return;
             }
-            
+
             $allowedStatuses = ['Pending', 'Collected', 'Dispatched'];
             if (!in_array($status, $allowedStatuses)) {
                 session()->flash('error', 'Collection Centers can only update status up to Dispatched.');

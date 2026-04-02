@@ -36,10 +36,14 @@ class Login extends Component
             // Redirect based on user role
             if ($user->hasRole('super_admin')) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->hasAnyRole(['doctor', 'agent'])) {
+            } elseif ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin'])) {
+                // Internal Lab Staff
+                return redirect()->route('lab.dashboard');
+            } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center'])) {
+                // External Referral Partners
                 return redirect()->route('partner.dashboard');
             } elseif ($user->company_id) {
-                // Anyone else with a company ID is lab staff (lab_admin, staff, or custom role)
+                // Fallback for other users with a company
                 return redirect()->route('lab.dashboard');
             }
             return redirect('/');

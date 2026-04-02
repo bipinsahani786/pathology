@@ -50,7 +50,7 @@
                             </div>
                             <div>
                                 <h3 class="fw-bolder mb-1 text-dark">₹{{ number_format($stats['total_pending'], 2) }}</h3>
-                                <p class="text-muted small mb-0 fw-bold text-uppercase ls-1 fs-10">Total Outstanding</p>
+                                <p class="text-muted small mb-0 fw-bold text-uppercase ls-1 fs-10">{{ $partnerType === 'Collection Center' ? 'Pending from Centers' : 'Total Outstanding' }}</p>
                             </div>
                         </div>
                     </div>
@@ -143,8 +143,8 @@
                                                             <i class="feather-pie-chart"></i>
                                                         </button>
                                                         @can('create settlements')
-                                                            <button wire:click="selectPartner({{ $p->id }}, 'process')" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" {{ ($p->pending_amount ?? 0) <= 0 ? 'disabled' : '' }}>
-                                                                Settle <i class="feather-arrow-right ms-1"></i>
+                                                            <button wire:click="selectPartner({{ $p->id }}, 'process')" class="btn btn-sm {{ $partnerType === 'Collection Center' ? 'btn-success' : 'btn-primary' }} rounded-pill px-3 fw-bold shadow-sm" {{ ($p->pending_amount ?? 0) <= 0 ? 'disabled' : '' }}>
+                                                                {{ $partnerType === 'Collection Center' ? 'Collect' : 'Settle' }} <i class="feather-arrow-right ms-1"></i>
                                                             </button>
                                                         @endcan
                                                     </div>
@@ -229,7 +229,7 @@
                     <div class="d-flex align-items-center gap-3">
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
-                            <h5 class="card-title mb-0 fw-bold">Process Settlement</h5>
+                            <h5 class="card-title mb-0 fw-bold">{{ $partnerType === 'Collection Center' ? 'Record Collection' : 'Process Settlement' }}</h5>
                             <p class="text-muted small mb-0">{{ $selectedPartner->name }} • {{ $selectedPartner->phone }}</p>
                         </div>
                     </div>
@@ -238,7 +238,7 @@
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <div class="col-lg-7">
-                            <h6 class="fw-bold mb-3 text-dark">Pending Commissions</h6>
+                            <h6 class="fw-bold mb-3 text-dark">{{ $partnerType === 'Collection Center' ? 'Unpaid B2B Bills' : 'Pending Commissions' }}</h6>
                             <div class="table-responsive border rounded-4 overflow-hidden shadow-sm">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="bg-light fs-10 text-uppercase text-muted">
@@ -272,7 +272,7 @@
                         <div class="col-lg-5">
                             <div class="bg-light p-4 rounded-4 border border-light h-100 shadow-inner">
                                 <div class="p-4  rounded-4 shadow-sm text-center mb-4 border border-primary border-opacity-10">
-                                    <p class="text-muted fs-11 text-uppercase fw-bold ls-1 mb-1">Payable Amount</p>
+                                    <p class="text-muted fs-11 text-uppercase fw-bold ls-1 mb-1">{{ $partnerType === 'Collection Center' ? 'Receivable Amount' : 'Payable Amount' }}</p>
                                     <h2 class="fw-bolder text-primary mb-0">₹{{ number_format($amount_to_pay, 2) }}</h2>
                                 </div>
                                 <div class="row g-3">
@@ -286,8 +286,8 @@
                                     <div class="col-12"><label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">UTR / Ref No.</label><input type="text" class="form-control rounded-3 border-0 shadow-sm py-2 fs-13" wire:model="reference_no" placeholder="Transaction ID"></div>
                                     <div class="col-12"><label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Notes</label><textarea class="form-control rounded-3 border-0 shadow-sm fs-13" wire:model="notes" rows="2" placeholder="Add any details..."></textarea></div>
                                 </div>
-                                <button wire:click="processSettlement" class="btn btn-primary w-100 py-3 rounded-4 fw-bolder mt-4 shadow" {{ count($selectedInvoices) == 0 ? 'disabled' : '' }}>
-                                    SUBMIT SETTLEMENT
+                                <button wire:click="processSettlement" class="btn {{ $partnerType === 'Collection Center' ? 'btn-success' : 'btn-primary' }} w-100 py-3 rounded-4 fw-bolder mt-4 shadow" {{ count($selectedInvoices) == 0 ? 'disabled' : '' }}>
+                                    {{ $partnerType === 'Collection Center' ? 'RECORD PAYMENT RECEIVED' : 'SUBMIT SETTLEMENT' }}
                                 </button>
                             </div>
                         </div>

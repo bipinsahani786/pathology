@@ -109,38 +109,17 @@ class Invoice extends Model
         }
 
         \DB::transaction(function () {
-            // 1. Reverse Doctor Commission
-            if ($this->referred_by_doctor_id && $this->doctor_commission_amount > 0) {
-                $wallet = Wallet::where('user_id', $this->referred_by_doctor_id)->first();
-                if ($wallet) {
-                    $wallet->debit(
-                        $this->doctor_commission_amount,
-                        "Commission Reversal (Invoice Cancelled) #{$this->invoice_number}",
-                        'invoice',
-                        $this->id
-                    );
-                }
-            }
+            // Reverse all commissions immediately
+            $commissionService = new \App\Services\CommissionService();
+            $commissionService->reverseCommissions($this, "Invoice Cancelled");
 
-            // 2. Reverse Agent Commission
-            if ($this->referred_by_agent_id && $this->agent_commission_amount > 0) {
-                $wallet = Wallet::where('user_id', $this->referred_by_agent_id)->first();
-                if ($wallet) {
-                    $wallet->debit(
-                        $this->agent_commission_amount,
-                        "Commission Reversal (Invoice Cancelled) #{$this->invoice_number}",
-                        'invoice',
-                        $this->id
-                    );
-                }
-            }
-
-            // 3. Update Invoice Status
+            // Update Invoice Status
             $this->update([
                 'status' => 'Cancelled',
-                'payment_status' => 'Unpaid', // Reset payment status if cancelled? 
+                'payment_status' => 'Unpaid', 
                 'doctor_commission_amount' => 0,
                 'agent_commission_amount' => 0,
+                'cc_profit_amount' => 0,
             ]);
         });
 

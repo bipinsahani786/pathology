@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\TestReport;
 use App\Models\ReportResult;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class ResultEntryManager extends Component
 {
@@ -159,6 +160,8 @@ class ResultEntryManager extends Component
             $groupedParams[$itemId][$k] = $p;
         }
 
+        $expressionLanguage = new ExpressionLanguage();
+
         foreach ($groupedParams as $itemId => $params) {
             // 1. Build a local code-to-value map for this test
             $localCodeMap = [];
@@ -173,26 +176,20 @@ class ResultEntryManager extends Component
                 if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
                     $formula = strtoupper($p['formula']);
                     
-                    // Replace codes like {HB} with values
-                    foreach ($localCodeMap as $code => $val) {
-                        $formula = str_replace('{'.$code.'}', $val, $formula);
-                    }
-
-                    // Clean up any remaining braces or invalid chars
-                    $formula = preg_replace('/[^{}0-9\+\-\*\/\.\(\) ]/', '', $formula);
+                    // Clean up formula for ExpressionLanguage by removing braces {CODE} -> CODE
+                    $formula = preg_replace('/\{([A-Z0-9_]+)\}/', '$1', $formula);
                     
                     try {
-                        // Basic evaluation if formula looks safe
-                        if (!empty($formula) && !str_contains($formula, '{')) {
-                            // Prevent DivisionByZeroError
-                            if (preg_match('/\/ *0(\.0*)?($|[^0-9])/', $formula)) {
-                                 Log::warning("Division by zero in formula: $formula");
-                                 continue;
-                            }
-
-                            $result = @eval("return $formula;");
+                        // Ensure formula is not empty
+                        if (!empty(trim($formula))) {
+                            // The expression language handles Division by Zero internally (throws exception)
+                            $result = $expressionLanguage->evaluate($formula, $localCodeMap);
+                            
                             if ($result !== false && is_numeric($result)) {
-                                $this->results[$k] = round($result, 2);
+                                // Prevent saving INF or NAN
+                                if (!is_infinite($result) && !is_nan($result)) {
+                                    $this->results[$k] = round($result, 2);
+                                }
                             }
                         }
                     } catch (\Throwable $e) {

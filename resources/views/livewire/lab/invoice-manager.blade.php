@@ -155,7 +155,7 @@
                         <select class="form-select" wire:model.live="filterDoctor">
                             <option value="">All Doctors</option>
                             @foreach($doctors as $dr)
-                                <option value="{{ $dr->id }}">👨‍⚕️ {{ $dr->user->name ?? 'Doctor' }}</option>
+                                <option value="{{ $dr->user_id }}">👨‍⚕️ {{ $dr->user->name ?? 'Doctor' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -163,7 +163,7 @@
                         <select class="form-select" wire:model.live="filterAgent">
                             <option value="">All Agents</option>
                             @foreach($agents as $ag)
-                                <option value="{{ $ag->id }}">🤝 {{ $ag->user->name ?? 'Agent' }}</option>
+                                <option value="{{ $ag->user_id }}">🤝 {{ $ag->user->name ?? 'Agent' }}</option>
                             @endforeach
                         </select>
                     </div>
