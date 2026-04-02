@@ -35,6 +35,31 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/about', function () {
+    return view('pages.about');
+})->name('about');
+
+Route::get('/features', function () {
+    return view('pages.features');
+})->name('features');
+
+Route::get('/pricing', function () {
+    return view('pages.pricing');
+})->name('pricing');
+
+Route::get('/contact', function () {
+    return view('pages.contact');
+})->name('contact');
+
+Route::get('/terms', function () {
+    return view('pages.terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return view('pages.privacy');
+})->name('privacy');
+
+
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', Login::class)->name('login');
 
@@ -71,8 +96,8 @@ Route::middleware(['auth'])->group(function () {
     // ----------------------------------------------------
     // 2. LAB OWNER / TENANT ROUTES
     // ----------------------------------------------------
-    // Apply the 'auth', 'role:lab_admin', and our new subscription check middleware
-    Route::middleware(['lab_staff', \App\Http\Middleware\CheckTenantSubscription::class])
+    // Apply the 'auth', 'lab_staff', and our new subscription check middleware
+    Route::middleware(['auth', 'lab_staff', \App\Http\Middleware\CheckTenantSubscription::class])
         ->prefix('lab')
         ->name('lab.')
         ->group(function () {
@@ -147,12 +172,15 @@ Route::middleware(['auth'])->group(function () {
 
             // Barcode Stickers
             Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
+
+            // Membership Card
+            Route::get('/membership-card/{id}/print', [\App\Http\Controllers\MembershipCardController::class, 'print'])->name('membership.card.print');
         });
 
     // ----------------------------------------------------
     // 3. PARTNER ROUTES (Doctor, Agent, Collection Center)
     // ----------------------------------------------------
-    Route::middleware(['auth', 'role:doctor|agent|collection_center|lab_admin|branch_admin|admin|staff'])
+    Route::middleware(['auth', 'partner_access'])
         ->prefix('partner')
         ->name('partner.')
         ->group(function () {

@@ -228,7 +228,7 @@ class PatientManager extends Component
                 $query->where('company_id', $companyId);
             })
             ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId))
-            ->with('patientProfile') // Eager load to prevent slow queries
+            ->with(['patientProfile', 'activeMembership.membership']) // Eager load to prevent slow queries
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')

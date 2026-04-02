@@ -93,6 +93,22 @@ class Invoice extends Model
     public function doctorSettlement() { return $this->belongsTo(Settlement::class, 'doctor_settlement_id'); }
     public function agentSettlement() { return $this->belongsTo(Settlement::class, 'agent_settlement_id'); }
     public function ccSettlement() { return $this->belongsTo(Settlement::class, 'cc_settlement_id'); }
+    
+    /**
+     * The membership plan applied or purchased in this invoice.
+     */
+    public function membership() 
+    {
+        return $this->belongsTo(Membership::class);
+    }
+
+    /**
+     * The specific record created when this membership was purchased.
+     */
+    public function patientMembership()
+    {
+        return $this->belongsTo(PatientMembership::class, 'patient_membership_id');
+    }
 
     /**
      * Cancel the invoice and reverse any commissions credited to wallets.

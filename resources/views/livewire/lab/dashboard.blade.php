@@ -331,9 +331,9 @@
 
             <div class="d-flex flex-column flex-sm-row gap-3">
                 <div class="d-flex gap-2">
-                    <button wire:click="setPreset('today')" class="preset-btn {{ $fromDate == date('Y-m-d') ? 'active' : '' }}">Today</button>
-                    <button wire:click="setPreset('this_week')" class="preset-btn">Week</button>
-                    <button wire:click="setPreset('this_month')" class="preset-btn">Month</button>
+                    <button wire:click="setPreset('today')" class="preset-btn {{ $fromDate == date('Y-m-d') && $toDate == date('Y-m-d') ? 'active' : '' }}">Today</button>
+                    <button wire:click="setPreset('this_week')" class="preset-btn {{ $fromDate == Carbon\Carbon::now()->startOfWeek()->toDateString() ? 'active' : '' }}">Week</button>
+                    <button wire:click="setPreset('this_month')" class="preset-btn {{ $fromDate == Carbon\Carbon::now()->startOfMonth()->toDateString() && $toDate == Carbon\Carbon::now()->endOfMonth()->toDateString() ? 'active' : '' }}">Month</button>
                 </div>
                 <div class="input-group">
                     <input type="date" wire:model="fromDate" class="form-control border-0 shadow-sm" style="border-radius: 12px 0 0 12px;">

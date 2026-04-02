@@ -1,10 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+@php
+    $savedSkin = $_COOKIE['nxl-skin'] ?? 'app-skin-light';
+@endphp
+<html lang="en" class="{{ $savedSkin }}">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $title ?? 'Pathology SaaS' }}</title>
+    
+    {{-- 1. INSTANT THEME GUARD (Blocking Script) --}}
+    <script>
+        (function() {
+            try {
+                // Check all possible theme keys used by this template
+                var skin = localStorage.getItem('nxl-skin') || localStorage.getItem('app-skin') || 'app-skin-light';
+                var nav = localStorage.getItem('nxl-navigation') || 'app-navigation-light';
+                
+                if (skin.includes('dark')) {
+                    document.documentElement.classList.add('app-skin-dark');
+                    // Force the background color immediately via style attribute
+                    document.documentElement.style.background = '#111827';
+                }
+                if (nav.includes('dark')) {
+                    document.documentElement.classList.add('app-navigation-dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    {{-- 2. INSTANT CSS GUARD (Ensures all major containers are dark instantly) --}}
+    <style>
+        html.app-skin-dark, 
+        html.app-skin-dark body,
+        html.app-skin-dark .nxl-container,
+        html.app-skin-dark .nxl-content,
+        html.app-skin-dark .nxl-header,
+        html.app-skin-dark .nxl-navigation {
+            background-color: #111827 !important;
+            color: #e5e7eb !important;
+            transition: none !important; /* Disable transitions to prevent flashing */
+        }
+        /* Keep background dark for any intermediate transition states */
+        html.app-skin-dark .nxl-content > div {
+            background-color: transparent !important;
+        }
+    </style>
 
     <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/icon.webp') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/bootstrap.min.css') }}" />
@@ -43,7 +84,7 @@
     
     <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js"></script>
 
-    <script>
+    <script data-navigate-once>
         document.addEventListener('livewire:navigated', () => {
             if (typeof bootstrap !== 'undefined') {
                 const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
@@ -58,10 +99,6 @@
                     });
                 });
             }
-            setTimeout(() => {
-                document.dispatchEvent(new Event('DOMContentLoaded'));
-                window.dispatchEvent(new Event('load'));
-            }, 100);
         });
     </script>
     @livewireScripts
@@ -196,11 +233,24 @@
         }
     </style>
 
-    <script>
+    <script data-navigate-once>
+        // 1. Modal & Navigation Cleanup
+        document.addEventListener('livewire:navigated', () => {
+            const modalElement = document.getElementById('searchModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        });
+
+        // 2. Global Search Logic
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('globalSearchInput');
             const navItems = document.querySelectorAll('.nav-search-item');
-
             if(searchInput) {
                 searchInput.addEventListener('input', function() {
                     const query = this.value.toLowerCase().trim();
@@ -209,41 +259,47 @@
                         item.classList.toggle('d-none', !title.includes(query));
                     });
                 });
+                const searchModal = document.getElementById('searchModal');
+                if (searchModal) {
+                    searchModal.addEventListener('shown.bs.modal', () => searchInput.focus());
+                }
+            }
+        });
 
-                document.getElementById('searchModal').addEventListener('shown.bs.modal', () => {
-                    searchInput.focus();
+        // 3. Global Livewire Listeners (STRICT ONCE REGISTRATION)
+        if (!window.pathologyListenersAdded) {
+            document.addEventListener('livewire:init', () => {
+                if (window.pathologyListenersAdded) return;
+                
+                Livewire.on('open-new-tab', (data) => {
+                    const url = Array.isArray(data) ? data[0].url : data.url;
+                    if (url) window.open(url, '_blank');
                 });
-            }
-        });
 
-        // Handle navigation to ensure modal closes
-        document.addEventListener('livewire:navigated', () => {
-            const modalElement = document.getElementById('searchModal');
-            if (modalElement) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
-            }
-            // Force remove backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(b => b.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+                Livewire.on('print-window', () => {
+                    window.print();
+                });
 
-        // GLOBAL LIVEWIRE LISTENERS
-        document.addEventListener('livewire:init', () => {
-            // Open URL in new tab
-            Livewire.on('open-new-tab', (data) => {
-                const url = Array.isArray(data) ? data[0].url : data.url;
-                if (url) window.open(url, '_blank');
+                window.pathologyListenersAdded = true;
             });
+        }
 
-            // Trigger browser print
-            Livewire.on('print-window', () => {
-                window.print();
+        // 4. Dark Mode Cookie Synchronization (Zero-Flash Persistence)
+        const syncThemeCookie = () => {
+            const skin = document.documentElement.classList.contains('app-skin-dark') ? 'app-skin-dark' : 'app-skin-light';
+            document.cookie = "nxl-skin=" + skin + "; path=/; max-age=31536000; SameSite=Lax";
+        };
+        
+        // Initial sync
+        syncThemeCookie();
+        
+        // Watch for theme changes via Customizer or Header Toggles
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') syncThemeCookie();
             });
         });
+        observer.observe(document.documentElement, { attributes: true });
     </script>
 </body>
 

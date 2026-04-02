@@ -53,6 +53,10 @@ class Dashboard extends Component
                 $this->fromDate = Carbon::now()->subMonth()->startOfMonth()->toDateString();
                 $this->toDate = Carbon::now()->subMonth()->endOfMonth()->toDateString();
                 break;
+            case 'last_30_days':
+                $this->fromDate = Carbon::now()->subDays(30)->toDateString();
+                $this->toDate = Carbon::now()->toDateString();
+                break;
         }
         $this->updateFilter();
     }
@@ -83,17 +87,17 @@ class Dashboard extends Component
             'pending_tests' => Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->whereIn('sample_status', ['Pending', 'Collected', 'Processing'])
-                ->whereBetween('created_at', [$start, $end])
+                ->whereBetween('invoice_date', [$start, $end])
                 ->count(),
             'completed_tests' => Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->where('sample_status', 'Ready')
-                ->whereBetween('created_at', [$start, $end])
+                ->whereBetween('invoice_date', [$start, $end])
                 ->count(),
             'home_visits' => Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->where('collection_type', 'Home Collection')
-                ->whereBetween('created_at', [$start, $end])
+                ->whereBetween('invoice_date', [$start, $end])
                 ->count(),
         ];
 
@@ -101,19 +105,19 @@ class Dashboard extends Component
         $financials = Invoice::where('company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where('status', '!=', 'Cancelled')
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('invoice_date', [$start, $end])
             ->selectRaw('SUM(total_amount) as revenue, SUM(cc_profit_amount) as profit, SUM(paid_amount) as collections, SUM(due_amount) as dues')
             ->first();
 
         // 4. Rankings (Top 5)
-        $topPackages = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('created_at', [$start, $end]))
+        $topPackages = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
             ->where('is_package', true)
             ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
             ->groupBy('lab_test_id', 'test_name')
             ->orderByDesc('total_income')
             ->take(5)->get();
 
-        $topTests = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('created_at', [$start, $end]))
+        $topTests = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
             ->where('is_package', false)
             ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
             ->groupBy('lab_test_id', 'test_name')
@@ -122,7 +126,7 @@ class Dashboard extends Component
 
         $topCCs = Invoice::where('company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('invoice_date', [$start, $end])
             ->with('collectionCenter')
             ->select('collection_center_id', DB::raw('SUM(total_amount) as total_income'), DB::raw('COUNT(*) as total_bills'))
             ->groupBy('collection_center_id')
@@ -131,7 +135,7 @@ class Dashboard extends Component
 
         $topDoctors = Invoice::where('company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('invoice_date', [$start, $end])
             ->whereNotNull('referred_by_doctor_id')
             ->with(['doctor' => fn($q) => $q->select('id', 'name')])
             ->select('referred_by_doctor_id', DB::raw('SUM(total_amount) as total_income'))
@@ -141,7 +145,7 @@ class Dashboard extends Component
 
         $topAgents = Invoice::where('company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('invoice_date', [$start, $end])
             ->whereNotNull('referred_by_agent_id')
             ->with(['agent' => fn($q) => $q->select('id', 'name')])
             ->select('referred_by_agent_id', DB::raw('SUM(total_amount) as total_income'))
@@ -164,12 +168,12 @@ class Dashboard extends Component
         $chartRawData = Invoice::where('company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where('status', '!=', 'Cancelled')
-            ->whereBetween('created_at', [$start, $end])
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_amount) as daily_revenue'), DB::raw('SUM(cc_profit_amount) as daily_profit'))
+            ->whereBetween('invoice_date', [$start, $end])
+            ->select(DB::raw('DATE(invoice_date) as date'), DB::raw('SUM(total_amount) as daily_revenue'), DB::raw('SUM(cc_profit_amount) as daily_profit'))
             ->groupBy('date')->orderBy('date')->get();
 
         // Chart 2: Department Distribution (Share of Tests)
-        $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.created_at', [$start, $end]))
+        $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
             ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
             ->join('departments', 'lab_tests.department_id', '=', 'departments.id')
             ->select('departments.name as dept_name', DB::raw('COUNT(*) as test_count'))
@@ -191,7 +195,7 @@ class Dashboard extends Component
         // Chart 4: Channel Split (Center vs Home vs Branch)
         $channelData = Invoice::where('invoices.company_id', $companyId)
             ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
-            ->whereBetween('invoices.created_at', [$start, $end])
+            ->whereBetween('invoices.invoice_date', [$start, $end])
             ->select(DB::raw("COALESCE(collection_type, 'Direct') as channel"), DB::raw('COUNT(*) as count'))
             ->groupBy('channel')
             ->get();

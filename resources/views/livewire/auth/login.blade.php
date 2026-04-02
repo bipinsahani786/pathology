@@ -1,181 +1,124 @@
-<div class="auth-cover-wrapper bg-white">
-    <div class="d-flex flex-column flex-lg-row min-vh-100">
-        
-        <div class="auth-cover-sidebar d-none d-lg-flex flex-column align-items-center justify-content-center w-50 position-relative overflow-hidden">
+<div class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
+    <!-- Left: Branding & Visual (Desktop Only) -->
+    <div class="hidden lg:flex lg:w-1/2 p-2 relative overflow-hidden">
+        <div class="w-full h-full rounded-[2.5rem] bg-zinc-900 border border-white/10 relative overflow-hidden group">
+            <!-- Decorative BG -->
+            <img src="/hero_pathology_modern_1775107463115.png" class="absolute inset-0 w-full h-full object-cover opacity-30 scale-105 group-hover:scale-110 transition-transform duration-[10s] blur-sm">
+            <div class="absolute inset-0 bg-linear-to-br from-brand-600/50 via-zinc-900/90 to-zinc-900"></div>
             
-            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at top left, #f1f5f9 0%, #e2e8f0 100%); z-index: 0;"></div>
-            
-            <div class="auth-cover-content text-center p-5 position-relative" style="z-index: 1;">
-                
-                <div class="hero-icon-composition position-relative mx-auto mb-5" style="width: 200px; height: 200px;">
-                    <div class="main-icon-circle bg-white shadow-lg rounded-circle d-flex align-items-center justify-content-center position-absolute top-50 start-50 translate-middle z-3" style="width: 120px; height: 120px;">
-                        <i class="feather-activity text-primary" style="font-size: 3.5rem;"></i>
+            <div class="relative z-10 w-full h-full p-20 flex flex-col justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
+                        <x-app-logo-icon class="h-8 w-8 text-white" />
                     </div>
-                    
-                    <div class="floating-icon icon-1 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-file-text text-success fs-5"></i>
-                    </div>
-                    <div class="floating-icon icon-2 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-users text-info fs-5"></i>
-                    </div>
-                    <div class="floating-icon icon-3 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-pie-chart text-warning fs-5"></i>
-                    </div>
+                    <span class="font-display font-bold text-2xl tracking-tight text-white uppercase transition-all duration-300">
+                        SWS <span class="text-brand-400">Pathology</span>
+                    </span>
                 </div>
 
-                <div class="mt-4 animate-fade-in-up">
-                    <h3 class="fw-bolder text-dark mb-3" style="letter-spacing: -0.5px;">Startup Web Support SaaS</h3>
-                    <p class="text-muted mx-auto fs-15 lh-lg" style="max-width: 420px;">
-                        Manage your laboratory reports, patients, and financial data with our secure, all-in-one enterprise diagnostic solution.
-                    </p>
-                </div>
-            </div>
-
-            <div class="position-absolute bottom-0 start-0 p-4 w-100 text-center" style="z-index: 1;">
-                <span class="fs-12 text-muted fw-medium text-uppercase tracking-wide">© 2026 Startup Web Support. All rights reserved.</span>
-            </div>
-        </div>
-
-        <div class="auth-cover-form-inner d-flex align-items-center justify-content-center w-100 w-lg-50 p-4 p-md-5 bg-white">
-            <div class="w-100 animate-fade-in" style="max-width: 420px;">
-                
-                <div class="mb-5 d-flex align-items-center gap-3 d-lg-none">
-                    <div class="bg-primary rounded-4 p-2 d-inline-flex shadow-sm">
-                        <i class="feather-activity text-white fs-3"></i>
+                <div class="max-w-md">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 mb-8">
+                        <span class="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Enterprise Ready</span>
                     </div>
-                    <span class="fw-bolder fs-4 tracking-tight text-dark">SWS Pathology</span>
+                    <h2 class="text-5xl font-bold text-white mb-6 leading-tight tracking-tight">Intelligence at the <span class="text-brand-400">Core</span> of Diagnostics.</h2>
+                    <p class="text-xl text-zinc-400 leading-relaxed">Securely manage laboratory reports, patient demographics, and partner settlements in one unified cloud ecosystem.</p>
                 </div>
 
-                <div class="mb-5">
-                    <h2 class="fw-bolder text-dark mb-2" style="letter-spacing: -1px; font-size: 2rem;">Welcome Back</h2>
-                    <p class="text-muted fs-14">Please enter your credentials to access the laboratory dashboard.</p>
-                </div>
-
-                <form wire:submit.prevent="login" class="mt-4">
-                    
-                    <div class="mb-4 position-relative">
-                        <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Email or Phone Number</label>
-                        <div class="position-relative">
-                            <i class="feather-user position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                            <input type="text" 
-                                class="form-control form-control-lg premium-input @error('email') is-invalid @enderror" 
-                                placeholder="Email or 10-digit Phone" 
-                                wire:model="email" required>
-                        </div>
-                        @error('email') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
+                <div class="flex items-center gap-12 border-t border-white/10 pt-12">
+                    <div>
+                        <p class="text-3xl font-bold text-white font-display">500+</p>
+                        <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Labs Integrated</p>
                     </div>
-
-                    <div class="mb-4 position-relative">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-0">Password</label>
-                            <a href="#" class="fs-12 fw-bold text-primary text-decoration-none transition-all hover-opacity">Forgot password?</a>
-                        </div>
-                        <div class="position-relative">
-                            <i class="feather-lock position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                            <input type="password" 
-                                class="form-control form-control-lg premium-input @error('password') is-invalid @enderror" 
-                                placeholder="••••••••" 
-                                wire:model="password" required>
-                        </div>
-                        @error('password') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
+                    <div>
+                        <p class="text-3xl font-bold text-white font-display">1M+</p>
+                        <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Reports Monthly</p>
                     </div>
-
-                    <div class="mb-4 d-flex align-items-center">
-                        <div class="form-check custom-checkbox m-0">
-                            <input type="checkbox" class="form-check-input border-secondary" id="rememberMe" wire:model="remember" style="cursor: pointer;">
-                            <label class="form-check-label fs-13 text-dark fw-medium mt-1 ms-1" for="rememberMe" style="cursor: pointer;">Keep me securely logged in</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow-sm rounded-4 transition-all hover-lift d-flex justify-content-center align-items-center gap-2 mt-2">
-                        <span wire:loading.remove>Access Dashboard</span>
-                        <i wire:loading.remove class="feather-arrow-right"></i>
-                        <span wire:loading class="spinner-border spinner-border-sm"></span>
-                        <span wire:loading>Authenticating...</span>
-                    </button>
-                </form>
-
-                {{-- <div class="mt-5">
-                    <div class="position-relative text-center mb-4">
-                        <hr class="text-light">
-                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted fs-11 text-uppercase fw-bold tracking-wide">Or connect with</span>
-                    </div>
-                    
-                    <div class="d-flex gap-3">
-                        <button class="btn btn-light bg-white border flex-fill py-2 rounded-3 shadow-sm transition-all hover-bg-light"><i class="feather-google text-danger"></i></button>
-                        <button class="btn btn-light bg-white border flex-fill py-2 rounded-3 shadow-sm transition-all hover-bg-light"><i class="feather-github text-dark"></i></button>
-                    </div>
-                </div> --}}
-
-                <div class="mt-5 text-center">
-                    <p class="fs-14 text-muted">New to the platform? <a href="{{ route('register.lab') }}" wire:navigate class="fw-bold text-primary text-decoration-none border-bottom border-primary pb-1 transition-all hover-opacity">Create your Lab Account</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <style>
-        .auth-cover-wrapper { min-height: 100vh; background-color: #ffffff; }
+    <!-- Right: Login Form -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-12">
+        <div class="w-full max-w-lg space-y-12">
+            <!-- Mobile Logo -->
+            <div class="flex items-center gap-3 lg:hidden mb-12">
+                <div class="bg-brand-600 p-2.5 rounded-xl">
+                    <x-app-logo-icon class="h-6 w-6 text-white" />
+                </div>
+                <span class="font-display font-bold text-xl tracking-tight text-zinc-900 dark:text-white uppercase transition-all duration-300">
+                    SWS <span class="text-brand-600">Pathology</span>
+                </span>
+            </div>
 
-        /* Left Sidebar & Icons */
-        .auth-cover-sidebar { border-right: 1px solid #e2e8f0; }
-        
-        .floating-icon {
-            width: 48px; height: 48px;
-            animation: float 4s ease-in-out infinite;
-        }
-        .icon-1 { top: 0; left: 10px; animation-delay: 0s; }
-        .icon-2 { bottom: 20px; right: 0; animation-delay: 1.5s; }
-        .icon-3 { bottom: -10px; left: 30px; animation-delay: 2.5s; }
+            <div>
+                <h1 class="text-4xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4">Welcome Back</h1>
+                <p class="text-zinc-500 font-medium">Please enter your credentials to access the laboratory dashboard.</p>
+            </div>
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
+            <form wire:submit.prevent="login" class="space-y-6">
+                <!-- Email or Phone -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Identity</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                            <i class="feather-user"></i>
+                        </div>
+                        <input type="text" 
+                               wire:model="email"
+                               placeholder="Email or 10-digit Phone" 
+                               class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                               required>
+                    </div>
+                    @error('email') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider animate-shake">{{ $message }}</p> @enderror
+                </div>
 
-        /* Typography & Utilities */
-        .tracking-wide { letter-spacing: 0.5px; }
-        .tracking-tight { letter-spacing: -0.5px; }
-        .transition-all { transition: all 0.25s ease; }
-        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13, 110, 253, 0.2) !important; }
-        .hover-opacity:hover { opacity: 0.8; }
-        .hover-bg-light:hover { background-color: #f8fafc !important; }
+                <!-- Password -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="text-xs font-bold text-zinc-400 uppercase tracking-widest">Secret</label>
+                        <a href="#" class="text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors">Forgot Password?</a>
+                    </div>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                            <i class="feather-lock"></i>
+                        </div>
+                        <input type="password" 
+                               wire:model="password"
+                               placeholder="••••••••" 
+                               class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                               required>
+                    </div>
+                    @error('password') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider animate-shake">{{ $message }}</p> @enderror
+                </div>
 
-        /* Premium Form Inputs */
-        .premium-input {
-            border-radius: 10px !important;
-            border: 1.5px solid #e2e8f0;
-            padding: 14px 16px 14px 45px; /* Extra left padding for the icon */
-            font-size: 14px;
-            font-weight: 500;
-            color: #1e293b;
-            background-color: #ffffff;
-            transition: all 0.2s ease-in-out;
-        }
+                <!-- Remember Me -->
+                <div class="flex items-center px-1 justify-between">
+                    <label class="flex items-center gap-3 cursor-pointer group">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" wire:model="remember" class="peer hidden">
+                            <div class="w-5 h-5 border-2 border-zinc-300 dark:border-zinc-700 rounded-md peer-checked:bg-brand-600 peer-checked:border-brand-600 transition-all"></div>
+                            <svg class="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity left-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">Remember my account</span>
+                    </label>
+                </div>
 
-        .premium-input::placeholder {
-            color: #94a3b8;
-            font-weight: 400;
-        }
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-600/30 hover:shadow-brand-700/40 hover:-translate-y-1 transition-all flex justify-center items-center gap-3 group">
+                    <span wire:loading.remove>Sign into Dashboard</span>
+                    <i wire:loading.remove class="feather-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    <div wire:loading class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span wire:loading>Authenticating...</span>
+                </button>
+            </form>
 
-        .premium-input:focus {
-            border-color: #0d6efd;
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.12);
-        }
-
-        /* Animations */
-        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+            <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center">
+                <p class="text-zinc-500 font-medium">New to the platform? <a href="{{ route('register.lab') }}" wire:navigate class="text-brand-600 hover:text-brand-700 font-bold border-b-2 border-brand-500/20 hover:border-brand-600 transition-all pb-1">Create Lab Merchant Account</a></p>
+            </div>
+        </div>
+    </div>
 </div>

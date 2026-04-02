@@ -98,6 +98,11 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
+                                            @if($patient->activeMembership)
+                                                <a href="{{ route('lab.membership.card.print', $patient->activeMembership->id) }}" target="_blank" class="btn btn-sm btn-light border text-success shadow-sm rounded align-center-btn transition-all hover-success" title="Print Membership Card">
+                                                    <i class="feather-credit-card fs-14"></i>
+                                                </a>
+                                            @endif
                                             @can('edit patients')
                                                 <button wire:click="edit({{ $patient->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Profile">
                                                     <i class="feather-edit-2 fs-14"></i>

@@ -1,214 +1,214 @@
-<x-slot:title>
-    Create Workspace | Pathology Lab Management Software
-</x-slot:title>
-<div class="auth-cover-wrapper bg-white">
-    <div class="d-flex flex-column flex-lg-row min-vh-100">
-        
-        <div class="auth-cover-sidebar d-none d-lg-flex flex-column align-items-center justify-content-center w-50 position-relative overflow-hidden">
+<div class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
+    
+    <!-- Left: Branding & Value Proposition (Desktop) -->
+    <div class="hidden lg:flex lg:w-5/12 p-2 relative overflow-hidden">
+        <div class="w-full h-full rounded-[2.5rem] bg-zinc-900 border border-white/10 relative overflow-hidden group">
+            <!-- Background Image -->
+            <img src="{{ asset('hero_pathology_modern_1775107463115.png') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 scale-105 group-hover:scale-110 transition-transform duration-[10s] blur-xs">
+            <div class="absolute inset-0 bg-linear-to-br from-brand-600/40 via-zinc-900/90 to-zinc-900"></div>
             
-            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: radial-gradient(circle at bottom right, #f1f5f9 0%, #e2e8f0 100%); z-index: 0;"></div>
-            
-            <div class="auth-cover-content text-center p-5 position-relative" style="z-index: 1;">
-                
-                <div class="hero-icon-composition position-relative mx-auto mb-5" style="width: 200px; height: 200px;">
-                    <div class="main-icon-circle bg-white shadow-lg rounded-circle d-flex align-items-center justify-content-center position-absolute top-50 start-50 translate-middle z-3" style="width: 120px; height: 120px;">
-                        <i class="feather-layers text-primary" style="font-size: 3.5rem;"></i>
-                    </div>
-                    
-                    <div class="floating-icon icon-1 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-home text-success fs-5"></i>
-                    </div>
-                    <div class="floating-icon icon-2 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-user-check text-info fs-5"></i>
-                    </div>
-                    <div class="floating-icon icon-3 bg-white shadow-sm rounded-circle d-flex align-items-center justify-content-center position-absolute z-2">
-                        <i class="feather-trending-up text-warning fs-5"></i>
-                    </div>
-                </div>
-
-                <div class="mt-4 animate-fade-in-up">
-                    <h3 class="fw-bolder text-dark mb-3" style="letter-spacing: -0.5px;">Grow Your Lab with Sws</h3>
-                    <p class="text-muted mx-auto fs-15 lh-lg" style="max-width: 420px;">
-                        Manage patients, automate reports, and track billing effortlessly. <strong>Start your free trial today</strong> and digitize your diagnostic center.
-                    </p>
-                </div>
-            </div>
-
-            <div class="position-absolute bottom-0 start-0 p-4 w-100 text-center" style="z-index: 1;">
-                <span class="fs-12 text-muted fw-medium text-uppercase tracking-wide">© 2026 Sws Pathology SaaS.</span>
-            </div>
-        </div>
-
-        <div class="auth-cover-form-inner d-flex align-items-center justify-content-center w-100 w-lg-50 p-4 p-md-5 bg-white">
-            <div class="w-100 animate-fade-in" style="max-width: 480px;">
-                
-                <div class="mb-5 d-flex align-items-center gap-3 d-lg-none">
-                    <div class="bg-primary rounded-4 p-2 d-inline-flex shadow-sm">
-                        <i class="feather-activity text-white fs-3"></i>
-                    </div>
-                    <span class="fw-bolder fs-4 tracking-tight text-dark">Sws</span>
-                </div>
-
-                <div class="mb-4">
-                    <h2 class="fw-bolder text-dark mb-2" style="letter-spacing: -1px; font-size: 2rem;">Create Workspace</h2>
-                    <p class="text-muted fs-14">Register your laboratory to get started in seconds.</p>
-                </div>
-
-                <form wire:submit.prevent="register" class="mt-4">
-                    
-                    <div class="mb-3 position-relative">
-                        <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Clinic / Lab Name <span class="text-danger">*</span></label>
-                        <div class="position-relative">
-                            <i class="feather-briefcase position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                            <input type="text" 
-                                class="form-control form-control-lg premium-input @error('lab_name') is-invalid @enderror" 
-                                wire:model="lab_name" placeholder="e.g. City Care Pathology">
+            <div class="relative z-10 w-full h-full p-16 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-12">
+                        <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
+                            <x-app-logo-icon class="h-8 w-8 text-white" />
                         </div>
-                        @error('lab_name') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
+                        <span class="font-display font-bold text-2xl tracking-tight text-white uppercase transition-all duration-300">
+                            SWS <span class="text-brand-400">Pathology</span>
+                        </span>
                     </div>
 
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6 position-relative">
-                            <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Your Name <span class="text-danger">*</span></label>
-                            <div class="position-relative">
-                                <i class="feather-user position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                                <input type="text" 
-                                    class="form-control form-control-lg premium-input @error('owner_name') is-invalid @enderror" 
-                                    wire:model="owner_name" placeholder="John Doe">
+                    <div class="space-y-8 mt-20">
+                        <div class="animate-fade-in-up" style="animation-delay: 0.1s">
+                            <h2 class="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">The Future of <span class="text-brand-400 italic">Lab Intelligence</span>.</h2>
+                            <p class="text-lg text-zinc-400 leading-relaxed max-w-sm">Modernize your diagnostic workflow in minutes. Zero hardware, infinite scale.</p>
+                        </div>
+
+                        <div class="space-y-6 pt-10">
+                            <div class="flex items-start gap-4 animate-fade-in-up" style="animation-delay: 0.2s">
+                                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-400 shrink-0">
+                                    <i class="feather-zap"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold text-sm">Instant Setup</h4>
+                                    <p class="text-xs text-zinc-500 mt-1">Get your digital lab live in less than 5 minutes.</p>
+                                </div>
                             </div>
-                            @error('owner_name') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
-                        </div>
-                        <div class="col-md-6 position-relative">
-                            <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Phone Number <span class="text-danger">*</span></label>
-                            <div class="position-relative">
-                                <i class="feather-phone position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                                <input type="text" 
-                                    class="form-control form-control-lg premium-input @error('phone') is-invalid @enderror" 
-                                    wire:model="phone" placeholder="9876543210">
+                            <div class="flex items-start gap-4 animate-fade-in-up" style="animation-delay: 0.3s">
+                                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                                    <i class="feather-activity"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold text-sm">Smart Diagnostics</h4>
+                                    <p class="text-xs text-zinc-500 mt-1">Automated result entries for 200+ machines.</p>
+                                </div>
                             </div>
-                            @error('phone') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-
-                    <div class="mb-3 position-relative">
-                        <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Email Address <span class="text-danger">*</span></label>
-                        <div class="position-relative">
-                            <i class="feather-mail position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                            <input type="email" 
-                                class="form-control form-control-lg premium-input @error('email') is-invalid @enderror" 
-                                wire:model="email" placeholder="admin@citycare.com">
-                        </div>
-                        @error('email') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6 position-relative">
-                            <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Password <span class="text-danger">*</span></label>
-                            <div class="position-relative">
-                                <i class="feather-lock position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                                <input type="password" 
-                                    class="form-control form-control-lg premium-input @error('password') is-invalid @enderror" 
-                                    wire:model="password" placeholder="••••••••">
-                            </div>
-                            @error('password') <span class="text-danger fs-11 mt-1 fw-medium"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
-                        </div>
-                        <div class="col-md-6 position-relative">
-                            <label class="form-label fw-bold text-muted fs-11 text-uppercase tracking-wide mb-2">Confirm Password</label>
-                            <div class="position-relative">
-                                <i class="feather-shield position-absolute top-50 translate-middle-y text-muted" style="left: 16px;"></i>
-                                <input type="password" 
-                                    class="form-control form-control-lg premium-input" 
-                                    wire:model="password_confirmation" placeholder="••••••••">
+                            <div class="flex items-start gap-4 animate-fade-in-up" style="animation-delay: 0.4s">
+                                <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400 shrink-0">
+                                    <i class="feather-shield"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-bold text-sm">HIPAA Compliant</h4>
+                                    <p class="text-xs text-zinc-500 mt-1">Enterprise-grade security for patient data.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="mb-4">
-                        <div class="form-check custom-checkbox m-0 d-flex align-items-start">
-                            <input type="checkbox" class="form-check-input border-secondary mt-1 @error('agree_terms') is-invalid @enderror" id="agreeTerms" wire:model="agree_terms" style="cursor: pointer;">
-                            <label class="form-check-label fs-13 text-muted ms-2 lh-sm" for="agreeTerms" style="cursor: pointer;">
-                                I agree to the <a href="#" class="text-primary text-decoration-none fw-bold transition-all hover-opacity">Terms of Service</a> and <a href="#" class="text-primary text-decoration-none fw-bold transition-all hover-opacity">Privacy Policy</a>.
-                            </label>
-                        </div>
-                        @error('agree_terms') <span class="text-danger fs-11 mt-1 fw-medium d-block"><i class="feather-alert-circle me-1"></i>{{ $message }}</span> @enderror
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow-sm rounded-4 transition-all hover-lift d-flex justify-content-center align-items-center gap-2">
-                        <span wire:loading.remove wire:target="register">Start Free Trial</span>
-                        <i wire:loading.remove wire:target="register" class="feather-arrow-right"></i>
-                        <span wire:loading wire:target="register" class="spinner-border spinner-border-sm"></span>
-                        <span wire:loading wire:target="register">Creating Workspace...</span>
-                    </button>
-                </form>
-
-                <div class="mt-5 text-center">
-                    <p class="fs-14 text-muted">Already have an account? <a href="{{ route('login') }}" wire:navigate class="fw-bold text-primary text-decoration-none border-bottom border-primary pb-1 transition-all hover-opacity">Log in here</a></p>
+                <div class="pt-10 border-t border-white/10">
+                    <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest italic">Join 500+ clinics digitizing their future.</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <style>
-        .auth-cover-wrapper { min-height: 100vh; background-color: #ffffff; }
 
-        /* Left Sidebar & Icons */
-        .auth-cover-sidebar { border-right: 1px solid #e2e8f0; }
-        
-        .floating-icon {
-            width: 48px; height: 48px;
-            animation: float 4s ease-in-out infinite;
-        }
-        .icon-1 { top: 0; left: 10px; animation-delay: 0s; }
-        .icon-2 { bottom: 20px; right: 0; animation-delay: 1.5s; }
-        .icon-3 { bottom: -10px; left: 30px; animation-delay: 2.5s; }
+    <!-- Right: Registration Form -->
+    <div class="w-full lg:w-7/12 flex items-center justify-center p-6 md:p-16 overflow-y-auto">
+        <div class="w-full max-w-2xl space-y-12 py-10">
+            <!-- Mobile Header -->
+            <div class="flex items-center justify-between lg:hidden mb-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-600 p-2.5 rounded-xl">
+                        <x-app-logo-icon class="h-6 w-6 text-white" />
+                    </div>
+                    <span class="font-display font-bold text-xl tracking-tight text-zinc-900 dark:text-white uppercase transition-all duration-300">
+                        SWS <span class="text-brand-600">Pathology</span>
+                    </span>
+                </div>
+                <a href="{{ route('login') }}" class="text-sm font-bold text-brand-600">Log In</a>
+            </div>
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
+            <div>
+                <h1 class="text-4xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4 italic underline decoration-brand-500/20 underline-offset-12">Register <span class="text-brand-600">Company</span></h1>
+                <p class="text-zinc-500 font-medium">Empower your laboratory with the world's most advanced SaaS LIS.</p>
+            </div>
 
-        /* Typography & Utilities */
-        .tracking-wide { letter-spacing: 0.5px; }
-        .tracking-tight { letter-spacing: -0.5px; }
-        .transition-all { transition: all 0.25s ease; }
-        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13, 110, 253, 0.2) !important; }
-        .hover-opacity:hover { opacity: 0.8; }
+            <form wire:submit.prevent="register" class="space-y-8">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Lab Name -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Laboratory / Clinic Identity</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-briefcase"></i>
+                            </div>
+                            <input type="text" 
+                                   wire:model="lab_name"
+                                   placeholder="e.g. Apollo Diagnostics Hub" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                        @error('lab_name') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+                    </div>
 
-        /* Premium Form Inputs */
-        .premium-input {
-            border-radius: 10px !important;
-            border: 1.5px solid #e2e8f0;
-            padding: 14px 16px 14px 45px; /* Extra left padding for the icon */
-            font-size: 14px;
-            font-weight: 500;
-            color: #1e293b;
-            background-color: #ffffff;
-            transition: all 0.2s ease-in-out;
-        }
+                    <!-- Owner Name -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Administrator Name</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-user"></i>
+                            </div>
+                            <input type="text" 
+                                   wire:model="owner_name"
+                                   placeholder="John Smith" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                        @error('owner_name') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+                    </div>
 
-        .premium-input::placeholder {
-            color: #94a3b8;
-            font-weight: 400;
-        }
+                    <!-- Phone Number -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Contact Phone</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-phone"></i>
+                            </div>
+                            <input type="text" 
+                                   wire:model="phone"
+                                   placeholder="9876543210" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                        @error('phone') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+                    </div>
 
-        .premium-input:focus {
-            border-color: #0d6efd;
-            background-color: #ffffff;
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.12);
-        }
+                    <!-- Email -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Official Email Address</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-mail"></i>
+                            </div>
+                            <input type="email" 
+                                   wire:model="email"
+                                   placeholder="admin@lab.com" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                        @error('email') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+                    </div>
 
-        /* Animations */
-        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+                    <!-- Password -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Security Code</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-lock"></i>
+                            </div>
+                            <input type="password" 
+                                   wire:model="password"
+                                   placeholder="••••••••" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                        @error('password') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+                    </div>
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+                    <!-- Password Confirm -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Confirm Secret</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                                <i class="feather-shield"></i>
+                            </div>
+                            <input type="password" 
+                                   wire:model="password_confirmation"
+                                   placeholder="••••••••" 
+                                   class="block w-full pl-14 pr-5 py-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-zinc-900 dark:text-white shadow-xs"
+                                   required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <div class="flex items-start gap-4 p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 transition-all hover:border-brand-500/20">
+                    <label class="relative flex items-center cursor-pointer mt-1">
+                        <input type="checkbox" wire:model="agree_terms" class="peer hidden">
+                        <div class="w-5 h-5 border-2 border-zinc-300 dark:border-zinc-700 rounded-md peer-checked:bg-emerald-600 peer-checked:border-emerald-600 transition-all"></div>
+                        <svg class="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity left-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </label>
+                    <p class="text-xs text-zinc-500 leading-relaxed font-medium">I understand and agree to the <a href="{{ route('terms') }}" class="text-brand-600 font-bold hover:underline">Terms of Service</a> and the <a href="{{ route('privacy') }}" class="text-brand-600 font-bold hover:underline">Secure Data Policy</a>. My lab records will be encrypted by default.</p>
+                </div>
+                @error('agree_terms') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">{{ $message }}</p> @enderror
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-600/30 hover:shadow-brand-700/40 hover:-translate-y-1 transition-all flex justify-center items-center gap-3 group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <span wire:loading.remove wire:target="register">Initialize Laboratory Portal</span>
+                    <i wire:loading.remove wire:target="register" class="feather-compass group-hover:rotate-12 transition-transform"></i>
+                    <div wire:loading wire:target="register" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span wire:loading wire:target="register">Setting up Cloud Infrastructure...</span>
+                </button>
+            </form>
+
+            <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center">
+                <p class="text-zinc-500 font-medium">Already managing a lab? <a href="{{ route('login') }}" wire:navigate class="text-brand-600 hover:text-brand-700 font-bold border-b-2 border-brand-500/20 hover:border-brand-600 transition-all pb-1">Enter your Workspace</a></p>
+            </div>
+        </div>
+    </div>
 </div>

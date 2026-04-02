@@ -31,14 +31,27 @@ class EnsureLabStaff
             abort(403, 'Unauthorized. You do not belong to any workspace.');
         }
 
-        // 4. Must NOT be an external role (patient, doctor, agent, collection_center)
-        // These roles have their own portals/prefixes.
-        if ($user->hasAnyRole(['patient', 'doctor', 'agent', 'collection_center'])) {
-            // Exception: Collection Centers are allowed to access POS and Invoices if needed
-            if ($user->hasRole('collection_center') && ($request->is('lab/pos*') || $request->is('lab/invoices*'))) {
-                return $next($request);
+        // 4. Strictly Block external partners from internal lab areas
+        // (External roles: patient, doctor, agent, collection_center)
+        $isPartner = $user->hasAnyRole(['patient', 'doctor', 'agent', 'collection_center']) || 
+                     $user->collection_center_id || 
+                     $user->doctorProfile || 
+                     $user->agentProfile;
+
+        if ($isPartner) {
+            // WHITELIST: Allow Collection Centers to access POS, Invoices, and Profile only.
+            // If they hit the lab dashboard or settings, block them.
+            if ($user->hasRole('collection_center') || $user->collection_center_id) {
+                $allowedPaths = ['lab/pos*', 'lab/invoices*', 'lab/profile*', 'lab/invoice*'];
+                foreach ($allowedPaths as $path) {
+                    if ($request->is($path)) {
+                        return $next($request);
+                    }
+                }
             }
-            abort(403, 'Unauthorized access to lab internal area.');
+            
+            // Logged in as partner but trying to access lab-internal dashboard or management
+            return redirect()->route('partner.dashboard')->with('error', 'Redirected to your dashboard.');
         }
 
         // 5. If they passed all above, they are considered lab-internal staff

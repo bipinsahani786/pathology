@@ -28,6 +28,9 @@
                 <ul class="dropdown-menu shadow-sm border-0">
                     <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf', $invoice->id) }}" target="_blank"><i class="feather-file-text me-2 text-primary"></i>Receipt (With Letterhead)</a></li>
                     <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf.plain', $invoice->id) }}" target="_blank"><i class="feather-file me-2 text-primary"></i>Receipt (Without Letterhead)</a></li>
+                    @if($invoice->patientMembership)
+                        <li><a class="dropdown-item py-2 fw-bold text-success" href="{{ route('lab.membership.card.print', $invoice->patientMembership->id) }}" target="_blank"><i class="feather-credit-card me-2"></i>Print Membership Card</a></li>
+                    @endif
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item py-2" href="{{ route('lab.reports.print', $invoice->id) }}" target="_blank"><i class="feather-book-open me-2 text-primary"></i>Print Report</a></li>
                 </ul>
@@ -166,6 +169,11 @@
                                 <span class="fs-13">Total Discount</span>
                                 <span class="fw-bold fs-13">- ₹{{ number_format($invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount, 2) }}</span>
                             </div>
+                            @if($invoice->membership)
+                                <div class="text-end mb-2 mt-n1">
+                                    <small class="text-success fs-10 fw-bold">Applied: {{ $invoice->membership->name }} ({{ $invoice->membership->discount_percentage }}%)</small>
+                                </div>
+                            @endif
                         @endif
 
                         <hr class="my-3 opacity-50">

@@ -38,17 +38,21 @@ class PartnerDashboard extends Component
     public function loadData()
     {
         $user = Auth::user();
-        if ($user->hasRole('doctor')) {
+        if ($user->hasRole('doctor') || $user->doctorProfile) {
             $this->role = 'Doctor';
             $this->loadDoctorStats($user->id);
-        } elseif ($user->hasRole('agent')) {
+        } elseif ($user->hasRole('agent') || $user->agentProfile) {
             $this->role = 'Agent';
             $this->loadAgentStats($user->id);
-        } elseif ($user->hasRole('collection_center')) {
+        } elseif ($user->hasRole('collection_center') || $user->collection_center_id) {
             $this->role = 'Collection Center';
             $this->loadCollectionCenterStats($user->id);
         } else {
-            return redirect()->route('lab.dashboard');
+            // Only redirect to lab dashboard if they are actually lab staff
+            if ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin'])) {
+                return redirect()->route('lab.dashboard');
+            }
+            abort(403, 'Unauthorized access to the Partner Portal.');
         }
     }
 

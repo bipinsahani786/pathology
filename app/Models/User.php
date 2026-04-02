@@ -178,4 +178,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Invoice::class, 'collection_center_id', 'collection_center_id');
     }
+
+    /**
+     * Membership history for the user (as a patient).
+     */
+    public function memberships()
+    {
+        return $this->hasMany(PatientMembership::class, 'patient_id');
+    }
+
+    /**
+     * Current active membership for the patient.
+     */
+    public function activeMembership()
+    {
+        return $this->hasOne(PatientMembership::class, 'patient_id')
+            ->where('is_active', true)
+            ->where('valid_until', '>=', now())
+            ->latest();
+    }
 }

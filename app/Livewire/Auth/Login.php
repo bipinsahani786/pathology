@@ -36,16 +36,19 @@ class Login extends Component
             // Redirect based on user role
             if ($user->hasRole('super_admin')) {
                 return redirect()->route('admin.dashboard');
-            } elseif ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin'])) {
-                // Internal Lab Staff
-                return redirect()->route('lab.dashboard');
-            } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center'])) {
-                // External Referral Partners
+            } 
+            
+            // 1. External Referral Partners & Collection Centers (Priority)
+            if ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id) {
                 return redirect()->route('partner.dashboard');
-            } elseif ($user->company_id) {
-                // Fallback for other users with a company
+            } 
+            
+            // 2. Internal Lab Staff (Standard Lab Operations)
+            if ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin']) || $user->company_id) {
                 return redirect()->route('lab.dashboard');
             }
+
+            return redirect('/');
             return redirect('/');
         }
 
@@ -54,6 +57,6 @@ class Login extends Component
 
     public function render()
     {
-        return view('livewire.auth.login')->layout('layouts.guest'); 
+        return view('livewire.auth.login')->layout('layouts.auth'); 
     }
 }
