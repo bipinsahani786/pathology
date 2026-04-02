@@ -130,10 +130,10 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
-            Route::get('/profile', \App\Livewire\Partner\PartnerProfile::class)->name('profile');
+            Route::get('/profile', PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
-            
+
             // Reports Generation
             Route::get('/reports', ReportManager::class)->name('reports');
             Route::get('/reports/entry/{id}', ResultEntryManager::class)->name('reports.entry');
@@ -152,7 +152,7 @@ Route::middleware(['auth'])->group(function () {
     // ----------------------------------------------------
     // 3. PARTNER ROUTES (Doctor, Agent, Collection Center)
     // ----------------------------------------------------
-    Route::middleware(['auth', 'role:doctor|agent|collection_center'])
+    Route::middleware(['auth', 'role:doctor|agent|collection_center|lab_admin|branch_admin|admin|staff'])
         ->prefix('partner')
         ->name('partner.')
         ->group(function () {
@@ -161,6 +161,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients', \App\Livewire\Partner\PartnerPatientManager::class)->name('patients');
             Route::get('/settlements', \App\Livewire\Partner\PartnerSettlementManager::class)->name('settlements');
             Route::get('/invoices', \App\Livewire\Partner\PartnerInvoiceManager::class)->name('invoices');
+            Route::get('/referrers/doctors', \App\Livewire\Lab\DoctorManager::class)->name('doctors');
+            Route::get('/referrers/agents', \App\Livewire\Lab\AgentManager::class)->name('agents');
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
         });
 

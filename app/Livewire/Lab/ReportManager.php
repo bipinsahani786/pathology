@@ -109,11 +109,11 @@ class ReportManager extends Component
         // Search
         if ($this->search) {
             $invoicesQuery->where(function($q) {
-                $q->where('invoice_number', 'like', "%{$this->search}%")
-                  ->orWhere('barcode', 'like', "%{$this->search}%")
+                $q->where('invoice_number', 'ilike', "%{$this->search}%")
+                  ->orWhere('barcode', 'ilike', "%{$this->search}%")
                   ->orWhereHas('patient', function($q) {
-                      $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('phone', 'like', "%{$this->search}%");
+                      $q->where('name', 'ilike', "%{$this->search}%")
+                        ->orWhere('phone', 'ilike', "%{$this->search}%");
                   });
             });
         }

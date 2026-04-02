@@ -48,7 +48,7 @@
                     $isExpiringSoon = $daysLeftInt <= 7;
                 @endphp
 
-                @if($company)
+                @if($company && auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']))
                     <div class="d-none d-lg-flex align-items-center me-3 border rounded-3 p-1 bg-white shadow-sm border-light">
                         <div class="avatar-text avatar-md bg-soft-primary text-primary rounded-3 me-2">
                             <i class="feather-zap fs-6"></i>
@@ -96,7 +96,7 @@
                         <img src="{{ $avatarUrl }}" alt="user-image"
                             class="img-fluid user-avtar me-0 rounded-2 border shadow-sm" style="width: 38px; height: 38px; object-fit: cover;" />
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown shadow-lg border-0 rounded-3 overflow-hidden">
+                    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown shadow-lg border-0 rounded-3">
                         <div class="dropdown-header p-4" style="background: linear-gradient(135deg, rgba(59,113,202,0.05) 0%, rgba(124,58,237,0.05) 100%);">
                             <div class="d-flex align-items-center gap-3">
                                 <img src="{{ $avatarUrl }}" alt="user-image"
@@ -112,11 +112,16 @@
                             </div>
                         </div>
                         <div class="p-2">
-                            <a href="{{ route('lab.profile') }}" wire:navigate class="dropdown-item rounded-3 py-2 px-3 transition-all">
+                            @php
+                                $isInternalStaff = auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']);
+                                $profileRoute = $isInternalStaff ? 'lab.profile' : 'partner.profile';
+                                $settingsRoute = $isInternalStaff ? 'lab.settings' : 'partner.profile';
+                            @endphp
+                            <a href="{{ route($profileRoute) }}" wire:navigate class="dropdown-item rounded-3 py-2 px-3 transition-all">
                                 <i class="feather-user me-2 text-primary"></i>
                                 <span class="fw-medium">Profile Details</span>
                             </a>
-                            <a href="{{ route('lab.settings') }}" wire:navigate class="dropdown-item rounded-3 py-2 px-3 transition-all">
+                            <a href="{{ route($settingsRoute) }}" wire:navigate class="dropdown-item rounded-3 py-2 px-3 transition-all">
                                 <i class="feather-settings me-2 text-primary"></i>
                                 <span class="fw-medium">Account Settings</span>
                             </a>
@@ -170,24 +175,36 @@
         .transition-all { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         
         /* Dropdown Alignment: Eliminate hover 'dead zone' with a pseudo-element bridge */
-        .nxl-user-dropdown {
+        .nxl-h-dropdown {
             margin-top: 10px !important;
             border: 1px solid rgba(0,0,0,0.05) !important;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
             border-radius: 12px !important;
-            overflow: visible !important; /* Allow pseudo-element to overflow */
+            overflow: visible !important; /* Allow pseudo-element to overflow for the hover bridge */
             background: white !important;
         }
         
-        .nxl-user-dropdown::before {
+        /* The Hover Bridge: Standardized for all header dropdowns */
+        .nxl-h-dropdown::before {
             content: "";
             position: absolute;
-            top: -15px;
+            top: -20px; /* Increased coverage to ensure it overlaps the trigger */
             left: 0;
-            width: 100%;
-            height: 15px;
+            right: 0;
+            height: 20px;
             background: transparent;
+            z-index: -1;
         }
+
+        /* Explicitly keep dropdown open on hover for supported themes */
+        @media (min-width: 992px) {
+            .nxl-h-item.dropdown:hover > .dropdown-menu {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+
 
         /* Pulse Animation for Expiring Subscription */
         .pulse-once {

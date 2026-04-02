@@ -28,20 +28,20 @@
             {{-- Stats Cards --}}
             @if($role === 'Collection Center')
                 <div class="col-xxl-3 col-md-6">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white hover-up transition-all">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-4">
-                                <div class="avatar-text avatar-lg bg-soft-primary text-primary rounded-4 shadow-sm">
+                                <div class="avatar-text avatar-lg bg-soft-primary text-primary rounded-4 shadow-sm border border-primary border-opacity-10">
                                     <i class="feather-box fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">{{ $stats['samples_collected'] }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Collected Today</h3>
+                                    <h3 class="fs-13 fw-bold text-muted text-uppercase ls-1 mb-1">Today's Collection</h3>
+                                    <div class="fs-3 fw-bolder text-dark mb-0">{{ $stats['samples_collected'] }} <small class="fs-11 text-muted fw-normal">Samples</small></div>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Pending: <strong>{{ $stats['pending_collection'] }}</strong></span>
-                                <span class="badge bg-soft-primary text-primary rounded-pill px-2 fw-bold">Live</span>
+                                <span class="fs-11 text-muted">Awaiting Pickup: <strong class="text-primary">{{ $stats['pending_collection'] }}</strong></span>
+                                <span class="badge bg-soft-primary text-primary rounded-pill px-2 py-1 fw-bold fs-9">Real-time</span>
                             </div>
                         </div>
                     </div>
@@ -93,20 +93,20 @@
                 </div>
 
                 <div class="col-xxl-3 col-md-6">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white hover-up transition-all">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-4">
-                                <div class="avatar-text avatar-lg bg-soft-success text-success rounded-4 shadow-sm">
+                                <div class="avatar-text avatar-lg bg-soft-success text-success rounded-4 shadow-sm border border-success border-opacity-10">
                                     <i class="feather-dollar-sign fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['total_profit'], 2) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">My Profit</h3>
+                                    <h3 class="fs-13 fw-bold text-muted text-uppercase ls-1 mb-1">My Profit</h3>
+                                    <div class="fs-3 fw-bolder text-dark mb-0">₹{{ number_format($stats['total_profit'], 2) }}</div>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Take home earnings</span>
-                                <span class="badge bg-soft-success text-success rounded-pill px-2 fw-bold">₹{{ number_format($stats['this_month_profit'], 2) }}</span>
+                                <span class="fs-11 text-muted">Range Profit:</span>
+                                <span class="badge bg-soft-success text-success rounded-pill px-2 py-1 fw-bold fs-10">+₹{{ number_format($stats['this_month_profit'], 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -133,20 +133,20 @@
                 </div>
 
                 <div class="col-xxl-3 col-md-6">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white border border-warning border-opacity-25">
+                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 bg-white border border-danger border-opacity-10 hover-up transition-all">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center gap-4">
-                                <div class="avatar-text avatar-lg bg-soft-warning text-warning rounded-4 shadow-sm">
-                                    <i class="feather-clock fs-4"></i>
+                                <div class="avatar-text avatar-lg bg-soft-danger text-danger rounded-4 shadow-sm border border-danger border-opacity-10">
+                                    <i class="feather-alert-octagon fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Unsettled Balance</h3>
+                                    <h3 class="fs-13 fw-bold text-muted text-uppercase ls-1 mb-1">Unsettled Dues</h3>
+                                    <div class="fs-3 fw-bolder text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Pending Settlement</span>
-                                <a href="{{ route('partner.settlements') }}" wire:navigate class="btn btn-xs btn-warning rounded-pill px-2 py-0 fs-9 fw-bold mt-1">Pay Now</a>
+                                <span class="fs-11 text-muted">Awaiting Verification: <strong class="text-warning">₹{{ number_format($stats['pending_approval_amount'] ?? 0, 2) }}</strong></span>
+                                <a href="{{ route('partner.settlements') }}" wire:navigate class="btn btn-xs btn-danger rounded-pill px-2 py-0 fs-9 fw-bold">Settle Dues</a>
                             </div>
                         </div>
                     </div>
@@ -206,13 +206,22 @@
                                     <i class="feather-clock fs-4"></i>
                                 </div>
                                 <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Unsettled Balance</h3>
+                                    <div class="fs-4 fw-bold {{ $stats['pending_balance'] < 0 ? 'text-danger' : 'text-dark' }} mb-0">
+                                        @if($stats['pending_balance'] < 0)
+                                            -₹{{ number_format(abs($stats['pending_balance']), 2) }}
+                                        @else
+                                            ₹{{ number_format($stats['pending_balance'], 2) }}
+                                        @endif
+                                    </div>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">
+                                        {{ $stats['pending_balance'] < 0 ? 'Amount Due To Lab' : 'Unsettled Balance' }}
+                                    </h3>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
-                                <span class="fs-11 text-muted">Pending Payout</span>
-                                <i class="feather-info fs-12 text-warning" title="Amount awaiting settlement"></i>
+                                <span class="fs-11 text-muted">{{ $stats['pending_balance'] < 0 ? 'Chargeback from cancelled bills' : 'Pending Payout' }}</span>
+                                <i class="feather-info fs-12 {{ $stats['pending_balance'] < 0 ? 'text-danger' : 'text-warning' }}" 
+                                   title="{{ $stats['pending_balance'] < 0 ? 'Amount you owe the lab due to bill reversals' : 'Amount awaiting settlement' }}"></i>
                             </div>
                         </div>
                     </div>
@@ -244,8 +253,8 @@
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-bottom-0 py-4 px-4 d-flex justify-content-between align-items-center">
                         <div>
-                            <h5 class="card-title mb-1 fw-bold text-dark">Earnings Overview</h5>
-                            <p class="text-muted small mb-0">Daily earnings distribution for the selected period</p>
+                            <h5 class="card-title mb-1 fw-bold text-dark">{{ $role === 'Collection Center' ? 'Profit Overview' : 'Earnings Overview' }}</h5>
+                            <p class="text-muted small mb-0">{{ $role === 'Collection Center' ? 'Daily profit distribution' : 'Daily earnings distribution' }} for the selected period</p>
                         </div>
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light border rounded-pill px-3 fs-11 fw-bold" type="button">
@@ -326,28 +335,36 @@
                         <h6 class="mb-0 fw-bold text-dark"><i class="feather-file-text me-2 text-primary"></i>Recent Invoices</h6>
                         <a href="{{ route('partner.invoices') }}" wire:navigate class="btn btn-sm btn-soft-primary px-3 rounded-pill fw-bold fs-11">View All</a>
                     </div>
-                    <div class="table-responsive" style="min-height: 200px;">
+                    <div class="table-responsive" style="min-height: 250px;">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-soft-light-gray fs-11 fw-bold text-uppercase text-muted border-bottom">
-                                <tr class="fs-11 text-uppercase text-muted fw-bold">
-                                    <th class="ps-4 py-3 border-0">Invoice #</th>
-                                    <th class="py-3 border-0">Patient</th>
-                                    <th class="py-3 border-0">Date</th>
-                                    <th class="py-3 text-end pe-4 border-0">Earnings (₹)</th>
+                            <thead class="bg-light fs-11 fw-bold text-uppercase text-muted border-bottom">
+                                <tr>
+                                    <th class="ps-4 py-3 border-0">Invoice Information</th>
+                                    <th class="py-3 border-0">Patient Name</th>
+                                    <th class="py-3 border-0">Date & Time</th>
+                                    <th class="py-3 text-end pe-4 border-0">{{ $role === 'Collection Center' ? 'Profit (₹)' : 'Earnings (₹)' }}</th>
                                 </tr>
                             </thead>
                             <tbody class="fs-13">
                                 @forelse($recentInvoices as $inv)
-                                    <tr class="border-bottom-light">
-                                        <td class="ps-4">
+                                    <tr class="border-bottom border-light">
+                                        <td class="ps-4 py-3">
                                             <div class="fw-bold text-dark fs-14">{{ $inv->invoice_number }}</div>
-                                            <span class="badge {{ $inv->payment_status == 'Paid' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }} fs-10 rounded-pill px-2">
-                                                {{ $inv->payment_status }}
-                                            </span>
+                                            <div class="fs-10">
+                                                <span class="badge {{ $inv->payment_status == 'Paid' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }} rounded-pill px-2">
+                                                    {{ $inv->payment_status }}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td class="text-dark fw-medium">{{ $inv->patient->name ?? 'N/A' }}</td>
-                                        <td class="text-muted font-medium">{{ $inv->invoice_date->format('d M, Y') }}</td>
-                                        <td class="text-end pe-4 fw-bold text-primary">
+                                        <td>
+                                            <div class="text-dark fw-medium fs-14">{{ $inv->patient->name ?? 'N/A' }}</div>
+                                            <div class="fs-11 text-muted">{{ $inv->patient->phone ?? '' }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark">{{ $inv->invoice_date->format('d M, Y') }}</div>
+                                            <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
+                                        </td>
+                                        <td class="text-end pe-4 fw-bold text-primary fs-15">
                                             @php
                                                 $amt = 0;
                                                 if($role === 'Doctor') $amt = $inv->doctor_commission_amount;
@@ -421,25 +438,30 @@
 
     <style>
         .font-medium { font-weight: 500; }
+        .ls-1 { letter-spacing: 0.5px; }
+        .ls-2 { letter-spacing: 1px; }
         .border-bottom-light { border-bottom: 1px solid #f8fafc; }
         .bg-soft-light-gray { background-color: #f8f9fa !important; }
         .bg-soft-primary { background-color: rgba(59, 113, 202, 0.08) !important; }
         .bg-soft-success { background-color: rgba(16, 185, 129, 0.08) !important; }
         .bg-soft-warning { background-color: rgba(245, 158, 11, 0.08) !important; }
         .bg-soft-info { background-color: rgba(6, 182, 212, 0.08) !important; }
+        .bg-soft-danger { background-color: rgba(220, 53, 69, 0.08) !important; }
         .text-primary { color: #3b71ca !important; }
         .text-success { color: #10b981 !important; }
         .text-warning { color: #f59e0b !important; }
         .text-info { color: #06b6d4 !important; }
+        .text-danger { color: #dc3545 !important; }
         
-        .avatar-text.avatar-lg { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .hover-up { transition: all 0.25s ease; }
+        .hover-up:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important; }
+        .transition-all { transition: all 0.25s ease; }
+
+        .avatar-text.avatar-lg { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
         .stretch { height: calc(100% - 30px); }
         .stretch-full { height: 100%; }
         
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            filter: invert(0.4) sepia(0) saturate(0) hue-rotate(0deg);
-        }
+        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; filter: invert(0.4); }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

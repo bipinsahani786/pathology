@@ -59,7 +59,8 @@ class PartnerDashboard extends Component
         $allInvoices = (clone $query)->get();
         
         $this->stats['total_earnings'] = $allInvoices->sum('doctor_commission_amount');
-        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
+        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
+        $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
         $this->stats['pending_balance'] = $this->stats['total_earnings'] - $this->stats['settled_amount'];
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
@@ -78,7 +79,8 @@ class PartnerDashboard extends Component
         $allInvoices = (clone $query)->get();
         
         $this->stats['total_earnings'] = $allInvoices->sum('agent_commission_amount');
-        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
+        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
+        $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
         $this->stats['pending_balance'] = $this->stats['total_earnings'] - $this->stats['settled_amount'];
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
@@ -105,7 +107,8 @@ class PartnerDashboard extends Component
         $this->stats['lab_dues'] = $allInvoices->sum('total_b2b_amount');
         $this->stats['total_earnings'] = $this->stats['total_profit']; // For UI consistency
         
-        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->sum('amount');
+        $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
+        $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
         $this->stats['pending_lab_payment'] = $this->stats['lab_dues'] - $this->stats['settled_amount'];
         $this->stats['pending_balance'] = $this->stats['pending_lab_payment']; // For UI consistency
         $this->stats['total_invoices'] = $rangeInvoices->count();

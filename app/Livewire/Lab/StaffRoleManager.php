@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 class StaffRoleManager extends Component
 {
     public $activeSubTab = 'staff'; // staff or roles
+    public $searchTerm = '';
 
     // Staff State
     public $staff_id, $name, $email, $phone, $password, $role_id;
@@ -150,13 +151,9 @@ class StaffRoleManager extends Component
         // For now, allow everything
         
         $this->role_id_to_edit = $role->id;
-        // Clean up name for editing (strip lab_CID_ or lab_CID_BID_)
+        // Clean up name for editing (strip lab_CID_)
         $user = auth()->user();
-        if ($user->hasRole('branch_admin')) {
-            $prefix = 'lab_' . $user->company_id . '_' . $user->branch_id . '_';
-        } else {
-            $prefix = 'lab_' . $user->company_id . '_';
-        }
+        $prefix = 'lab_' . $user->company_id . '_';
         $this->role_name = str_replace($prefix, '', $role->name);
         $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
         $this->isRoleModalOpen = true;
@@ -171,16 +168,12 @@ class StaffRoleManager extends Component
 
         DB::beginTransaction();
         try {
-            // Branch specific role name logic
+            // Company specific role name logic
             $cleanName = strtolower(str_replace(' ', '_', $this->role_name));
             $user = auth()->user();
             
-            if ($user->hasRole('branch_admin')) {
-                // Branch specific naming: lab_CID_BID_rolename
-                $internalName = 'lab_' . $user->company_id . '_' . $user->branch_id . '_' . $cleanName;
-            } else {
-                $internalName = 'lab_' . $user->company_id . '_' . $cleanName;
-            }
+            // All custom roles are tenant-scoped, not branch-scoped
+            $internalName = 'lab_' . $user->company_id . '_' . $cleanName;
 
             if ($this->role_id_to_edit) {
                 $this->authorize('edit staff_roles');
@@ -222,6 +215,15 @@ class StaffRoleManager extends Component
                 $query->whereIn('name', ['patient', 'doctor', 'agent']);
             });
 
+        // Apply Search Filter
+        if ($this->searchTerm) {
+            $query->where(function($q) {
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('email', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%');
+            });
+        }
+
         // Filter by branch for branch admins
         if ($user->hasRole('branch_admin')) {
             $query->where('branch_id', $user->branch_id);
@@ -240,17 +242,15 @@ class StaffRoleManager extends Component
             ->with('roles')
             ->get();
 
-        // Get roles: Lab specific roles + base staff role
+        // Get roles: Use generic roles from RoleSeeder
         if ($user->hasRole('branch_admin')) {
-            // Show branch specific roles + the generic staff role
-            $roles = Role::where('name', 'like', 'lab_' . $labId . '_' . $user->branch_id . '_%')
-                ->orWhere('name', 'staff')
+            // Branch admins can only assign staff roles
+            $roles = Role::whereIn('name', ['staff', 'collection_center', 'doctor', 'agent'])
                 ->orderBy('id', 'asc')
                 ->get();
         } else {
-            // Main Admin: Show all lab roles + global lab_admin/staff
-            $roles = Role::where('name', 'like', 'lab_' . $labId . '_%')
-                ->orWhereIn('name', ['staff', 'lab_admin']) 
+            // Main Admin: Show all relevant management roles
+            $roles = Role::whereIn('name', ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent']) 
                 ->orderBy('id', 'asc')
                 ->get();
         }

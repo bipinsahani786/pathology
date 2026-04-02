@@ -85,9 +85,12 @@ class RoleSeeder extends Seeder
         $collector = Role::firstOrCreate(['name' => 'collection_center']);
         $collector->syncPermissions([
             'view patients', 'create patients',
+            'view doctors', 'create doctors',
+            'view agents', 'create agents',
             'view invoices', 'create invoices',
             'view reports', 'generate reports', 'download reports',
-            'view pos', 'create pos'
+            'view pos', 'create pos',
+            'view marketing', 'create marketing'
         ]);
 
         // Customer (Patient)

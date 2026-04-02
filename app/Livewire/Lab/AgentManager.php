@@ -135,7 +135,7 @@ class AgentManager extends Component
                 $user = User::create([
                     'name' => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email ?? ($this->phone ? $this->phone . '@agent.local' : strtolower(str_replace(' ', '', $this->name)) . rand(100, 999) . '@agent.local'), 
+                    'email' => $this->email ?: null, 
                     'password' => Hash::make($this->password ?? $this->phone ?? 'password123'), 
                     'is_active' => true,
                 ]);
@@ -201,9 +201,11 @@ class AgentManager extends Component
 
     public function render()
     {
+        $companyId = auth()->user()->company_id;
+
         // Fetch only users who have an AgentProfile attached to the current company
-        $agents = User::whereHas('agentProfile', function($query) {
-                $query->where('company_id', auth()->user()->company_id);
+        $agents = User::whereHas('agentProfile', function($query) use ($companyId) {
+                $query->where('company_id', $companyId);
             })
             ->with('agentProfile') 
             ->where(function($q) {

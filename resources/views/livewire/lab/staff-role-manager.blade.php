@@ -33,9 +33,17 @@
             @if($activeSubTab === 'staff')
                 {{-- Staff List Card --}}
                 <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                        <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-users text-primary me-2"></i>Staff Directory</h6>
-                        <button wire:click="createStaff" class="btn btn-primary btn-sm px-3 rounded-pill">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between gap-3">
+                        <h6 class="card-title mb-0 fw-bold text-dark d-none d-md-block"><i class="feather-users text-primary me-2"></i>Staff Directory</h6>
+                        
+                        <div class="flex-grow-1" style="max-width: 400px;">
+                            <div class="input-group input-group-sm rounded-pill border overflow-hidden">
+                                <span class="input-group-text bg-white border-0 ps-3"><i class="feather-search text-muted fs-11"></i></span>
+                                <input type="text" wire:model.live.debounce.300ms="searchTerm" class="form-control border-0 fs-11 ps-2" placeholder="Search name, email or phone...">
+                            </div>
+                        </div>
+
+                        <button wire:click="createStaff" class="btn btn-primary btn-sm px-3 rounded-pill flex-shrink-0">
                             <i class="feather-plus me-1"></i>Add Staff
                         </button>
                     </div>

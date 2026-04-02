@@ -141,7 +141,7 @@ class DoctorManager extends Component
                 $user = User::create([
                     'name' => $finalName,
                     'phone' => $this->phone,
-                    'email' => $this->email ?? ($this->phone ? $this->phone . '@doctor.local' : strtolower(str_replace(' ', '', $this->name)) . rand(100, 999) . '@doctor.local'), 
+                    'email' => $this->email ?: null, 
                     'password' => Hash::make($this->password ?? $this->phone ?? 'password123'), 
                     'is_active' => true,
                 ]);
@@ -211,9 +211,11 @@ class DoctorManager extends Component
 
     public function render()
     {
+        $companyId = auth()->user()->company_id;
+
         // Fetch only users who have a DoctorProfile attached to the current company
-        $doctors = User::whereHas('doctorProfile', function($query) {
-                $query->where('company_id', auth()->user()->company_id);
+        $doctors = User::whereHas('doctorProfile', function($query) use ($companyId) {
+                $query->where('company_id', $companyId);
             })
             ->with('doctorProfile') 
             ->where(function($q) {

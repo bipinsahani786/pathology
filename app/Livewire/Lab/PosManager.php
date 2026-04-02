@@ -504,8 +504,8 @@ class PosManager extends Component
         try {
             $companyId = auth()->user()->company_id;
 
-            // fallback for email/password if phone is missing
-            $fallbackEmail = 'patient_' . time() . rand(10, 99) . '@patient.local';
+            // fallback for password if phone is missing
+            $fallbackEmail = null;
             $defaultPass = $this->new_phone ?? '12345678';
 
             $user = User::create([
@@ -658,6 +658,9 @@ class PosManager extends Component
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
+            
+            // Acquire a lock on the company to prevent concurrent invoice numbering issues
+            Company::where('id', $companyId)->lockForUpdate()->first();
 
             // ── Build Invoice Number from Configuration ──
             $prefix = Configuration::getFor('invoice_prefix', 'INV');
@@ -750,10 +753,10 @@ class PosManager extends Component
                 'invoice_number' => $invoiceNumber,
                 'barcode' => $barcode,
                 'invoice_date' => now(),
-                // 'sample_received_at' => $this->sample_received_at, // Removed temporarily until DB migration
-                // 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
-                //     ? $this->expected_report_date . ' ' . $this->expected_report_time
-                //     : null,
+                'sample_received_at' => $this->sample_received_at, 
+                'expected_report_time' => $this->expected_report_date && $this->expected_report_time
+                    ? $this->expected_report_date . ' ' . $this->expected_report_time
+                    : null,
                 'subtotal' => $this->subtotal,
                 'membership_discount_amount' => $this->membership_discount_amt,
                 'voucher_id' => $this->applied_voucher->id ?? null,
@@ -801,27 +804,12 @@ class PosManager extends Component
 
             // ── Mark membership as paid if bill is fully paid ──
             if ($this->purchasedMembershipRecordId && $this->due_amount <= 0) {
-                $memRecord = PatientMembership::find($this->purchasedMembershipRecordId);
-                if ($memRecord) {
-                    $memRecord->update(['amount_paid' => $this->membership_fee]);
-                }
+                PatientMembership::where('id', $this->purchasedMembershipRecordId)->update(['amount_paid' => $this->membership_fee]);
             }
 
-            // ── Credit Doctor & Agent Wallets ──
-            if ($docCommission > 0 && data_get($this->selectedDoctor, 'id')) {
-                $wallet = Wallet::firstOrCreate(
-                    ['user_id' => data_get($this->selectedDoctor, 'id'), 'company_id' => $companyId],
-                    ['balance' => 0]
-                );
-                $wallet->credit($docCommission, 'Commission from Invoice #' . $invoiceNumber, 'invoice', $invoice->id);
-            }
-            if ($agentCommission > 0 && $agentId) {
-                $wallet = Wallet::firstOrCreate(
-                    ['user_id' => $agentId, 'company_id' => $companyId],
-                    ['balance' => 0]
-                );
-                $wallet->credit($agentCommission, 'Commission from Invoice #' . $invoiceNumber, 'invoice', $invoice->id);
-            }
+            // ── Credit Wallets using unified Commission Service ──
+            $commissionService = new \App\Services\CommissionService();
+            $commissionService->applyCommissions($invoice);
 
             DB::commit();
             session()->flash('message', '✅ Bill Generated! Invoice: ' . $invoiceNumber);

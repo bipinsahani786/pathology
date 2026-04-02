@@ -35,15 +35,22 @@
             <a href="{{ route('lab.invoice.barcode.stickers', $invoice->id) }}" target="_blank" class="btn btn-outline-dark fw-bold me-2">
                 <i class="feather-code me-2"></i>Print Barcode
             </a>
-            <button class="btn btn-outline-success fw-bold" disabled title="Feature coming soon">
+            <button class="btn btn-outline-success fw-bold" disabled title="WhatsApp feature coming soon">
                 <i class="bi bi-whatsapp me-2"></i>WhatsApp
             </button>
+            @if($invoice->status === 'Completed')
+                <a href="{{ route('lab.reports.print', $invoice->id) }}" target="_blank" class="btn btn-primary fw-bold ms-2 px-4 shadow-sm">
+                    <i class="feather-printer me-2"></i>View / Print Report
+                </a>
+            @endif
         </div>
+        @if(!auth()->user()->hasRole('collection_center'))
         <div>
             <a href="{{ route('lab.reports.entry', $invoice->id) }}" wire:navigate class="btn btn-warning px-4 fw-bold text-dark shadow-sm">
                 <i class="feather-edit-3 me-2"></i>Enter Results
             </a>
         </div>
+        @endif
     </div>
 
     <!-- Main Content -->

@@ -31,9 +31,13 @@ class EnsureLabStaff
             abort(403, 'Unauthorized. You do not belong to any workspace.');
         }
 
-        // 4. Must NOT be an external role (patient, doctor, agent)
+        // 4. Must NOT be an external role (patient, doctor, agent, collection_center)
         // These roles have their own portals/prefixes.
-        if ($user->hasAnyRole(['patient', 'doctor', 'agent'])) {
+        if ($user->hasAnyRole(['patient', 'doctor', 'agent', 'collection_center'])) {
+            // Exception: Collection Centers are allowed to access POS and Invoices if needed
+            if ($user->hasRole('collection_center') && ($request->is('lab/pos*') || $request->is('lab/invoices*'))) {
+                return $next($request);
+            }
             abort(403, 'Unauthorized access to lab internal area.');
         }
 

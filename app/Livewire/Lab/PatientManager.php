@@ -139,10 +139,6 @@ class PatientManager extends Component
             } else {
                 // CREATE NEW PATIENT
                 
-                // fallback for email/password if phone is missing
-                $fallbackEmail = 'patient_' . time() . rand(10, 99) . '@patient.local';
-                $defaultPass = $this->phone ?? '12345678';
-
                 // 1. Create the User record (Allows them to log in later)
                 $activeBranchId = session('active_branch_id', 'all');
                 $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
@@ -152,8 +148,8 @@ class PatientManager extends Component
                 $user = User::create([
                     'name' => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email ?? $fallbackEmail, 
-                    'password' => Hash::make($defaultPass), 
+                    'email' => $this->email ?: null, 
+                    'password' => Hash::make($this->phone ?? '12345678'), 
                     'is_active' => true,
                     'company_id' => $companyId,
                     'branch_id' => $myBranchId,

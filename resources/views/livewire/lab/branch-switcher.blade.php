@@ -18,7 +18,7 @@
             <i class="feather-chevron-down fs-10 text-muted ms-1"></i>
         </a>
         
-        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown shadow-lg border-0 rounded-3 p-0 overflow-hidden" style="min-width: 280px; margin-top: 10px !important;">
+        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown shadow-lg border-0 rounded-3 p-0" style="min-width: 280px; margin-top: 10px !important;">
             <div class="dropdown-header p-3 border-bottom bg-light">
                 <div class="d-flex align-items-center justify-content-between">
                     <span class="fw-bold text-muted text-uppercase fs-10 ls-1">Select Branch Context</span>
