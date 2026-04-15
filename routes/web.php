@@ -35,6 +35,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Impersonation Routes
+Route::get('/impersonate/start/{user}', [\App\Http\Controllers\ImpersonationController::class, 'loginAs'])->name('impersonate.start')->middleware('auth');
+Route::get('/impersonate/stop', [\App\Http\Controllers\ImpersonationController::class, 'stopImpersonating'])->name('impersonate.stop')->middleware('auth');
+
 Route::get('/about', function () {
     return view('pages.about');
 })->name('about');

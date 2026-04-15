@@ -39,6 +39,64 @@ class SettlementManager extends Component
 
     protected $queryString = ['partnerType'];
 
+    private function getSettledField(): string
+    {
+        return match ($this->partnerType) {
+            'Doctor' => 'is_doctor_settled',
+            'Agent' => 'is_agent_settled',
+            'Collection Center' => 'is_cc_settled',
+            default => '',
+        };
+    }
+
+    private function getCommField(): string
+    {
+        return match ($this->partnerType) {
+            'Doctor' => 'doctor_commission_amount',
+            'Agent' => 'agent_commission_amount',
+            'Collection Center' => 'total_b2b_amount', // Amount Lab receives
+            default => 'total_amount',
+        };
+    }
+
+    private function getEarningsField(): string
+    {
+        return match ($this->partnerType) {
+            'Doctor' => 'doctor_commission_amount',
+            'Agent' => 'agent_commission_amount',
+            'Collection Center' => 'cc_profit_amount', // Amount CC earns
+            default => 'total_amount',
+        };
+    }
+
+    private function getPartnerIdField(): string
+    {
+        return match ($this->partnerType) {
+            'Doctor' => 'referred_by_doctor_id',
+            'Agent' => 'referred_by_agent_id',
+            'Collection Center' => 'collection_center_id',
+            default => '',
+        };
+    }
+
+    private function getPartnerValId(): ?int
+    {
+        if (!$this->selectedPartnerId) return null;
+        if (!$this->selectedPartner) $this->selectedPartner = User::find($this->selectedPartnerId);
+        
+        return ($this->partnerType === 'Collection Center') 
+            ? $this->selectedPartner->collection_center_id 
+            : $this->selectedPartnerId;
+    }
+
+    private function getMyBranchId()
+    {
+        $activeBranchId = session('active_branch_id', 'all');
+        return auth()->user()->hasRole('lab_admin|super_admin') 
+            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+            : auth()->user()->branch_id;
+    }
+
     public function mount()
     {
         $this->authorize('view settlements');
@@ -49,7 +107,8 @@ class SettlementManager extends Component
 
     public function updatedPartnerType()
     {
-        $this->reset(['selectedPartnerId', 'selectedPartner', 'selectedInvoices', 'amount_to_pay']);
+        $this->reset(['selectedPartnerId', 'selectedPartner', 'selectedInvoices', 'amount_to_pay', 'viewMode']);
+        $this->viewMode = 'list';
         $this->resetPage('partnersPage');
     }
 
@@ -82,36 +141,28 @@ class SettlementManager extends Component
 
     public function loadPartnerInsights()
     {
+        $this->authorize('view settlements');
         $companyId = auth()->user()->company_id;
-        $partnerIdField = '';
-        if ($this->partnerType === 'Doctor') $partnerIdField = 'referred_by_doctor_id';
-        elseif ($this->partnerType === 'Agent') $partnerIdField = 'referred_by_agent_id';
-        elseif ($this->partnerType === 'Collection Center') $partnerIdField = 'collection_center_id';
-
-        $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
-
-        $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+        $partnerIdField = $this->getPartnerIdField();
+        $valId = $this->getPartnerValId();
+        $myBranchId = $this->getMyBranchId();
 
         $query = Invoice::where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where($partnerIdField, $valId)
             ->where('status', '!=', 'Cancelled');
 
-        $statsQuery = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate]);
+        $statsQuery = (clone $query)->whereBetween('invoice_date', [
+            \Carbon\Carbon::parse($this->startDate)->startOfDay(), 
+            \Carbon\Carbon::parse($this->endDate)->endOfDay()
+        ]);
 
-        // Define which field represents the commission/due for this partner
-        $commField = '';
-        if ($this->partnerType === 'Doctor') $commField = 'doctor_commission_amount';
-        elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
-        elseif ($this->partnerType === 'Collection Center') $commField = 'total_b2b_amount';
+        $earningsField = $this->getEarningsField();
 
         $this->partnerStats = [
             'total_bills' => (clone $statsQuery)->count(),
             'total_revenue' => (clone $statsQuery)->sum('total_amount'),
-            'total_commission' => (clone $statsQuery)->where('payment_status', 'Paid')->sum($commField),
+            'total_commission' => (clone $statsQuery)->where('payment_status', 'Paid')->sum($earningsField),
             'avg_bill' => (clone $statsQuery)->avg('total_amount') ?? 0,
             'settlement_history' => Settlement::where('user_id', $this->selectedPartnerId)
                 ->where('company_id', $companyId)
@@ -171,12 +222,8 @@ class SettlementManager extends Component
     {
         $this->authorize('create settlements');
         $companyId = auth()->user()->company_id;
-        $partnerIdField = '';
-        if ($this->partnerType === 'Doctor') $partnerIdField = 'referred_by_doctor_id';
-        elseif ($this->partnerType === 'Agent') $partnerIdField = 'referred_by_agent_id';
-        elseif ($this->partnerType === 'Collection Center') $partnerIdField = 'collection_center_id';
-
-        $partnerValId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
+        $partnerIdField = $this->getPartnerIdField();
+        $partnerValId = $this->getPartnerValId();
 
         DB::beginTransaction();
         try {
@@ -268,26 +315,15 @@ class SettlementManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
-        $settledField = '';
-        if ($this->partnerType === 'Doctor') $settledField = 'is_doctor_settled';
-        elseif ($this->partnerType === 'Agent') $settledField = 'is_agent_settled';
-        elseif ($this->partnerType === 'Collection Center') $settledField = 'is_cc_settled';
-
-        $commField = '';
-        if ($this->partnerType === 'Doctor') $commField = 'doctor_commission_amount';
-        elseif ($this->partnerType === 'Agent') $commField = 'agent_commission_amount';
-        elseif ($this->partnerType === 'Collection Center') $commField = 'total_b2b_amount';
-        else $commField = 'total_amount';
+        $settledField = $this->getSettledField();
+        $commField = $this->getCommField();
 
         // Re-hydrate selected partner if missing
         if ($this->selectedPartnerId && !$this->selectedPartner) {
             $this->selectedPartner = User::find($this->selectedPartnerId);
         }
 
-        $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+        $myBranchId = $this->getMyBranchId();
 
         // --- Analytics Calculations ---
         $stats = [
@@ -312,8 +348,10 @@ class SettlementManager extends Component
         
         $stats['partners_with_pending'] = User::role($this->partnerType === 'Collection Center' ? 'collection_center' : strtolower($this->partnerType))
             ->where('company_id', $companyId)
-            ->whereHas($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType, function($q) use ($settledField) {
-                $q->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId)) // Consistent Branch Filter
+            ->whereHas($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType, function($q) use ($settledField, $myBranchId) {
+                $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId)) // Consistent Branch Filter in subquery
+                    ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             })
             ->count();
 
@@ -323,7 +361,7 @@ class SettlementManager extends Component
         // --- Partners Paginated List ---
         $partners = User::role($this->partnerType === 'Collection Center' ? 'collection_center' : strtolower($this->partnerType))
             ->where('company_id', $companyId)
-            ->when($myBranchId && ($this->partnerType !== 'Collection Center'), fn($q) => $q->where('branch_id', $myBranchId))
+            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId)) // Now filters ALL partners by branch
             ->withSum([($this->partnerType === 'Collection Center' ? 'collectionCenterInvoices' : 'invoicesAs'.$this->partnerType) . ' as pending_amount' => function($q) use ($settledField, $myBranchId) {
                 $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             }], $commField)
@@ -340,12 +378,8 @@ class SettlementManager extends Component
         // --- Pending Invoices for selected partner ---
         $pendingInvoices = [];
         if ($this->selectedPartnerId) {
-            $idField = '';
-            if ($this->partnerType === 'Doctor') $idField = 'referred_by_doctor_id';
-            elseif ($this->partnerType === 'Agent') $idField = 'referred_by_agent_id';
-            elseif ($this->partnerType === 'Collection Center') $idField = 'collection_center_id';
-
-            $valId = ($this->partnerType === 'Collection Center') ? $this->selectedPartner->collection_center_id : $this->selectedPartnerId;
+            $idField = $this->getPartnerIdField();
+            $valId = $this->getPartnerValId();
 
             $pendingInvoices = Invoice::where('company_id', $companyId)
                 ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))

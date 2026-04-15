@@ -62,6 +62,18 @@
 
     @include('layouts.partials.header')
 
+    @if(session()->has('impersonate_original_id'))
+        <div class="impersonation-banner" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 1060; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="spinner-grow spinner-grow-sm text-white" role="status"></div>
+                <span class="fw-bold fs-14">IMPERSONATION MODE: You are currently viewing the panel as <u>{{ auth()->user()->name }}</u></span>
+            </div>
+            <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-light fw-black rounded-pill px-4 shadow-sm" style="color: #ff416c;">
+                <i class="feather-log-out me-2"></i>RETURN TO ADMIN
+            </a>
+        </div>
+    @endif
+
     <main class="nxl-container" style="flex: 1; display: flex; flex-direction: column;">
         <div class="nxl-content" style="flex: 1;">
 

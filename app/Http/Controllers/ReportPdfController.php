@@ -15,7 +15,7 @@ class ReportPdfController extends Controller
             'invoice.patient.patientProfile', 
             'invoice.collectionCenter', 
             'invoice.doctor',
-            'results.labTest'
+            'results.labTest.department'
         ])->where('invoice_id', $id)->firstOrFail();
 
         if ($report->invoice->company_id !== auth()->user()->company_id) {
@@ -29,9 +29,23 @@ class ReportPdfController extends Controller
             'pdf_show_footer' => Configuration::getFor('pdf_show_footer', '1', $companyId) === '1',
             'pdf_header_image' => Configuration::getFor('pdf_header_image', null, $companyId),
             'pdf_footer_image' => Configuration::getFor('pdf_footer_image', null, $companyId),
-            'authorized_signatory_name' => Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist', $companyId),
-            'authorized_signatory_designation' => Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist', $companyId),
-            'signature_image' => Configuration::getFor('signature_image', null, $companyId),
+            
+            'report_signature_mode' => Configuration::getFor('report_signature_mode', 'global_bottom', $companyId),
+            
+            // Global 1
+            'global_sig_1_name' => Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist', $companyId),
+            'global_sig_1_desig' => Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist', $companyId),
+            'global_sig_1_path' => Configuration::getFor('signature_image', null, $companyId),
+
+            // Global 2
+            'global_sig_2_name' => Configuration::getFor('global_sig_2_name', '', $companyId),
+            'global_sig_2_desig' => Configuration::getFor('global_sig_2_desig', '', $companyId),
+            'global_sig_2_path' => Configuration::getFor('global_sig_2_path', null, $companyId),
+
+            // Global 3
+            'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId),
+            'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId),
+            'global_sig_3_path' => Configuration::getFor('global_sig_3_path', null, $companyId),
         ];
 
         // Format data for view: Group by Department => Test Name => Results
@@ -44,11 +58,14 @@ class ReportPdfController extends Controller
         }
 
         $groupedResults = $results->groupBy(function($result) {
-            return $result->labTest->department ?? 'General';
+            return $result->labTest->department_id ?? 0;
         })->map(function($deptGroup) {
-            return $deptGroup->groupBy(function($result) {
-                return $result->labTest->name;
-            });
+            return [
+                'department' => $deptGroup->first()->labTest->department ?? null,
+                'tests' => $deptGroup->groupBy(function($result) {
+                    return $result->labTest->name;
+                })
+            ];
         });
 
         $pdf = Pdf::loadView('pdf.report-' . $template, [

@@ -744,6 +744,13 @@ class PosManager extends Component
             $ccProfitAmount = 0;
             if ($ccId) {
                 $ccProfitAmount = max(0, $this->net_payable - $totalB2bAmount);
+
+                // Enforcement of B2B Price Floor
+                $restrictBilling = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
+                if ($restrictBilling && $this->net_payable < $totalB2bAmount) {
+                    session()->flash('error', 'Action Blocked: Net Payable (₹' . number_format($this->net_payable, 2) . ') cannot be less than the total B2B cost (₹' . number_format($totalB2bAmount, 2) . '). Please reduce discount or adjust tests.');
+                    return;
+                }
             }
 
             $invoice = Invoice::create([
