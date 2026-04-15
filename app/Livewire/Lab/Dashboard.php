@@ -106,7 +106,12 @@ class Dashboard extends Component
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where('status', '!=', 'Cancelled')
             ->whereBetween('invoice_date', [$start, $end])
-            ->selectRaw('SUM(total_amount) as revenue, SUM(cc_profit_amount) as profit, SUM(paid_amount) as collections, SUM(due_amount) as dues')
+            ->selectRaw('
+                SUM(total_amount) as revenue, 
+                SUM(total_amount - COALESCE(cc_profit_amount, 0) - COALESCE(doctor_commission_amount, 0) - COALESCE(agent_commission_amount, 0)) as profit, 
+                SUM(paid_amount) as collections, 
+                SUM(due_amount) as dues
+            ')
             ->first();
 
         // 4. Rankings (Top 5)
@@ -169,7 +174,11 @@ class Dashboard extends Component
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->where('status', '!=', 'Cancelled')
             ->whereBetween('invoice_date', [$start, $end])
-            ->select(DB::raw('DATE(invoice_date) as date'), DB::raw('SUM(total_amount) as daily_revenue'), DB::raw('SUM(cc_profit_amount) as daily_profit'))
+            ->select(
+                DB::raw('DATE(invoice_date) as date'), 
+                DB::raw('SUM(total_amount) as daily_revenue'), 
+                DB::raw('SUM(total_amount - COALESCE(cc_profit_amount, 0) - COALESCE(doctor_commission_amount, 0) - COALESCE(agent_commission_amount, 0)) as daily_profit')
+            )
             ->groupBy('date')->orderBy('date')->get();
 
         // Chart 2: Department Distribution (Share of Tests)

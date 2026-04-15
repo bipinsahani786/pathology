@@ -88,6 +88,11 @@
                                                     <button onclick="confirm('Are you sure?') || event.stopImmediatePropagation()" wire:click="deleteStaff({{ $member->id }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
                                                         <i class="feather-trash-2"></i>
                                                     </button>
+                                                    @if(auth()->user()->hasAnyRole(['super_admin', 'lab_admin']) && $member->id !== auth()->id())
+                                                        <a href="{{ route('impersonate.start', $member->id) }}" class="btn btn-icon btn-soft-dark btn-sm border-0" title="Login As {{ $member->name }}">
+                                                            <i class="feather-user-check"></i>
+                                                        </a>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>

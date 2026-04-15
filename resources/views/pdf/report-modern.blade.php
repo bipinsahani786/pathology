@@ -160,9 +160,22 @@
             margin-top: 40px;
         }
         .signature-img {
-            max-height: 50px;
-            max-width: 150px;
-            margin-bottom: 5px;
+            max-height: 45px;
+            max-width: 140px;
+            margin-bottom: 3px;
+        }
+
+        .signature-row {
+            display: table;
+            width: 100%;
+            margin-top: 30px;
+        }
+        .signature-col {
+            display: table-cell;
+            width: 33.33%;
+            text-align: center;
+            vertical-align: bottom;
+            font-size: 10px;
         }
         
         .end-of-report {
@@ -269,8 +282,13 @@
 
     {{-- RESULTS Engine --}}
     
-    @foreach($groupedResults as $dept => $tests)
-        <div class="dept-header">{{ strtoupper($dept) }}</div>
+    @foreach($groupedResults as $deptId => $data)
+        @php 
+            $dept = $data['department'];
+            $tests = $data['tests'];
+            $deptName = $dept ? $dept->name : 'General';
+        @endphp
+        <div class="dept-header">{{ strtoupper($deptName) }}</div>
         
         <table class="results-table">
             <thead>
@@ -334,6 +352,33 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- Per-Department Signatures --}}
+        @if($settings['report_signature_mode'] == 'per_department' && $dept)
+            <div class="signature-row" style="margin-top: 10px; margin-bottom: 20px;">
+                @if($dept->sig_1_path)
+                    <div class="signature-col">
+                        <img src="{{ public_path('storage/' . $dept->sig_1_path) }}" class="signature-img"><br>
+                        <strong>{{ $dept->sig_1_name }}</strong><br>
+                        {{ $dept->sig_1_desig }}
+                    </div>
+                @endif
+                @if($dept->sig_2_path)
+                    <div class="signature-col">
+                        <img src="{{ public_path('storage/' . $dept->sig_2_path) }}" class="signature-img"><br>
+                        <strong>{{ $dept->sig_2_name }}</strong><br>
+                        {{ $dept->sig_2_desig }}
+                    </div>
+                @endif
+                @if($dept->sig_3_path)
+                    <div class="signature-col">
+                        <img src="{{ public_path('storage/' . $dept->sig_3_path) }}" class="signature-img"><br>
+                        <strong>{{ $dept->sig_3_name }}</strong><br>
+                        {{ $dept->sig_3_desig }}
+                    </div>
+                @endif
+            </div>
+        @endif
     @endforeach
 
     {{-- REPORT COMMENTS --}}
@@ -344,17 +389,34 @@
         </div>
     @endif
 
-    {{-- SIGNATURE BLOCK --}}
-    <div class="clearfix">
-        <div class="signature-box">
-            @if($settings['signature_image'])
-                <img src="{{ public_path('storage/' . $settings['signature_image']) }}" class="signature-img">
+    {{-- SIGNATURE BLOCK (Global Bottom) --}}
+    @if($settings['report_signature_mode'] == 'global_bottom')
+        <div class="signature-row">
+            @if($settings['global_sig_1_path'])
+                <div class="signature-col">
+                    <img src="{{ public_path('storage/' . $settings['global_sig_1_path']) }}" class="signature-img"><br>
+                    <strong>{{ $settings['global_sig_1_name'] }}</strong><br>
+                    {{ $settings['global_sig_1_desig'] }}
+                </div>
             @endif
-            <br>
-            <strong>{{ $settings['authorized_signatory_name'] }}</strong><br>
-            <span style="color:#555">{{ $settings['authorized_signatory_designation'] }}</span>
+
+            @if($settings['global_sig_2_path'])
+                <div class="signature-col">
+                    <img src="{{ public_path('storage/' . $settings['global_sig_2_path']) }}" class="signature-img"><br>
+                    <strong>{{ $settings['global_sig_2_name'] }}</strong><br>
+                    {{ $settings['global_sig_2_desig'] }}
+                </div>
+            @endif
+
+            @if($settings['global_sig_3_path'])
+                <div class="signature-col">
+                    <img src="{{ public_path('storage/' . $settings['global_sig_3_path']) }}" class="signature-img"><br>
+                    <strong>{{ $settings['global_sig_3_name'] }}</strong><br>
+                    {{ $settings['global_sig_3_desig'] }}
+                </div>
+            @endif
         </div>
-    </div>
+    @endif
 
     {{-- END OF REPORT --}}
     <div class="end-of-report">

@@ -115,6 +115,11 @@
                                                     <i class="feather-trash-2 fs-14"></i>
                                                 </button>
                                             @endcan
+                                            @if($center->user && auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
+                                                <a href="{{ route('impersonate.start', $center->user->id) }}" class="btn btn-sm btn-light border text-dark shadow-sm rounded align-center-btn transition-all hover-dark" title="Login As {{ $center->user->name }}">
+                                                    <i class="feather-user-check fs-14"></i>
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

@@ -44,6 +44,11 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button wire:click="$set('activeTab', 'signatures')" class="nav-link {{ $activeTab === 'signatures' ? 'active' : '' }}">
+                    <i class="feather-edit-3 me-1"></i> Signatures
+                </button>
+            </li>
+            <li class="nav-item">
                 <button wire:click="$set('activeTab', 'barcode')" class="nav-link {{ $activeTab === 'barcode' ? 'active' : '' }}">
                     <i class="feather-maximize me-1"></i> Barcode Settings
                 </button>
@@ -314,6 +319,18 @@
                                 </div>
                             </div>
 
+                            <div class="p-3 rounded-3 mt-4" style="background:rgba(59,113,202,0.05);">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="fw-bold fs-12 text-dark"><i class="feather-shield text-primary me-2"></i>Restrict Billing below B2B Price</div>
+                                        <div class="fs-11 text-muted mt-1">If enabled, Collection Centers cannot generate bills if the patient amount is less than the B2B cost.</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="restrict_billing_below_b2b" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                            </div>
+
                             @can('edit settings')
                             <hr class="my-3">
                             <div class="text-end">
@@ -565,6 +582,257 @@
                     </div>
                 </div>
             </div>
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB: SIGNATURES --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'signatures')
+            <div class="row g-4">
+                {{-- Global Settings & Mode --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-edit-3 text-primary me-2"></i>Signature Display Strategy</h6>
+                                <p class="fs-12 text-muted mb-0">Choose how signatures should appear on your medical reports.</p>
+                            </div>
+                            @if($signaturesSaved)
+                                <div class="badge bg-soft-success text-success border border-success px-3 py-2 animate__animated animate__fadeIn">
+                                    <i class="feather-check-circle me-1"></i>Settings Saved
+                                </div>
+                            @endif
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-md-6">
+                                    <div class="d-flex gap-3">
+                                        <div wire:click="$set('report_signature_mode', 'global_bottom')" 
+                                             class="flex-fill p-3 rounded-4 border-2 cursor-pointer transition-all {{ $report_signature_mode === 'global_bottom' ? 'border-primary bg-soft-primary' : 'border-light bg-light opacity-75' }}">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-text avatar-md rounded-circle {{ $report_signature_mode === 'global_bottom' ? 'bg-primary text-white' : 'bg-white text-muted' }}">
+                                                    <i class="feather-align-center"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold fs-13 {{ $report_signature_mode === 'global_bottom' ? 'text-primary' : 'text-dark' }}">Global Bottom</div>
+                                                    <div class="fs-10 text-muted">Fixed signatures at end of report</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div wire:click="$set('report_signature_mode', 'per_department')" 
+                                             class="flex-fill p-3 rounded-4 border-2 cursor-pointer transition-all {{ $report_signature_mode === 'per_department' ? 'border-primary bg-soft-primary' : 'border-light bg-light opacity-75' }}">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="avatar-text avatar-md rounded-circle {{ $report_signature_mode === 'per_department' ? 'bg-primary text-white' : 'bg-white text-muted' }}">
+                                                    <i class="feather-layers"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold fs-13 {{ $report_signature_mode === 'per_department' ? 'text-primary' : 'text-dark' }}">Per Department</div>
+                                                    <div class="fs-10 text-muted">Signatures after each dept section</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 border-start ps-4">
+                                    <div class="alert alert-soft-info border-0 shadow-none mb-0 fs-11 py-2">
+                                        <i class="feather-info me-2"></i>
+                                        <strong>Option B active:</strong> In "Global Bottom" mode, the fixed signatures set below will be used. In "Per Department" mode, each department's unique signatures will be used.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Global Signatures (For Bottom Mode) --}}
+                <div class="col-12">
+                    <h6 class="fw-bold text-dark mt-2 mb-3"><i class="feather-globe text-primary me-2"></i>Global Signatures (Fixed Bottom)</h6>
+                    <div class="row g-3">
+                        {{-- Slot 1 --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                                <div class="card-body p-4 text-center">
+                                    <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Signatory Slot 1</div>
+                                    <div class="position-relative mb-4 mx-auto" style="width: 140px; height: 80px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        @if($new_signature_image)
+                                            <img src="{{ $new_signature_image->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                        @elseif($signature_image)
+                                            <img src="{{ asset('storage/' . $signature_image) }}" class="w-100 h-100 object-fit-contain">
+                                        @else
+                                            <i class="feather-upload-cloud fs-4 text-muted"></i>
+                                        @endif
+                                        <input type="file" wire:model="new_signature_image" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="authorized_signatory_name" placeholder="Name">
+                                    </div>
+                                    <div>
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="authorized_signatory_designation" placeholder="Designation">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Slot 2 --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                                <div class="card-body p-4 text-center">
+                                    <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Signatory Slot 2</div>
+                                    <div class="position-relative mb-4 mx-auto" style="width: 140px; height: 80px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        @if($new_global_sig_2)
+                                            <img src="{{ $new_global_sig_2->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                        @elseif($global_sig_2_path)
+                                            <img src="{{ asset('storage/' . $global_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
+                                        @else
+                                            <i class="feather-upload-cloud fs-4 text-muted"></i>
+                                        @endif
+                                        <input type="file" wire:model="new_global_sig_2" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="global_sig_2_name" placeholder="Name">
+                                    </div>
+                                    <div>
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="global_sig_2_desig" placeholder="Designation">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Slot 3 --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                                <div class="card-body p-4 text-center">
+                                    <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Signatory Slot 3</div>
+                                    <div class="position-relative mb-4 mx-auto" style="width: 140px; height: 80px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        @if($new_global_sig_3)
+                                            <img src="{{ $new_global_sig_3->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                        @elseif($global_sig_3_path)
+                                            <img src="{{ asset('storage/' . $global_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
+                                        @else
+                                            <i class="feather-upload-cloud fs-4 text-muted"></i>
+                                        @endif
+                                        <input type="file" wire:model="new_global_sig_3" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="global_sig_3_name" placeholder="Name">
+                                    </div>
+                                    <div>
+                                        <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="global_sig_3_desig" placeholder="Designation">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Department Signatures --}}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-layers text-primary me-2"></i>Department-Specific Signatures</h6>
+                                <div style="width: 250px;">
+                                    <select class="form-select border-0 bg-light fw-bold fs-12 text-primary" wire:model.live="selected_dept_id">
+                                        <option value="">Choose Department...</option>
+                                        @foreach(\App\Models\Department::forCompany(auth()->user()->company_id)->get() as $dept)
+                                            <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-4">
+                            @if(!$selected_dept_id)
+                                <div class="text-center py-5">
+                                    <div class="avatar-text avatar-xl bg-soft-primary text-primary mx-auto mb-3">
+                                        <i class="feather-arrow-up"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Select a Department</h6>
+                                    <p class="fs-12 text-muted">Choose a department above to manage its specific signatures for "Per Department" mode.</p>
+                                </div>
+                            @else
+                                <div class="row g-4">
+                                    {{-- Dept Slot 1 --}}
+                                    <div class="col-md-4">
+                                        <div class="p-4 border rounded-4 text-center bg-white shadow-sm">
+                                            <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Dept Signatory 1</div>
+                                            <div class="position-relative mb-4 mx-auto" style="width: 130px; height: 70px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                @if($new_dept_sig_1)
+                                                    <img src="{{ $new_dept_sig_1->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                                @elseif($dept_sig_1_path)
+                                                    <img src="{{ asset('storage/' . $dept_sig_1_path) }}" class="w-100 h-100 object-fit-contain">
+                                                @else
+                                                    <i class="feather-plus text-muted"></i>
+                                                @endif
+                                                <input type="file" wire:model="new_dept_sig_1" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                            </div>
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-12 mb-2" wire:model="dept_sig_1_name" placeholder="Name">
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-10 text-muted" wire:model="dept_sig_1_desig" placeholder="Designation">
+                                        </div>
+                                    </div>
+                                    {{-- Dept Slot 2 --}}
+                                    <div class="col-md-4">
+                                        <div class="p-4 border rounded-4 text-center bg-white shadow-sm">
+                                            <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Dept Signatory 2</div>
+                                            <div class="position-relative mb-4 mx-auto" style="width: 130px; height: 70px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                @if($new_dept_sig_2)
+                                                    <img src="{{ $new_dept_sig_2->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                                @elseif($dept_sig_2_path)
+                                                    <img src="{{ asset('storage/' . $dept_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
+                                                @else
+                                                    <i class="feather-plus text-muted"></i>
+                                                @endif
+                                                <input type="file" wire:model="new_dept_sig_2" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                            </div>
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-12 mb-2" wire:model="dept_sig_2_name" placeholder="Name">
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-10 text-muted" wire:model="dept_sig_2_desig" placeholder="Designation">
+                                        </div>
+                                    </div>
+                                    {{-- Dept Slot 3 --}}
+                                    <div class="col-md-4">
+                                        <div class="p-4 border rounded-4 text-center bg-white shadow-sm">
+                                            <div class="fs-10 fw-bold text-muted text-uppercase mb-3">Dept Signatory 3</div>
+                                            <div class="position-relative mb-4 mx-auto" style="width: 130px; height: 70px; border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                @if($new_dept_sig_3)
+                                                    <img src="{{ $new_dept_sig_3->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
+                                                @elseif($dept_sig_3_path)
+                                                    <img src="{{ asset('storage/' . $dept_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
+                                                @else
+                                                    <i class="feather-plus text-muted"></i>
+                                                @endif
+                                                <input type="file" wire:model="new_dept_sig_3" class="position-absolute opacity-0 w-100 h-100 cursor-pointer">
+                                            </div>
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-12 mb-2" wire:model="dept_sig_3_name" placeholder="Name">
+                                            <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-10 text-muted" wire:model="dept_sig_3_desig" placeholder="Designation">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Action Bar --}}
+                <div class="col-12 mt-2">
+                    <div class="card bg-dark border-0 shadow-lg rounded-4 overflow-hidden">
+                        <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                            <div class="text-white">
+                                <h6 class="fw-bold mb-1"><i class="feather-shield me-2 text-primary"></i>Finalize Signatures</h6>
+                                <p class="fs-11 text-white-50 mb-0">Changes will be reflected in all new and re-printed reports instantly.</p>
+                            </div>
+                            <button wire:click="saveSignatures" class="btn btn-primary btn-lg shadow-sm px-5 fw-bold transition-all hover-lift">
+                                <span wire:loading.remove wire:target="saveSignatures"><i class="feather-save me-2"></i>Publish All Changes</span>
+                                <span wire:loading wire:target="saveSignatures"><span class="spinner-border spinner-border-sm me-2"></span>Publishing...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .bg-soft-primary { background-color: rgba(59, 113, 202, 0.08) !important; }
+                .cursor-pointer { cursor: pointer; }
+                .transition-all { transition: all 0.2s ease-in-out; }
+                .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+            </style>
         @endif
 
         {{-- ═══════════════════════════════════════════════════════ --}}

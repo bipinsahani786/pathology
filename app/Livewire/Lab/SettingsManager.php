@@ -12,7 +12,7 @@ class SettingsManager extends Component
     use WithFileUploads;
 
     // Active Tab
-    public $activeTab = 'profile'; // profile, invoice, template, pdf, staff
+    public $activeTab = 'profile'; // profile, invoice, template, pdf, signatures, staff
 
     // ==========================================
     // LAB PROFILE
@@ -31,6 +31,7 @@ class SettingsManager extends Component
     public $invoice_date_format = 'ym';
     public $invoice_counter_digits = 4;
     public $invoice_counter_reset = 'monthly';
+    public $restrict_billing_below_b2b = false;
     public $invoiceSaved = false;
 
     // ==========================================
@@ -75,11 +76,24 @@ class SettingsManager extends Component
     public $restrict_branch_access = true;
     public $branchControlsSaved = false;
 
-    // Report Signatory
+    // Report Signatory (Global 1)
     public $authorized_signatory_name;
     public $authorized_signatory_designation;
     public $signature_image;
     public $new_signature_image;
+
+    // Global Signatories (2 & 3)
+    public $global_sig_2_name, $global_sig_2_desig, $global_sig_2_path, $new_global_sig_2;
+    public $global_sig_3_name, $global_sig_3_desig, $global_sig_3_path, $new_global_sig_3;
+
+    // Department-wise Signatures
+    public $report_signature_mode = 'global_bottom';
+    public $selected_dept_id;
+    public $dept_sig_1_name, $dept_sig_1_desig, $dept_sig_1_path, $new_dept_sig_1;
+    public $dept_sig_2_name, $dept_sig_2_desig, $dept_sig_2_path, $new_dept_sig_2;
+    public $dept_sig_3_name, $dept_sig_3_desig, $dept_sig_3_path, $new_dept_sig_3;
+
+    public $signaturesSaved = false;
 
     public function mount()
     {
@@ -103,6 +117,7 @@ class SettingsManager extends Component
         $this->invoice_date_format = Configuration::getFor('invoice_date_format', 'ym');
         $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4);
         $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
+        $this->restrict_billing_below_b2b = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
         $this->bill_template = Configuration::getFor('bill_template', 'classic');
 
         // Patient ID settings
@@ -118,6 +133,16 @@ class SettingsManager extends Component
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
         $this->signature_image = Configuration::getFor('signature_image', null);
+
+        // Global 2 & 3
+        $this->global_sig_2_name = Configuration::getFor('global_sig_2_name', '');
+        $this->global_sig_2_desig = Configuration::getFor('global_sig_2_desig', '');
+        $this->global_sig_2_path = Configuration::getFor('global_sig_2_path', null);
+        $this->global_sig_3_name = Configuration::getFor('global_sig_3_name', '');
+        $this->global_sig_3_desig = Configuration::getFor('global_sig_3_desig', '');
+        $this->global_sig_3_path = Configuration::getFor('global_sig_3_path', null);
+
+        $this->report_signature_mode = Configuration::getFor('report_signature_mode', 'global_bottom');
 
         // Barcode settings
         $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB');
@@ -207,6 +232,7 @@ class SettingsManager extends Component
         Configuration::setFor('invoice_date_format', $this->invoice_date_format);
         Configuration::setFor('invoice_counter_digits', $this->invoice_counter_digits);
         Configuration::setFor('invoice_counter_reset', $this->invoice_counter_reset);
+        Configuration::setFor('restrict_billing_below_b2b', $this->restrict_billing_below_b2b ? '1' : '0');
 
         $this->invoiceSaved = true;
     }
@@ -296,6 +322,99 @@ class SettingsManager extends Component
         Configuration::setFor('signature_image', $this->signature_image);
 
         $this->pdfSaved = true;
+    }
+
+    // ==========================================
+    // SAVE SIGNATURE SETTINGS (Global & Dept)
+    // ==========================================
+    public function updatedSelectedDeptId($value)
+    {
+        if (!$value) {
+            $this->reset(['dept_sig_1_name', 'dept_sig_1_desig', 'dept_sig_1_path', 'dept_sig_2_name', 'dept_sig_2_desig', 'dept_sig_2_path', 'dept_sig_3_name', 'dept_sig_3_desig', 'dept_sig_3_path']);
+            return;
+        }
+
+        $dept = \App\Models\Department::find($value);
+        if ($dept) {
+            $this->dept_sig_1_name = $dept->sig_1_name;
+            $this->dept_sig_1_desig = $dept->sig_1_desig;
+            $this->dept_sig_1_path = $dept->sig_1_path;
+
+            $this->dept_sig_2_name = $dept->sig_2_name;
+            $this->dept_sig_2_desig = $dept->sig_2_desig;
+            $this->dept_sig_2_path = $dept->sig_2_path;
+
+            $this->dept_sig_3_name = $dept->sig_3_name;
+            $this->dept_sig_3_desig = $dept->sig_3_desig;
+            $this->dept_sig_3_path = $dept->sig_3_path;
+        }
+    }
+
+    public function saveSignatures()
+    {
+        $this->authorize('edit settings');
+
+        // 1. Save Global Signatures
+        if ($this->new_signature_image) {
+            $this->signature_image = $this->new_signature_image->store('signatures', 'public');
+            $this->new_signature_image = null;
+        }
+        if ($this->new_global_sig_2) {
+            $this->global_sig_2_path = $this->new_global_sig_2->store('signatures', 'public');
+            $this->new_global_sig_2 = null;
+        }
+        if ($this->new_global_sig_3) {
+            $this->global_sig_3_path = $this->new_global_sig_3->store('signatures', 'public');
+            $this->new_global_sig_3 = null;
+        }
+
+        Configuration::setFor('report_signature_mode', $this->report_signature_mode);
+        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
+        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
+        Configuration::setFor('signature_image', $this->signature_image);
+
+        Configuration::setFor('global_sig_2_name', $this->global_sig_2_name);
+        Configuration::setFor('global_sig_2_desig', $this->global_sig_2_desig);
+        Configuration::setFor('global_sig_2_path', $this->global_sig_2_path);
+
+        Configuration::setFor('global_sig_3_name', $this->global_sig_3_name);
+        Configuration::setFor('global_sig_3_desig', $this->global_sig_3_desig);
+        Configuration::setFor('global_sig_3_path', $this->global_sig_3_path);
+
+        // 2. Save Selected Department Signatures
+        if ($this->selected_dept_id) {
+            $dept = \App\Models\Department::find($this->selected_dept_id);
+            if ($dept) {
+                $updateData = [
+                    'sig_1_name' => $this->dept_sig_1_name,
+                    'sig_1_desig' => $this->dept_sig_1_desig,
+                    'sig_2_name' => $this->dept_sig_2_name,
+                    'sig_2_desig' => $this->dept_sig_2_desig,
+                    'sig_3_name' => $this->dept_sig_3_name,
+                    'sig_3_desig' => $this->dept_sig_3_desig,
+                ];
+
+                if ($this->new_dept_sig_1) {
+                    $updateData['sig_1_path'] = $this->new_dept_sig_1->store('signatures', 'public');
+                    $this->dept_sig_1_path = $updateData['sig_1_path'];
+                    $this->new_dept_sig_1 = null;
+                }
+                if ($this->new_dept_sig_2) {
+                    $updateData['sig_2_path'] = $this->new_dept_sig_2->store('signatures', 'public');
+                    $this->dept_sig_2_path = $updateData['sig_2_path'];
+                    $this->new_dept_sig_2 = null;
+                }
+                if ($this->new_dept_sig_3) {
+                    $updateData['sig_3_path'] = $this->new_dept_sig_3->store('signatures', 'public');
+                    $this->dept_sig_3_path = $updateData['sig_3_path'];
+                    $this->new_dept_sig_3 = null;
+                }
+
+                $dept->update($updateData);
+            }
+        }
+
+        $this->signaturesSaved = true;
     }
 
     // ==========================================
