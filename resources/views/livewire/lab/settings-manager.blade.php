@@ -398,6 +398,7 @@
                             $templates = [
                                 'classic' => ['name' => 'Classic', 'icon' => 'feather-file-text', 'color' => '#3b71ca', 'desc' => 'Traditional layout with header, table, and footer. Best for formal medical reports.'],
                                 'modern' => ['name' => 'Modern', 'icon' => 'feather-layout', 'color' => '#14b8a6', 'desc' => 'Clean contemporary design with gradient banner and colored info cards.'],
+                                'pro' => ['name' => 'Professional', 'icon' => 'feather-shield', 'color' => '#1e293b', 'desc' => 'High-end Black & White design with clean borders, QR & Barcodes.'],
                                 'compact' => ['name' => 'Compact', 'icon' => 'feather-minimize-2', 'color' => '#f59e0b', 'desc' => 'Space-efficient layout for quick printing. Fits more data per page.'],
                                 'thermal' => ['name' => 'Thermal', 'icon' => 'feather-printer', 'color' => '#6366f1', 'desc' => 'Optimized for 80mm thermal printers. Narrow receipt format.'],
                             ];
@@ -414,13 +415,20 @@
                                         </div>
                                         <h6 class="fw-bold mb-1 fs-14">{{ $tpl['name'] }}</h6>
                                         <p class="fs-11 text-muted mb-2">{{ $tpl['desc'] }}</p>
-                                        @if($bill_template === $key)
-                                            <span class="badge rounded-pill fw-bold fs-11 px-3 py-2" style="background:{{ $tpl['color'] }};color:#fff;">
-                                                <i class="feather-check me-1"></i>Active
-                                            </span>
-                                        @else
-                                            <span class="badge bg-light text-muted rounded-pill fs-11 px-3 py-1">Select</span>
-                                        @endif
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            @if($bill_template === $key)
+                                                <span class="badge rounded-pill fw-bold fs-11 px-3 py-2" style="background:{{ $tpl['color'] }};color:#fff;">
+                                                    <i class="feather-check me-1"></i>Active
+                                                </span>
+                                            @else
+                                                <span class="badge bg-light text-muted rounded-pill fs-11 px-3 py-1">Select</span>
+                                            @endif
+                                        </div>
+                                        <div class="mt-3">
+                                            <a href="{{ route('lab.settings.invoice.preview', $key) }}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-light border w-100 fs-11 fw-bold">
+                                                <i class="feather-eye me-1"></i> Preview Format
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

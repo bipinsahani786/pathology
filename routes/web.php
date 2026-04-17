@@ -162,6 +162,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/profile', PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
+            Route::get('/settings/invoice-preview/{template}', [\App\Http\Controllers\InvoicePdfController::class, 'previewTemplate'])->name('settings.invoice.preview');
 
             // Reports Generation
             Route::get('/reports', ReportManager::class)->name('reports');

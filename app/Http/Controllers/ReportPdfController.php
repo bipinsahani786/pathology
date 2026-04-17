@@ -15,7 +15,7 @@ class ReportPdfController extends Controller
             'invoice.patient.patientProfile', 
             'invoice.collectionCenter', 
             'invoice.doctor',
-            'results.labTest.department'
+            'results.labTest.dept'
         ])->where('invoice_id', $id)->firstOrFail();
 
         if ($report->invoice->company_id !== auth()->user()->company_id) {
@@ -61,7 +61,7 @@ class ReportPdfController extends Controller
             return $result->labTest->department_id ?? 0;
         })->map(function($deptGroup) {
             return [
-                'department' => $deptGroup->first()->labTest->department ?? null,
+                'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function($result) {
                     return $result->labTest->name;
                 })

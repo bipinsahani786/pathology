@@ -69,4 +69,38 @@ class InvoicePdfController extends Controller
 
         return $pdf->stream('Invoice-' . $invoice->invoice_number . '-NoHeader.pdf');
     }
+
+    public function previewTemplate($template)
+    {
+        $companyId = auth()->user()->company_id;
+        $company = Company::find($companyId);
+        
+        // Grab the latest invoice to use as dummy data for the preview
+        $invoice = Invoice::where('company_id', $companyId)
+            ->with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator'])
+            ->latest()
+            ->first();
+
+        if (!$invoice) {
+            abort(404, 'Need at least one invoice to generate a preview. Please create a bill first.');
+        }
+
+        $view = 'pdf.invoice-' . $template;
+        if (!view()->exists($view)) {
+            $view = 'pdf.invoice-classic';
+        }
+
+        $pdf = Pdf::loadView($view, [
+            'invoice' => $invoice,
+            'company' => $company,
+            'showHeader' => true,
+            'showFooter' => true,
+            'headerImage' => null, // Configuration::getFor('pdf_header_image', null)
+            'footerImage' => null, // Configuration::getFor('pdf_footer_image', null)
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Preview-' . ucfirst($template) . '-Template.pdf');
+    }
 }
