@@ -86,33 +86,17 @@
 
     @include('layouts.partials.customizer')
 
-    <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
-    <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
+    <script src="{{ asset('assets/vendors/js/vendors.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/common-init.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/dashboard-init.min.js') }}" data-navigate-once></script>
     
-    <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js" data-navigate-once></script>
 
-    <script data-navigate-once>
-        document.addEventListener('livewire:navigated', () => {
-            if (typeof bootstrap !== 'undefined') {
-                const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-                dropdowns.forEach(dropdown => {
-                    new bootstrap.Dropdown(dropdown, {
-                        popperConfig(defaultBsPopperConfig) {
-                            return {
-                                ...defaultBsPopperConfig,
-                                strategy: 'fixed'
-                            };
-                        }
-                    });
-                });
-            }
-        });
-    </script>
+    <!-- Removed explicit Bootstrap Dropdown instantiation to allow native data-api delegation to work cleanly -->
     @livewireScripts
     
     {{-- Global Search Modal --}}
@@ -257,6 +241,17 @@
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
             document.body.style.paddingRight = '';
+
+            // Restore Sidebar Scrollbar and Accordion interactions after Livewire Morph
+            setTimeout(() => {
+                if (typeof window.addscroller === 'function') {
+                    window.addscroller();
+                }
+                // Ensure actively selected menus stay visible if the theme relies on inline styles
+                if (typeof jQuery !== 'undefined') {
+                    jQuery('.nxl-hasmenu.nxl-trigger > .nxl-submenu').css('display', 'block');
+                }
+            }, 10);
         });
 
         // 2. Global Search Logic

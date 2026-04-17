@@ -349,6 +349,24 @@
                             </td>
                         </tr>
                     @endif
+
+                    <!-- Display Test Form specific remarks -->
+                    @php
+                        $testInvoiceItem = null;
+                        if($results->first()->invoice_item_id) {
+                            $testInvoiceItem = $invoice->items->where('id', $results->first()->invoice_item_id)->first();
+                        } else {
+                            $testInvoiceItem = $invoice->items->where('lab_test_id', $results->first()->lab_test_id)->first();
+                        }
+                    @endphp
+                    @if($testInvoiceItem && $testInvoiceItem->report_comments)
+                        <tr>
+                            <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333; background: #fafafa; border: 1px dotted #ccc;">
+                                <strong>Feedback / Remarks:</strong> <br>
+                                {!! $testInvoiceItem->report_comments !!}
+                            </td>
+                        </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
@@ -385,7 +403,7 @@
     @if($report->comments)
         <div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #fcfcfc;">
             <strong>Doctor's Comments / Interpretation:</strong><br>
-            <span style="font-size: 11px; color: #333;">{!! nl2br(e($report->comments)) !!}</span>
+            <span style="font-size: 11px; color: #333;">{!! $report->comments !!}</span>
         </div>
     @endif
 
