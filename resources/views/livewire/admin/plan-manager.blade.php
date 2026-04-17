@@ -137,65 +137,95 @@
 
                     <form wire:submit.prevent="store" class="d-flex flex-column mb-0 overflow-hidden">
                         <div class="modal-body p-4 bg-white">
+                            <!-- Basic Info -->
                             <div class="row g-3 mb-4">
                                 <div class="col-md-12">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Plan Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name" placeholder="e.g. Starter Pack">
                                     @error('name') <span class="invalid-feedback fs-11">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Price (₹) <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" wire:model="price">
                                     @error('price') <span class="text-danger fs-11 mt-1">{{ $message }}</span> @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Validity (Days) <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control @error('duration_in_days') is-invalid @enderror" wire:model="duration_in_days">
                                     @error('duration_in_days') <span class="text-danger fs-11 mt-1">{{ $message }}</span> @enderror
                                 </div>
-                            </div>
-
-                            <div class="mb-3 d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
-                                <h6 class="fw-bold text-dark mb-0">Plan Limits & Features</h6>
-                                <button type="button" wire:click="addFeature" class="btn btn-soft-primary btn-sm px-3 rounded-pill">
-                                    <i class="feather-plus me-1"></i> Add Feature
-                                </button>
-                            </div>
-
-                            <div class="border rounded-4 bg-white shadow-sm overflow-hidden mb-4">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr class="fs-10 text-uppercase text-muted fw-bold">
-                                            <th class="ps-3 py-2">Feature Key</th>
-                                            <th>Value/Limit</th>
-                                            <th class="text-end pe-3" style="width: 50px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($features as $index => $feature)
-                                            <tr wire:key="feature-{{ $index }}" class="border-bottom border-light">
-                                                <td class="ps-3 py-2">
-                                                    <input type="text" class="form-control form-control-sm" wire:model="features.{{ $index }}.key" placeholder="max_branches">
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="features.{{ $index }}.value" placeholder="5">
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    <button type="button" wire:click="removeFeature({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
-                                                        <i class="feather-trash-2"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="mb-0">
-                                <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
-                                    <div class="me-auto fw-bold text-dark small">Plan Active</div>
-                                    <div class="form-check form-switch m-0">
+                                <div class="col-md-4">
+                                    <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Status</label>
+                                    <div class="form-check form-switch mt-2">
                                         <input class="form-check-input" type="checkbox" wire:model="is_active">
+                                        <label class="form-check-label fs-11 fw-bold text-muted ms-1">{{ $is_active ? 'ACTIVE' : 'INACTIVE' }}</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Numeric Limits -->
+                            <h6 class="fw-bold text-dark mb-3 border-bottom pb-2"><i class="feather-maximize-2 me-2 text-primary"></i>System Limits (-1 for Unlimited)</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-soft-primary rounded-3 border border-primary border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-primary text-uppercase mb-1">Max Branches</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_branches">
+                                        @error('max_branches') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-soft-success rounded-3 border border-success border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-success text-uppercase mb-1">Max Staff Members</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_staff">
+                                        @error('max_staff') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-soft-info rounded-3 border border-info border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-info text-uppercase mb-1">Referring Doctors</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_doctors">
+                                        @error('max_doctors') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-soft-warning rounded-3 border border-warning border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-warning text-uppercase mb-1">Marketing Agents</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_agents">
+                                        @error('max_agents') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-soft-dark rounded-3 border border-dark border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-dark text-uppercase mb-1">Collection Centers</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_collection_centers">
+                                        @error('max_collection_centers') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Module Toggle Switches -->
+                            <h6 class="fw-bold text-dark mb-3 border-bottom pb-2"><i class="feather-box me-2 text-primary"></i>Module & Interface Access</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-12">Inventory Management</div>
+                                            <div class="text-muted fs-10">Stock, Reagents, and Supplies tracking</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="has_inventory">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-12">Premium Invoices</div>
+                                            <div class="text-muted fs-10">Customized Branding and Designs</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="has_custom_invoice">
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -73,6 +73,24 @@ class StaffRoleManager extends Component
 
         $this->authorize($this->staff_id ? 'edit staff_roles' : 'create staff_roles');
 
+        // Pre-validation for SaaS Staff Limit
+        if (!$this->staff_id) {
+            $company = auth()->user()->company;
+            $maxStaff = $company->plan->features['staff'] ?? -1;
+            
+            if ($maxStaff != -1) {
+                $currentStaffCount = \App\Models\User::where('company_id', $company->id)
+                    ->whereHas('roles', function($q) {
+                        $q->whereIn('name', ['staff', 'lab_admin', 'branch_admin', 'collection_center']);
+                    })->count();
+                    
+                if ($currentStaffCount >= $maxStaff) {
+                    $this->addError('name', "Plan Limit Reached! Your plan allows a maximum of {$maxStaff} staff members. Please upgrade your plan to add more.");
+                    return;
+                }
+            }
+        }
+
         DB::beginTransaction();
         try {
             $data = [

@@ -132,7 +132,19 @@ class DoctorManager extends Component
                 session()->flash('message', 'Doctor details updated successfully.');
             } else {
                 $this->authorize('create doctors');
-                $companyId = auth()->user()->company_id;
+                $company = auth()->user()->company;
+                
+                // SaaS Plan Enforcement for Doctors
+                $maxDoctors = $company->plan->features['doctors'] ?? -1;
+                if ($maxDoctors != -1) {
+                    $currentDoctorsCount = \App\Models\DoctorProfile::where('company_id', $company->id)->count();
+                    if ($currentDoctorsCount >= $maxDoctors) {
+                        $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxDoctors} referring doctor(s). Upgrade your plan to add more.");
+                        return;
+                    }
+                }
+
+                $companyId = $company->id;
                 // CREATE NEW DOCTOR
                 
                 // 1. Create the base User record (Prefixing Dr. if not provided can be done here)

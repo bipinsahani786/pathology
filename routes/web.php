@@ -111,8 +111,12 @@ Route::middleware(['auth'])->group(function () {
 
             // Billing & Upgrade Page (Users will be redirected here when their trial expires)
             Route::get('/upgrade-plan', function () {
-                return "Your trial has expired. Please upgrade your plan to continue."; // Placeholder text for now
+                return view('lab.subscription-expired');
             })->name('billing.upgrade');
+
+            Route::get('/subscription-expired', function () {
+                return view('lab.subscription-expired');
+            })->name('subscription.expired');
 
 
 
@@ -185,7 +189,7 @@ Route::middleware(['auth'])->group(function () {
     // ----------------------------------------------------
     // 3. PARTNER ROUTES (Doctor, Agent, Collection Center)
     // ----------------------------------------------------
-    Route::middleware(['auth', 'partner_access'])
+    Route::middleware(['auth', 'partner_access', \App\Http\Middleware\CheckTenantSubscription::class])
         ->prefix('partner')
         ->name('partner.')
         ->group(function () {

@@ -52,7 +52,7 @@
                     <li class="nxl-item {{ request()->routeIs('admin.labs') ? 'active' : '' }}">
                         <a href="{{ route('admin.labs') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
-                            <span class="nxl-mtext">Labs & Settlements</span>
+                            <span class="nxl-mtext">Labs</span>
                         </a>
                     </li>
                 @endrole

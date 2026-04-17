@@ -18,6 +18,7 @@
             </div>
             
             {{-- Global Search Trigger --}}
+            @if(!auth()->user()->hasRole('super_admin'))
             <div class="header-search-wrapper d-none d-md-flex">
                 <div class="search-form-wrapper">
                     <form action="javascript:void(0);" class="search-form">
@@ -33,12 +34,15 @@
                     </form>
                 </div>
             </div>
+            @endif
         </div>
 
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center gap-2">
                 {{-- Branch Switcher --}}
-                <livewire:lab.branch-switcher />
+                @if(!auth()->user()->hasRole('super_admin'))
+                    <livewire:lab.branch-switcher />
+                @endif
 
                 {{-- Subscription Timer --}}
                 @php

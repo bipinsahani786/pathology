@@ -9,7 +9,9 @@ use Illuminate\Validation\Rule;
 
 class GlobalTestEditor extends Component
 {
-    public $test_id, $test_code, $name, $method, $department_id, $suggested_price, $description, $interpretation;
+    public $test_id, $test_code, $name, $method, $department_id, $mrp, $b2b_price, $sample_type;
+    public $tat_hours = 24;
+    public $description, $interpretation;
     public array $parameters = [];
     public $editingParamIndex = null;
     public $isRangeModalOpen = false;
@@ -24,7 +26,10 @@ class GlobalTestEditor extends Component
             $this->name = $test->name;
             $this->method = $test->method;
             $this->department_id = $test->department_id;
-            $this->suggested_price = $test->suggested_price;
+            $this->mrp = $test->mrp;
+            $this->b2b_price = $test->b2b_price;
+            $this->sample_type = $test->sample_type;
+            $this->tat_hours = $test->tat_hours;
             $this->description = $test->description;
             $this->interpretation = $test->interpretation;
             $this->parameters = $test->default_parameters ?? [];
@@ -134,7 +139,10 @@ class GlobalTestEditor extends Component
             'name' => 'required|string|max:255',
             'method' => 'nullable|string|max:100',
             'department_id' => 'required|exists:departments,id',
-            'suggested_price' => 'nullable|numeric|min:0',
+            'mrp' => 'nullable|numeric|min:0',
+            'b2b_price' => 'nullable|numeric|min:0',
+            'sample_type' => 'nullable|string|max:100',
+            'tat_hours' => 'nullable|integer|min:0',
             'description' => 'nullable|string|max:1000',
             'interpretation' => 'nullable|string',
             'parameters' => 'nullable|array',
@@ -158,7 +166,10 @@ class GlobalTestEditor extends Component
             'name' => $this->name,
             'method' => $this->method,
             'department_id' => $this->department_id,
-            'suggested_price' => $this->suggested_price,
+            'mrp' => $this->mrp,
+            'b2b_price' => $this->b2b_price,
+            'sample_type' => $this->sample_type,
+            'tat_hours' => $this->tat_hours,
             'description' => $this->description,
             'interpretation' => $this->interpretation,
             'default_parameters' => $this->parameters,

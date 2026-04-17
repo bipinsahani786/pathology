@@ -21,22 +21,34 @@ class DemoSeeder extends Seeder
         // ============================================================
         // 1. PLANS
         // ============================================================
-        $basicPlan = Plan::firstOrCreate(['name' => 'Basic'], [
+        $basicPlan = Plan::updateOrCreate(['name' => 'Basic'], [
             'price' => 0,
             'duration_in_days' => 365,
-            'features' => ['tests' => 50, 'patients' => 200, 'branches' => 1, 'staff' => 2],
+            'features' => [
+                'tests' => 50, 'patients' => 200, 'branches' => 1, 'staff' => 2,
+                'inventory' => false, 'custom_invoice' => false, 'collection_centers' => 1,
+                'doctors' => 5, 'agents' => 0, 'reports' => true
+            ],
             'is_active' => true,
         ]);
-        $proPlan = Plan::firstOrCreate(['name' => 'Professional'], [
+        $proPlan = Plan::updateOrCreate(['name' => 'Professional'], [
             'price' => 4999,
             'duration_in_days' => 365,
-            'features' => ['tests' => 500, 'patients' => 5000, 'branches' => 5, 'staff' => 10, 'reports' => true],
+            'features' => [
+                'tests' => 500, 'patients' => 5000, 'branches' => 5, 'staff' => 10,
+                'inventory' => true, 'custom_invoice' => true, 'collection_centers' => 5,
+                'doctors' => 50, 'agents' => 10, 'reports' => true
+            ],
             'is_active' => true,
         ]);
-        $enterprisePlan = Plan::firstOrCreate(['name' => 'Enterprise'], [
+        $enterprisePlan = Plan::updateOrCreate(['name' => 'Enterprise'], [
             'price' => 14999,
             'duration_in_days' => 365,
-            'features' => ['tests' => -1, 'patients' => -1, 'branches' => -1, 'staff' => -1, 'reports' => true, 'api' => true, 'whatsapp' => true],
+            'features' => [
+                'tests' => -1, 'patients' => -1, 'branches' => -1, 'staff' => -1,
+                'inventory' => true, 'custom_invoice' => true, 'collection_centers' => -1,
+                'doctors' => -1, 'agents' => -1, 'reports' => true, 'api' => true, 'whatsapp' => true
+            ],
             'is_active' => true,
         ]);
         $this->command->info('✅ Plans created');
@@ -210,10 +222,10 @@ class DemoSeeder extends Seeder
                 'global_test_id' => $gt->id,
                 'name' => $gt->name,
                 'department_id' => $gt->department_id,
-                'mrp' => $gt->suggested_price ?? 300,
-                'b2b_price' => ($gt->suggested_price ?? 300) * 0.7,
-                'sample_type' => in_array($gt->category, ['Clinical Pathology']) ? 'Urine/Stool' : 'Blood',
-                'tat_hours' => in_array($gt->category, ['Immunology', 'Hormones']) ? 24 : 6,
+                'mrp' => $gt->mrp ?? 300,
+                'b2b_price' => ($gt->mrp ?? 300) * 0.7,
+                'sample_type' => $gt->sample_type ?? (in_array($gt->category, ['Clinical Pathology']) ? 'Urine/Stool' : 'Blood'),
+                'tat_hours' => $gt->tat_hours ?? 24,
                 'parameters' => $gt->default_parameters,
                 'description' => $gt->description,
                 'interpretation' => $gt->interpretation,
@@ -464,9 +476,10 @@ class DemoSeeder extends Seeder
             $totalB2b = $selectedTests->sum('b2b_price');
             $ccProfit = max(0, $total - $totalB2b);
 
-            $invoice = Invoice::create([
-                'company_id' => $company->id,
-                'collection_center_id' => $selectedCC->id,
+            $invoice = Invoice::updateOrCreate(
+                ['company_id' => $company->id, 'invoice_number' => $invoiceNumber],
+                [
+                    'collection_center_id' => $selectedCC->id,
                 'branch_id' => $selectedBranch->id,
                 'patient_id' => $patient->id,
                 'created_by' => $labAdmin->id,

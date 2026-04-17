@@ -64,6 +64,11 @@ class Dashboard extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $company = auth()->user()->company;
+        $daysLeft = 0;
+        if ($company && $company->trial_ends_at) {
+            $daysLeft = now()->diffInDays($company->trial_ends_at, false);
+        }
         $activeBranchId = session('active_branch_id', 'all');
         $branchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin')
             ? ($activeBranchId === 'all' ? null : $activeBranchId)
@@ -210,6 +215,7 @@ class Dashboard extends Component
             ->get();
 
         return view('livewire.lab.dashboard', [
+            'daysLeft' => $daysLeft,
             'stats' => $stats,
             'ops' => $ops,
             'financials' => $financials,

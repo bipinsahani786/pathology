@@ -100,6 +100,17 @@ class BranchManager extends Component
                 $rules['password'] = 'min:6';
             }
         } else {
+            // Pre-validation logic for SaaS Limits limits to avoid user filling form to be rejected
+            $company = auth()->user()->company;
+            $maxBranches = $company->plan->features['branches'] ?? -1;
+            if ($maxBranches != -1) {
+                $currentBranchCount = \App\Models\Branch::where('company_id', $company->id)->count();
+                if ($currentBranchCount >= $maxBranches) {
+                    $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxBranches} branch(es). Upgrade your plan to add more.");
+                    return;
+                }
+            }
+
             // Create
             $rules['email'] .= '|unique:users,email';
             $rules['password'] = 'required|min:6';
@@ -108,6 +119,19 @@ class BranchManager extends Component
         $this->validate($rules);
 
         \Illuminate\Support\Facades\DB::transaction(function () {
+            // SaaS Plan Enforcement for Branches
+            if (!$this->branch_id) {
+                $company = auth()->user()->company;
+                $maxBranches = $company->plan->features['branches'] ?? -1;
+                
+                if ($maxBranches != -1) {
+                    $currentBranchCount = \App\Models\Branch::where('company_id', $company->id)->count();
+                    if ($currentBranchCount >= $maxBranches) {
+                        return; // Halt transaction execution
+                    }
+                }
+            }
+
             // Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
             if ($this->branch_id) {
                 $this->authorize('edit branches');

@@ -22,26 +22,27 @@ class CheckTenantSubscription
             return $next($request);
         }
 
-        // 2. Check subscription status for lab admins or staff members
+        // 2. Check subscription status for lab admins, staff members, and partners
         if ($user && $user->company_id) {
             $company = $user->company;
 
             if (!$company) {
-                abort(403, 'Workspace not found. It may have been deleted.');
+                abort(403, 'Workspace not found.');
             }
-            // Block access if the company account has been manually suspended by a super admin
+
             if ($company->status !== 'active') {
                 abort(403, 'Your workspace has been suspended. Please contact support.');
             }
 
-            // Check if the 15-day trial or active subscription period has expired
+            // Check if the subscription period has expired
             if ($company->trial_ends_at && Carbon::now()->greaterThan($company->trial_ends_at)) {
+                
+                $currentRoute = $request->route()->getName();
+                $allowedRoutes = ['lab.subscription.expired', 'lab.billing.upgrade', 'logout'];
 
-                // Allow access ONLY to the billing/upgrade page to prevent an infinite redirection loop
-                if ($request->route()->getName() !== 'lab.billing.upgrade') {
-
-                    return redirect()->route('lab.billing.upgrade')
-                        ->with('error', 'Your free trial has expired. Please choose a plan to continue using Sws SaaS.');
+                if (!in_array($currentRoute, $allowedRoutes)) {
+                    return redirect()->route('lab.subscription.expired')
+                        ->with('error', 'Your subscription has expired. Please renew to continue.');
                 }
             }
         }

@@ -279,6 +279,15 @@ class SettingsManager extends Component
     public function saveTemplate()
     {
         $this->authorize('edit settings');
+
+        // SaaS Plan Enforcement
+        $hasCustomInvoice = auth()->user()->company->plan->features['custom_invoice'] ?? false;
+        if (!$hasCustomInvoice && $this->bill_template !== 'classic') {
+            session()->flash('error', 'Plan Restriction: Your current plan only supports the Classic invoice template. Upgrade to a premium plan to use Modern or Professional templates.');
+            $this->bill_template = 'classic';
+            return;
+        }
+
         Configuration::setFor('bill_template', $this->bill_template);
         $this->templateSaved = true;
     }
@@ -293,6 +302,17 @@ class SettingsManager extends Component
             'new_header_image' => 'nullable|image|max:3072',
             'new_footer_image' => 'nullable|image|max:3072',
         ]);
+
+        // SaaS Plan Enforcement for Custom Branding
+        $hasCustomInvoice = auth()->user()->company->plan->features['custom_invoice'] ?? false;
+        if (!$hasCustomInvoice) {
+            if (is_object($this->new_header_image) || is_object($this->new_footer_image)) {
+                session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
+                $this->new_header_image = null;
+                $this->new_footer_image = null;
+                return;
+            }
+        }
 
         // Upload header image
         if (is_object($this->new_header_image) && method_exists($this->new_header_image, 'store')) {
