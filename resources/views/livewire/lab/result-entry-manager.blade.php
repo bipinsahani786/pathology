@@ -178,6 +178,26 @@
                                             </td>
                                         </tr>
                                     @endforeach
+
+                                    {{-- Test Level Comment --}}
+                                    <tr>
+                                        <td colspan="5" class="bg-light p-3 border-bottom" wire:ignore>
+                                            <label class="form-label fw-bold fs-11 text-muted text-uppercase mb-1"><i class="feather-align-left me-1"></i>{{ $testName }} Feedback / Remarks</label>
+                                            <textarea class="form-control" rows="2" 
+                                                x-data x-init="
+                                                    ClassicEditor
+                                                        .create($el, {
+                                                            toolbar: ['bold', 'italic', 'bulletedList', 'numberedList', 'undo', 'redo']
+                                                        })
+                                                        .then(editor => {
+                                                            editor.model.document.on('change:data', () => {
+                                                                @this.set('testComments.{{ $itemId }}', editor.getData());
+                                                            });
+                                                            editor.setData(@js($testComments[$itemId] ?? ''));
+                                                        })
+                                                " placeholder="Add specific interpretation for {{ $testName }}..."></textarea>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             @endforeach
                         </tbody>
@@ -186,7 +206,7 @@
                 
                 {{-- Report Comments --}}
                 <div class="px-4 py-3 bg-light border-top" wire:ignore>
-                    <label class="form-label fw-bold fs-12 text-dark"><i class="feather-message-square me-2 text-primary"></i>Report Comments / Interpretation</label>
+                    <label class="form-label fw-bold fs-12 text-dark"><i class="feather-message-square me-2 text-primary"></i>Global Report Comments / Interpretation (Appears at End)</label>
                     <textarea class="form-control rich-editor" id="report-comments-editor" rows="3" 
                         x-data x-init="
                             ClassicEditor

@@ -20,6 +20,7 @@ class ResultEntryManager extends Component
     public $flags = []; 
     public $parametersList = [];
     public $selectedTests = []; // For selective printing from here
+    public $testComments = []; // Comments per invoice item (test)
 
     public function mount($id)
     {
@@ -82,6 +83,7 @@ class ResultEntryManager extends Component
         }
 
         foreach ($this->invoice->items as $item) {
+            $this->testComments[$item->id] = $item->report_comments ?? '';
             if ($item->labTest && $item->labTest->parameters) {
                 foreach ($item->labTest->parameters as $param) {
                     $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
@@ -297,6 +299,13 @@ class ResultEntryManager extends Component
                     'method' => $details['method'] ?? null,
                 ]
             );
+        }
+
+        // Save Test Level Comments
+        foreach ($this->invoice->items as $item) {
+            if (isset($this->testComments[$item->id])) {
+                $item->update(['report_comments' => $this->testComments[$item->id]]);
+            }
         }
 
         if ($status === 'Approved') {

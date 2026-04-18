@@ -31,10 +31,19 @@ class GlobalTestSeeder extends Seeder
 
                 GlobalTest::updateOrCreate(
                     ['test_code' => $test['test_code']],
-                    array_merge($test, [
+                    [
+                        'name' => $test['name'],
+                        'category' => $test['category'] ?? 'Other',
                         'department_id' => $department?->id,
+                        'description' => $test['description'] ?? null,
+                        'interpretation' => $test['interpretation'] ?? null,
+                        'mrp' => $test['suggested_price'] ?? 0,
+                        'method' => $test['method'] ?? null,
+                        'sample_type' => $test['sample_type'] ?? null,
+                        'tat_hours' => $test['tat_hours'] ?? 24,
                         'default_parameters' => $test['default_parameters'] ?? [],
-                    ])
+                        'is_active' => true,
+                    ]
                 );
             }
         }

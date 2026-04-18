@@ -1,53 +1,64 @@
 <!DOCTYPE html>
 @php
-    $savedSkin = $_COOKIE['nxl-skin'] ?? 'app-skin-light';
+    // Server-side theme detection from cookie - page arrives already dark if needed
+    $themeCookie = $_COOKIE['nxl_theme'] ?? '';
+    $isDark = str_contains($themeCookie, 'dark');
+    $skinClass = $isDark ? 'app-skin-dark' : '';
 @endphp
-<html lang="en" class="{{ $savedSkin }}">
+<html lang="en" class="{{ $skinClass }}">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $title ?? 'Pathology SaaS' }}</title>
-    
-    {{-- 1. INSTANT THEME GUARD (Blocking Script) --}}
+
+    {{-- THEME GUARD: Runs before anything renders. Reads localStorage and applies classes instantly. --}}
     <script>
         (function() {
             try {
-                // Check all possible theme keys used by this template
-                var skin = localStorage.getItem('nxl-skin') || localStorage.getItem('app-skin') || 'app-skin-light';
-                var nav = localStorage.getItem('nxl-navigation') || 'app-navigation-light';
-                
-                if (skin.includes('dark')) {
+                // The template uses TWO keys: 'app-skin' (customizer) and 'app-skin-dark' (header toggle)
+                var skinCustomizer = localStorage.getItem('app-skin') || '';
+                var skinToggle = localStorage.getItem('app-skin-dark') || '';
+                var isDark = skinCustomizer === 'app-skin-dark' || skinToggle === 'app-skin-dark';
+
+                if (isDark) {
                     document.documentElement.classList.add('app-skin-dark');
-                    // Force the background color immediately via style attribute
-                    document.documentElement.style.background = '#111827';
+                } else {
+                    document.documentElement.classList.remove('app-skin-dark');
                 }
-                if (nav.includes('dark')) {
-                    document.documentElement.classList.add('app-navigation-dark');
-                }
+
+                // Apply navigation preference
+                var nav = localStorage.getItem('app-navigation');
+                if (nav) document.documentElement.classList.add(nav);
+
+                // Apply header preference
+                var header = localStorage.getItem('app-header');
+                if (header) document.documentElement.classList.add(header);
+
+                // Apply font preference
+                var font = localStorage.getItem('font-family');
+                if (font) document.documentElement.classList.add(font);
+
+                // Apply color preference
+                var color = localStorage.getItem('app-color');
+                if (color) document.documentElement.classList.add(color);
+
+                // Sync cookie for server-side rendering on next request
+                document.cookie = "nxl_theme=" + (isDark ? 'dark' : 'light') + "; path=/; max-age=31536000; SameSite=Lax";
             } catch (e) {}
         })();
     </script>
 
-    {{-- 2. INSTANT CSS GUARD (Ensures all major containers are dark instantly) --}}
+    {{-- Inline critical dark-mode styles so there's zero flash even before CSS loads --}}
     <style>
-        html.app-skin-dark, 
-        html.app-skin-dark body,
-        html.app-skin-dark .nxl-container,
-        html.app-skin-dark .nxl-content,
-        html.app-skin-dark .nxl-header,
-        html.app-skin-dark .nxl-navigation {
-            background-color: #111827 !important;
-            color: #e5e7eb !important;
-            transition: none !important; /* Disable transitions to prevent flashing */
-        }
-        /* Keep background dark for any intermediate transition states */
-        html.app-skin-dark .nxl-content > div {
-            background-color: transparent !important;
+        html.app-skin-dark,
+        html.app-skin-dark body {
+            background-color: #1a1d29 !important;
         }
     </style>
 
-    <link rel="shortcut icon" type="image/x-icon" href="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/icon.webp') }}" />
+    <link rel="shortcut icon" type="image/x-icon"
+        href="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/icon.webp') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/bootstrap.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/vendors.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/daterangepicker.min.css') }}" />
@@ -63,12 +74,15 @@
     @include('layouts.partials.header')
 
     @if(session()->has('impersonate_original_id'))
-        <div class="impersonation-banner" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 1060; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);">
+        <div class="impersonation-banner"
+            style="background: linear-gradient(90deg, #ff416c, #ff4b2b); color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 1060; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);">
             <div class="d-flex align-items-center gap-3">
                 <div class="spinner-grow spinner-grow-sm text-white" role="status"></div>
-                <span class="fw-bold fs-14">IMPERSONATION MODE: You are currently viewing the panel as <u>{{ auth()->user()->name }}</u></span>
+                <span class="fw-bold fs-14">IMPERSONATION MODE: You are currently viewing the panel as
+                    <u>{{ auth()->user()->name }}</u></span>
             </div>
-            <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-light fw-black rounded-pill px-4 shadow-sm" style="color: #ff416c;">
+            <a href="{{ route('impersonate.stop') }}" class="btn btn-sm btn-light fw-black rounded-pill px-4 shadow-sm"
+                style="color: #ff416c;">
                 <i class="feather-log-out me-2"></i>RETURN TO ADMIN
             </a>
         </div>
@@ -86,6 +100,7 @@
 
     @include('layouts.partials.customizer')
 
+    {{-- Vendor scripts: NO data-navigate-once so jQuery handlers re-bind after SPA nav --}}
     <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
     <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
@@ -93,42 +108,28 @@
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
-    
-    <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js"></script>
 
-    <script data-navigate-once>
-        document.addEventListener('livewire:navigated', () => {
-            if (typeof bootstrap !== 'undefined') {
-                const dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-                dropdowns.forEach(dropdown => {
-                    new bootstrap.Dropdown(dropdown, {
-                        popperConfig(defaultBsPopperConfig) {
-                            return {
-                                ...defaultBsPopperConfig,
-                                strategy: 'fixed'
-                            };
-                        }
-                    });
-                });
-            }
-        });
-    </script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js" data-navigate-once></script>
+
     @livewireScripts
-    
+
     {{-- Global Search Modal --}}
     <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden"
+                style="background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);">
                 <div class="modal-header border-0 p-4 pb-0">
                     <div class="input-group search-modal-input-group border-0 rounded-4 px-3 py-2 bg-light shadow-sm">
                         <span class="input-group-text border-0 ps-0 bg-transparent">
                             <i class="feather-search text-primary fs-4"></i>
                         </span>
-                        <input type="text" id="globalSearchInput" class="form-control border-0 shadow-none bg-transparent fs-5 fw-medium" 
+                        <input type="text" id="globalSearchInput"
+                            class="form-control border-0 shadow-none bg-transparent fs-5 fw-medium"
                             placeholder="What can I help you find?" autofocus>
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-white text-muted border shadow-sm px-2 py-1 fs-10">ESC</span>
-                            <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                         </div>
                     </div>
                 </div>
@@ -144,7 +145,6 @@
                             $navItems = [];
 
                             if ($isLabStaff) {
-                                // Internal Lab Admin/Staff View
                                 $navItems = [
                                     ['name' => 'Dashboard', 'route' => 'lab.dashboard', 'icon' => 'feather-airplay', 'desc' => 'Overview & Analytics', 'color' => 'primary'],
                                     ['name' => 'New Bill (POS)', 'route' => 'lab.pos', 'icon' => 'feather-plus-circle', 'desc' => 'Quick Billing', 'color' => 'success'],
@@ -162,7 +162,6 @@
                                     ['name' => 'My Profile', 'route' => 'lab.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
                                 ];
                             } elseif ($isCollectionCenter) {
-                                // Collection Center View
                                 $navItems = [
                                     ['name' => 'Center Dashboard', 'route' => 'partner.dashboard', 'icon' => 'feather-airplay', 'desc' => 'My Dashboard', 'color' => 'primary'],
                                     ['name' => 'New Bill (POS)', 'route' => 'lab.pos', 'icon' => 'feather-plus-circle', 'desc' => 'Billing Portal', 'color' => 'success'],
@@ -172,7 +171,6 @@
                                     ['name' => 'My Profile', 'route' => 'partner.profile', 'icon' => 'feather-user', 'desc' => 'Account Info', 'color' => 'dark'],
                                 ];
                             } elseif ($isDoctorAgent) {
-                                // Referral Partners View
                                 $navItems = [
                                     ['name' => 'Partner Dashboard', 'route' => 'partner.dashboard', 'icon' => 'feather-airplay', 'desc' => 'My Dashboard', 'color' => 'primary'],
                                     ['name' => 'Referred Invoices', 'route' => 'partner.invoices', 'icon' => 'feather-file-text', 'desc' => 'My Billings', 'color' => 'info'],
@@ -185,15 +183,19 @@
 
                         @foreach($navItems as $item)
                             <div class="col-md-4 nav-search-item animated fadeInUp">
-                                <a href="{{ route($item['route']) }}" wire:navigate class="nav-card d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm transition-all h-100">
-                                    <div class="avatar-text avatar-md bg-soft-{{ $item['color'] }} text-{{ $item['color'] }} rounded-3 me-3 flex-shrink-0 card-icon">
+                                <a href="{{ route($item['route']) }}" wire:navigate
+                                    class="nav-card d-flex align-items-center p-3 rounded-4 border bg-white shadow-sm transition-all h-100">
+                                    <div
+                                        class="avatar-text avatar-md bg-soft-{{ $item['color'] }} text-{{ $item['color'] }} rounded-3 me-3 flex-shrink-0 card-icon">
                                         <i class="{{ $item['icon'] }} fs-5"></i>
                                     </div>
                                     <div class="overflow-hidden flex-grow-1">
-                                        <h6 class="mb-0 fs-13 fw-bold text-dark text-truncate nav-title">{{ $item['name'] }}</h6>
+                                        <h6 class="mb-0 fs-13 fw-bold text-dark text-truncate nav-title">{{ $item['name'] }}
+                                        </h6>
                                         <small class="text-muted fs-11 text-truncate d-block">{{ $item['desc'] }}</small>
                                     </div>
-                                    <i class="feather-chevron-right fs-11 text-muted opacity-0 arrow-indicator transition-all"></i>
+                                    <i
+                                        class="feather-chevron-right fs-11 text-muted opacity-0 arrow-indicator transition-all"></i>
                                 </a>
                             </div>
                         @endforeach
@@ -204,17 +206,22 @@
     </div>
 
     <style>
-        .modal-backdrop { z-index: 9998 !important; }
-        .modal { z-index: 9999 !important; }
-        
+        .modal-backdrop {
+            z-index: 9998 !important;
+        }
+
+        .modal {
+            z-index: 9999 !important;
+        }
+
         /* THE ULTIMATE BLUR KILLER */
-        body.modal-open > *:not(.modal):not(.modal-backdrop) {
+        body.modal-open>*:not(.modal):not(.modal-backdrop) {
             filter: none !important;
             backdrop-filter: none !important;
         }
-        
-        body.modal-open .nxl-container, 
-        body.modal-open .nxl-navigation, 
+
+        body.modal-open .nxl-container,
+        body.modal-open .nxl-navigation,
         body.modal-open .nxl-header {
             filter: none !important;
             backdrop-filter: none !important;
@@ -223,21 +230,36 @@
         .search-modal-input-group:focus-within {
             background: white !important;
             border: 1px solid var(--bs-primary) !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
         }
 
         .nav-card:hover {
             border-color: var(--bs-primary) !important;
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
         }
-        .nav-card:hover .card-icon { transform: scale(1.1); }
-        .nav-card:hover .arrow-indicator { opacity: 1 !important; transform: translateX(3px); }
+
+        .nav-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .nav-card:hover .arrow-indicator {
+            opacity: 1 !important;
+            transform: translateX(3px);
+        }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translate3d(0, 20px, 0); }
-            to { opacity: 1; transform: translate3d(0, 0, 0); }
+            from {
+                opacity: 0;
+                transform: translate3d(0, 20px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
         }
+
         .animated.fadeInUp {
             animation-name: fadeInUp;
             animation-duration: 0.4s;
@@ -245,73 +267,151 @@
         }
     </style>
 
+    {{-- ============================================================ --}}
+    {{-- MASTER LAYOUT SCRIPT: Theme persistence, navigation, events  --}}
+    {{-- ============================================================ --}}
     <script data-navigate-once>
-        // 1. Modal & Navigation Cleanup
-        document.addEventListener('livewire:navigated', () => {
-            const modalElement = document.getElementById('searchModal');
-            if (modalElement) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
-            }
-            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        });
+        (function() {
+            // ── Helper: sync both localStorage keys + cookie ──
+            function syncThemeState() {
+                var isDark = document.documentElement.classList.contains('app-skin-dark');
+                // Keep both localStorage keys in sync (customizer uses 'app-skin', header toggle uses 'app-skin-dark')
+                localStorage.setItem('app-skin', isDark ? 'app-skin-dark' : 'app-skin-light');
+                localStorage.setItem('app-skin-dark', isDark ? 'app-skin-dark' : 'app-skin-light');
+                // Sync cookie for server-side rendering
+                document.cookie = "nxl_theme=" + (isDark ? 'dark' : 'light') + "; path=/; max-age=31536000; SameSite=Lax";
 
-        // 2. Global Search Logic
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('globalSearchInput');
-            const navItems = document.querySelectorAll('.nav-search-item');
-            if(searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const query = this.value.toLowerCase().trim();
-                    navItems.forEach(item => {
-                        const title = item.querySelector('.nav-title').textContent.toLowerCase();
-                        item.classList.toggle('d-none', !title.includes(query));
-                    });
-                });
-                const searchModal = document.getElementById('searchModal');
-                if (searchModal) {
-                    searchModal.addEventListener('shown.bs.modal', () => searchInput.focus());
+                // Sync header button visibility
+                if (isDark) {
+                    document.querySelectorAll('.dark-button').forEach(function(el) { el.style.display = 'none'; });
+                    document.querySelectorAll('.light-button').forEach(function(el) { el.style.display = ''; });
+                } else {
+                    document.querySelectorAll('.dark-button').forEach(function(el) { el.style.display = ''; });
+                    document.querySelectorAll('.light-button').forEach(function(el) { el.style.display = 'none'; });
                 }
             }
-        });
 
-        // 3. Global Livewire Listeners (STRICT ONCE REGISTRATION)
-        if (!window.pathologyListenersAdded) {
-            document.addEventListener('livewire:init', () => {
-                if (window.pathologyListenersAdded) return;
-                
-                Livewire.on('open-new-tab', (data) => {
-                    const url = Array.isArray(data) ? data[0].url : data.url;
-                    if (url) window.open(url, '_blank');
-                });
+            // ── Helper: restore theme after Livewire SPA navigation ──
+            function restoreThemeAfterNavigation() {
+                var skinCustomizer = localStorage.getItem('app-skin') || '';
+                var skinToggle = localStorage.getItem('app-skin-dark') || '';
+                var isDark = skinCustomizer === 'app-skin-dark' || skinToggle === 'app-skin-dark';
 
-                Livewire.on('print-window', () => {
-                    window.print();
-                });
+                if (isDark) {
+                    document.documentElement.classList.add('app-skin-dark');
+                }
 
-                window.pathologyListenersAdded = true;
+                // Restore other theme classes
+                var nav = localStorage.getItem('app-navigation');
+                if (nav) {
+                    document.documentElement.classList.remove('app-navigation-light', 'app-navigation-dark');
+                    document.documentElement.classList.add(nav);
+                }
+                var header = localStorage.getItem('app-header');
+                if (header) {
+                    document.documentElement.classList.remove('app-header-light', 'app-header-dark');
+                    document.documentElement.classList.add(header);
+                }
+                var font = localStorage.getItem('font-family');
+                if (font) document.documentElement.classList.add(font);
+                var color = localStorage.getItem('app-color');
+                if (color) document.documentElement.classList.add(color);
+
+                // Sync button states
+                syncThemeState();
+            }
+
+            // ── 1. After every Livewire SPA navigation ──
+            document.addEventListener('livewire:navigated', function() {
+                // Restore theme instantly (before paint if possible)
+                restoreThemeAfterNavigation();
+
+                // Modal cleanup
+                var modalElement = document.getElementById('searchModal');
+                if (modalElement && typeof bootstrap !== 'undefined') {
+                    var modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+
+                // Restore sidebar scroller
+                setTimeout(function() {
+                    if (typeof window.addscroller === 'function') {
+                        window.addscroller();
+                    }
+                    if (typeof jQuery !== 'undefined') {
+                        jQuery('.nxl-hasmenu.nxl-trigger > .nxl-submenu').css('display', 'block');
+                    }
+                    if (document.fullscreenElement) {
+                        document.documentElement.classList.add('fsh-infullscreen');
+                        if (document.body) document.body.classList.add('full-screen-helper');
+                    }
+                }, 10);
             });
-        }
 
-        // 4. Dark Mode Cookie Synchronization (Zero-Flash Persistence)
-        const syncThemeCookie = () => {
-            const skin = document.documentElement.classList.contains('app-skin-dark') ? 'app-skin-dark' : 'app-skin-light';
-            document.cookie = "nxl-skin=" + skin + "; path=/; max-age=31536000; SameSite=Lax";
-        };
-        
-        // Initial sync
-        syncThemeCookie();
-        
-        // Watch for theme changes via Customizer or Header Toggles
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'class') syncThemeCookie();
+            // ── 2. Before Livewire starts navigating (prevent flash) ──
+            document.addEventListener('livewire:navigating', function() {
+                // Ensure the dark class stays on <html> during the swap
+                var isDark = localStorage.getItem('app-skin') === 'app-skin-dark' ||
+                             localStorage.getItem('app-skin-dark') === 'app-skin-dark';
+                if (isDark) {
+                    document.documentElement.classList.add('app-skin-dark');
+                }
             });
-        });
-        observer.observe(document.documentElement, { attributes: true });
+
+            // ── 3. Watch for class changes on <html> to keep cookie in sync ──
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        syncThemeState();
+                    }
+                });
+            });
+            observer.observe(document.documentElement, { attributes: true });
+
+            // ── 4. Global Search ──
+            document.addEventListener('DOMContentLoaded', function() {
+                var searchInput = document.getElementById('globalSearchInput');
+                var navItems = document.querySelectorAll('.nav-search-item');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        var query = this.value.toLowerCase().trim();
+                        navItems.forEach(function(item) {
+                            var title = item.querySelector('.nav-title').textContent.toLowerCase();
+                            item.classList.toggle('d-none', !title.includes(query));
+                        });
+                    });
+                    var searchModal = document.getElementById('searchModal');
+                    if (searchModal) {
+                        searchModal.addEventListener('shown.bs.modal', function() { searchInput.focus(); });
+                    }
+                }
+            });
+
+            // ── 5. Livewire Event Listeners (strict once) ──
+            if (!window.pathologyListenersAdded) {
+                document.addEventListener('livewire:init', function() {
+                    if (window.pathologyListenersAdded) return;
+
+                    Livewire.on('open-new-tab', function(data) {
+                        var url = Array.isArray(data) ? data[0].url : data.url;
+                        if (url) window.open(url, '_blank');
+                    });
+
+                    Livewire.on('print-window', function() {
+                        window.print();
+                    });
+
+                    window.pathologyListenersAdded = true;
+                });
+            }
+
+            // ── 6. Initial sync on page load ──
+            syncThemeState();
+        })();
     </script>
 </body>
 

@@ -12,11 +12,16 @@ class PlanManager extends Component
     public $duration_in_days = 30;
     public $is_active = true;
 
-    // Array to manage dynamic JSONB features
-    public array $features = [];
+    // Fixed SaaS Features & Limits
+    public $max_branches = 1;
+    public $max_staff = 3;
+    public $max_doctors = 5;
+    public $max_agents = 2;
+    public $max_collection_centers = 1;
+    public $has_inventory = false;
+    public $has_custom_invoice = false;
+
     public $isModalOpen = false;
-
-
 
     /**
      * Get an instance of the PlanService.
@@ -26,28 +31,28 @@ class PlanManager extends Component
         return app(PlanService::class);
     }
 
-    public function addFeature()
-    {
-        $this->features[] = ['key' => '', 'value' => ''];
-    }
-
-    public function removeFeature($index)
-    {
-        unset($this->features[$index]);
-        $this->features = array_values($this->features);
-    }
-
     public function create()
     {
         $this->resetFields();
-        $this->addFeature();
+        $this->resetFeaturesToDefault();
         $this->isModalOpen = true;
+    }
+
+    private function resetFeaturesToDefault()
+    {
+        $this->max_branches = 1;
+        $this->max_staff = 3;
+        $this->max_doctors = 5;
+        $this->max_agents = 2;
+        $this->max_collection_centers = 1;
+        $this->has_inventory = false;
+        $this->has_custom_invoice = false;
     }
 
     public function resetFields()
     {
         $this->reset(['plan_id', 'name', 'price', 'duration_in_days', 'is_active']);
-        $this->features = [];
+        $this->resetFeaturesToDefault();
         $this->resetValidation();
     }
 
@@ -64,10 +69,28 @@ class PlanManager extends Component
             'price' => 'required|numeric|min:0',
             'duration_in_days' => 'required|integer|min:1',
             'is_active' => 'boolean',
+            'max_branches' => 'required|integer',
+            'max_staff' => 'required|integer',
+            'max_doctors' => 'required|integer',
+            'max_agents' => 'required|integer',
+            'max_collection_centers' => 'required|integer',
+            'has_inventory' => 'boolean',
+            'has_custom_invoice' => 'boolean',
         ]);
 
+        // Pack fixed features into the JSON format for the service
+        $finalFeaturesArr = [
+            ['key' => 'branches', 'value' => $this->max_branches],
+            ['key' => 'staff', 'value' => $this->max_staff],
+            ['key' => 'doctors', 'value' => $this->max_doctors],
+            ['key' => 'agents', 'value' => $this->max_agents],
+            ['key' => 'collection_centers', 'value' => $this->max_collection_centers],
+            ['key' => 'inventory', 'value' => $this->has_inventory],
+            ['key' => 'custom_invoice', 'value' => $this->has_custom_invoice],
+        ];
+
         // Use the service to handle the business logic
-        $this->planService()->savePlan($validatedData, $this->features, $this->plan_id);
+        $this->planService()->savePlan($validatedData, $finalFeaturesArr, $this->plan_id);
 
         session()->flash('message', $this->plan_id ? 'Plan Updated Successfully.' : 'Plan Created Successfully.');
         $this->closeModal();
@@ -83,12 +106,15 @@ class PlanManager extends Component
         $this->duration_in_days = $plan->duration_in_days;
         $this->is_active = $plan->is_active;
 
-        // Use the service to format features for the UI
-        $this->features = $this->planService()->formatFeaturesForUi($plan->features);
-
-        if (empty($this->features)) {
-            $this->addFeature();
-        }
+        // Map JSON features back to public properties
+        $f = $plan->features ?? [];
+        $this->max_branches = $f['branches'] ?? 1;
+        $this->max_staff = $f['staff'] ?? 3;
+        $this->max_doctors = $f['doctors'] ?? 5;
+        $this->max_agents = $f['agents'] ?? 2;
+        $this->max_collection_centers = $f['collection_centers'] ?? 1;
+        $this->has_inventory = $f['inventory'] ?? false;
+        $this->has_custom_invoice = $f['custom_invoice'] ?? false;
 
         $this->isModalOpen = true;
     }

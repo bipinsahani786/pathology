@@ -109,7 +109,20 @@ class CollectionCenterManager extends Component
 
         DB::beginTransaction();
         try {
-            $companyId = auth()->user()->company_id;
+            $company = auth()->user()->company;
+            $companyId = $company->id;
+
+            // SaaS Plan Enforcement for Collection Centers
+            if (!$this->center_id) {
+                $maxCenters = $company->plan->features['collection_centers'] ?? -1;
+                if ($maxCenters != -1) {
+                    $currentCentersCount = CollectionCenter::where('company_id', $companyId)->count();
+                    if ($currentCentersCount >= $maxCenters) {
+                        $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxCenters} collection center(s). Upgrade your plan to add more.");
+                        return;
+                    }
+                }
+            }
 
             // 1. Manage User (Login Account)
             if ($this->user_id) {

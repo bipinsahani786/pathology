@@ -313,6 +313,23 @@
     </style>
 
     <div class="db-container">
+        {{-- Subscription Warning Banner --}}
+        @if(auth()->user()->hasRole('lab_admin') && $daysLeft >= 0 && $daysLeft <= 15)
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 d-flex align-items-center animate__animated animate__fadeInDown" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
+            <div class="icon-box bg-warning text-white me-4 mb-0" style="width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0;">
+                <i class="feather-alert-triangle fs-4"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="fw-bold text-dark mb-1">Your subscription is expiring soon!</h5>
+                <p class="text-muted mb-0">Your plan will expire in <strong>{{ floor($daysLeft) }} days</strong> ({{ auth()->user()->company->trial_ends_at->format('d M, Y') }}). Please renew to avoid any service interruption.</p>
+            </div>
+            <div class="ms-md-4 mt-3 mt-md-0">
+                <a href="tel:+91XXXXXXXXXX" class="btn btn-warning fw-bold px-4 py-2 rounded-3 shadow-sm text-white">
+                    <i class="feather-zap me-2"></i>Renew Now
+                </a>
+            </div>
+        </div>
+        @endif
         
         {{-- Header & Filters --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-4">

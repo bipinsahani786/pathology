@@ -18,6 +18,7 @@
             </div>
             
             {{-- Global Search Trigger --}}
+            @if(!auth()->user()->hasRole('super_admin') && !auth()->user()->patientProfile)
             <div class="header-search-wrapper d-none d-md-flex">
                 <div class="search-form-wrapper">
                     <form action="javascript:void(0);" class="search-form">
@@ -33,12 +34,15 @@
                     </form>
                 </div>
             </div>
+            @endif
         </div>
 
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center gap-2">
                 {{-- Branch Switcher --}}
-                <livewire:lab.branch-switcher />
+                @if(!auth()->user()->hasRole('super_admin'))
+                    <livewire:lab.branch-switcher />
+                @endif
 
                 {{-- Subscription Timer --}}
                 @php
@@ -69,13 +73,14 @@
                 <div class="nxl-h-item d-none d-sm-flex">
                     <div class="full-screen-switcher">
                         <a href="javascript:void(0);" class="nxl-head-link me-0"
-                            onclick="$('body').fullScreenHelper('toggle');">
+                            onclick="$('html').fullScreenHelper('toggle');">
                             <i class="feather-maximize maximize"></i>
                             <i class="feather-minimize minimize"></i>
                         </a>
                     </div>
                 </div>
 
+                @if(!auth()->user()->patientProfile)
                 <div class="nxl-h-item dark-light-theme">
                     <a href="javascript:void(0);" class="nxl-head-link me-0 dark-button">
                         <i class="feather-moon"></i>
@@ -84,6 +89,7 @@
                         <i class="feather-sun"></i>
                     </a>
                 </div>
+                @endif
 
                 <div class="dropdown nxl-h-item">
                     @php

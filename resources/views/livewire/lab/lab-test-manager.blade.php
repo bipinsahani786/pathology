@@ -11,6 +11,9 @@
             </ul>
         </div>
         <div class="page-header-right">
+            <button type="button" class="btn btn-soft-info px-4 me-2" data-bs-toggle="modal" data-bs-target="#testDocumentationModal">
+                <i class="feather-book-open me-2"></i>Documentation
+            </button>
             @can('create lab_tests')
                 <button wire:click="openImportModal" class="btn btn-soft-primary px-4 me-2">
                     <i class="feather-download me-2"></i>Import Global
@@ -203,4 +206,6 @@
         .fs-11 { font-size: 11px; }
         .fs-14 { font-size: 14px; }
     </style>
+
+    @include('components.test-documentation-modal')
 </div>

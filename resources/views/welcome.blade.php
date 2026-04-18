@@ -1,325 +1,398 @@
+@php
+    $heroTitle = \App\Models\SiteSetting::get('hero_title', 'Intelligence for Modern Laboratories');
+    $heroSubtitle = \App\Models\SiteSetting::get('hero_subtitle', 'Streamline your diagnostic workflow from collection to automated reporting with our secure cloud ecosystem.');
+    $heroCta = \App\Models\SiteSetting::get('hero_cta_text', 'Start Free Trial');
+    $heroImage = \App\Models\SiteSetting::get('hero_image');
+    $features = \App\Models\LandingFeature::active()->get();
+    $testimonials = \App\Models\LandingTestimonial::active()->get();
+    $faqs = \App\Models\LandingFaq::active()->take(5)->get();
+    $plans = \App\Models\Plan::landing()->get();
+@endphp
+
 <x-landing-layout>
-    <x-slot name="title">SWS Pathology - Precision Diagnostics & Lab Intelligence</x-slot>
+    <x-slot name="title">{{ \App\Models\SiteSetting::get('meta_title', 'SWS Pathology - Precision Diagnostics') }}</x-slot>
 
-    <!-- SECTION 1: Hero -->
-    <section class="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
-        <div class="absolute inset-0 z-0">
-            <img src="{{ asset('hero_pathology_modern_1775107463115.png') }}" class="w-full h-full object-cover opacity-20 dark:opacity-10 scale-105 animate-slow-zoom" alt="Professional Lab">
-            <div class="absolute inset-0 bg-linear-to-b from-zinc-50 via-zinc-50/80 to-zinc-50 dark:from-zinc-950 dark:via-zinc-950/80 dark:to-zinc-950"></div>
-        </div>
+    <div class="bg-white text-zinc-700 selection:bg-brand-500/10 selection:text-brand-700 font-sans">
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="max-w-3xl animate-fade-in-up">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-800 mb-6 group cursor-default">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
-                    </span>
-                    <span class="text-[10px] font-bold text-brand-700 dark:text-brand-400 uppercase tracking-widest transition-all group-hover:tracking-wider">Next-Gen LIS Platform</span>
-                </div>
-                <h1 class="font-display text-5xl md:text-7xl font-bold text-zinc-900 dark:text-white leading-[1.1] mb-6 tracking-tight">
-                    Intelligence for <span class="text-transparent bg-clip-text bg-linear-to-r from-brand-600 to-indigo-600">Modern Laboratories</span>
-                </h1>
-                <p class="text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-10 max-w-2xl">
-                    Streamline your entire diagnostic workflow from sample collection to automated reporting with our secure, enterprise-grade cloud ecosystem.
-                </p>
-                <div class="flex flex-wrap gap-4">
-                    <a href="{{ route('register.lab') }}" class="px-8 py-4 bg-brand-600 text-white rounded-2xl font-bold shadow-xl shadow-brand-600/30 hover:bg-brand-700 hover:-translate-y-1 transition-all duration-300">Get Started for Free</a>
-                    <a href="#features" class="px-8 py-4 glass text-zinc-900 dark:text-white rounded-2xl font-bold hover:bg-white/50 dark:hover:bg-zinc-800 transition-all duration-300 border border-zinc-200 dark:border-zinc-800">Watch Demo</a>
+        <section class="relative min-h-[100svh] flex items-center pt-24 pb-12 overflow-hidden border-b border-zinc-100">
+            <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div class="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-brand-500/5 rounded-full blur-[120px]"></div>
+                <div class="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="reveal">
+                        <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-50 border border-brand-100 shadow-sm mb-8">
+                            <span class="relative flex h-2.5 w-2.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
+                            </span>
+                            <span class="text-xs font-bold text-brand-700 tracking-wide">Next-Gen LIS Platform 2.0</span>
+                        </div>
+
+                        <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-zinc-900 leading-[1.1] mb-6 tracking-tight">
+                            {!! str_replace(['Modern', 'Laboratories'], ['<span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600">Modern</span>', '<span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600">Laboratories</span>'], e($heroTitle)) !!}
+                        </h1>
+
+                        <p class="text-lg text-zinc-600 leading-relaxed mb-10 max-w-xl">
+                            {{ $heroSubtitle }}
+                        </p>
+
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <a href="{{ route('register.lab') }}" class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-zinc-900 hover:bg-brand-600 text-white rounded-full font-semibold text-[15px] shadow-lg shadow-zinc-900/10 transition-all duration-300 transform hover:-translate-y-0.5">
+                                {{ $heroCta }} <i class="feather-arrow-right"></i>
+                            </a>
+                            <a href="{{ route('portal.login') }}" class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-white hover:bg-zinc-50 text-zinc-700 rounded-full font-semibold text-[15px] border border-zinc-200 transition-all duration-300 shadow-sm hover:shadow-md">
+                                <i class="feather-download-cloud text-brand-600"></i> Download Report
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="reveal delay-2 hidden lg:block relative">
+                        @if($heroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($heroImage))
+                            <img src="{{ asset('storage/' . $heroImage) }}" alt="Lab Background" class="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-multiply">
+                        @endif
+                        <div class="relative w-full aspect-[4/3] bg-zinc-100 rounded-[2rem] border border-zinc-200 shadow-2xl overflow-hidden p-2">
+                             <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="SWS Pathology Dashboard Mockup" class="w-full h-full object-cover rounded-xl grayscale-[20%]">
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- SECTION 2: Trusted By (Logo Cloud) -->
-    <section class="py-20 border-y border-zinc-200/50 dark:border-zinc-800/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-10">Powering 500+ Diagnostic Centers Nationwide</p>
-            <div class="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                <span class="text-2xl font-bold text-zinc-900 dark:text-white">METROLAB</span>
-                <span class="text-2xl font-bold text-zinc-900 dark:text-white">QUANTUM DIAG</span>
-                <span class="text-2xl font-bold text-zinc-900 dark:text-white">COREPATH</span>
-                <span class="text-2xl font-bold text-zinc-900 dark:text-white">APEXVUE</span>
-                <span class="text-2xl font-bold text-zinc-900 dark:text-white">LIFEBLOOM</span>
+        <section class="py-10 border-b border-zinc-100 bg-zinc-50">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-6">Powering 500+ Diagnostic Centers</p>
+                <div class="flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-60 grayscale">
+                    @foreach(['METROLAB', 'QUANTUM DIAG', 'COREPATH', 'APEXVUE', 'LIFEBLOOM'] as $logo)
+                        <span class="text-xl font-black font-display text-zinc-900 tracking-tight">{{ $logo }}</span>
+                    @endforeach
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- SECTION 3: Key Feature - Automation -->
-    <section id="features" class="py-32 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid lg:grid-cols-2 gap-20 items-center">
-                <div class="relative group">
-                    <div class="absolute -inset-4 bg-linear-to-tr from-brand-500/20 to-indigo-500/20 blur-2xl rounded-3xl group-hover:scale-105 transition-transform duration-500"></div>
-                    <img src="{{ asset('pathology_reports_mockup_1775107484267.png') }}" class="relative rounded-3xl shadow-2xl border border-white/20" alt="Automation Dashboard">
-                    <div class="absolute -bottom-10 -right-10 glass p-6 rounded-2xl shadow-xl animate-float">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center text-white"><i class="feather-check-circle"></i></div>
-                            <div>
-                                <p class="text-sm font-bold">Report Verified</p>
-                                <p class="text-[10px] text-zinc-500 font-medium">Verified by AI Engine</p>
+        <section class="py-20 border-b border-zinc-100 relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    @foreach([
+                        ['val' => '10M+', 'label' => 'Reports Generated'],
+                        ['val' => '99.9%', 'label' => 'System Uptime'],
+                        ['val' => '500+', 'label' => 'Active Labs'],
+                        ['val' => '0', 'label' => 'Data Breaches'],
+                    ] as $stat)
+                        <div class="text-center reveal">
+                            <div class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-2 font-display">{{ $stat['val'] }}</div>
+                            <div class="text-sm text-zinc-500 uppercase tracking-wider">{{ $stat['label'] }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 border-b border-zinc-100">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="bg-zinc-50 rounded-[2.5rem] p-10 md:p-16 border border-zinc-100 relative overflow-hidden">
+                    <div class="grid lg:grid-cols-2 gap-16 items-center relative z-10">
+                        <div>
+                            <h2 class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-6 font-display">Tired of <span class="text-zinc-400 line-through">Paper Friction?</span></h2>
+                            <p class="text-lg text-zinc-600 mb-8">Legacy systems and manual entry lead to lost samples, delayed reports, and frustrated partners.</p>
+                        </div>
+                        <div class="space-y-4">
+                            @foreach([
+                                ['old' => 'Manual Data Entry', 'new' => 'Auto-synced Machine Results'],
+                                ['old' => 'Delayed B2B Settlements', 'new' => 'Real-time Partner Payouts'],
+                                ['old' => 'No Patient Tracking', 'new' => 'Automated WhatsApp Tracking'],
+                            ] as $item)
+                                <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+                                    <div class="flex-1 text-sm text-zinc-500 line-through">{{ $item['old'] }}</div>
+                                    <i class="feather-arrow-right text-zinc-400"></i>
+                                    <div class="flex-1 text-sm text-emerald-600 font-semibold">{{ $item['new'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 border-b border-zinc-100" id="features">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="text-center max-w-3xl mx-auto mb-16 reveal">
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 block">Operating System</span>
+                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 tracking-tight mb-4">Everything your lab needs.</h2>
+                    <p class="text-lg text-zinc-600">A comprehensive LIS platform to run your diagnostic business.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
+                    @foreach($features->take(6) as $i => $feature)
+                        @php $isLarge = ($i === 0 || $i === 3); @endphp
+                        <div class="reveal delay-{{ $i + 1 }} group bg-white border border-zinc-100 p-8 rounded-3xl hover:border-brand-300 shadow-sm hover:shadow-xl hover:shadow-brand-500/5 transition-all duration-300 {{ $isLarge ? 'md:col-span-2' : '' }}">
+                            <div class="w-12 h-12 bg-zinc-100 group-hover:bg-brand-50 rounded-xl flex items-center justify-center text-zinc-600 group-hover:text-brand-600 mb-6 transition-colors duration-300">
+                                <i class="{{ $feature->icon }} text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-zinc-900 mb-3">{{ $feature->title }}</h3>
+                            <p class="text-sm text-zinc-600 leading-relaxed mb-auto">{{ $feature->description }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        @php
+            $deepDives = [
+                ['title' => 'Smart Machine Interfacing', 'desc' => 'Connect Cell Counters, Biochemistry analyzers directly to the cloud. Zero manual typing. Results sync instantly.', 'img' => 'https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=1200'],
+                ['title' => 'Automated Smart Reporting', 'desc' => 'Generate beautiful, QR-coded PDF reports. Auto-highlight abnormal values based on patient age and gender.', 'img' => 'https://images.unsplash.com/photo-1584432810601-6c7f27d2362b?auto=format&fit=crop&q=80&w=1200'],
+                ['title' => 'B2B Franchise Portal', 'desc' => 'Give collection centers a dedicated dashboard. Track wallet balances and sample statuses in real-time.', 'img' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200'],
+                ['title' => 'Reagent & Inventory Tracking', 'desc' => 'Never run out of essential kits. Predictive alerts tell you exactly when to reorder.', 'img' => 'https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&q=80&w=1200'],
+            ];
+        @endphp
+
+        @foreach($deepDives as $index => $dive)
+            <section class="py-20 border-b border-zinc-100 overflow-hidden">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="grid lg:grid-cols-2 gap-16 items-center">
+                        <div class="{{ $index % 2 == 1 ? 'lg:order-2' : '' }}">
+                            <div class="text-brand-600 text-sm font-bold tracking-widest uppercase mb-2">Feature {{ $index + 1 }}</div>
+                            <h3 class="text-3xl font-extrabold text-zinc-900 mb-4 font-display">{{ $dive['title'] }}</h3>
+                            <p class="text-lg text-zinc-600 leading-relaxed">{{ $dive['desc'] }}</p>
+                            <ul class="mt-6 space-y-3">
+                                <li class="flex items-center gap-3 text-sm text-zinc-600 font-medium"><i class="feather-check-circle text-brand-500"></i> Cloud Synced</li>
+                                <li class="flex items-center gap-3 text-sm text-zinc-600 font-medium"><i class="feather-check-circle text-brand-500"></i> Real-time Updates</li>
+                            </ul>
+                        </div>
+                        <div class="relative {{ $index % 2 == 1 ? 'lg:order-1' : '' }}">
+                            <div class="aspect-video bg-zinc-100 rounded-2xl border border-zinc-200 shadow-2xl p-2">
+                                <img src="{{ $dive['img'] }}" alt="{{ $dive['title'] }} Mockup" class="w-full h-full object-cover rounded-xl">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <h2 class="text-sm font-bold text-brand-600 uppercase tracking-[0.3em] mb-4">Precision Workflow</h2>
-                    <h3 class="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-white mb-8 tracking-tight">Automate the <span class="text-brand-600">Uninteresting</span>. Focus on Diagnostics.</h3>
-                    <p class="text-lg text-zinc-600 dark:text-zinc-400 mb-10 leading-relaxed">
-                        Say goodbye to manual data entry errors. Our smart acquisition system syncs directly with clinical analyzers to populate results in real-time.
-                    </p>
-                    <ul class="space-y-6">
-                        <li class="flex items-center gap-4">
-                            <div class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600"><i class="feather-zap text-[12px]"></i></div>
-                            <span class="font-medium">Direct LIS-Analyzer Handshake</span>
-                        </li>
-                        <li class="flex items-center gap-4">
-                            <div class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600"><i class="feather-zap text-[12px]"></i></div>
-                            <span class="font-medium">Smart Reference Range Mapping</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
+        @endforeach
 
-    <!-- SECTION 4: Feature - Reports -->
-    <section class="py-32 bg-white dark:bg-zinc-900/20 transition-colors">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h3 class="text-4xl font-bold mb-16 tracking-tight">Beautifully Structured Reports</h3>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="p-8 rounded-3xl glass transition-all hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 mb-6"><i class="feather-file-text"></i></div>
-                    <h4 class="text-xl font-bold mb-4">Dynamic Templates</h4>
-                    <p class="text-zinc-500">Customizable layouts for every test type, from blood chemistry to histopathology.</p>
-                </div>
-                <!-- Section 5: Patient Portal (part of this grid) -->
-                <div class="p-8 rounded-3xl glass transition-all hover:-translate-y-2 border-brand-500/20">
-                    <div class="w-14 h-14 bg-brand-100 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center text-brand-600 mb-6"><i class="feather-smartphone"></i></div>
-                    <h4 class="text-xl font-bold mb-4">Mobile Access</h4>
-                    <p class="text-zinc-500">Patients receive encrypted links to view reports instantly on their smartphones.</p>
-                </div>
-                <!-- Section 6: Analytics -->
-                <div class="p-8 rounded-3xl glass transition-all hover:-translate-y-2">
-                    <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 mb-6"><i class="feather-trending-up"></i></div>
-                    <h4 class="text-xl font-bold mb-4">Trend Tracking</h4>
-                    <p class="text-zinc-500">Automatic visualization of historical data for long-term clinical monitoring.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 7: Problem Statement -->
-    <section class="py-32 overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-zinc-900 dark:bg-zinc-900 rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500/20 blur-3xl opacity-50"></div>
-                <div class="max-w-2xl relative z-10 text-white">
-                    <h2 class="text-4xl md:text-5xl font-bold mb-8 tracking-tight">Tired of <br><span class="text-zinc-500">Paper Friction?</span></h2>
-                    <p class="text-xl text-zinc-400 leading-relaxed mb-10">
-                        Legacy systems slow you down. Manual invoicing, lost samples, and delayed reports cost your lab reputation and revenue. We fixed that.
-                    </p>
-                    <div class="flex items-center gap-6">
-                        <div class="flex -space-x-3">
-                            <span class="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-[10px]">LB</span>
-                            <span class="w-10 h-10 rounded-full bg-zinc-700 border-2 border-zinc-900 flex items-center justify-center text-[10px]">MD</span>
-                            <span class="w-10 h-10 rounded-full bg-brand-500 border-2 border-zinc-900 flex items-center justify-center text-[10px] font-bold">+12</span>
+        <section class="py-24 border-b border-zinc-100 bg-zinc-50">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-16">Four Steps to Automation</h2>
+                <div class="grid md:grid-cols-4 gap-8">
+                    @foreach(['Register Patient', 'Process Sample', 'Verify Results', 'Auto-Deliver WhatsApp'] as $i => $step)
+                        <div class="relative z-10 bg-white p-8 rounded-2xl border border-zinc-100 text-center shadow-sm">
+                            <div class="w-12 h-12 mx-auto bg-brand-50 text-brand-600 rounded-full flex items-center justify-center font-bold text-xl mb-4 border border-brand-100">{{ $i + 1 }}</div>
+                            <h5 class="font-bold text-zinc-900">{{ $step }}</h5>
                         </div>
-                        <p class="text-sm font-medium text-zinc-400">Join forward-thinking pathologists</p>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 border-b border-zinc-100">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="text-2xl font-bold text-zinc-900 mb-8 font-display">Seamlessly Connects With</h2>
+                <div class="flex flex-wrap justify-center gap-4">
+                    @foreach(['WhatsApp API', 'Razorpay', 'Stripe', 'Sysmex Analyzers', 'Erba Analyzers', 'AWS Cloud'] as $tech)
+                        <div class="px-6 py-3 bg-white rounded-full border border-zinc-200 text-sm font-semibold text-zinc-600 shadow-sm">{{ $tech }}</div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 border-b border-zinc-100 bg-zinc-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="p-6 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                        <i class="feather-lock text-3xl text-brand-600 mb-4 block"></i>
+                        <h4 class="text-lg font-bold text-zinc-900 mb-2 font-display">AES-256 Encryption</h4>
+                        <p class="text-sm text-zinc-600">Bank-grade security for patient data.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                        <i class="feather-shield text-3xl text-brand-600 mb-4 block"></i>
+                        <h4 class="text-lg font-bold text-zinc-900 mb-2 font-display">HIPAA Ready</h4>
+                        <p class="text-sm text-zinc-600">Built for healthcare privacy standards.</p>
+                    </div>
+                    <div class="p-6 bg-white rounded-2xl border border-zinc-100 shadow-sm">
+                        <i class="feather-server text-3xl text-brand-600 mb-4 block"></i>
+                        <h4 class="text-lg font-bold text-zinc-900 mb-2 font-display">Automated Backups</h4>
+                        <p class="text-sm text-zinc-600">Hourly cloud backups ensure zero data loss.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- SECTION 8: Solution Summary -->
-    <section class="py-32">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-20">
-                <h2 class="text-4xl font-bold mb-6 tracking-tight">The All-in-One Operating System</h2>
-                <p class="text-zinc-600 dark:text-zinc-400">Everything you need to run a high-volume lab enterprise.</p>
-            </div>
-            <!-- SECTION 9: Interactive Dashboard Preview (already covered by img intro) -->
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-                <!-- SECTION 10: Smart Billing -->
-                <div class="space-y-4">
-                    <h4 class="font-bold flex items-center gap-3"><i class="feather-credit-card text-brand-600"></i> Smart Billing</h4>
-                    <p class="text-sm text-zinc-500">Integrated POS for instant billing, taxes, and membership discounts.</p>
-                </div>
-                <!-- SECTION 11: Finance -->
-                <div class="space-y-4">
-                    <h4 class="font-bold flex items-center gap-3"><i class="feather-dollar-sign text-emerald-600"></i> Partner Portal</h4>
-                    <p class="text-sm text-zinc-500">Enable Doctors and Collection Centers to track their referrals and settlements.</p>
-                </div>
-                <!-- SECTION 12: Inventory (Extra) -->
-                <div class="space-y-4">
-                    <h4 class="font-bold flex items-center gap-3"><i class="feather-package text-amber-600"></i> Inventory Hub</h4>
-                    <p class="text-sm text-zinc-500">Track reagents and kits with automated shelf-life alerts.</p>
-                </div>
-                <!-- SECTION 13: Stats -->
-                <div class="space-y-4">
-                    <h4 class="font-bold flex items-center gap-3"><i class="feather-activity text-indigo-600"></i> Metrics</h4>
-                    <p class="text-sm text-zinc-500">Visual analytics for sample turnaround time and business growth.</p>
+        @if($testimonials->count())
+        <section class="py-24 border-b border-zinc-100">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="text-center font-display text-4xl font-extrabold text-zinc-900 mb-16">Trusted by Professionals</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    @foreach($testimonials->take(3) as $testimonial)
+                        <div class="bg-white p-8 rounded-3xl border border-zinc-100 shadow-sm flex flex-col hover:border-brand-200 transition-colors">
+                            <p class="text-zinc-600 italic mb-6 leading-relaxed flex-1">"{{ $testimonial->quote }}"</p>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-700 flex items-center justify-center font-bold border border-brand-100">
+                                    {{ substr($testimonial->author_name, 0, 1) }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-zinc-900 text-sm">{{ $testimonial->author_name }}</p>
+                                    <p class="text-xs text-zinc-500">{{ $testimonial->author_role }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+        @endif
 
-    <!-- SECTION 14: How it Works -->
-    <section class="py-32 bg-zinc-50 dark:bg-zinc-950/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid md:grid-cols-4 gap-12 text-center">
-                <div class="space-y-6">
-                    <div class="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl mx-auto flex items-center justify-center font-bold text-2xl text-brand-600">1</div>
-                    <h5 class="font-bold uppercase text-[10px] tracking-widest text-zinc-400">Register</h5>
-                    <p class="text-sm font-medium">Patient onboarding & barcodes</p>
+        @if($plans->count())
+        <section class="py-24 border-b border-zinc-100 bg-zinc-50" id="pricing">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="text-center mb-16 max-w-2xl mx-auto">
+                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-4">Transparent Pricing</h2>
+                    <p class="text-lg text-zinc-600">Simple plans designed to scale with your laboratory's growth.</p>
                 </div>
-                <div class="space-y-6">
-                    <div class="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl mx-auto flex items-center justify-center font-bold text-2xl text-brand-600">2</div>
-                    <h5 class="font-bold uppercase text-[10px] tracking-widest text-zinc-400">Process</h5>
-                    <p class="text-sm font-medium">Sample tracking & entry</p>
-                </div>
-                <div class="space-y-6">
-                    <div class="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl mx-auto flex items-center justify-center font-bold text-2xl text-brand-600">3</div>
-                    <h5 class="font-bold uppercase text-[10px] tracking-widest text-zinc-400">Verify</h5>
-                    <p class="text-sm font-medium">Pathologist digital signature</p>
-                </div>
-                <div class="space-y-6">
-                    <div class="w-16 h-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl mx-auto flex items-center justify-center font-bold text-2xl text-brand-600">4</div>
-                    <h5 class="font-bold uppercase text-[10px] tracking-widest text-zinc-400">Deliver</h5>
-                    <p class="text-sm font-medium">SMS, WhatsApp & Portal</p>
+                <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+                    @foreach($plans as $plan)
+                        @php $isPopular = $plan->landing_badge !== null; @endphp
+                        <div class="bg-white border {{ $isPopular ? 'border-brand-500 shadow-2xl shadow-brand-500/10' : 'border-zinc-200 shadow-sm' }} rounded-3xl p-8 flex flex-col relative overflow-hidden transition-all hover:-translate-y-1">
+                            @if($isPopular)
+                                <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-500 to-indigo-500"></div>
+                                <div class="absolute top-6 right-6 bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1 rounded-full border border-brand-100">
+                                    {{ $plan->landing_badge }}
+                                </div>
+                            @endif
+
+                            <div class="mb-8">
+                                <h5 class="text-sm font-bold uppercase tracking-widest mb-4 {{ $isPopular ? 'text-brand-700' : 'text-zinc-500' }}">{{ $plan->name }}</h5>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-5xl font-display font-extrabold text-zinc-900">
+                                        @if($plan->price == 0) Free @else ₹{{ number_format($plan->price) }} @endif
+                                    </span>
+                                    @if($plan->price > 0)<span class="text-sm font-medium text-zinc-500">/month</span>@endif
+                                </div>
+                            </div>
+
+                            @if($plan->landing_features)
+                                <ul class="space-y-4 mb-8 flex-1">
+                                    @foreach($plan->landing_features as $feat)
+                                        <li class="flex items-start gap-3 text-sm text-zinc-700 font-medium">
+                                            <div class="mt-0.5 w-5 h-5 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 border border-brand-100">
+                                                <i class="feather-check text-[10px]"></i>
+                                            </div>
+                                            {{ $feat }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            <a href="{{ route('register.lab') }}" class="block w-full py-4 text-center rounded-xl font-semibold text-sm transition-all duration-300 {{ $isPopular ? 'bg-zinc-900 text-white shadow-lg hover:bg-black' : 'bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100' }}">
+                                {{ $plan->landing_cta_text ?? 'Get Started' }}
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+        @endif
 
-    <!-- SECTION 15: Security -->
-    <section class="py-32">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center gap-20">
-                <div class="flex-1">
-                    <h3 class="text-4xl font-bold mb-8 tracking-tight">Bank-Grade <span class="text-blue-500">Security</span></h3>
-                    <p class="text-lg text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed">
-                        Data privacy is not a feature; it's a foundation. Every report is encrypted with AES-256 and stored across redundant global servers.
-                    </p>
-                    <div class="grid grid-cols-2 gap-8">
+        @if($faqs->count())
+        <section class="py-24 border-b border-zinc-100 bg-white">
+            <div class="max-w-3xl mx-auto px-4">
+                <h2 class="text-center font-display text-4xl font-extrabold text-zinc-900 mb-12">FAQs</h2>
+                <div class="space-y-3" x-data="{ active: null }">
+                    @foreach($faqs as $faq)
+                        <div class="bg-white rounded-2xl border border-zinc-200 overflow-hidden transition-colors hover:border-brand-200">
+                            <button @click="active = active === {{ $faq->id }} ? null : {{ $faq->id }}" class="w-full flex justify-between p-6 text-left focus:outline-none">
+                                <span class="font-semibold text-zinc-900 pr-4">{{ $faq->question }}</span>
+                                <div class="w-8 h-8 rounded-full bg-zinc-50 flex items-center justify-center shrink-0 transition-transform duration-300" :class="active === {{ $faq->id }} ? 'rotate-180 bg-brand-50 text-brand-600' : 'text-zinc-400'">
+                                    <i class="feather-chevron-down text-sm"></i>
+                                </div>
+                            </button>
+                            <div x-show="active === {{ $faq->id }}" x-collapse>
+                                <div class="px-6 pb-6 text-sm text-zinc-600 leading-relaxed font-medium">{{ $faq->answer }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+        @endif
+
+        <section class="py-24 bg-zinc-50 border-b border-zinc-100" id="contact">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="bg-white rounded-[2rem] border border-zinc-100 p-8 md:p-12 shadow-xl hover:border-brand-100 transition-colors">
+                    <div class="grid lg:grid-cols-2 gap-16">
                         <div>
-                            <h6 class="font-bold mb-2 uppercase text-[10px] tracking-widest text-brand-600">HIPAA Compliant</h6>
-                            <p class="text-xs text-zinc-500">Global standards for health data.</p>
+                            <h2 class="text-3xl font-extrabold text-zinc-900 mb-6 font-display">Let's talk about your lab.</h2>
+                            <p class="text-zinc-600 mb-10 leading-relaxed">Whether you process 50 or 5000 samples a day, we have a solution tailored for you. Drop us a line and our experts will get back to you.</p>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center text-brand-600 border border-zinc-200"><i class="feather-mail"></i></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-zinc-900">Email Us</p>
+                                        <p class="text-sm text-zinc-500">support@zytrixon.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center text-brand-600 border border-zinc-200"><i class="feather-phone"></i></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-zinc-900">Call Us</p>
+                                        <p class="text-sm text-zinc-500">+91 98765 43210</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h6 class="font-bold mb-2 uppercase text-[10px] tracking-widest text-emerald-600">ISO 27001</h6>
-                            <p class="text-xs text-zinc-500">Certified information security.</p>
+
+                        <div class="bg-white p-8 rounded-2xl border border-zinc-100 shadow-inner">
+                            <form action="{{ route('contact.submit') ?? '#' }}" method="POST" class="space-y-5">
+                                @csrf
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">First Name</label>
+                                        <input type="text" name="first_name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors" placeholder="Rahul">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Last Name</label>
+                                        <input type="text" name="last_name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="Verma">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Lab Name</label>
+                                    <input type="text" name="lab_name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="City Diagnostics">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Email</label>
+                                    <input type="email" name="email" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="rahul@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Message</label>
+                                    <textarea name="message" rows="4" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors resize-none" placeholder="Tell us about your requirements..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-4 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold shadow-lg shadow-zinc-900/10 transition-all">
+                                    Send Message
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
-                <div class="flex-1 w-full flex justify-center">
-                    <div class="w-72 h-72 border-4 border-zinc-200 dark:border-zinc-800 rounded-full flex items-center justify-center relative">
-                        <div class="w-56 h-56 border-4 border-brand-500 rounded-full animate-spin-slow animate-duration-[10s]"></div>
-                        <div class="absolute inset-0 flex items-center justify-center"><i class="feather-lock text-5xl text-brand-600"></i></div>
-                    </div>
+            </div>
+        </section>
+
+        <section class="py-32 relative overflow-hidden bg-brand-600">
+            <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-white/10 blur-[120px] rounded-full pointer-events-none"></div>
+            </div>
+            <div class="max-w-4xl mx-auto px-4 relative z-10 text-center">
+                <h2 class="font-display text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">Ready to Modernize?</h2>
+                <p class="text-xl text-brand-100 mb-12 max-w-2xl mx-auto font-medium">Join top laboratories automating their workflow, reducing errors, and scaling revenue.</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="{{ route('register.lab') }}" class="inline-flex justify-center items-center px-10 py-5 bg-white text-brand-600 rounded-full font-bold text-lg shadow-2xl transition-transform hover:-translate-y-1">
+                        Create Free Account
+                    </a>
+                    <a href="#contact" class="inline-flex justify-center items-center px-10 py-5 bg-brand-700 hover:bg-brand-800 text-white rounded-full font-bold text-lg border border-brand-500 transition-all">
+                        Request a Demo
+                    </a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- SECTION 16: Testimonials -->
-    <section class="py-32 bg-brand-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h3 class="text-3xl font-bold mb-16">Trusted by the Professionals</h3>
-            <div class="grid md:grid-cols-2 gap-12">
-                <div class="bg-white/10 p-10 rounded-[2rem] text-left border border-white/20 backdrop-blur-sm">
-                    <p class="text-xl italic mb-8">"Since switching to SWS, our turnaround time dropped by 40%. The automated reporting is a lifesaver."</p>
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold">DR</div>
-                        <div>
-                            <p class="font-bold">Dr. Rajesh Khanna</p>
-                            <p class="text-xs opacity-70">Chief Pathologist, KH Labs</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white/10 p-10 rounded-[2rem] text-left border border-white/20 backdrop-blur-sm">
-                    <p class="text-xl italic mb-8">"The partner portal changed how we work with agents. Transparency in billing is incredible now."</p>
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold">AM</div>
-                        <div>
-                            <p class="font-bold">Anu Mishra</p>
-                            <p class="text-xs opacity-70">Director, Apex Diagnostics</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 17: Pricing -->
-    <section id="pricing" class="py-32">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h3 class="text-4xl font-bold mb-16">Transparent Pricing</h3>
-            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div class="p-10 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 space-y-8">
-                    <h5 class="font-bold underline decoration-brand-500/30 underline-offset-8">Starter</h5>
-                    <div class="text-4xl font-bold">Free</div>
-                    <p class="text-sm text-zinc-500">Up to 100 reports/month</p>
-                    <a href="{{ route('register.lab') }}" class="block w-full py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold hover:bg-zinc-50 transition-colors">Start Trial</a>
-                </div>
-                <div class="p-10 rounded-[2rem] bg-zinc-900 text-white scale-105 shadow-2xl space-y-8">
-                    <h5 class="font-bold uppercase text-[10px] tracking-[0.3em] text-brand-400">Professional</h5>
-                    <div class="text-4xl font-bold">$49<span class="text-sm font-medium text-zinc-500">/mo</span></div>
-                    <p class="text-sm text-zinc-400">Unlimited reports + Partner Portal</p>
-                    <a href="{{ route('register.lab') }}" class="block w-full py-3 rounded-xl bg-brand-600 font-bold hover:bg-brand-700 transition-colors shadow-lg shadow-brand-600/30">Select Plan</a>
-                </div>
-                <div class="p-10 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 space-y-8">
-                    <h5 class="font-bold tracking-widest text-zinc-400">Enterprise</h5>
-                    <div class="text-4xl font-bold">Custom</div>
-                    <p class="text-sm text-zinc-500">Multi-branch + Custom API</p>
-                    <a href="{{ route('contact') }}" class="block w-full py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold hover:bg-zinc-50 transition-colors">Contact Us</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 18: FAQ -->
-    <section class="py-32 bg-zinc-50 dark:bg-zinc-950/20">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h3 class="text-3xl font-bold mb-12 text-center uppercase tracking-widest">General Questions</h3>
-            <div class="space-y-4">
-                <div class="glass p-6 rounded-2xl">
-                    <h6 class="font-bold mb-2">Can I use my existing laboratory equipment?</h6>
-                    <p class="text-sm text-zinc-500">Yes, we support integration with over 200+ diagnostic analyzers.</p>
-                </div>
-                <div class="glass p-6 rounded-2xl">
-                    <h6 class="font-bold mb-2">Is there a mobile app for collectors?</h6>
-                    <p class="text-sm text-zinc-500">Yes, collectors can use our field app to book samples on the fly.</p>
-                </div>
-                <div class="glass p-6 rounded-2xl">
-                    <h6 class="font-bold mb-2">Where is my data stored?</h6>
-                    <p class="text-sm text-zinc-500">Data is stored in regionally compliant cloud nodes (AWS/Azure) for zero latency.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 19: Final CTA -->
-    <section class="py-32 relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <h2 class="text-5xl md:text-6xl font-bold mb-12 tracking-tight">Elevate Your Lab <br><span class="text-brand-600">Experience Today.</span></h2>
-            <div class="flex justify-center flex-wrap gap-6">
-                <a href="{{ route('register.lab') }}" class="px-12 py-5 bg-brand-600 text-white rounded-[2rem] font-bold text-lg shadow-2xl hover:bg-brand-700 transition-all">Create Free Account</a>
-                <a href="{{ route('contact') }}" class="px-12 py-5 glass text-zinc-900 dark:text-white rounded-[2rem] font-bold text-lg border border-zinc-200 dark:border-zinc-800 transition-all">Talk to an Expert</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 20: Newsletter Header (The last transition) -->
-    <section class="bg-zinc-100 dark:bg-zinc-900/50 py-12 border-t border-zinc-200 dark:border-zinc-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
-            <h4 class="text-xl font-bold">Join 2,000+ Pathologists</h4>
-            <div class="flex w-full md:w-auto gap-4">
-                <input type="email" placeholder="Enter your email" class="flex-1 md:w-80 px-6 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-brand-500 bg-white dark:bg-zinc-950">
-                <button class="px-6 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-bold">Subscribe</button>
-            </div>
-        </div>
-    </section>
-
+    </div>
 </x-landing-layout>

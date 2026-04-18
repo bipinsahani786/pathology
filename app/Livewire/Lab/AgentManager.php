@@ -128,7 +128,19 @@ class AgentManager extends Component
                 session()->flash('message', 'Agent details updated successfully.');
             } else {
                 $this->authorize('create agents');
-                $companyId = auth()->user()->company_id;
+                $company = auth()->user()->company;
+                
+                // SaaS Plan Enforcement for Agents
+                $maxAgents = $company->plan->features['agents'] ?? -1;
+                if ($maxAgents != -1) {
+                    $currentAgentsCount = \App\Models\AgentProfile::where('company_id', $company->id)->count();
+                    if ($currentAgentsCount >= $maxAgents) {
+                        $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxAgents} marketing agent(s). Upgrade your plan to add more.");
+                        return;
+                    }
+                }
+
+                $companyId = $company->id;
                 // CREATE NEW AGENT
                 
                 // 1. Create the base User record

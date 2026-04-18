@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'lab_staff' => \App\Http\Middleware\EnsureLabStaff::class,
             'partner_access' => \App\Http\Middleware\EnsurePartnerPortal::class,
+            'patient_portal_access' => \App\Http\Middleware\EnsurePatientSession::class,
 
         ]);
     })

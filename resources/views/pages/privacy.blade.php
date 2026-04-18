@@ -1,89 +1,46 @@
 <x-landing-layout>
-    <x-slot name="title">Privacy Policy - SWS Pathology Data Protection</x-slot>
+    <x-slot name="title">Privacy Policy - {{ \App\Models\SiteSetting::get('site_name', 'SWS Pathology') }}</x-slot>
 
-    <!-- 1. Hero -->
-    <section class="pt-32 pb-20 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-fade-in-up">
-            <div class="inline-block px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-6">Security First</div>
-            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 italic tracking-tight underline decoration-emerald-500/20 underline-offset-12">Privacy <span class="text-emerald-600">Policy</span></h1>
-            <p class="text-sm text-zinc-400 font-bold uppercase tracking-tighter">Compliant with HIPAA, GDPR & Global Health Standards</p>
+    <!-- Hero -->
+    <section class="pt-32 pb-16 border-b border-zinc-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-zinc-100 text-zinc-600 text-[11px] font-bold uppercase tracking-wider mb-6">Legal</span>
+            <h1 class="font-display text-4xl md:text-6xl font-extrabold tracking-tight mb-4">Privacy <span class="gradient-text">Policy</span></h1>
+            <p class="text-sm text-zinc-400 font-bold uppercase tracking-wider">Last Revised: April 2026</p>
         </div>
     </section>
 
-    <!-- 2-20. Privacy Content Blocks -->
-    <section class="py-24 bg-white dark:bg-zinc-950">
+    <!-- Content -->
+    <section class="py-24">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="space-y-20">
-                
-                <!-- 2. Data We Collect -->
-                <div class="group">
-                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-4 text-zinc-900 dark:text-white group-hover:text-emerald-600 transition-colors"><i class="feather-database"></i> Data Collection</h3>
-                    <div class="prose prose-zinc dark:prose-invert max-w-none text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        We collect laboratory merchant information (name, tax ID, location) and diagnostic metadata. Patient health records are stored in encrypted silos and are only accessible by authorized subscriber accounts.
+            <div class="space-y-16">
+                @foreach([
+                    ['num' => '01', 'title' => 'Information We Collect', 'text' => 'We collect information you provide directly (name, email, lab details) and diagnostic data processed through the platform. We also collect usage analytics to improve our services.'],
+                    ['num' => '02', 'title' => 'How We Use Your Data', 'text' => 'Your data is used solely for providing diagnostic platform services, improving user experience, and communicating service updates. We never sell your data to third parties.'],
+                    ['num' => '03', 'title' => 'Data Security', 'text' => 'All patient data is encrypted using AES-256 at rest and TLS 1.3 in transit. We maintain HIPAA-compliant infrastructure with regular security audits.'],
+                    ['num' => '04', 'title' => 'Data Retention', 'text' => 'Diagnostic data is retained for the duration of your subscription plus 30 days. Upon account termination, you can request a full data export before deletion.'],
+                    ['num' => '05', 'title' => 'Your Rights', 'text' => 'You have the right to access, correct, export, or delete your personal data at any time. Contact our data protection officer for any privacy-related requests.'],
+                    ['num' => '06', 'title' => 'Cookie Policy', 'text' => 'We use essential cookies for platform functionality and optional analytics cookies. You can manage your cookie preferences at any time through your browser settings.'],
+                ] as $i => $section)
+                    <div class="reveal delay-{{ ($i % 3) + 1 }}">
+                        <h3 class="text-2xl font-bold mb-4 flex items-center gap-4 text-zinc-900">
+                            <span class="gradient-text font-display text-sm font-bold">{{ $section['num'] }}</span>
+                            {{ $section['title'] }}
+                        </h3>
+                        <p class="text-zinc-500 leading-relaxed">{{ $section['text'] }}</p>
                     </div>
+                @endforeach
+
+                <div class="reveal bg-blue-50 p-8 rounded-2xl border border-blue-200">
+                    <h4 class="text-xl font-bold mb-4 flex items-center gap-2"><i class="feather-shield text-blue-500"></i> HIPAA & GDPR Compliance</h4>
+                    <p class="text-sm text-zinc-600 leading-relaxed">SWS Pathology maintains full compliance with HIPAA regulations for health data protection and GDPR standards for users in the European Union. Our infrastructure is regularly audited by independent security firms.</p>
                 </div>
 
-                <!-- 3. Usage of Information -->
-                <div class="group">
-                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-4 text-zinc-900 dark:text-white group-hover:text-emerald-600 transition-colors"><i class="feather-activity"></i> Usage & Processing</h3>
-                    <div class="prose prose-zinc dark:prose-invert max-w-none text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        Information is processed solely to generate diagnostic reports, facilitate billing, and provide technical support. We never sell medical data to third-party aggregators.
-                    </div>
+                <div class="text-center pt-8 reveal">
+                    <p class="text-zinc-400 text-sm mb-8">Privacy questions? Contact privacy@swspathology.com</p>
+                    <a href="/" class="inline-block px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-2xl font-bold shadow-lg shadow-brand-500/25 hover:-translate-y-1 transition-all duration-300">Back to Home</a>
                 </div>
-
-                <!-- 4. Encryption Architecture -->
-                <div class="bg-zinc-900 rounded-[2.5rem] p-12 text-white relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl"></div>
-                    <h3 class="text-2xl font-bold mb-6 flex items-center gap-4 italic"><i class="feather-lock text-emerald-400"></i> Zero-Knowledge Encryption</h3>
-                    <p class="text-zinc-400 leading-relaxed mb-6">Patient reports are encrypted at rest using AES-256 standards. Our database administrators cannot view sensitive clinical results without explicit cryptographic keys managed by your lab.</p>
-                    <div class="flex gap-4 opacity-50"><i class="feather-shield"></i><i class="feather-command"></i><i class="feather-cpu"></i></div>
-                </div>
-
-                <!-- 5-10. Detailed Sub-Sections -->
-                <div class="grid md:grid-cols-2 gap-12 pt-10 border-t border-zinc-50 dark:border-zinc-900">
-                    <!-- 5 -->
-                    <div>
-                        <h4 class="font-bold text-zinc-900 dark:text-white mb-4">Cookies & Tracking</h4>
-                        <p class="text-sm text-zinc-500 italic leading-relaxed">We use essential cookies for session management. Analytics are anonymized and focused on platform performance.</p>
-                    </div>
-                    <!-- 6 -->
-                    <div>
-                        <h4 class="font-bold text-zinc-900 dark:text-white mb-4">Third-Party Disclosure</h4>
-                        <p class="text-sm text-zinc-500 italic leading-relaxed">Data is only shared with authorized sub-processors (AWS, Azure) for hosting purposes, or when legally mandated by medical regulatory bodies.</p>
-                    </div>
-                    <!-- 7 -->
-                    <div>
-                        <h4 class="font-bold text-zinc-900 dark:text-white mb-4">Data Retention</h4>
-                        <p class="text-sm text-zinc-500 italic leading-relaxed">We retain records as long as your subscription is active, or as required by local medical record retention laws (typically 7-10 years).</p>
-                    </div>
-                    <!-- 8 -->
-                    <div>
-                        <h4 class="font-bold text-zinc-900 dark:text-white mb-4">International Transfers</h4>
-                        <p class="text-sm text-zinc-500 italic leading-relaxed">Cross-border transfers are conducted under Standard Contractual Clauses (SCCs) to ensure equivalent protection.</p>
-                    </div>
-                </div>
-
-                <!-- 9-20 Global Commitment Block (Rich UI section) -->
-                <div class="py-20 text-center glass rounded-[3rem] border-emerald-500/20 relative overflow-hidden">
-                    <div class="absolute inset-0 bg-emerald-500/5 pulse"></div>
-                    <div class="relative z-10 max-w-2xl mx-auto px-6">
-                        <h3 class="text-3xl font-bold mb-8 italic">Your Patients' Data, <br><span class="text-emerald-600 underline">Protected</span> for life.</h3>
-                        <p class="text-zinc-500 mb-10 leading-relaxed text-sm">We undergo semi-annual security audits by independent firms to ensure our infrastructure remains the safest in the diagnostic industry.</p>
-                        <div class="flex justify-center flex-wrap gap-8 grayscale opacity-40">
-                            <span class="text-[10px] font-bold uppercase tracking-widest">ISO 27001</span>
-                            <span class="text-[10px] font-bold uppercase tracking-widest">SOC2 TYPE II</span>
-                            <span class="text-[10px] font-bold uppercase tracking-widest">HIPAA READY</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center pt-20">
-                    <p class="text-zinc-400 text-sm font-medium mb-10 italic">Data protection officer: privacy@swspathology.com</p>
-                    <a href="/" class="inline-block px-12 py-5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-[2rem] font-bold shadow-xl shadow-zinc-900/30 hover:bg-zinc-800 transition-all transition-transform hover:-translate-y-1">Return to Main Cloud</a>
-                </div>
-
             </div>
         </div>
     </section>
-
 </x-landing-layout>

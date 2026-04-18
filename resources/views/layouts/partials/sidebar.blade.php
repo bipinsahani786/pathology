@@ -52,7 +52,33 @@
                     <li class="nxl-item {{ request()->routeIs('admin.labs') ? 'active' : '' }}">
                         <a href="{{ route('admin.labs') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
-                            <span class="nxl-mtext">Labs & Settlements</span>
+                            <span class="nxl-mtext">Labs</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item nxl-caption">
+                        <label>Website CMS</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.site-settings') ? 'active' : '' }}">
+                        <a href="{{ route('admin.site-settings') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-globe"></i></span>
+                            <span class="nxl-mtext">Site Settings</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.landing-content') ? 'active' : '' }}">
+                        <a href="{{ route('admin.landing-content') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-layout"></i></span>
+                            <span class="nxl-mtext">Landing Content</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.enquiries') ? 'active' : '' }}">
+                        <a href="{{ route('admin.enquiries') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-inbox"></i></span>
+                            <span class="nxl-mtext">Enquiries</span>
+                            @php $newEnquiries = \App\Models\Enquiry::new()->count(); @endphp
+                            @if($newEnquiries > 0)
+                                <span class="badge bg-danger rounded-pill ms-auto">{{ $newEnquiries }}</span>
+                            @endif
                         </a>
                     </li>
                 @endrole
@@ -310,7 +336,7 @@
                     </li>
                 @endrole
 
-                @if(auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) || auth()->user()->collection_center_id || auth()->user()->doctorProfile || auth()->user()->agentProfile)
+                @if(!auth()->user()->patientProfile && (auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) || auth()->user()->collection_center_id || auth()->user()->doctorProfile || auth()->user()->agentProfile))
                     <li class="nxl-item nxl-caption">
                         <label>Partner Portal</label>
                     </li>
@@ -377,6 +403,27 @@
                             @csrf
                         </form>
                         <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-sidebar').submit();" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-log-out text-danger"></i></span>
+                            <span class="nxl-mtext text-danger">Logout</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if(auth()->user()->patientProfile)
+                    <li class="nxl-item nxl-caption">
+                        <label>Patient Portal</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
+                        <a href="{{ route('portal.dashboard') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-airplay"></i></span>
+                            <span class="nxl-mtext">My Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item">
+                        <form method="POST" action="{{ route('logout') }}" id="logout-form-patient" class="d-none">
+                            @csrf
+                        </form>
+                        <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-patient').submit();" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-log-out text-danger"></i></span>
                             <span class="nxl-mtext text-danger">Logout</span>
                         </a>
