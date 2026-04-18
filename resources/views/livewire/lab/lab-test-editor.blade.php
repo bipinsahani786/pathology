@@ -12,6 +12,9 @@
             </ul>
         </div>
         <div class="page-header-right d-flex gap-2">
+            <button type="button" class="btn btn-soft-info px-3 d-none d-md-flex align-items-center" data-bs-toggle="modal" data-bs-target="#testDocumentationModal">
+                <i class="feather-book-open me-2"></i>Documentation
+            </button>
             <a href="{{ route('lab.tests') }}" wire:navigate class="btn btn-light px-3 px-md-4">
                 <i class="feather-arrow-left me-1 me-md-2"></i><span class="d-none d-sm-inline">Back</span>
             </a>
@@ -406,4 +409,8 @@
         .fs-12 { font-size: 12px; }
         .ck-editor__editable { min-height: 400px; border-radius: 0 0 12px 12px !important; border-color: #e2e8f0 !important; }
     </style>
+
+    <!-- Test Documentation Modal -->
+    @include('components.test-documentation-modal')
+    
 </div>

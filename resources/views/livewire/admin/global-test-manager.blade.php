@@ -11,6 +11,9 @@
             </ul>
         </div>
         <div class="page-header-right">
+            <button type="button" class="btn btn-soft-info px-3 me-2" data-bs-toggle="modal" data-bs-target="#testDocumentationModal">
+                <i class="feather-book-open me-2"></i>Documentation
+            </button>
             <a href="{{ route('admin.global-tests.create') }}" wire:navigate class="btn btn-primary px-4">
                 <i class="feather-plus me-2"></i>Add New Test
             </a>
@@ -132,4 +135,6 @@
         .fs-12 { font-size: 12px; }
         .fs-14 { font-size: 14px; }
     </style>
+
+    @include('components.test-documentation-modal')
 </div>

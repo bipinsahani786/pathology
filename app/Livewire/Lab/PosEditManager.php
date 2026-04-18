@@ -83,14 +83,25 @@ class PosEditManager extends Component
         if ($patient) {
             $this->selectedPatient = $patient->toArray();
             $this->patientProfileData = $patient->patientProfile ? $patient->patientProfile->toArray() : null;
+        }
 
-            // Check active membership
+        // Check active membership
+        // First strictly check if THIS invoice itself applied a membership
+        if ($invoice->membership_id) {
+            $membership = Membership::find($invoice->membership_id);
+            if ($membership) {
+                $this->active_membership = $membership->toArray();
+                $this->selectedMembershipId = $membership->id;
+            }
+        } elseif ($patient) {
+            // Otherwise check if patient has a pre-existing active membership
             $record = PatientMembership::where('patient_id', $patient->id)
                 ->where('is_active', true)
                 ->where('valid_until', '>=', now())
                 ->latest()->first();
             if ($record) {
                 $membership = Membership::find($record->membership_id);
+                // For pre-existing memberships, it must be fully paid
                 if ($membership && $record->amount_paid >= $membership->price) {
                     $this->active_membership = $membership->toArray();
                 }
@@ -123,8 +134,16 @@ class PosEditManager extends Component
         $this->expected_report_date = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('Y-m-d') : date('Y-m-d');
         $this->expected_report_time = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('H:i') : date('H:i', strtotime('+24 hours'));
 
+        $this->membership_fee = 0; // Initialize
+
         // Load cart from invoice items
         foreach ($invoice->items as $item) {
+            // Special case: If this is the Membership Fee line item, extract it to $this->membership_fee and do NOT add to cart!
+            if (is_null($item->lab_test_id) && str_starts_with($item->test_name, 'Membership:')) {
+                $this->membership_fee = (float) $item->price;
+                continue; 
+            }
+
             $test = LabTest::find($item->lab_test_id);
             $cartItem = [
                 'id' => $item->lab_test_id,
@@ -609,6 +628,15 @@ class PosEditManager extends Component
             return;
         }
 
+        $this->validate([
+            'collection_center_id' => 'required|exists:collection_centers,id',
+            'branch_id' => 'nullable|exists:branches,id',
+            'collection_type' => 'required|string',
+        ], [
+            'collection_center_id.required' => 'Please select a Collection Center.',
+            'collection_center_id.exists' => 'The selected Collection Center is invalid.',
+        ]);
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
@@ -714,13 +742,28 @@ class PosEditManager extends Component
 
             // Handle Membership purchase if applicable
             if ($this->membership_fee > 0 && $this->active_membership) {
-                PatientMembership::create([
+                $newMembership = PatientMembership::create([
+                    'company_id' => $companyId,
                     'patient_id' => $this->selectedPatient['id'],
                     'membership_id' => $this->active_membership['id'],
-                    'purchase_date' => now(),
-                    'valid_until' => now()->addDays($this->active_membership['validity_days'] ?? 365),
                     'amount_paid' => $this->membership_fee,
+                    'valid_from' => now()->toDateString(),
+                    'valid_until' => now()->addDays($this->active_membership['validity_days'] ?? 365)->toDateString(),
                     'is_active' => true,
+                ]);
+                
+                // Also update the invoice to link to this new membership
+                $invoice->update(['patient_membership_id' => $newMembership->id]);
+                
+                // And insert as line item
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'lab_test_id' => null,
+                    'test_name' => 'Membership: ' . ($this->active_membership['name'] ?? 'Plan'),
+                    'is_package' => false,
+                    'mrp' => $this->membership_fee,
+                    'price' => $this->membership_fee,
+                    'b2b_price' => 0,
                 ]);
             }
 

@@ -30,6 +30,18 @@ class DemoSeeder extends Seeder
                 'doctors' => 5, 'agents' => 0, 'reports' => true
             ],
             'is_active' => true,
+            'show_on_landing' => true,
+            'landing_sort_order' => 1,
+            'landing_subtitle' => 'Perfect for emerging clinics & boutique labs.',
+            'landing_cta_text' => 'Start Free Pilot',
+            'landing_badge' => null,
+            'landing_features' => [
+                'Up to 200 Patient Records / Year',
+                'Core Reporting Module',
+                'Cloud Inventory Tracking',
+                'Basic WhatsApp Notifications',
+                '1 Collection Center Access'
+            ],
         ]);
         $proPlan = Plan::updateOrCreate(['name' => 'Professional'], [
             'price' => 4999,
@@ -40,6 +52,18 @@ class DemoSeeder extends Seeder
                 'doctors' => 50, 'agents' => 10, 'reports' => true
             ],
             'is_active' => true,
+            'show_on_landing' => true,
+            'landing_sort_order' => 2,
+            'landing_subtitle' => 'Unleash scale for high-volume diagnostic centers.',
+            'landing_cta_text' => 'Deploy Professional',
+            'landing_badge' => 'Most Popular',
+            'landing_features' => [
+                'Uncapped Interfacing & Auto-Reporting',
+                'Advanced B2B Partner Portals',
+                'Multi-Branch Consolidated Billing',
+                'API-driven Machine Workflows',
+                'Custom Invoice PDF Engine'
+            ],
         ]);
         $enterprisePlan = Plan::updateOrCreate(['name' => 'Enterprise'], [
             'price' => 14999,
@@ -50,6 +74,18 @@ class DemoSeeder extends Seeder
                 'doctors' => -1, 'agents' => -1, 'reports' => true, 'api' => true, 'whatsapp' => true
             ],
             'is_active' => true,
+            'show_on_landing' => true,
+            'landing_sort_order' => 3,
+            'landing_subtitle' => 'Dedicated architecture globally distributed networks.',
+            'landing_cta_text' => 'Contact Enterprise Sales',
+            'landing_badge' => 'Scale',
+            'landing_features' => [
+                'Unlimited Branch & Center Topology',
+                'Dedicated Account Architecture',
+                'Custom EMR/EHR Integrations',
+                'White-glove 24/7 SLA Support',
+                'Bespoke BI & Financial Analytics'
+            ],
         ]);
         $this->command->info('✅ Plans created');
 

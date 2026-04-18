@@ -51,9 +51,35 @@ Route::get('/pricing', function () {
     return view('pages.pricing');
 })->name('pricing');
 
-Route::get('/contact', function () {
-    return view('pages.contact');
-})->name('contact');
+Route::get('/contact', \App\Livewire\Landing\ContactPage::class)->name('contact');
+
+Route::post('/contact/submit', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'first_name' => 'required|string|max:255',
+        'email' => 'required|email|max:255',
+    ]);
+    
+    \App\Models\Enquiry::create([
+        'name' => trim($request->input('first_name') . ' ' . $request->input('last_name')),
+        'email' => $request->input('email'),
+        'lab_name' => $request->input('lab_name'),
+        'message' => $request->input('message'),
+        'status' => 'new',
+        'enquiry_type' => 'website',
+    ]);
+    
+    return redirect('/')->with('success', 'Thank you! We will get back to you shortly.');
+})->name('contact.submit');
+
+Route::get('/enquiry', \App\Livewire\Landing\EnquiryPage::class)->name('enquiry');
+
+Route::get('/how-it-works', function () {
+    return view('pages.how-it-works');
+})->name('how-it-works');
+
+Route::get('/faq', function () {
+    return view('pages.faq');
+})->name('faq');
 
 Route::get('/terms', function () {
     return view('pages.terms');
@@ -92,8 +118,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/departments', \App\Livewire\Admin\DepartmentManager::class)->name('departments');
         Route::get('/plans', PlanManager::class)->name('plans');
         Route::get('/labs', \App\Livewire\Admin\LabManager::class)->name('labs');
-        // Route::get('/manage-labs', ManageLabs::class)->name('manage-labs');
-        // Route::get('/subscriptions', ManageSubscriptions::class)->name('subscriptions');
+
+        // CMS Management
+        Route::get('/site-settings', \App\Livewire\Admin\SiteSettingsManager::class)->name('site-settings');
+        Route::get('/landing-content', \App\Livewire\Admin\LandingContentManager::class)->name('landing-content');
+        Route::get('/enquiries', \App\Livewire\Admin\EnquiryManager::class)->name('enquiries');
     });
 
 
@@ -204,13 +233,26 @@ Route::middleware(['auth'])->group(function () {
         });
 
 
-    // ----------------------------------------------------
-    // 4. PATIENT PORTAL ROUTES (Future)
-    // ----------------------------------------------------
-    Route::middleware(['role:patient'])->prefix('portal')->name('portal.')->group(function () {
-        // Route::get('/dashboard', PatientDashboard::class)->name('dashboard');
-    });
 
+});
+
+// ----------------------------------------------------
+// 4. PATIENT PORTAL ROUTES (External / Public Access)
+// ----------------------------------------------------
+Route::prefix('portal')->name('portal.')->group(function () {
+    // Guest route for login (No Auth Middleware needed)
+    Route::get('/login', \App\Livewire\Patient\PatientLogin::class)->name('login');
+
+    // Protected routes (Only protected by our custom session middleware)
+    Route::middleware(['auth', 'patient_portal_access'])->group(function () {
+        Route::get('/dashboard', \App\Livewire\Patient\PatientDashboard::class)->name('dashboard');
+        
+        // Dedicated Patient Report Download
+        Route::get('/report/{id}/print', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('report.download');
+        
+        // Dedicated Patient Invoice Download
+        Route::get('/invoice/{id}/print', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.download');
+    });
 });
 
 // Settings

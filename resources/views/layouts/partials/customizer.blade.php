@@ -1,3 +1,4 @@
+@if(auth()->check() && !auth()->user()->patientProfile)
 <div class="theme-customizer">
     <div class="customizer-handle">
         <a href="javascript:void(0);" class="cutomizer-open-trigger bg-primary">
@@ -135,3 +136,4 @@
         </div>
     </div>
 </div>
+@endif

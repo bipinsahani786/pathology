@@ -18,7 +18,7 @@
             </div>
             
             {{-- Global Search Trigger --}}
-            @if(!auth()->user()->hasRole('super_admin'))
+            @if(!auth()->user()->hasRole('super_admin') && !auth()->user()->patientProfile)
             <div class="header-search-wrapper d-none d-md-flex">
                 <div class="search-form-wrapper">
                     <form action="javascript:void(0);" class="search-form">
@@ -80,6 +80,7 @@
                     </div>
                 </div>
 
+                @if(!auth()->user()->patientProfile)
                 <div class="nxl-h-item dark-light-theme">
                     <a href="javascript:void(0);" class="nxl-head-link me-0 dark-button">
                         <i class="feather-moon"></i>
@@ -88,6 +89,7 @@
                         <i class="feather-sun"></i>
                     </a>
                 </div>
+                @endif
 
                 <div class="dropdown nxl-h-item">
                     @php
