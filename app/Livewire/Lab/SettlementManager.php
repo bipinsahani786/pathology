@@ -91,10 +91,27 @@ class SettlementManager extends Component
 
     private function getMyBranchId()
     {
+        $user = auth()->user();
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        return auth()->user()->hasRole('lab_admin|super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+        
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = $user->branch_id;
+        }
+
+        // Apply strict isolation if setting is ON and NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = $user->branch_id;
+        }
+
+        return $myBranchId;
     }
 
     public function mount()
@@ -369,7 +386,7 @@ class SettlementManager extends Component
                 $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
             }])
             ->when($this->searchPartner, function($q) {
-                $q->where(fn($q2) => $q2->where('name', 'ilike', "%{$this->searchPartner}%")->orWhere('phone', 'ilike', "%{$this->searchPartner}%"));
+                $q->where(fn($q2) => $q2->where('name', 'like', "%{$this->searchPartner}%")->orWhere('phone', 'like', "%{$this->searchPartner}%"));
             })
             ->orderBy('pending_amount', 'desc')
             ->orderBy('name', 'asc')

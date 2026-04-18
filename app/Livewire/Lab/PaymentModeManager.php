@@ -134,7 +134,7 @@ class PaymentModeManager extends Component
     public function render()
     {
         $paymentModes = PaymentMode::where('company_id', auth()->user()->company_id)
-            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
+            ->where('name', 'like', '%' . $this->searchTerm . '%')
             ->orderBy('id', 'desc')
             ->paginate(10);
 

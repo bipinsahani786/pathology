@@ -146,7 +146,7 @@
                                             <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Details">
                                                 <i class="feather-eye fs-14"></i>
                                             </a>
-                                            @if($inv->status == 'Completed')
+                                            @if($inv->sample_status == 'Ready')
                                                 <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Print Report">
                                                     <i class="feather-printer fs-14"></i>
                                                 </a>

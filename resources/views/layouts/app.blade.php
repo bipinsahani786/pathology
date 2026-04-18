@@ -100,14 +100,14 @@
 
     @include('layouts.partials.customizer')
 
-    {{-- Vendor scripts: NO data-navigate-once so jQuery handlers re-bind after SPA nav --}}
-    <script src="{{ asset('assets/vendors/js/vendors.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}"></script>
-    <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
+    {{-- Vendor scripts: Using data-navigate-once for stable delegation in SPA mode --}}
+    <script src="{{ asset('assets/vendors/js/vendors.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/common-init.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/dashboard-init.min.js') }}" data-navigate-once></script>
 
     <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js" data-navigate-once></script>
 
@@ -337,17 +337,14 @@
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
 
-                // Restore sidebar scroller
+                // Restore Sidebar Scrollbar and Accordion interactions after Livewire Morph
                 setTimeout(function() {
                     if (typeof window.addscroller === 'function') {
                         window.addscroller();
                     }
+                    // Ensure actively selected menus stay visible
                     if (typeof jQuery !== 'undefined') {
                         jQuery('.nxl-hasmenu.nxl-trigger > .nxl-submenu').css('display', 'block');
-                    }
-                    if (document.fullscreenElement) {
-                        document.documentElement.classList.add('fsh-infullscreen');
-                        if (document.body) document.body.classList.add('full-screen-helper');
                     }
                 }, 10);
             });
@@ -391,10 +388,12 @@
                 }
             });
 
-            // ── 5. Livewire Event Listeners (strict once) ──
+            // ── 5. Livewire Event Listeners & Global Delegation (Strict Once) ──
             if (!window.pathologyListenersAdded) {
                 document.addEventListener('livewire:init', function() {
                     if (window.pathologyListenersAdded) return;
+
+
 
                     Livewire.on('open-new-tab', function(data) {
                         var url = Array.isArray(data) ? data[0].url : data.url;
@@ -411,6 +410,13 @@
 
             // ── 6. Initial sync on page load ──
             syncThemeState();
+            
+            // Re-init specialized sidebar behavior on load
+            setTimeout(function() {
+                if (typeof jQuery !== 'undefined') {
+                    jQuery('.nxl-hasmenu.active').addClass('nxl-trigger').find('.nxl-submenu').show();
+                }
+            }, 100);
         })();
     </script>
 </body>

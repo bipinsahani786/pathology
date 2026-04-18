@@ -148,7 +148,18 @@ class CollectionCenterManager extends Component
                     'password' => Hash::make($this->password ?? $this->phone ?? '12345678'),
                     'is_active' => $this->is_active,
                 ]);
-                $user->assignRole('collection_center');
+
+                // Robust role assignment: find a role that is/was collection_center
+                $ccRole = \Spatie\Permission\Models\Role::where('name', 'collection_center')
+                    ->orWhere('name', 'like', '%collection%')
+                    ->first();
+                
+                if ($ccRole) {
+                    $user->assignRole($ccRole->name);
+                } else {
+                    $user->assignRole('collection_center'); // Fallback
+                }
+                
                 $this->user_id = $user->id;
             }
 
@@ -232,19 +243,24 @@ class CollectionCenterManager extends Component
 
     public function render()
     {
-        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $companyId = $user->company_id;
         $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
+        
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        
+        $myBranchId = $isGlobalAdmin 
             ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+            : $user->branch_id;
 
         $centers = CollectionCenter::with('user')->where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%')
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('center_code', 'like', '%' . $this->searchTerm . '%')
                   ->orWhereHas('user', function($qu) {
-                      $qu->where('phone', 'ilike', '%' . $this->searchTerm . '%');
+                      $qu->where('phone', 'like', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')
@@ -252,7 +268,9 @@ class CollectionCenterManager extends Component
 
         return view('livewire.lab.collection-center-manager', [
             'centers' => $centers,
-            'branches' => \App\Models\Branch::where('company_id', $companyId)->get()
+            'branches' => \App\Models\Branch::where('company_id', $companyId)
+                ->when($myBranchId, fn($q) => $q->where('id', $myBranchId))
+                ->get()
         ])->layout('layouts.app', ['title' => 'Manage Collection Centers']);
     }
 }

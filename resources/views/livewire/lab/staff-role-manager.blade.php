@@ -74,7 +74,7 @@
                                             </td>
                                             <td>
                                                 <span class="badge bg-soft-info text-info rounded-pill px-3 py-1 fs-10 fw-bold">
-                                                    {{ str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin'], ['', 'System Admin'], $member->roles->first()?->name ?? 'No Role') }}
+                                                    {{ ucfirst(str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin', '_'], ['', 'Lab Administrator', ' '], $member->roles->first()?->name ?? 'No Role')) }}
                                                 </span>
                                             </td>
                                             <td class="fs-11 text-muted">
@@ -135,7 +135,7 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="feather-shield text-{{ str_contains($role->name, 'admin') ? 'danger' : 'primary' }}"></i>
                                                     <span class="fw-bold text-dark fs-13">
-                                                        {{ ucfirst(str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin'], ['', 'Lab Administrator'], $role->name)) }}
+                                                        {{ ucfirst(str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin', '_'], ['', 'Lab Administrator', ' '], $role->name)) }}
                                                     </span>
                                                 </div>
                                             </td>
@@ -143,12 +143,12 @@
                                                 <span class="fs-12 fw-bold text-muted">{{ $role->permissions->count() }} permissions</span>
                                             </td>
                                             <td class="text-end pe-4">
-                                                @if(!str_contains($role->name, 'admin'))
+                                                @if($role->name !== 'lab_admin')
                                                     <button wire:click="editRole({{ $role->id }})" class="btn btn-sm btn-soft-primary px-3 rounded-pill border-0">
                                                         <i class="feather-edit me-1"></i>Edit Permissions
                                                     </button>
                                                 @else
-                                                    <span class="fs-10 text-muted italic">System Role</span>
+                                                    <span class="fs-10 text-muted italic">Core System Role</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -195,7 +195,7 @@
                                     <option value="">Select Role</option>
                                     @foreach($roles as $role)
                                         <option value="{{ $role->id }}">
-                                            {{ ucfirst(str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin'], ['', 'System Admin'], $role->name)) }}
+                                            {{ ucfirst(str_replace(['lab_'.auth()->user()->company_id.'_', 'lab_admin', '_'], ['', 'Lab Administrator', ' '], $role->name)) }}
                                         </option>
                                     @endforeach
                                 </select>

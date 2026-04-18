@@ -43,7 +43,7 @@ class PatientLogin extends Component
                 
                 // Also check by PatientProfile patient_id_string
                 $query->orWhereHas('patientProfile', function($q) use ($inputId) {
-                    $q->where('patient_id_string', 'ilike', '%' . $inputId . '%');
+                    $q->where('patient_id_string', 'like', '%' . $inputId . '%');
                 });
             })
             ->first();

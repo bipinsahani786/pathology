@@ -33,15 +33,21 @@ class EnsureLabStaff
 
         // 4. Strictly Block external partners from internal lab areas
         // (External roles: patient, doctor, agent, collection_center)
-        $isPartner = $user->hasAnyRole(['patient', 'doctor', 'agent', 'collection_center']) || 
+        $roles = $user->roles->pluck('name')->toArray();
+        $isPartnerRole = collect($roles)->contains(fn($r) => in_array($r, ['patient', 'doctor', 'agent', 'collection_center']) || str_ends_with($r, '_patient') || str_ends_with($r, '_doctor') || str_ends_with($r, '_agent') || str_ends_with($r, '_collection_center'));
+
+        $isPartner = $isPartnerRole || 
                      $user->collection_center_id || 
                      $user->doctorProfile || 
                      $user->agentProfile;
 
         if ($isPartner) {
             // WHITELIST: Allow Collection Centers to access POS, Invoices, and Profile only.
-            // If they hit the lab dashboard or settings, block them.
-            if ($user->hasRole('collection_center') || $user->collection_center_id) {
+            $isCollector = $user->hasRole('collection_center') || 
+                           $user->collection_center_id || 
+                           collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
+
+            if ($isCollector) {
                 $allowedPaths = ['lab/pos*', 'lab/invoices*', 'lab/profile*', 'lab/invoice*'];
                 foreach ($allowedPaths as $path) {
                     if ($request->is($path)) {
@@ -50,8 +56,14 @@ class EnsureLabStaff
                 }
             }
             
-            // Logged in as partner but trying to access lab-internal dashboard or management
-            return redirect()->route('partner.dashboard')->with('error', 'Redirected to your dashboard.');
+            // Differentiate redirect based on partner type
+            $isPatient = $user->hasRole('patient') || $user->patientProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_patient'));
+            
+            if ($isPatient) {
+                return redirect()->route('portal.dashboard')->with('error', 'Redirected to your patient portal.');
+            }
+
+            return redirect()->route('partner.dashboard')->with('error', 'Redirected to your partner dashboard.');
         }
 
         // 5. If they passed all above, they are considered lab-internal staff

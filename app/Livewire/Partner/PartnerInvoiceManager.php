@@ -22,14 +22,19 @@ class PartnerInvoiceManager extends Component
     public function mount()
     {
         $user = Auth::user();
-        if ($user->hasRole('doctor')) {
+        $roles = $user->roles->pluck('name')->toArray();
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_agent'));
+
+        if ($isDoctor) {
             $this->role = 'Doctor';
-        } elseif ($user->hasRole('agent')) {
+        } elseif ($isAgent) {
             $this->role = 'Agent';
-        } elseif ($user->hasRole('collection_center')) {
+        } elseif ($isCC) {
             $this->role = 'Collection Center';
         } else {
-            abort(403);
+            abort(403, 'Unauthorized access: Role not recognized.');
         }
 
         $this->filterDateFrom = now()->startOfMonth()->format('Y-m-d');
