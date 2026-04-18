@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 @php
-    $savedSkin = $_COOKIE['nxl-skin'] ?? 'app-skin-light';
+    $themeCookie = $_COOKIE['nxl_theme'] ?? '';
+    $isDark = str_contains($themeCookie, 'dark');
+    $skinClass = $isDark ? 'app-skin-dark' : '';
 @endphp
-<html lang="en" class="{{ $savedSkin }}">
+<html lang="en" class="{{ $skinClass }}">
 
 <head>
     <meta charset="utf-8" />
@@ -11,20 +13,23 @@
     <script>
         (function() {
             try {
-                var skin = localStorage.getItem('nxl-skin') || localStorage.getItem('app-skin') || 'app-skin-light';
-                if (skin.includes('dark')) {
+                var skinCustomizer = localStorage.getItem('app-skin') || '';
+                var skinToggle = localStorage.getItem('app-skin-dark') || '';
+                var isDark = skinCustomizer === 'app-skin-dark' || skinToggle === 'app-skin-dark';
+                if (isDark) {
                     document.documentElement.classList.add('app-skin-dark');
-                    document.documentElement.style.background = '#111827'; 
+                } else {
+                    document.documentElement.classList.remove('app-skin-dark');
                 }
+                document.cookie = "nxl_theme=" + (isDark ? 'dark' : 'light') + "; path=/; max-age=31536000; SameSite=Lax";
             } catch (e) {}
         })();
     </script>
     <style>
-        html.app-skin-dark, 
+        html.app-skin-dark,
         html.app-skin-dark body,
         html.app-skin-dark .auth-minimal-wrapper {
-            background-color: #111827 !important;
-            color: #e5e7eb !important;
+            background-color: #1a1d29 !important;
         }
     </style>
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/bootstrap.min.css') }}" />
