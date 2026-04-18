@@ -1,210 +1,292 @@
 <div>
-    <div class="page-header">
-        <div class="page-header-left d-flex align-items-center">
-            <div class="page-header-title">
-                <h5 class="m-b-10">Patient Portal</h5>
-            </div>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('portal.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item">My Dashboard</li>
-            </ul>
-        </div>
-        <div class="page-header-right ms-auto">
-            <div class="d-flex align-items-center gap-3">
-                <div class="fw-bold fs-14">
-                    <span class="text-muted fw-normal me-1">Medical ID:</span> {{ $patient->formatted_id }}
-                </div>
-                <div class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold">
-                    {{ $reports->count() }} Tests Completed
-                </div>
-            </div>
-        </div>
-    </div>
+    <style>
+        :root {
+            --db-primary: #4f46e5;
+            --db-success: #10b981;
+            --db-warning: #f59e0b;
+            --db-danger: #ef4444;
+            --db-info: #3b82f6;
+            --db-bg: #f8fafc;
+            --db-card-bg: #ffffff;
+            --db-text-main: #1e293b;
+            --db-text-muted: #64748b;
+            --db-border: #e2e8f0;
+            --db-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --db-glass-bg: rgba(255, 255, 255, 0.7);
+            --db-glass-border: rgba(255, 255, 255, 0.4);
+        }
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="row">
-            <!-- Left Side: Laboratory / Membership details -->
-            <div class="col-lg-4 col-md-12">
-                <!-- Lab Details Card -->
-                <div class="card stretch stretch-full">
-                    <div class="card-header bg-soft-primary">
-                        <h5 class="card-title text-primary"><i class="feather-home me-2"></i> Your Laboratory</h5>
+        html.app-skin-dark {
+            --db-bg: #0d0d1a;
+            --db-card-bg: #1a1a2e;
+            --db-text-main: #e2e8f0;
+            --db-text-muted: #94a3b8;
+            --db-border: rgba(255, 255, 255, 0.08);
+            --db-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .db-container {
+            padding: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .db-card {
+            background: var(--db-card-bg);
+            border: 1px solid var(--db-border);
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            box-shadow: var(--db-shadow);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .db-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--db-primary);
+            box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.15);
+        }
+
+        .glass-bar {
+            background: var(--db-glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--db-glass-border);
+            border-radius: 2rem;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            box-shadow: var(--db-shadow);
+        }
+
+        .glass-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .glass-val {
+            font-size: 1.5rem;
+            font-weight: 850;
+            letter-spacing: -0.5px;
+            color: var(--db-text-main);
+            line-height: 1;
+        }
+
+        .glass-lbl {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--db-text-muted);
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .icon-box-sm {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .wellness-banner {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 2rem;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+            color: white;
+            box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.3);
+        }
+
+        .wellness-banner::after {
+            content: "\e991"; /* feather-heart icon */
+            font-family: 'feather' !important;
+            position: absolute;
+            top: -40px;
+            right: -20px;
+            font-size: 240px;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+
+    <div class="db-container">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div>
+                <h2 class="fw-black mb-1" style="letter-spacing: -1.5px; font-size: 2.25rem;">Patient Overview</h2>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-soft-primary text-primary px-3 py-1 rounded-pill fw-bold fs-10">
+                        <span class="pulse-dot me-2"></span>LIVE HEALTH UPDATES
+                    </span>
+                    <span class="text-muted small fw-bold">
+                        <i class="feather-calendar me-1"></i> {{ date('l, d M Y') }}
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="px-4 py-2 bg-white border rounded-pill shadow-sm d-flex align-items-center gap-2">
+                    <span class="text-muted fs-11 fw-bold text-uppercase">Medical ID:</span>
+                    <span class="fw-black text-primary">{{ $patient->formatted_id }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wellness Banner -->
+        <div class="wellness-banner animate__animated animate__fadeIn">
+            <div class="position-relative" style="z-index: 2;">
+                <h1 class="fw-900 text-white mb-2 display-5">Hello, {{ $patient->name }}!</h1>
+                <p class="fs-18 opacity-90 mb-4 fw-medium max-w-md">{{ $greeting }}</p>
+                <div class="d-flex gap-3 mt-4">
+                    <a href="{{ route('portal.reports') }}" class="btn btn-white text-primary fw-900 px-5 py-3 rounded-pill shadow-lg border-0 bg-white">
+                        <i class="feather-file-text me-2"></i>ACCESS MY REPORTS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary Bar -->
+        <div class="glass-bar">
+            <div class="glass-item">
+                <div class="icon-box-sm bg-soft-primary text-primary"><i class="feather-clipboard"></i></div>
+                <div>
+                    <div class="glass-val">{{ $reportsCount }}</div>
+                    <div class="glass-lbl">Total Reports</div>
+                </div>
+            </div>
+            <div class="vr d-none d-lg-block opacity-10"></div>
+            <div class="glass-item">
+                <div class="icon-box-sm bg-soft-warning text-warning"><i class="feather-clock"></i></div>
+                <div>
+                    <div class="glass-val">{{ $pendingReportsCount }}</div>
+                    <div class="glass-lbl">Processing</div>
+                </div>
+            </div>
+            <div class="vr d-none d-lg-block opacity-10"></div>
+            <div class="glass-item">
+                <div class="icon-box-sm bg-soft-success text-success"><i class="feather-trending-down"></i></div>
+                <div>
+                    <div class="glass-val">₹{{ number_format($totalSavings, 0) }}</div>
+                    <div class="glass-lbl">Your Savings</div>
+                </div>
+            </div>
+            <div class="vr d-none d-lg-block opacity-10"></div>
+            <div class="glass-item">
+                <div class="icon-box-sm bg-soft-info text-info"><i class="feather-award"></i></div>
+                <div>
+                    <div class="glass-val text-truncate" style="max-width: 150px;">{{ $activeMembership->membership->name ?? 'Free Plan' }}</div>
+                    <div class="glass-lbl">Member Status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="db-card p-0 overflow-hidden">
+                    <div class="p-4 border-bottom bg-light bg-opacity-50">
+                        <h5 class="fw-bold mb-0 text-dark">Laboratory Information</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="text-center mb-4 pb-4 border-bottom border-dashed border-gray-200">
-                            <h4 class="fw-bolder mb-1">{{ $lab->name ?? 'Primary Laboratory' }}</h4>
-                            <p class="text-muted fs-12 mb-0">{{ $lab->tagline ?? 'Quality & Precision diagnostics' }}</p>
-                        </div>
-                        
-                        <div class="mt-4">
-                            <label class="text-muted fs-10 text-uppercase fw-bold tracking-widest mb-1 d-block">Registered Branch</label>
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="feather-map-pin text-primary mt-1"></i>
-                                <div>
-                                    <div class="fs-13 fw-semibold text-dark">{{ $branch->name ?? 'Main Branch' }}</div>
-                                    @if($branch && $branch->address)
-                                        <p class="fs-12 text-muted mt-1 mb-0">{{ $branch->address }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        @if($collectionCenter)
-                            <div class="mt-4 pt-4 border-top border-dashed border-gray-200">
-                                <label class="text-muted fs-10 text-uppercase fw-bold tracking-widest mb-1 d-block">Collection Center</label>
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="feather-box text-success mt-1"></i>
-                                    <div>
-                                        <div class="fs-13 fw-semibold text-dark">{{ $collectionCenter->name }}</div>
-                                        @if($collectionCenter->address)
-                                            <p class="fs-12 text-muted mt-1 mb-0">{{ $collectionCenter->address }}</p>
-                                        @endif
+                    <div class="p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="p-4 rounded-4 border border-dashed bg-white h-100">
+                                    <h6 class="fw-black text-muted fs-11 text-uppercase mb-3 tracking-widest">Main Lab & Branch</h6>
+                                    <h5 class="fw-900 text-dark mb-1">{{ $lab->name ?? 'Primary Diagnostics' }}</h5>
+                                    <p class="text-muted fs-12 mb-3 fw-medium">{{ $branch->name ?? 'Main Testing Facility' }}</p>
+                                    <div class="d-flex align-items-center gap-2 fs-13 text-muted fw-medium">
+                                        <i class="feather-map-pin text-primary"></i>
+                                        <span>{{ $branch->address ?? 'Address not available' }}</span>
                                     </div>
                                 </div>
                             </div>
-                        @endif
-
-                        <div class="mt-4 pt-4 border-top border-dashed border-gray-200">
-                            <label class="text-muted fs-10 text-uppercase fw-bold tracking-widest mb-1 d-block">Technical Queries</label>
-                            <div class="p-3 bg-soft-info rounded-3 mt-2">
-                                <p class="fs-12 text-dark mb-2">If you have any questions regarding your reports, please call our 24/7 helpline:</p>
-                                <a href="tel:{{ $lab->phone ?? '' }}" class="fw-bold text-info text-decoration-none">
-                                    <i class="feather-phone-call me-1"></i> +{{ $lab->phone ?? 'Contact Lab' }}
-                                </a>
+                            <div class="col-md-6">
+                                <div class="p-4 rounded-4 bg-soft-info border border-info border-opacity-10 h-100">
+                                    <h6 class="fw-black text-info fs-11 text-uppercase mb-3 tracking-widest">Support Helpline</h6>
+                                    <p class="fs-13 text-dark mb-4 fw-medium">Need help with your reports? Our technical team is available 24/7.</p>
+                                    <a href="tel:{{ $lab->phone ?? '' }}" class="btn btn-info w-100 fw-900 text-white rounded-pill py-3 shadow-sm border-0">
+                                        <i class="feather-phone-call me-2"></i>CALL HELPLINE
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Membership Card Info -->
-                @if($activeMembership)
-                    <div class="card stretch stretch-full bg-dark text-white overflow-hidden" style="background: linear-gradient(135deg, #1e293b, #0f172a);">
-                        <div class="card-body position-relative">
-                            <i class="feather-shield position-absolute text-white" style="font-size: 100px; opacity: 0.05; right: -10px; bottom: -20px;"></i>
-                            <p class="fs-10 fw-bold text-white text-uppercase tracking-widest mb-1 opacity-75">Active Membership</p>
-                            <h4 class="fw-bolder mb-4 text-white">{{ $activeMembership->membership->name ?? 'VIP Member' }}</h4>
-                            
-                            <div class="bg-white bg-opacity-10 p-3 rounded-3 mb-3 border border-white border-opacity-10">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="fs-11 fw-semibold opacity-75">Valid Until:</span>
-                                    <span class="fs-12 fw-bold text-success">{{ \Carbon\Carbon::parse($activeMembership->valid_until)->format('d M, Y') }}</span>
-                                </div>
-                                <div class="progress bg-white bg-opacity-20 mb-3" style="height: 4px;">
-                                    <div class="progress-bar bg-success" style="width: 100%"></div>
-                                </div>
-                                @if($totalSavings > 0)
-                                <div class="border-top border-white border-opacity-10 pt-3 mt-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="avatar-text avatar-sm bg-soft-success text-success rounded-circle">
-                                                <i class="feather-trending-down"></i>
-                                            </div>
-                                            <span class="fs-11 fw-bold text-white opacity-75">Total Savings</span>
-                                        </div>
-                                        <h5 class="mb-0 fw-bolder text-success">₹{{ number_format($totalSavings, 2) }}</h5>
-                                    </div>
-                                    <p class="fs-10 text-white opacity-50 mt-2 mb-0">Total money saved on tests compared to standard rates.</p>
-                                </div>
-                                @endif
-                            </div>
-                            <p class="fs-11 opacity-75 mb-0">Enjoy priority processing and exclusive discounts on all your diagnostic tests.</p>
-                        </div>
-                    </div>
-                @endif
             </div>
 
-            <!-- Right Side: Test Reports -->
-            <div class="col-lg-8 col-md-12">
-                <div class="card stretch stretch-full">
-                    <div class="card-header">
-                        <h5 class="card-title">My Test Reports</h5>
-                        <div class="card-header-action">
-                            <a href="javascript:void(0);" class="btn btn-sm btn-light border" onclick="window.location.reload();">
-                                <i class="feather-refresh-cw me-2"></i>Refresh
+            <div class="col-lg-4">
+                <div class="db-card p-0 overflow-hidden">
+                    <div class="p-4 border-bottom bg-light bg-opacity-50">
+                        <h5 class="fw-bold mb-0 text-dark">Quick Navigation</h5>
+                    </div>
+                    <div class="p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="{{ route('portal.reports') }}" class="list-group-item list-group-item-action p-4 border-0">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="avatar-text avatar-md bg-soft-primary text-primary rounded-4">
+                                        <i class="feather-file-text fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-900 text-dark fs-15">Download Reports</div>
+                                        <div class="fs-12 text-muted fw-medium">Approved lab results</div>
+                                    </div>
+                                    <i class="feather-chevron-right text-muted opacity-40"></i>
+                                </div>
+                            </a>
+                            <a href="{{ route('portal.membership') }}" class="list-group-item list-group-item-action p-4 border-0 border-top">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="avatar-text avatar-md bg-soft-success text-success rounded-4">
+                                        <i class="feather-award fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-900 text-dark fs-15">VIP Perks</div>
+                                        <div class="fs-12 text-muted fw-medium">Plan benefits & savings</div>
+                                    </div>
+                                    <i class="feather-chevron-right text-muted opacity-40"></i>
+                                </div>
+                            </a>
+                            <a href="{{ route('portal.profile') }}" class="list-group-item list-group-item-action p-4 border-0 border-top">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div class="avatar-text avatar-md bg-soft-danger text-danger rounded-4">
+                                        <i class="feather-settings fs-4"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-900 text-dark fs-15">Settings</div>
+                                        <div class="fs-12 text-muted fw-medium">Account & Security</div>
+                                    </div>
+                                    <i class="feather-chevron-right text-muted opacity-40"></i>
+                                </div>
                             </a>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        @if($reports->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0 align-middle">
-                                    <thead class="bg-light fs-11 fw-bold text-uppercase text-muted tracking-wide">
-                                        <tr>
-                                            <th class="ps-4">Report Details</th>
-                                            <th>Date & Time</th>
-                                            <th class="text-center">Status</th>
-                                            <th class="text-end pe-4">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($reports as $report)
-                                            <tr>
-                                                <td class="ps-4">
-                                                    <div class="fw-bold text-dark fs-14">Invoice #{{ $report->invoice->invoice_number }}</div>
-                                                    <div class="text-muted fs-12 mt-1"><i class="feather-layers me-1"></i>Multiple Tests</div>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-bolder text-dark fs-13">{{ \Carbon\Carbon::parse($report->created_at)->format('d M, Y') }}</div>
-                                                    <div class="text-muted fs-11 mt-1">{{ \Carbon\Carbon::parse($report->created_at)->format('h:i A') }}</div>
-                                                </td>
-                                                <td class="text-center">
-                                                    @if($report->status === 'approved')
-                                                        <span class="badge bg-soft-success text-success px-3 py-1 rounded fw-bold fs-11 border border-success border-opacity-10">
-                                                            <i class="feather-check-circle me-1"></i> APPROVED
-                                                        </span>
-                                                    @elseif($report->status === 'pending')
-                                                        <span class="badge bg-soft-warning text-warning px-3 py-1 rounded fw-bold fs-11 border border-warning border-opacity-10">
-                                                            <i class="feather-clock me-1"></i> PENDING
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-soft-primary text-primary px-3 py-1 rounded fw-bold fs-11 border border-primary border-opacity-10">
-                                                            <i class="feather-activity me-1"></i> {{ strtoupper($report->status) }}
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end pe-4">
-                                                    <div class="d-flex justify-content-end gap-2">
-                                                        <a href="{{ route('portal.invoice.download', $report->invoice->id) }}" target="_blank" 
-                                                           class="btn btn-soft-secondary btn-sm px-3 fw-bold shadow-sm" title="Download Invoice">
-                                                            <i class="feather-file-text me-1"></i> Bill
-                                                        </a>
-                                                        
-                                                        @if($report->status === 'approved')
-                                                            <a href="{{ route('portal.report.download', $report->id) }}" target="_blank" 
-                                                               class="btn btn-primary btn-sm px-3 fw-bold shadow-sm">
-                                                                <i class="feather-download me-1"></i> Report
-                                                            </a>
-                                                        @else
-                                                            <button class="btn btn-light btn-sm px-3 fw-bold border" disabled title="Report Processing">
-                                                                <i class="feather-lock me-1"></i> Report
-                                                            </button>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="py-5 text-center px-4">
-                                <div class="bg-light d-inline-flex p-4 rounded-circle mb-4 border">
-                                    <i class="feather-inbox fs-1 text-muted"></i>
-                                </div>
-                                <h5 class="fw-bolder text-dark mb-2">No test reports found</h5>
-                                <p class="text-muted fs-13 max-w-sm mx-auto">Once your tests are completed and approved by the doctor, your reports will be securely available here for download.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Footer Security Notice -->
-                <div class="alert alert-info border-0 shadow-sm rounded-4 d-flex align-items-start p-4 mb-4">
-                    <i class="feather-info fs-3 text-info me-3 mt-1"></i>
-                    <div>
-                        <h6 class="fw-bold text-info mb-1">Important Privacy Note</h6>
-                        <p class="fs-13 text-dark opacity-75 mb-0">Your medical records are highly confidential. Please do not share your Medical ID with unauthorized personnel. Always ensure you click 'Logout' after reviewing your reports on a shared device.</p>
                     </div>
                 </div>
             </div>

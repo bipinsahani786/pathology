@@ -194,8 +194,8 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        @if($inv->sample_status == 'Ready')
-                                            <span class="badge bg-soft-success text-success border border-success border-opacity-10 px-3 py-1 fs-11 fw-bold animated pulse shadow-sm">
+                                        @if(trim($inv->sample_status) == 'Ready')
+                                            <span class="badge bg-soft-success text-success border border-success border-opacity-10 px-3 py-1 fs-11 fw-bold shadow-sm">
                                                 <i class="feather-check-circle me-1"></i>Report Ready
                                             </span>
                                         @else

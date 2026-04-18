@@ -456,7 +456,25 @@
                     <li class="nxl-item {{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
                         <a href="{{ route('portal.dashboard') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
-                            <span class="nxl-mtext">My Dashboard</span>
+                            <span class="nxl-mtext">Overview</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.reports') ? 'active' : '' }}">
+                        <a href="{{ route('portal.reports') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-clipboard"></i></span>
+                            <span class="nxl-mtext">My Test Reports</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.membership') ? 'active' : '' }}">
+                        <a href="{{ route('portal.membership') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-award"></i></span>
+                            <span class="nxl-mtext">My Membership</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.profile') ? 'active' : '' }}">
+                        <a href="{{ route('portal.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
                         </a>
                     </li>
                     <li class="nxl-item">
