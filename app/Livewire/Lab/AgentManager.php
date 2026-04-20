@@ -145,6 +145,7 @@ class AgentManager extends Component
                 
                 // 1. Create the base User record
                 $user = User::create([
+                    'company_id' => $companyId,
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null, 
@@ -221,10 +222,10 @@ class AgentManager extends Component
             })
             ->with('agentProfile') 
             ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhereHas('agentProfile', function($query2) {
-                      $query2->where('agency_name', 'like', '%' . $this->searchTerm . '%');
+                      $query2->where('agency_name', 'ilike', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

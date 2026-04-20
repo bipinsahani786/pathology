@@ -257,10 +257,10 @@ class CollectionCenterManager extends Component
         $centers = CollectionCenter::with('user')->where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
             ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('center_code', 'like', '%' . $this->searchTerm . '%')
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhereHas('user', function($qu) {
-                      $qu->where('phone', 'like', '%' . $this->searchTerm . '%');
+                      $qu->where('phone', 'ilike', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

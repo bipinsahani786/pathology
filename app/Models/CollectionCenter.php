@@ -35,4 +35,12 @@ class CollectionCenter extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the invoices associated with the collection center.
+     */
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'collection_center_id');
+    }
 }
