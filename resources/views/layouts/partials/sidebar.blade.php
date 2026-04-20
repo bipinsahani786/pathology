@@ -352,27 +352,67 @@
                             <span class="nxl-mtext">My Referrals</span>
                         </a>
                     </li>
-                    @if(auth()->user()->hasRole('collection_center'))
+                    @can('create pos')
                     <li class="nxl-item {{ request()->routeIs('lab.pos') ? 'active' : '' }}">
                         <a href="{{ route('lab.pos') }}" wire:navigate class="nxl-link">
-                            <span class="nxl-micon"><i class="feather-shopping-cart"></i></span>
+                            <span class="nxl-micon"><i class="feather-plus-circle"></i></span>
                             <span class="nxl-mtext">Create Bill (POS)</span>
                         </a>
                     </li>
+                    @endcan
+                    
+                    @can('view invoices')
+                    @php
+                        $isCC = auth()->user()->collection_center_id || auth()->user()->hasRole('collection_center') || collect(auth()->user()->roles->pluck('name'))->contains(fn($r) => str_contains(strtolower($r), 'collection'));
+                    @endphp
+                    @if(!$isCC)
+                    <li class="nxl-item {{ request()->routeIs('lab.invoices') ? 'active' : '' }}">
+                        <a href="{{ route('lab.invoices') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-file-text"></i></span>
+                            <span class="nxl-mtext">Invoice History</span>
+                        </a>
+                    </li>
                     @endif
+                    @endcan
+
+
+
+                    @can('view reports')
+                    @php
+                        $isCC = auth()->user()->collection_center_id || auth()->user()->hasRole('collection_center') || collect(auth()->user()->roles->pluck('name'))->contains(fn($r) => str_contains(strtolower($r), 'collection'));
+                    @endphp
+                    @if(!$isCC)
+                    <li class="nxl-item {{ request()->routeIs('lab.reports') ? 'active' : '' }}">
+                        <a href="{{ route('lab.reports') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-clipboard"></i></span>
+                            <span class="nxl-mtext">Test Reports</span>
+                        </a>
+                    </li>
+                    @endif
+                    @endcan
+
                     <li class="nxl-item {{ request()->routeIs('partner.settlements') ? 'active' : '' }}">
                         <a href="{{ route('partner.settlements') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
                             <span class="nxl-mtext">Settlement History</span>
                         </a>
                     </li>
+                    @php
+                        $isCC = auth()->user()->collection_center_id || auth()->user()->hasRole('collection_center') || collect(auth()->user()->roles->pluck('name'))->contains(fn($r) => str_contains(strtolower($r), 'collection'));
+                    @endphp
+                    @if(!$isCC)
                     <li class="nxl-item {{ request()->routeIs('partner.invoices') ? 'active' : '' }}">
                         <a href="{{ route('partner.invoices') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-file-text"></i></span>
                             <span class="nxl-mtext">Invoice History</span>
                         </a>
                     </li>
-                    @if(auth()->user()->hasRole('collection_center'))
+                    @endif
+
+                    @php
+                        $isCC = auth()->user()->collection_center_id || auth()->user()->hasRole('collection_center') || collect(auth()->user()->roles->pluck('name'))->contains(fn($r) => str_contains(strtolower($r), 'collection'));
+                    @endphp
+                    @if($isCC)
                     <li class="nxl-item nxl-hasmenu {{ request()->routeIs('partner.doctors') || request()->routeIs('partner.agents') ? 'active nxl-trigger' : '' }}">
                         <a href="javascript:void(0);" class="nxl-link">
                             <span class="nxl-micon"><i class="feather-users"></i></span>
@@ -416,7 +456,25 @@
                     <li class="nxl-item {{ request()->routeIs('portal.dashboard') ? 'active' : '' }}">
                         <a href="{{ route('portal.dashboard') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
-                            <span class="nxl-mtext">My Dashboard</span>
+                            <span class="nxl-mtext">Overview</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.reports') ? 'active' : '' }}">
+                        <a href="{{ route('portal.reports') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-clipboard"></i></span>
+                            <span class="nxl-mtext">My Test Reports</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.membership') ? 'active' : '' }}">
+                        <a href="{{ route('portal.membership') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-award"></i></span>
+                            <span class="nxl-mtext">My Membership</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.profile') ? 'active' : '' }}">
+                        <a href="{{ route('portal.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
                         </a>
                     </li>
                     <li class="nxl-item">

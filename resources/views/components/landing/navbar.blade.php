@@ -63,7 +63,16 @@
 
             <div class="hidden lg:flex items-center gap-4">
                 @auth
-                    <a href="{{ url('/dashboard') }}"
+                    @php
+                        $user = auth()->user();
+                        $dashboardRoute = 'lab.dashboard';
+                        if ($user->patientProfile) {
+                            $dashboardRoute = 'portal.dashboard';
+                        } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id || $user->doctorProfile || $user->agentProfile) {
+                            $dashboardRoute = 'partner.dashboard';
+                        }
+                    @endphp
+                    <a href="{{ route($dashboardRoute) }}"
                         class="text-sm font-semibold text-zinc-700 px-5 py-2.5 rounded-full border border-zinc-200 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 transition-all duration-300 focus:ring-4 focus:ring-brand-500/10">
                         Dashboard
                     </a>
@@ -116,7 +125,16 @@
 
             <div class="mt-6 pt-6 border-t border-zinc-100 flex flex-col gap-3">
                 @auth
-                    <a href="{{ url('/dashboard') }}"
+                    @php
+                        $user = auth()->user();
+                        $dashboardRoute = 'lab.dashboard';
+                        if ($user->patientProfile) {
+                            $dashboardRoute = 'portal.dashboard';
+                        } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id || $user->doctorProfile || $user->agentProfile) {
+                            $dashboardRoute = 'partner.dashboard';
+                        }
+                    @endphp
+                    <a href="{{ route($dashboardRoute) }}"
                         class="w-full text-center py-3.5 rounded-xl font-semibold text-zinc-700 border border-zinc-200 hover:bg-zinc-50 transition-all">
                         Go to Dashboard
                     </a>

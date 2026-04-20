@@ -194,8 +194,8 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        @if($inv->status == 'Completed')
-                                            <span class="badge bg-soft-success text-success border border-success border-opacity-10 px-3 py-1 fs-11 fw-bold animated pulse shadow-sm">
+                                        @if(trim($inv->sample_status) == 'Ready')
+                                            <span class="badge bg-soft-success text-success border border-success border-opacity-10 px-3 py-1 fs-11 fw-bold shadow-sm">
                                                 <i class="feather-check-circle me-1"></i>Report Ready
                                             </span>
                                         @else
@@ -210,7 +210,7 @@
                                             <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Case Summary">
                                                 <i class="feather-eye fs-14"></i>
                                             </a>
-                                            @if($inv->status == 'Completed')
+                                            @if($inv->sample_status == 'Ready')
                                                 <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View / Print Report">
                                                     <i class="feather-printer fs-14"></i>
                                                 </a>

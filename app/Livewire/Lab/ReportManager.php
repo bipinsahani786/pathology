@@ -88,14 +88,30 @@ class ReportManager extends Component
 
     public function render()
     {
-        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
 
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = $user->branch_id;
+        }
+
+        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = $user->branch_id;
+        }
+
+        $companyId = $user->company_id;
         $invoicesQuery = Invoice::where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
+            ->when($user->collection_center_id, fn($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->with([
                 'patient.patientProfile', 
                 'testReport.results', 
@@ -109,11 +125,11 @@ class ReportManager extends Component
         // Search
         if ($this->search) {
             $invoicesQuery->where(function($q) {
-                $q->where('invoice_number', 'ilike', "%{$this->search}%")
-                  ->orWhere('barcode', 'ilike', "%{$this->search}%")
+                $q->where('invoice_number', 'like', "%{$this->search}%")
+                  ->orWhere('barcode', 'like', "%{$this->search}%")
                   ->orWhereHas('patient', function($q) {
-                      $q->where('name', 'ilike', "%{$this->search}%")
-                        ->orWhere('phone', 'ilike', "%{$this->search}%");
+                      $q->where('name', 'like', "%{$this->search}%")
+                        ->orWhere('phone', 'like', "%{$this->search}%");
                   });
             });
         }
@@ -171,10 +187,19 @@ class ReportManager extends Component
             }
         }
 
-        // Dropdown lists
-        $doctors = \App\Models\DoctorProfile::with('user:id,name')->get();
-        $agents = \App\Models\AgentProfile::with('user:id,name')->get();
-        $centers = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
+        // Dropdown lists filtering
+        $doctorsQuery = \App\Models\DoctorProfile::where('company_id', $companyId)->with('user:id,name');
+        $agentsQuery = \App\Models\AgentProfile::where('company_id', $companyId)->with('user:id,name');
+        $centersQuery = \App\Models\CollectionCenter::where('company_id', $companyId);
+
+        if ($restrictAccess && $myBranchId) {
+            $centersQuery->where('branch_id', $myBranchId);
+            // Note: Doctors and Agents are currently company-wide unless specifically filtered by branch association
+        }
+
+        $doctors = $doctorsQuery->get();
+        $agents = $agentsQuery->get();
+        $centers = $centersQuery->get();
 
         return view('livewire.lab.report-manager', [
             'invoices' => $invoicesQuery->paginate($this->perPage),

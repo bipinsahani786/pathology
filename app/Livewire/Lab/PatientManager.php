@@ -155,8 +155,12 @@ class PatientManager extends Component
                     'branch_id' => $myBranchId,
                 ]);
 
-                // 2. Generate a unique Patient ID (e.g., PAT-2603-0001)
-                $patientIdString = 'PAT-' . date('ym') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                // 2. Generate a unique Patient ID from settings
+                $pPrefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
+                $pDigits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
+                $nextPId = \App\Models\PatientProfile::where('company_id', $companyId)->count() + 1;
+                
+                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
 
                 // 3. Create the Patient Profile record
                 PatientProfile::create([
@@ -215,25 +219,50 @@ class PatientManager extends Component
 
     public function render()
     {
-        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $companyId = $user->company_id;
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+        
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = $user->branch_id;
+        }
+
+        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = $user->branch_id;
+        }
         
         $sharePatients = \App\Models\Configuration::getFor('branch_share_patients', '1') === '1';
 
         // Fetch only users who have a PatientProfile attached to the current company
-        $patients = User::whereHas('patientProfile', function($query) use ($companyId) {
+        $query = User::whereHas('patientProfile', function($query) use ($companyId) {
                 $query->where('company_id', $companyId);
-            })
-            ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId))
-            ->with(['patientProfile', 'activeMembership.membership']) // Eager load to prevent slow queries
+            });
+
+        // Strict isolation: Even if sharePatients is true, the browse list might be restricted
+        // Usually: restrictAccess means you only see YOUR branch data.
+        // sharePatients means you can find patients from other branches via Search (but not list them).
+        
+        if ($myBranchId && !$sharePatients) {
+            $query->where('branch_id', $myBranchId);
+        } elseif ($myBranchId && $restrictAccess) {
+            $query->where('branch_id', $myBranchId);
+        }
+
+        $patients = $query->with(['patientProfile', 'activeMembership.membership']) // Eager load to prevent slow queries
             ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
                   ->orWhereHas('patientProfile', function($query2) {
-                      $query2->where('patient_id_string', 'ilike', '%' . $this->searchTerm . '%');
+                      $query2->where('patient_id_string', 'like', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

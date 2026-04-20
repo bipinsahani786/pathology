@@ -221,10 +221,10 @@ class AgentManager extends Component
             })
             ->with('agentProfile') 
             ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
                   ->orWhereHas('agentProfile', function($query2) {
-                      $query2->where('agency_name', 'ilike', '%' . $this->searchTerm . '%');
+                      $query2->where('agency_name', 'like', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

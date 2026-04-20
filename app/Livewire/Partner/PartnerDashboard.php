@@ -38,18 +38,24 @@ class PartnerDashboard extends Component
     public function loadData()
     {
         $user = Auth::user();
-        if ($user->hasRole('doctor') || $user->doctorProfile) {
+        $roles = $user->roles->pluck('name')->toArray();
+
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'agent'));
+
+        if ($isDoctor) {
             $this->role = 'Doctor';
             $this->loadDoctorStats($user->id);
-        } elseif ($user->hasRole('agent') || $user->agentProfile) {
+        } elseif ($isAgent) {
             $this->role = 'Agent';
             $this->loadAgentStats($user->id);
-        } elseif ($user->hasRole('collection_center') || $user->collection_center_id) {
+        } elseif ($isCC) {
             $this->role = 'Collection Center';
             $this->loadCollectionCenterStats($user->id);
         } else {
             // Only redirect to lab dashboard if they are actually lab staff
-            if ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin'])) {
+            if (collect($roles)->contains(fn($r) => in_array($r, ['lab_admin', 'staff', 'branch_admin']) || str_ends_with($r, '_admin') || str_ends_with($r, '_staff'))) {
                 return redirect()->route('lab.dashboard');
             }
             abort(403, 'Unauthorized access to the Partner Portal.');
@@ -130,7 +136,7 @@ class PartnerDashboard extends Component
             ->count();
 
         $this->stats['reports_ready'] = Invoice::where('collection_center_id', $ccId)
-            ->where('status', 'Completed')
+            ->where('sample_status', 'Ready')
             ->count();
 
         $this->stats['pending_collection'] = Invoice::where('collection_center_id', $ccId)

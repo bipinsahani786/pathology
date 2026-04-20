@@ -86,13 +86,30 @@ class InvoiceManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
-            : auth()->user()->branch_id;
+        
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = $user->branch_id;
+        }
 
+        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = $user->branch_id;
+        }
+
+        $companyId = $user->company_id;
         $query = Invoice::where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
+            ->when($user->collection_center_id, fn($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->with(['patient', 'doctor', 'collectionCenter', 'items', 'creator'])
             ->latest('invoice_date');
 
@@ -100,11 +117,11 @@ class InvoiceManager extends Component
         if ($this->search) {
             $s = $this->search;
             $query->where(function ($q) use ($s) {
-                $q->where('invoice_number', 'ilike', "%{$s}%")
-                    ->orWhere('barcode', 'ilike', "%{$s}%")
+                $q->where('invoice_number', 'like', "%{$s}%")
+                    ->orWhere('barcode', 'like', "%{$s}%")
                     ->orWhereHas('patient', function ($pq) use ($s) {
-                        $pq->where('name', 'ilike', "%{$s}%")
-                            ->orWhere('phone', 'ilike', "%{$s}%");
+                        $pq->where('name', 'like', "%{$s}%")
+                            ->orWhere('phone', 'like', "%{$s}%");
                     });
             });
         }
@@ -149,17 +166,27 @@ class InvoiceManager extends Component
 
         $invoices = $query->paginate($this->perPage);
 
-        // Stats
+        // Stats calculations with strict scoping
+        $statsBase = Invoice::where('company_id', $companyId);
+        if ($myBranchId) $statsBase->where('branch_id', $myBranchId);
+        if ($user->collection_center_id) $statsBase->where('collection_center_id', $user->collection_center_id);
+
         $stats = [
-            'total' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->count(),
-            'today' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->whereDate('invoice_date', today())->count(),
-            'paid' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->where('payment_status', 'Paid')->count(),
-            'due' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->where('payment_status', '!=', 'Paid')->sum('due_amount'),
-            'todayRevenue' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->whereDate('invoice_date', today())->sum('paid_amount'),
-            'totalRevenue' => Invoice::where('company_id', $companyId)->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))->sum('paid_amount'),
+            'total' => (clone $statsBase)->count(),
+            'today' => (clone $statsBase)->whereDate('invoice_date', today())->count(),
+            'paid' => (clone $statsBase)->where('payment_status', 'Paid')->count(),
+            'due' => (clone $statsBase)->where('payment_status', '!=', 'Paid')->sum('due_amount'),
+            'todayRevenue' => (clone $statsBase)->whereDate('invoice_date', today())->sum('paid_amount'),
+            'totalRevenue' => (clone $statsBase)->sum('paid_amount'),
         ];
 
-        $collectionCenters = \App\Models\CollectionCenter::where('company_id', $companyId)->get();
+        // Lookup data filtering
+        $ccQuery = \App\Models\CollectionCenter::where('company_id', $companyId);
+        if ($restrictAccess && $myBranchId) {
+            $ccQuery->where('branch_id', $myBranchId);
+        }
+        $collectionCenters = $ccQuery->get();
+
         $doctors = \App\Models\DoctorProfile::where('company_id', $companyId)->with('user')->get();
         $agents = \App\Models\AgentProfile::where('company_id', $companyId)->with('user')->get();
 

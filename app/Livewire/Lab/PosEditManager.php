@@ -204,7 +204,8 @@ class PosEditManager extends Component
         $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
 
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
-        if (auth()->user()->hasRole('branch_admin') && $restrictAccess) {
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'branch')) && $restrictAccess) {
             $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', auth()->user()->branch_id)->where('is_active', true)->get();
             $this->cachedBranches = Branch::where('id', auth()->user()->branch_id)->get();
             $this->branch_id = auth()->user()->branch_id;
@@ -803,7 +804,11 @@ class PosEditManager extends Component
         $companyId = auth()->user()->company_id;
         $activeBranchId = session('active_branch_id', 'all');
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
-        $myBranchId = (auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') || !$restrictAccess) 
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $isGlobalAdmin = auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+
+        $myBranchId = ($isGlobalAdmin || !$restrictAccess) 
             ? ($activeBranchId === 'all' ? null : $activeBranchId) 
             : auth()->user()->branch_id;
 
@@ -819,7 +824,7 @@ class PosEditManager extends Component
             $query = clone \App\Models\User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             }
             $patients = $query->with('patientProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -830,7 +835,7 @@ class PosEditManager extends Component
             $query = clone \App\Models\User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$shareDoctors, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             }
             $doctors = $query->with('doctorProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -841,7 +846,7 @@ class PosEditManager extends Component
             $query = clone \App\Models\User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$shareAgents, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             }
             $agents = $query->with('agentProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -851,7 +856,7 @@ class PosEditManager extends Component
             $s = $this->testSearch;
             $query = LabTest::where('company_id', $companyId)->where('is_active', true);
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('test_code', 'like', "%{$s}%"));
             }
             $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }

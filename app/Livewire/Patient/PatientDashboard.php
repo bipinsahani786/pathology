@@ -12,38 +12,41 @@ use Illuminate\Support\Facades\Auth;
 class PatientDashboard extends Component
 {
     public $patient;
-    public $reports;
+    public $reportsCount = 0;
+    public $pendingReportsCount = 0;
     public $activeMembership;
     public $totalSavings = 0;
+    public $greeting;
     public $lab;
     public $branch;
-    public $collectionCenter;
     public $siteSetting;
 
     public function mount()
     {
-        // Auth check is handled by middleware, so user is guaranteed to be logged in
         $this->patient = Auth::user();
+        $this->patient->load(['company', 'branch']);
+
+        // Stats summary
+        $this->reportsCount = TestReport::where('patient_id', $this->patient->id)->count();
+        $this->pendingReportsCount = TestReport::where('patient_id', $this->patient->id)->where('status', 'pending')->count();
+        $this->activeMembership = $this->patient->activeMembership ? $this->patient->activeMembership->load('membership') : null;
         
-        // Ensure relationships are loaded
-        $this->patient->load(['company', 'branch', 'collectionCenter']);
-
-        // Fetch reports
-        $this->reports = TestReport::where('patient_id', $this->patient->id)
-            ->with(['invoice'])
-            ->latest()
-            ->get();
-
-        $this->activeMembership = $this->patient->activeMembership;
-
-        // Calculate total savings across all invoices
-        $this->totalSavings = Invoice::where('patient_id', $this->patient->id)
-                                     ->sum('discount_amount');
+        $this->totalSavings = Invoice::where('patient_id', $this->patient->id)->sum('discount_amount');
 
         $this->lab = $this->patient->company;
         $this->branch = $this->patient->branch;
-        $this->collectionCenter = $this->patient->collectionCenter;
         $this->siteSetting = SiteSetting::first();
+
+        // Random medical greeting
+        $greetings = [
+            "Wishing you a speedy and full recovery!",
+            "Take care of yourself, and get well soon!",
+            "Sending you strength and healthy vibes for your recovery.",
+            "Health is wealth. We are here to help you get back on your feet.",
+            "Rest up and feel better soon. Your health is our priority.",
+            "Hope you feel better with each passing day!",
+        ];
+        $this->greeting = $greetings[array_rand($greetings)];
     }
 
     public function logout()

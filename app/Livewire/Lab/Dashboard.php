@@ -70,7 +70,11 @@ class Dashboard extends Component
             $daysLeft = now()->diffInDays($company->trial_ends_at, false);
         }
         $activeBranchId = session('active_branch_id', 'all');
-        $branchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin')
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $isGlobalAdmin = auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+
+        $branchId = ($isGlobalAdmin)
             ? ($activeBranchId === 'all' ? null : $activeBranchId)
             : auth()->user()->branch_id;
 

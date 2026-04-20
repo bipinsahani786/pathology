@@ -169,10 +169,19 @@ class StaffRoleManager extends Component
         // For now, allow everything
         
         $this->role_id_to_edit = $role->id;
-        // Clean up name for editing (strip lab_CID_)
+        
+        // Technical name cleanup logic
         $user = auth()->user();
         $prefix = 'lab_' . $user->company_id . '_';
-        $this->role_name = str_replace($prefix, '', $role->name);
+        
+        // If it starts with prefix, strip it. If it's a known system role, use friendly name.
+        if (str_starts_with($role->name, $prefix)) {
+            $this->role_name = str_replace($prefix, '', $role->name);
+        } else {
+            // Keep system role names as is for editing, but they will be prefixed on save
+            $this->role_name = $role->name;
+        }
+        
         $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
         $this->isRoleModalOpen = true;
     }
@@ -208,9 +217,10 @@ class StaffRoleManager extends Component
             $role->syncPermissions($this->selectedPermissions);
 
             DB::commit();
+            $this->dispatch('refreshComponent'); // Ensure lists update
             $this->isRoleModalOpen = false;
             $this->resetRoleFields();
-            session()->flash('message', 'Role saved successfully.');
+            session()->flash('message', 'Role permissions updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error: ' . $e->getMessage());
@@ -236,9 +246,9 @@ class StaffRoleManager extends Component
         // Apply Search Filter
         if ($this->searchTerm) {
             $query->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('email', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%');
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%');
             });
         }
 
@@ -260,17 +270,28 @@ class StaffRoleManager extends Component
             ->with('roles')
             ->get();
 
-        // Get roles: Use generic roles from RoleSeeder
+        // Get roles: Fetch System roles + Current Lab's custom roles
+        $tenantPrefix = 'lab_' . $labId . '_';
+        $systemRoleNames = ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent'];
+
+        $rolesQuery = Role::where(function($q) use ($tenantPrefix, $systemRoleNames) {
+            $q->whereIn('name', $systemRoleNames)
+              ->orWhere('name', 'like', $tenantPrefix . '%');
+        });
+
         if ($user->hasRole('branch_admin')) {
-            // Branch admins can only assign staff roles
-            $roles = Role::whereIn('name', ['staff', 'collection_center', 'doctor', 'agent'])
-                ->orderBy('id', 'asc')
-                ->get();
+            // Branch admins see restricted set
+            // Filter: Name must be in the basic list OR start with prefix AND not be the admin version
+            $roles = $rolesQuery->where(function($q) use ($tenantPrefix) {
+                $q->whereIn('name', ['staff', 'collection_center', 'doctor', 'agent'])
+                  ->orWhere(function($sub) use ($tenantPrefix) {
+                      $sub->where('name', 'like', $tenantPrefix . '%')
+                          ->where('name', 'not like', '%admin%');
+                  });
+            })->orderBy('id', 'asc')->get();
         } else {
-            // Main Admin: Show all relevant management roles
-            $roles = Role::whereIn('name', ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent']) 
-                ->orderBy('id', 'asc')
-                ->get();
+            // Main Admin sees all
+            $roles = $rolesQuery->orderBy('id', 'asc')->get();
         }
 
         // Filter permissions: Exclude Super Admin only permissions

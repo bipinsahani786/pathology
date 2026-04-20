@@ -231,10 +231,10 @@ class DoctorManager extends Component
             })
             ->with('doctorProfile') 
             ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
                   ->orWhereHas('doctorProfile', function($query2) {
-                      $query2->where('clinic_name', 'ilike', '%' . $this->searchTerm . '%');
+                      $query2->where('clinic_name', 'like', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

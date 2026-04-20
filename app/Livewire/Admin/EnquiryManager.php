@@ -46,9 +46,9 @@ class EnquiryManager extends Component
             ->when($this->filterStatus, fn($q) => $q->where('status', $this->filterStatus))
             ->when($this->filterType, fn($q) => $q->where('enquiry_type', $this->filterType))
             ->when($this->search, fn($q) => $q->where(function($q) {
-                $q->where('name', 'ilike', "%{$this->search}%")
-                  ->orWhere('email', 'ilike', "%{$this->search}%")
-                  ->orWhere('lab_name', 'ilike', "%{$this->search}%");
+                $q->where('name', 'like', "%{$this->search}%")
+                  ->orWhere('email', 'like', "%{$this->search}%")
+                  ->orWhere('lab_name', 'like', "%{$this->search}%");
             }))
             ->orderBy('created_at', 'desc')
             ->paginate(20);

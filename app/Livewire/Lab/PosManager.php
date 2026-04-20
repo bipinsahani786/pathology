@@ -93,11 +93,13 @@ class PosManager extends Component
         $activeBranchId = session('active_branch_id', 'all');
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
 
-        // Logic for Branch Selection
-        if ($user->hasRole('branch_admin') && $restrictAccess) {
-            // Locked to their own branch
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        
+        if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'branch')) && $restrictAccess) {
             $this->branch_id = $user->branch_id;
-        } elseif ($user->hasRole('collection_center')) {
+        } elseif (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'))) {
             $this->collection_center_id = $user->collection_center_id;
             $cc = CollectionCenter::find($this->collection_center_id);
             $this->branch_id = $cc->branch_id ?? $this->branch_id;
@@ -522,10 +524,16 @@ class PosManager extends Component
                 'company_id' => $companyId,
                 'branch_id' => $this->branch_id,
             ]);
+            // Generate a unique Patient ID from settings
+            $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
+            $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
+            $nextPId = PatientProfile::where('company_id', $companyId)->count() + 1;
+            $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+
             PatientProfile::create([
                 'company_id' => $companyId,
                 'user_id' => $user->id,
-                'patient_id_string' => 'PAT-' . date('ym') . str_pad(PatientProfile::where('company_id', $companyId)->count() + 1, 4, '0', STR_PAD_LEFT),
+                'patient_id_string' => $patientIdString,
                 'age' => $this->new_age,
                 'gender' => $this->new_gender,
             ]);
@@ -878,7 +886,11 @@ class PosManager extends Component
         $companyId = auth()->user()->company_id;
         $activeBranchId = session('active_branch_id', 'all');
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
-        $myBranchId = (auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') || !$restrictAccess) 
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $isGlobalAdmin = auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+
+        $myBranchId = ($isGlobalAdmin || !$restrictAccess) 
             ? ($activeBranchId === 'all' ? null : $activeBranchId) 
             : auth()->user()->branch_id;
 
@@ -895,7 +907,7 @@ class PosManager extends Component
             $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('phone', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"));
             }
             $patients = $query->with('patientProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -906,7 +918,7 @@ class PosManager extends Component
             $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$shareDoctors, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             }
             $doctors = $query->with('doctorProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -917,7 +929,7 @@ class PosManager extends Component
             $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
                 ->when($myBranchId && !$shareAgents, fn($q) => $q->where('branch_id', $myBranchId));
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             }
             $agents = $query->with('agentProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -934,7 +946,7 @@ class PosManager extends Component
             // or we just show them anyway if there's no way to create branch tests.
             $query = LabTest::where('company_id', $companyId)->where('is_active', true);
             if (!empty($s)) {
-                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
+                $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")->orWhere('test_code', 'like', "%{$s}%"));
             }
             $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }

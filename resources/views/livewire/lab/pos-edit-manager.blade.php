@@ -104,7 +104,7 @@
                                             @if($patientProfileData)
                                                 <div class="d-flex flex-wrap gap-1 mt-1">
                                                     <span
-                                                        class="badge bg-soft-primary text-primary fs-10">{{ $patientProfileData['formatted_id'] ?? '—' }}</span>
+                                                        class="badge bg-soft-primary text-primary fs-10">{{ $selectedPatient['formatted_id'] ?? '—' }}</span>
                                                     <span
                                                         class="badge bg-soft-info text-info fs-10">{{ $patientProfileData['age'] ?? '' }}
                                                         {{ $patientProfileData['age_type'] ?? 'Yrs' }}</span>

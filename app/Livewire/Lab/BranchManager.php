@@ -245,8 +245,8 @@ class BranchManager extends Component
     {
         $branches = Branch::where('company_id', auth()->user()->company_id)
             ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('contact_number', 'ilike', '%' . $this->searchTerm . '%');
+                $q->where('name', 'like', '%' . $this->searchTerm . '%')
+                  ->orWhere('contact_number', 'like', '%' . $this->searchTerm . '%');
             })
             ->orderBy('id', 'desc')
             ->paginate(10);

@@ -44,8 +44,12 @@ class PartnerSettlementManager extends Component
     public function recordPayment()
     {
         $user = Auth::user();
-        if (!$user->hasRole('collection_center')) {
-            abort(403);
+        $roles = $user->roles->pluck('name')->toArray();
+
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
+
+        if (!$isCC) {
+            abort(403, 'Only Collection Centers can record payments.');
         }
 
         $this->validate([
@@ -90,16 +94,21 @@ class PartnerSettlementManager extends Component
 
         // Stats calculation
         $invoices = Invoice::where('status', '!=', 'Cancelled');
-        if ($user->hasRole('collection_center')) {
+        $roles = $user->roles->pluck('name')->toArray();
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_agent'));
+
+        if ($isCC) {
             $invoices->where('collection_center_id', $user->collection_center_id);
-        } elseif ($user->hasRole('doctor')) {
+        } elseif ($isDoctor) {
             $invoices->where('referred_by_doctor_id', $user->id);
-        } elseif ($user->hasRole('agent')) {
+        } elseif ($isAgent) {
             $invoices->where('referred_by_agent_id', $user->id);
         }
 
         $totalDuesBill = $invoices->sum('total_amount');
-        if ($user->hasRole('collection_center')) {
+        if ($isCC) {
              // For CC, dues = total billing minus their profit
             $totalDuesBill = $invoices->sum('total_amount') - $invoices->sum('cc_profit_amount');
         }

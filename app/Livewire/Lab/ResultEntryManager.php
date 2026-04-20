@@ -25,13 +25,10 @@ class ResultEntryManager extends Component
     public function mount($id)
     {
         $this->authorize('view reports');
-        $this->invoice = Invoice::with(['patient.patientProfile', 'items.labTest', 'testReport.results'])->findOrFail($id);
+        $this->invoice = Invoice::where('company_id', auth()->user()->company_id)
+            ->with(['patient.patientProfile', 'items.labTest', 'testReport.results'])
+            ->findOrFail($id);
         
-        // Ensure only users belonging to this company can access
-        if ($this->invoice->company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
-
         $this->testReport = $this->invoice->testReport;
         $this->comments = $this->testReport ? $this->testReport->comments : '';
         

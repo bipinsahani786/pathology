@@ -246,6 +246,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
     // Protected routes (Only protected by our custom session middleware)
     Route::middleware(['auth', 'patient_portal_access'])->group(function () {
         Route::get('/dashboard', \App\Livewire\Patient\PatientDashboard::class)->name('dashboard');
+        Route::get('/reports', \App\Livewire\Patient\PatientReports::class)->name('reports');
+        Route::get('/membership', \App\Livewire\Patient\PatientMembership::class)->name('membership');
+        Route::get('/profile', \App\Livewire\Patient\PatientProfile::class)->name('profile');
         
         // Dedicated Patient Report Download
         Route::get('/report/{id}/print', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('report.download');
