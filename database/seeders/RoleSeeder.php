@@ -19,10 +19,23 @@ class RoleSeeder extends Seeder
 
         // 1. Module-based Granular Permissions
         $modules = [
-            'patients', 'doctors', 'agents', 'lab_tests', 'test_packages', 
-            'departments', 'invoices', 'reports', 'settlements', 'branches', 
-            'collection_centers', 'payment_modes', 'marketing', 'staff_roles', 'settings',
-            'pos', 'wallets'
+            'patients',
+            'doctors',
+            'agents',
+            'lab_tests',
+            'test_packages',
+            'departments',
+            'invoices',
+            'reports',
+            'settlements',
+            'branches',
+            'collection_centers',
+            'payment_modes',
+            'marketing',
+            'staff_roles',
+            'settings',
+            'pos',
+            'wallets'
         ];
         $actions = ['view', 'create', 'edit', 'delete'];
 
@@ -75,45 +88,61 @@ class RoleSeeder extends Seeder
         // Lab Staff (Default Permissions)
         $staff = Role::firstOrCreate(['name' => 'staff']);
         $staff->syncPermissions([
-            'view patients', 'create patients', 'edit patients',
-            'view invoices', 'create invoices',
-            'view reports', 'generate reports', 'download reports',
-            'view pos', 'create pos'
+            'view patients',
+            'create patients',
+            'edit patients',
+            'view invoices',
+            'create invoices',
+            'view reports',
+            'generate reports',
+            'download reports',
+            'view pos',
+            'create pos'
         ]);
 
         // Collection Center User
         $collector = Role::firstOrCreate(['name' => 'collection_center']);
         $collector->syncPermissions([
-            'view patients', 'create patients', 'edit patients',
-            'view doctors', 'create doctors',
-            'view agents', 'create agents',
-            'view invoices', 'create invoices', 'edit invoices',
-            'view reports', 'generate reports', 'download reports',
-            'view pos', 'create pos',
-            'view marketing', 'create marketing'
+            'view patients',
+            'create patients',
+            'edit patients',
+            'view doctors',
+            'create doctors',
+            'view agents',
+            'create agents',
+            'view invoices',
+            'create invoices',
+            'edit invoices',
+            'view reports',
+            'generate reports',
+            'download reports',
+            'view pos',
+            'create pos',
+            'view marketing',
+            'create marketing'
         ]);
 
         // Customer (Patient)
         $patient = Role::firstOrCreate(['name' => 'patient']);
         $patient->syncPermissions([
-            'view reports', 
+            // 'view reports', 
             'download reports'
         ]);
 
         // Doctor (Referral Partner)
         $doctor = Role::firstOrCreate(['name' => 'doctor']);
         $doctor->syncPermissions([
-            'view reports',
+            // 'view reports',
             'download reports'
         ]);
 
         // Agent (Referral Partner)
         $agent = Role::firstOrCreate(['name' => 'agent']);
         $agent->syncPermissions([
-            'view reports',
+            // 'view reports',
             'download reports'
         ]);
-        
+
         $this->command->info('Roles and Permissions synced successfully!');
     }
 }

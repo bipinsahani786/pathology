@@ -151,6 +151,7 @@ class DoctorManager extends Component
                 $finalName = str_starts_with(strtolower($this->name), 'dr') ? $this->name : 'Dr. ' . $this->name;
 
                 $user = User::create([
+                    'company_id' => $companyId,
                     'name' => $finalName,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null, 
@@ -231,10 +232,10 @@ class DoctorManager extends Component
             })
             ->with('doctorProfile') 
             ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhereHas('doctorProfile', function($query2) {
-                      $query2->where('clinic_name', 'like', '%' . $this->searchTerm . '%');
+                      $query2->where('clinic_name', 'ilike', '%' . $this->searchTerm . '%');
                   });
             })
             ->orderBy('id', 'desc')

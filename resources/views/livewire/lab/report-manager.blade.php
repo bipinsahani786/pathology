@@ -181,8 +181,13 @@
                                                         <li><a class="dropdown-item fs-12" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
                                                     @endcan
                                                     <li><hr class="dropdown-divider"></li>
-                                                    <li><button type="button" class="dropdown-item fs-12 text-success fw-bold" wire:click="printSelected({{ $invoice->id }})"><i class="feather-check-square me-2"></i> Print Selected Tests</button></li>
-                                                    <li><a class="dropdown-item fs-12 text-primary" href="{{ route('lab.reports.print', [$invoice->id, 'modern']) }}" target="_blank"><i class="feather-file-text me-2"></i> Print All (Modern)</a></li>
+                                                    <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print All Tests</li>
+                                                    <li><a class="dropdown-item fs-12 text-primary" href="{{ route('lab.reports.print', [$invoice->id, 'new']) }}?header=1" target="_blank"><i class="feather-file-text me-2"></i> With Header</a></li>
+                                                    <li><a class="dropdown-item fs-12 text-secondary" href="{{ route('lab.reports.print', [$invoice->id, 'new']) }}?header=0" target="_blank"><i class="feather-file me-2"></i> Without Header</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print Selected Tests</li>
+                                                    <li><button type="button" class="dropdown-item fs-12 text-success fw-bold" wire:click="printSelected({{ $invoice->id }}, 1)"><i class="feather-check-square me-2"></i> With Header</button></li>
+                                                    <li><button type="button" class="dropdown-item fs-12 text-dark" wire:click="printSelected({{ $invoice->id }}, 0)"><i class="feather-check-square me-2"></i> Without Header</button></li>
                                                 </ul>
                                             </div>
                                         @endif

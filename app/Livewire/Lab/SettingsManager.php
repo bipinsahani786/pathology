@@ -64,6 +64,15 @@ class SettingsManager extends Component
     public $pdf_footer_image;       // stored path
     public $new_header_image;       // upload
     public $new_footer_image;       // upload
+    
+    // PDF Typography & Layout
+    public $pdf_font_size = 10;
+    public $pdf_font_family = 'Helvetica';
+    public $pdf_margin_top = 295;
+    public $pdf_margin_bottom = 255;
+    public $pdf_header_height = 285;
+    public $pdf_footer_height = 245;
+
     public $pdfSaved = false;
 
     // ==========================================
@@ -129,6 +138,14 @@ class SettingsManager extends Component
         $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1') === '1';
         $this->pdf_header_image = Configuration::getFor('pdf_header_image', null);
         $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null);
+
+        // PDF Typography & Layout
+        $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 10);
+        $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica');
+        $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 295);
+        $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255);
+        $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 285);
+        $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 245);
         
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
@@ -332,10 +349,17 @@ class SettingsManager extends Component
             $this->new_signature_image = null;
         }
 
-        Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0');
         Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0');
         Configuration::setFor('pdf_header_image', $this->pdf_header_image);
         Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);
+        
+        // Layout & Typography
+        Configuration::setFor('pdf_font_size', $this->pdf_font_size);
+        Configuration::setFor('pdf_font_family', $this->pdf_font_family);
+        Configuration::setFor('pdf_margin_top', $this->pdf_margin_top);
+        Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom);
+        Configuration::setFor('pdf_header_height', $this->pdf_header_height);
+        Configuration::setFor('pdf_footer_height', $this->pdf_footer_height);
         
         Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
         Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
@@ -515,6 +539,16 @@ class SettingsManager extends Component
         $prefix = $this->patient_id_prefix ?: 'PAT';
         $counter = str_pad(1, max((int)$this->patient_id_digits, 2), '0', STR_PAD_LEFT);
         return $prefix . $counter;
+    }
+
+    public function getFontFamiliesProperty()
+    {
+        return [
+            'Helvetica' => 'Helvetica / Arial (Standard)',
+            'DejaVu Sans' => 'DejaVu Sans (UTF-8 Support)',
+            'Times-Roman' => 'Times New Roman (Serif)',
+            'Courier' => 'Courier (Monospace)',
+        ];
     }
 
     public function render()

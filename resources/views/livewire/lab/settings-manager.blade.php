@@ -549,10 +549,66 @@
                                 <div class="fs-10 text-muted mt-1">Max 3MB · JPG, PNG</div>
                             </div>
 
+                    </div>
+
+                    {{-- NEW: Layout & Typography Settings --}}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0 fs-13"><i class="feather-type text-primary me-2"></i>Layout & Typography</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold fs-11">Font Family</label>
+                                    <select class="form-select form-select-sm" wire:model="pdf_font_family">
+                                        @foreach($this->fontFamilies as $val => $label)
+                                            <option value="{{ $val }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold fs-11">Font Size (px)</label>
+                                    <input type="number" class="form-control form-control-sm" wire:model="pdf_font_size" min="8" max="14">
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
+                            <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Page Spacing (pixels)</div>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Top Margin</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" wire:model="pdf_margin_top">
+                                        <span class="input-group-text">px</span>
+                                    </div>
+                                    <div class="fs-10 text-muted mt-1">Space for Letterhead Header</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Bottom Margin</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" wire:model="pdf_margin_bottom">
+                                        <span class="input-group-text">px</span>
+                                    </div>
+                                    <div class="fs-10 text-muted mt-1">Space for Letterhead Footer</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Header Height</label>
+                                    <input type="number" class="form-control form-control-sm" wire:model="pdf_header_height">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Footer Height</label>
+                                    <input type="number" class="form-control form-control-sm" wire:model="pdf_footer_height">
+                                </div>
+                            </div>
+
                             @can('edit settings')
-                            <div class="text-end">
+                            <div class="text-end border-top pt-3">
                                 <button wire:click="savePdfSettings" class="btn btn-primary fw-bold px-4">
-                                    <span wire:loading.remove wire:target="savePdfSettings"><i class="feather-save me-1"></i>Save PDF Settings</span>
+                                    <span wire:loading.remove wire:target="savePdfSettings"><i class="feather-save me-1"></i>Save All PDF Settings</span>
                                     <span wire:loading wire:target="savePdfSettings"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
                                 </button>
                             </div>

@@ -21,7 +21,7 @@
 
     <div class="main-content">
         
-        @if (session()->has('message'))
+        @if (session()->has('message') && !$isModalOpen)
             <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
                 <i class="feather-check-circle fs-4 me-2"></i>
                 <strong>{{ session('message') }}</strong>
@@ -125,7 +125,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-5">
+                                    <td colspan="6" class="text-center py-5">
                                         <div class="text-muted mb-3"><i class="feather-map" style="font-size: 3rem; opacity: 0.5;"></i></div>
                                         <h6 class="fw-bold text-dark">No Collection Centers Found</h6>
                                         <p class="text-muted fs-13">Add your pickup points, clinics, or franchise locations.</p>
@@ -160,6 +160,22 @@
 
                     <form wire:submit.prevent="store">
                         <div class="modal-body p-4 bg-white" style="max-height: 70vh; overflow-y: auto;">
+                            @if (session()->has('message'))
+                                <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show mb-4">
+                                    <i class="feather-check-circle fs-4 me-2"></i>
+                                    <strong>{{ session('message') }}</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            @if (session()->has('error'))
+                                <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show mb-4">
+                                    <i class="feather-alert-triangle fs-4 me-2"></i>
+                                    <strong>{{ session('error') }}</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
                         <div class="row g-4">
                             <div class="col-md-7">
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">Center Name *</label>

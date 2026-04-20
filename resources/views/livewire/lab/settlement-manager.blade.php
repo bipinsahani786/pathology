@@ -120,12 +120,21 @@
                                             <tr wire:key="partner-{{ $p->id }}" class="border-bottom border-light">
                                                 <td class="ps-4 py-3">
                                                     <div class="d-flex align-items-center gap-3">
-                                                        <div class="avatar-text avatar-md {{ $p->pending_amount > 0 ? 'bg-soft-warning text-warning' : 'bg-soft-primary text-primary' }} rounded-circle fw-bolder">
-                                                            {{ substr($p->name, 0, 1) }}
+                                                        <div class="avatar-text avatar-md {{ $p->pending_amount > 200 ? 'bg-soft-danger text-danger' : ($p->pending_amount > 0 ? 'bg-soft-warning text-warning' : 'bg-soft-primary text-primary') }} rounded-circle fw-bolder">
+                                                            {{ substr($p->name ?? '?', 0, 1) }}
                                                         </div>
                                                         <div>
-                                                            <div class="fw-bold text-dark fs-14">{{ $p->name }}</div>
-                                                            <div class="text-muted fs-11"><i class="feather-phone fs-10 me-1"></i>{{ $p->phone }}</div>
+                                                            <div class="fw-bold text-dark fs-14">{{ $p->name ?? 'Unknown' }}</div>
+                                                            @if($partnerType === 'Collection Center')
+                                                                <div class="text-muted fs-11">
+                                                                    <i class="feather-tag fs-10 me-1"></i>{{ $p->center_code ?? 'No Code' }}
+                                                                    @if(!$p->user_id)
+                                                                        <span class="ms-2 badge bg-soft-danger text-danger fs-9 border-0 p-0" title="No user linked for settlement">! NO USER</span>
+                                                                    @endif
+                                                                </div>
+                                                            @else
+                                                                <div class="text-muted fs-11"><i class="feather-phone fs-10 me-1"></i>{{ $p->phone ?? 'N/A' }}</div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </td>
@@ -185,7 +194,7 @@
                                             <span class="text-muted fs-10 fw-bold text-uppercase">{{ $s->payment_date->format('d M, Y') }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <div class="fw-bolder text-dark fs-13">{{ $s->user->name }}</div>
+                                            <div class="fw-bolder text-dark fs-13">{{ $s->user->name ?? 'Deleted User' }}</div>
                                             @php
                                                 $st = $s->status ?? 'Approved';
                                                 $stColor = $st === 'Approved' ? 'success' : ($st === 'Pending' ? 'warning' : 'danger');
@@ -230,7 +239,14 @@
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
                             <h5 class="card-title mb-0 fw-bold">{{ $partnerType === 'Collection Center' ? 'Record Collection' : 'Process Settlement' }}</h5>
-                            <p class="text-muted small mb-0">{{ $selectedPartner->name }} • {{ $selectedPartner->phone }}</p>
+                            <p class="text-muted small mb-0">
+                                {{ $selectedPartner->name ?? 'Unknown' }} 
+                                @if($partnerType === 'Collection Center')
+                                    • {{ $selectedPartner->center_code ?? 'No Code' }}
+                                @else
+                                    • {{ $selectedPartner->phone ?? 'No Phone' }}
+                                @endif
+                            </p>
                         </div>
                     </div>
                     <button wire:click="$set('viewMode', 'insights')" class="btn btn-outline-info btn-sm rounded-pill px-3 shadow-sm"><i class="feather-pie-chart me-2"></i>Full Portfolio</button>
@@ -260,7 +276,7 @@
                                                     <div class="fw-bold text-dark">{{ $inv->invoice_number }}</div>
                                                     <div class="text-muted fs-11">{{ $inv->patient->name ?? 'Patient N/A' }} • {{ $inv->invoice_date->format('d M, Y') }}</div>
                                                 </td>
-                                                <td class="text-end pe-4 fw-bolder text-primary">₹{{ number_format($partnerType == 'Doctor' ? $inv->doctor_commission_amount : ($partnerType == 'Agent' ? $inv->agent_commission_amount : $inv->total_amount), 2) }}</td>
+                                                <td class="text-end pe-4 fw-bolder text-primary">₹{{ number_format($partnerType == 'Doctor' ? $inv->doctor_commission_amount : ($partnerType == 'Agent' ? $inv->agent_commission_amount : ($partnerType == 'Collection Center' ? $inv->total_b2b_amount : $inv->total_amount)), 2) }}</td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="3" class="text-center py-5 text-muted">No pending commissions found.</td></tr>
@@ -303,7 +319,7 @@
                         <button wire:click="$set('viewMode', 'list')" class="btn btn-sm btn-light rounded-circle shadow-sm" style="width:36px; height:36px; padding:0;"><i class="feather-arrow-left"></i></button>
                         <div>
                             <h5 class="card-title mb-0 fw-bold">{{ $selectedPartner->name ?? 'Partner' }} Portfolio</h5>
-                            <p class="text-muted small mb-0">{{ $partnerType }} Insights • {{ $selectedPartner->phone ?? '' }}</p>
+                            <p class="text-muted small mb-0">{{ $partnerType }} Insights • {{ $selectedPartner->phone ?? 'N/A' }}</p>
                         </div>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
