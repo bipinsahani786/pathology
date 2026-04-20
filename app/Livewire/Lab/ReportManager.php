@@ -73,7 +73,7 @@ class ReportManager extends Component
         $this->resetPage();
     }
 
-    public function printSelected($invoiceId)
+    public function printSelected($invoiceId, $withHeader = 1)
     {
         if (empty($this->selectedTests)) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Please select at least one test to print.']);
@@ -81,7 +81,9 @@ class ReportManager extends Component
         }
 
         $testIds = implode(',', $this->selectedTests);
-        $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'modern']) . '?tests=' . $testIds;
+        $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
+             . '?tests=' . $testIds
+             . '&header=' . ($withHeader ? '1' : '0');
         
         $this->dispatch('open-new-tab', ['url' => $url]);
     }

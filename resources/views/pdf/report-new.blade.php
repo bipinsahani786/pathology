@@ -4,8 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Lab Report - {{ $patient['name'] }}</title>
+    <title>Lab Report - {{ $invoice->invoice_number }}</title>
+
+    @php
+        // ── Resolve image paths ──
+        $headerImgSrc = $settings['pdf_header_image']
+            ? public_path('storage/' . $settings['pdf_header_image'])
+            : public_path('assets/images/pdf-header.jpeg');
+
+        $footerImgSrc = $settings['pdf_footer_image']
+            ? public_path('storage/' . $settings['pdf_footer_image'])
+            : public_path('assets/images/pdf-footer.jpeg');
+
+        $sigImgSrc = $settings['global_sig_1_path']
+            ? public_path('storage/' . $settings['global_sig_1_path'])
+            : (file_exists(public_path('assets/images/signature.jpg'))
+                ? public_path('assets/images/signature.jpg')
+                : null);
+
+        // ── Margins from Settings ──
+        $marginTop    = ($settings['pdf_margin_top'] ?? 295) . 'px';
+        $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $headerHeight = ($settings['pdf_header_height'] ?? 285) . 'px';
+        $footerHeight = ($settings['pdf_footer_height'] ?? 245) . 'px';
+        
+        $fontSize     = ($settings['pdf_font_size'] ?? 10) . 'px';
+        $fontFamily   = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
+    @endphp
+
     <style>
+        /* ── RESET ── */
         * {
             margin: 0;
             padding: 0;
@@ -13,128 +41,268 @@
         }
 
         body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 10px;
-            color: #121212;
+            font-family: {{ $fontFamily }};
+            font-size: {{ $fontSize }};
+            color: #1a1a1a;
             background: #fff;
-            margin: 290px 25px 280px 25px;
-            /* top right bottom left */
+            line-height: 1.45;
+            margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px;
         }
 
-        /* HEADER */
+        /* ══════════════════════════════════════════════
+           FIXED HEADER
+           ══════════════════════════════════════════════ */
         header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            /* height: 160px; */
-            height: 295px;
-            overflow: hidden;
+            height: {{ (int)$headerHeight + 20 }}px;
+            overflow: visible;
         }
 
-        /* FOOTER */
+        .header-banner {
+            width: 100%;
+            display: block;
+        }
+
+        /* ── PATIENT INFO BOX ── */
+        .patient-box {
+            border: 1px solid #1a1a1a !important;
+            margin: 4px 25px 0;
+            padding: 8px 10px;
+            font-size: 10.5px;
+            display: block;
+            border-radius: 2px;
+        }
+
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .patient-table td {
+            padding: 0.5px 2px;
+            vertical-align: top;
+            line-height: 1.1;
+        }
+
+        .patient-table .lbl {
+            font-weight: 700;
+            color: #1a1a1a;
+            width: 14%;
+            white-space: nowrap;
+        }
+
+        .patient-table .val {
+            color: #1a1a1a;
+            width: 28%;
+        }
+
+        .patient-table .qr-cell {
+            text-align: center;
+            vertical-align: middle;
+            width: 12%;
+        }
+
+        .qr-code {
+            width: 55px;
+            height: 55px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .barcode {
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .barcode-img {
+            width: 100px;
+            height: 30px;
+        }
+
+        /* ══════════════════════════════════════════════
+           FIXED FOOTER
+           ══════════════════════════════════════════════ */
         footer {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 280px;
+            height:
+                {{ $footerHeight }}
+            ;
         }
 
-        /* Ensure image fits */
-        header>img,
-        footer>img {
-            width: 100%;
-            /* height: 100%; */
-            object-fit: contain;
-        }
-
-        /* ── PATIENT INFO BOX ── */
-        .patient-info-box {
-            border: 1px solid #181818;
-            padding: 15px 10px;
-            /* margin-top: 10px;
-            margin-bottom: 10px; */
-            font-size: 11px;
-            margin: 5px 25px 10px;
-        }
-
-        .patient-info-table {
+        /* Signature Table */
+        .sig-table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
-
+            margin-bottom: 5px;
         }
 
-        .patient-info-table td {
-            padding: 1px 4px;
-            width: 25%;
-            vertical-align: top;
-            /* display: inline-block; */
+        .sig-checked {
+            width: 55%;
+            text-align: left;
+            vertical-align: bottom;
+            font-weight: 700;
+            font-size: 11px;
+            padding-left: 35px;
+            padding-bottom: 8px;
         }
 
-        .patient-info-table .label {
-            color: #121212;
-            font-weight: bold;
+        .sig-doctor {
+            width: 45%;
+            text-align: center;
+            vertical-align: bottom;
+            padding-right: 35px;
+            padding-bottom: 2px;
+            line-height: 1.2; /* Tighten line height to prevent overlap */
         }
 
-        .patient-info-table .value {
-            color: #121212;
+        .sign-img {
+            max-height: 55px;
+            margin-bottom: 2px;
         }
 
-        /* ── SECTION TITLE ── */
-        .section-title {
+        .doc-name {
+            font-weight: 700;
+            font-size: 11px;
+            display: block;
+            margin-bottom: 0px;
+        }
+
+        .doc-desig {
+            font-size: 10px;
+            color: #333;
+            display: block;
+            margin-top: 0px;
+        }
+
+        .footer-banner {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
+        }
+
+        /* ── Multi-Signature Row ── */
+        .sig-container {
+            position: absolute;
+            bottom: 175px; /* Shifted UP by ~1cm (35-40px) from 140px */
+            left: 0;
+            width: 100%;
+        }
+
+        .multi-sig-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        .multi-sig-table td {
+            text-align: center;
+            vertical-align: bottom;
+            font-size: 10px;
+            padding: 0 15px 5px;
+        }
+
+        /* ══════════════════════════════════════════════
+           SECTION TITLES
+           ══════════════════════════════════════════════ */
+        .dept-title {
             text-align: center;
             font-weight: 700;
             font-size: 12px;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
-            margin: 15px 0 4px;
+            margin: 10px 0 2px;
+            color: #1a1a1a;
         }
 
-        .sub-section-title {
-            width: 100%;
+        .test-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            color: #1a1a1a;
+        }
+
+        .method-line {
+            text-align: center;
+            font-size: 9px;
+            color: #555;
+            font-style: italic;
             margin-bottom: 5px;
+        }
+
+        /* ── Barcode Area ── */
+        .barcode-area {
+            text-align: right;
+            margin-bottom: 4px;
             position: relative;
         }
 
-        /* ── RESULT TABLE ── */
+        .barcode-area img {
+            height: 45px;
+        }
+
+        /* ══════════════════════════════════════════════
+           MINIMALIST RESULT TABLE
+           ══════════════════════════════════════════════ */
         .result-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
-            border: 1px solid #181818;
-            font-size: 11px;
+            margin-bottom: 8px;
+            font-size: 10px;
         }
 
-        .result-table thead tr th {
-            background: #f5f5f5;
-            border-bottom: 1px solid #181818;
-            padding: 4px 6px;
+        .result-table thead th {
+            border-top: 1.5px solid #333;
+            border-bottom: 1.5px solid #333;
+            padding: 6px 6px;
             text-align: left;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 10.5px;
             text-transform: uppercase;
+            color: #000;
+            background: #fbfbfb;
         }
 
-        .result-table tbody tr td {
-            padding: 1px 6px;
-            vertical-align: middle;
+        .result-table tbody td {
+            padding: 5px 6px;
+            vertical-align: top;
+            border-bottom: 0.5px solid #eee;
         }
 
-        .result-table .sub-header td {
+        /* Explicitly remove vertical lines */
+        .result-table, .result-table th, .result-table td {
+            border-left: none !important;
+            border-right: none !important;
+        }
+
+        .result-table tr:last-child td {
+            border-bottom: 1.5px solid #333;
+        }
+
+        /* Sub-header rows (section dividers like "TOTAL COUNT") */
+        .result-table .sub-hdr td {
             font-weight: 700;
-            font-size: 11px;
+            font-size: 10px;
             text-transform: uppercase;
-            padding: 1px 6px 0px;
-            color: #121212;
+            padding: 3px 6px 1px;
+            color: #1a1a1a;
+            border-bottom: none;
         }
 
-        .result-table tbody tr.sub-pointers td:first-child {
-            padding-left: 35px;
+        /* Indented parameter rows under sub-headers */
+        .result-table .param-indent td:first-child {
+            padding-left: 28px;
         }
 
+        /* ── Flag & Abnormal Colors ── */
         .flag-H {
             color: #cc0000;
             font-weight: 700;
@@ -145,371 +313,481 @@
             font-weight: 700;
         }
 
-        .abnormal-H {
-            color: #cc0000;
+        .result-bold {
             font-weight: 700;
         }
 
-        .abnormal-L {
-            color: #0055aa;
-            font-weight: 700;
+        /* ══════════════════════════════════════════════
+           INTERPRETATION & REMARKS BLOCKS
+           ══════════════════════════════════════════════ */
+        .interp-block {
+            margin: 6px 0 10px;
+            padding: 4px 6px;
+            font-size: 10px;
+            line-height: 1.5;
         }
 
-        /* ── INTERPRETATION TABLE ── */
-        .interp-table {
+        .interp-label {
+            font-weight: 700;
+            font-size: 10px;
+            margin-bottom: 3px;
+            color: #1a1a1a;
+        }
+
+        /* Render HTML interpretation tables cleanly */
+        .interp-content table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 6px;
-            margin-bottom: 10px;
+            margin-top: 4px;
+            font-size: 10px;
         }
 
-        .interp-table th {
-            background: #eeeeee;
-            border: 1px solid #b8b8b8;
+        .interp-content table th {
+            background: #f0f0f0;
+            border: 1px solid #bbb;
+            padding: 3px 6px;
+            font-weight: 700;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        .interp-content table td {
+            border: 1px solid #bbb;
+            padding: 3px 6px;
+            font-size: 10px;
+        }
+
+        .interp-content table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .interp-content p {
+            margin: 3px 0;
+            font-size: 10px;
+            color: #444;
+        }
+
+        .interp-content ul,
+        .interp-content ol {
+            margin: 3px 0 3px 15px;
+            font-size: 10px;
+        }
+
+        .interp-content li {
+            margin-bottom: 2px;
+        }
+
+        .interp-content strong {
+            color: #1a1a1a;
+        }
+
+        /* Remarks block (from result entry) */
+        .remarks-block {
+            margin: 10px 0;
+            padding: 5px 0;
+            font-size: 10px;
+            line-height: 1.5;
+            border-top: 1px dashed #ccc;
+        }
+
+        .remarks-block table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 10px;
+        }
+
+        .remarks-block table th {
+            border: 1px solid #bbb;
             padding: 3px 6px;
             font-weight: 700;
             text-align: left;
         }
 
-        .interp-table td {
-            border: 1px solid #b8b8b8;
+        .remarks-block table td {
+            border: 1px solid #bbb;
             padding: 3px 6px;
-            vertical-align: top;
         }
 
-        /* ── PAGE BREAK ── */
-        .page-break {
-            page-break-after: always;
-        }
-
-        /* ── BARCODE PLACEHOLDER ── */
-        .barcode-placeholder {
-            position: absolute;
-            top: -50px;
-            right: 0px;
-            padding: 2px 3px;
-        }
-
-        .signature-section {
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .signature-label {
-            position: relative;
-            top: 70px;
-            font-size: 12px;
-            padding-left: 35px;
-            color: #121212;
-            font-weight: 700;
-        }
-
-        .signature-right {
-            float: right;
-            text-align: center;
-            margin-right: 35px;
-            font-weight: 700;
-            font-size: 12px;
-        }
-
-        .sign-img {
-            margin-bottom: 4px;
-            max-height: 70px;
-        }
-
-        .footer-img {
-            position: absolute;
-            bottom: 0px;
-            left: 0px;
-        }
-
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            padding-left: 35px;
-            color: #121212;
-            font-weight: 700;
-        }
-
-        .checked-td {
-            width: 60%;
-            text-align: left;
-            vertical-align: bottom;
-        }
-
-        .checked-td span {
-            margin-left: 35px;
-        }
-
-        .signature-td {
-            width: 40%;
-            text-align: center;
-            vertical-align: bottom;
-            padding-right: 35px;
-        }
-
+        /* ══════════════════════════════════════════════
+           MISC
+           ══════════════════════════════════════════════ */
         .watermark {
             position: fixed;
             top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: -1000;
-            opacity: 0.1;
+            opacity: 0.08;
         }
 
         .watermark img {
-            width: 300px;
+            width: 280px;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .end-of-report {
+            text-align: center;
+            font-weight: 700;
+            font-size: 10px;
+            margin-top: 20px;
+            padding-top: 8px;
+            border-top: 1px dashed #333;
+            width: 180px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #555;
+        }
+
+        /* Doctor Comments Block */
+        .doctor-comments {
+            margin-top: 15px;
+            padding: 6px 0;
+            border-top: 1px dashed #ccc;
+            font-size: 10px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="watermark">
-        <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
-    </div>
-    <!-- HEADER -->
+    {{-- ══════════════════ WATERMARK ══════════════════ --}}
+    @if(file_exists(public_path('assets/images/healthcare-logo.png')))
+        <div class="watermark">
+            <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
+        </div>
+    @endif
+
+    {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
-        <img src="{{ public_path('assets/images/pdf-header.jpeg') }}" alt="Trustline Logo">
-        @include('pdf.patient_info', ['patient' => $patient])
+        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header"
+            style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom: 12px; display: block;">
+
+        {{-- Patient Info Box — always visible --}}
+        <div class="patient-box" style="margin-top: 0; clear: both;">
+            <table class="patient-table">
+                <tr>
+                    <td class="lbl">Name</td>
+                    <td class="val">: {{ $patient->name }}</td>
+                    <td class="lbl">Report ID</td>
+                    <td class="val">: {{ $invoice->invoice_number }}</td>
+                    <td rowspan="4" class="qr-cell">
+                        @if(isset($qrCodeUri))
+                             <img src="{{ $qrCodeUri }}" class="qr-code">
+                        @elseif(file_exists(public_path('assets/images/qr-code.png')))
+                             <img src="{{ public_path('assets/images/qr-code.png') }}" class="qr-code">
+                        @endif
+
+                        @if(isset($barcodeUri))
+                            <div class="barcode">
+                                <img src="{{ $barcodeUri }}" class="barcode-img">
+                                <div style="font-size: 8px; margin-top: 1px; font-weight: bold;">{{ $invoice->invoice_number }}</div>
+                            </div>
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td class="lbl">Age/Gender</td>
+                    <td class="val">: {{ $profile->age ?? '--' }} {{ $profile->age_type ?? 'Y' }} /
+                        {{ $profile->gender ?? '--' }}</td>
+                    <td class="lbl">Collection Date</td>
+                    <td class="val">:
+                        {{ $invoice->sample_collected_at ? $invoice->sample_collected_at->format('d/m/Y h:i A') : $invoice->created_at->format('d/m/Y h:i A') }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="lbl">Referred By</td>
+                    <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF' }}</td>
+                    <td class="lbl">Report Date</td>
+                    <td class="val">:
+                        {{ $report->approved_at ? $report->approved_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="lbl">Patient ID</td>
+                    <td class="val">: {{ $patient->formatted_id ?? $patient->id }}</td>
+                    <td class="lbl"></td>
+                    <td class="val"></td>
+                </tr>
+            </table>
+        </div>
     </header>
 
-    <!-- FOOTER -->
+    {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
     <footer>
-        <table class="signature-table">
-            <tr>
-                <td class="checked-td">
-                    <span>CHECKED BY</span>
-                </td>
+        <div class="sig-container">
+            {{-- ── Signature Section ── --}}
+            @if($settings['report_signature_mode'] === 'global_bottom' || $settings['report_signature_mode'] === '')
+                <table class="sig-table">
+                    <tr>
+                        <td class="sig-checked">CHECKED BY</td>
+                        <td class="sig-doctor">
+                            @if($sigImgSrc)
+                                <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                            @endif
+                            <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
+                            @if($settings['global_sig_1_desig'])
+                                <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+            @else
+                {{-- Multi Signatory Layout --}}
+                <table class="multi-sig-table">
+                    <tr>
+                        <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
+                            CHECKED BY
+                        </td>
+                        @if($settings['global_sig_2_name'])
+                            <td>
+                                @if($settings['global_sig_2_path'])
+                                    <img class="sign-img" src="{{ public_path('storage/' . $settings['global_sig_2_path']) }}"><br>
+                                @endif
+                                <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
+                                <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
+                            </td>
+                        @endif
+                        <td>
+                            @if($sigImgSrc)
+                                <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                            @endif
+                            <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
+                            <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
+                        </td>
+                        @if($settings['global_sig_3_name'])
+                            <td>
+                                @if($settings['global_sig_3_path'])
+                                    <img class="sign-img" src="{{ public_path('storage/' . $settings['global_sig_3_path']) }}"><br>
+                                @endif
+                                <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
+                                <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>
+                            </td>
+                        @endif
+                    </tr>
+                </table>
+            @endif
+        </div>
 
-                <td class="signature-td">
-                    <img class="sign-img" src="{{ public_path('assets/images/signature.jpg') }}">
-                    <br>
-                    <span>DR. ASHISH SHEKHAR JHA</span><br>
-                    <span>MBBS, DMCH</span>
-                </td>
-            </tr>
-        </table>
-
-        <img class="footer-img" src="{{ public_path('assets/images/pdf-footer.jpeg') }}" alt="Trustline Logo">
+        <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer"
+            style="{{ ($showHeader && ($showFooter ?? true)) ? '' : 'visibility: hidden;' }}">
     </footer>
 
-    {{-- ============================= PAGE 1 : CBC ============================= --}}
-    <div class="section-title">
-        <p>Haematology</p>
-        <p>Complete Blood Count (CBC)</p>
-    </div>
-    <div class="sub-section-title">
-        <img class="barcode-placeholder" src="{{ public_path('assets/images/barcode.png') }}" height="50px">
-    </div>
+    {{-- ══════════════════ BODY CONTENT ══════════════════ --}}
+    @php $testIndex = 0; @endphp
 
-    <table class="result-table">
-        <thead>
-            <tr>
-                <th style="width:45%">Test Description</th>
-                <th style="width:15%">Result</th>
-                <th style="width:8%">Flag</th>
-                <th style="width:20%">Ref. Range</th>
-                <th style="width:12%">Unit</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($cbc as $index => $row)
-                @if ($row['type'] === 'subheader')
-                    <tr class="sub-header">
-                        <td colspan="5">{{ $row['label'] }}</td>
+    @foreach($groupedResults as $deptId => $data)
+        @php
+            $dept = $data['department'];
+            $tests = $data['tests'];
+            $deptName = $dept ? $dept->name : 'General';
+        @endphp
+
+        @foreach($tests as $testId => $testData)
+            @php
+                $testName = $testData['name'];
+                $labTest = $testData['labTest'];
+                $results = $testData['results'];
+            @endphp
+
+            {{-- Page break between tests (not before the first) --}}
+            @if($testIndex > 0)
+                <div class="page-break"></div>
+            @endif
+
+            {{-- ── Department & Test Title ── --}}
+            <div class="dept-title">{{ strtoupper($deptName) }}</div>
+            <div class="test-title" style="margin-bottom: 12px; font-size: 11.5px;">{{ strtoupper($testName) }}</div>
+
+            {{-- ── Method (from LabTest master) ── --}}
+            @if($labTest->method)
+                <div class="method-line">Method: {{ $labTest->method }}</div>
+            @endif
+
+
+
+            {{-- ── Results Table ── --}}
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th style="width:40%">Test Description</th>
+                        <th style="width:15%">Result</th>
+                        <th style="width:8%">Flag</th>
+                        <th style="width:22%">Ref. Range</th>
+                        <th style="width:15%">Unit</th>
                     </tr>
-                @else
-                    <tr class="{{ $index !== 0 ? 'sub-pointers' : '' }}">
-                        <td style="{{ isset($row['bold']) && $row['bold'] ? 'font-weight:700;' : '' }}">
-                            {{ $row['name'] }}
-                        </td>
-                        <td
-                            class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'abnormal-H' : 'abnormal-L') : '' }}">
-                            {{ $row['result'] }}
-                        </td>
-                        <td class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'flag-H' : 'flag-L') : '' }}">
-                            {{ $row['flag'] ?? '' }}
-                        </td>
-                        <td style="{{ isset($row['bold']) && $row['bold'] ? 'font-weight:700;' : '' }}">
-                            {{ $row['range'] }}</td>
-                        <td style="{{ isset($row['bold']) && $row['bold'] ? 'font-weight:700;' : '' }}">
-                            {{ $row['unit'] ?? '' }}</td>
-                    </tr>
+                </thead>
+                <tbody>
+                    @php $hasSubHeaders = false; @endphp
+
+                    @foreach($results as $r)
+                        @php
+                            // Detect sub-header: no result value AND no reference range
+                            $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
+                                && (is_null($r->reference_range) || trim($r->reference_range) === '');
+
+                            // Determine flag
+                            $flag = null;
+                            if ($r->is_highlighted && $r->status) {
+                                $rawFlag = strtoupper(trim($r->status));
+                                if (in_array($rawFlag, ['H', 'HIGH'])) {
+                                    $flag = 'H';
+                                } elseif (in_array($rawFlag, ['L', 'LOW'])) {
+                                    $flag = 'L';
+                                } else {
+                                    $flag = '*';
+                                }
+                            }
+                            $isAbnormal = $r->is_highlighted;
+                        @endphp
+
+                        @if($isSubHeader)
+                            {{-- ── Sub-Header Row ── --}}
+                            @php $hasSubHeaders = true; @endphp
+                            <tr class="sub-hdr">
+                                <td colspan="5">{{ strtoupper($r->parameter_name) }}</td>
+                            </tr>
+                        @else
+                            {{-- ── Parameter Row ── --}}
+                            <tr class="{{ $hasSubHeaders ? 'param-indent' : '' }}">
+                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
+                                    {{ strtoupper($r->parameter_name) }}
+                                    @if($r->method)
+                                        <div style="font-size: 8px; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
+                                            (Method: {{ $r->method }})
+                                        </div>
+                                    @endif
+                                </td>
+                                <td
+                                    class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'result-bold')) : 'result-bold' }}">
+                                    {{ $r->result_value }}
+                                </td>
+                                <td class="{{ $flag ? 'flag-' . $flag : '' }}">
+                                    {{ $flag }}
+                                </td>
+                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 22%; font-size: 8.5px; line-height: 1.2; vertical-align: middle;">
+                                    @php
+                                        $displayRange = $r->reference_range;
+                                        // Attempt to fetch master ranges for robust multi-gender display
+                                        if (isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
+                                            $masterParam = collect($r->labTest->parameters)->first(function($p) use ($r) {
+                                                $pName = is_array($p) ? ($p['name'] ?? '') : $p;
+                                                return $pName === $r->parameter_name;
+                                            });
+
+                                            if ($masterParam && isset($masterParam['ranges']) && count($masterParam['ranges']) > 1) {
+                                                $ranges = collect($masterParam['ranges']);
+                                                $maleRange = $ranges->firstWhere('gender', 'Male');
+                                                $femaleRange = $ranges->firstWhere('gender', 'Female');
+
+                                                if ($maleRange && $femaleRange) {
+                                                    $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    {!! $displayRange !!}
+                                </td>
+                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 15%;">
+                                    {{ $r->unit }}
+                                </td>
+                            </tr>
+                        @endif
+                    @endforeach
+                </tbody>
+            </table>
+
+            {{-- ── Method (per-result level, if different from test master) ── --}}
+            @if($results->first()->method && $results->first()->method !== $labTest->method)
+                <p style="font-size:9px; color:#555; font-style:italic; margin-bottom:5px;">
+                    <strong>Method:</strong> {{ $results->first()->method }}
+                </p>
+            @endif
+
+            {{-- ── Default Interpretation (from LabTest master — stored as HTML) ── --}}
+            @if($labTest->interpretation)
+                <div class="interp-block">
+                    <div class="interp-label">Interpretation:</div>
+                    <div class="interp-content">
+                        {!! $labTest->interpretation !!}
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Description / Note (from LabTest master — plain text) ── --}}
+            @if($labTest->description)
+                <div class="interp-block" style="color:#555;">
+                    <div class="interp-label" style="color:#333;">Note:</div>
+                    <div class="interp-content">
+                        {!! nl2br(e($labTest->description)) !!}
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Result Entry Remarks (from InvoiceItem — stored as HTML) ── --}}
+            @php
+                $testInvoiceItem = null;
+                if ($results->first()->invoice_item_id) {
+                    $testInvoiceItem = $invoice->items->where('id', $results->first()->invoice_item_id)->first();
+                } else {
+                    $testInvoiceItem = $invoice->items->where('lab_test_id', $results->first()->lab_test_id)->first();
+                }
+            @endphp
+            @if($testInvoiceItem && $testInvoiceItem->report_comments)
+                <div class="remarks-block">
+                    <div class="interp-label">Remarks:</div>
+                    <div class="interp-content">
+                        {!! $testInvoiceItem->report_comments !!}
+                    </div>
+                </div>
+            @endif
+
+            {{-- ── Per-Department Signatures (if mode is per_department) ── --}}
+            @if($settings['report_signature_mode'] === 'per_department' && $dept)
+                @if(isset($dept->sig_1_path) && $dept->sig_1_path)
+                    <table class="multi-sig-table" style="margin-top:12px;">
+                        <tr>
+                            <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
+                                CHECKED BY
+                            </td>
+                            @if(isset($dept->sig_1_path) && $dept->sig_1_path)
+                                <td>
+                                    <img style="max-height:40px;" src="{{ public_path('storage/' . $dept->sig_1_path) }}"><br>
+                                    <span class="doc-name">{{ $dept->sig_1_name ?? '' }}</span>
+                                    <span class="doc-desig">{{ $dept->sig_1_desig ?? '' }}</span>
+                                </td>
+                            @endif
+                            @if(isset($dept->sig_2_path) && $dept->sig_2_path)
+                                <td>
+                                    <img style="max-height:40px;" src="{{ public_path('storage/' . $dept->sig_2_path) }}"><br>
+                                    <span class="doc-name">{{ $dept->sig_2_name ?? '' }}</span>
+                                    <span class="doc-desig">{{ $dept->sig_2_desig ?? '' }}</span>
+                                </td>
+                            @endif
+                        </tr>
+                    </table>
                 @endif
-            @endforeach
-        </tbody>
-    </table>
-    <div class="page-break"></div>
+            @endif
 
-    {{-- ============================= PAGE 2 : LIPID PROFILE ============================= --}}
-    <div class="section-title">
-        <p>Biochemistry</p>
-        <p>Lipid Profile</p>
-    </div>
-    <div class="sub-section-title">
-        <img class="barcode-placeholder" src="{{ public_path('assets/images/barcode.png') }}" height="50px">
-    </div>
+            @php $testIndex++; @endphp
+        @endforeach
+    @endforeach
 
-    <table class="result-table">
-        <thead>
-            <tr>
-                <th style="width:45%">Test Description</th>
-                <th style="width:15%">Result</th>
-                <th style="width:8%">Flag</th>
-                <th style="width:20%">Ref. Range</th>
-                <th style="width:12%">Unit</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($lipid as $row)
-                <tr>
-                    <td style="{{ isset($row['bold']) && $row['bold'] ? 'font-weight:700;' : '' }}">
-                        {{ $row['name'] }}
-                    </td>
-                    <td class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'abnormal-H' : 'abnormal-L') : '' }}">
-                        {{ $row['result'] }}
-                    </td>
-                    <td class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'flag-H' : 'flag-L') : '' }}">
-                        {{ $row['flag'] ?? '' }}
-                    </td>
-                    <td>{{ $row['range'] }}</td>
-                    <td>{{ $row['unit'] ?? '' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+    {{-- ── Global Report Comments ── --}}
+    @if($report->comments)
+        <div class="doctor-comments">
+            <div class="interp-label">Doctor's Comments / Interpretation:</div>
+            <div class="interp-content">
+                {!! $report->comments !!}
+            </div>
+        </div>
+    @endif
 
-    <p style="font-size:10px; margin:15px 0px 5px; font-weight:700;">Interpretation:</p>
-    <table class="interp-table">
-        <thead>
-            <tr>
-                <th>Lipid Profile Test</th>
-                <th>Desirable Levels</th>
-                <th>Borderline High</th>
-                <th>High</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Total cholesterol</td>
-                <td>&lt;200 mg/dL</td>
-                <td>200–239 mg/dL</td>
-                <td>≥240 mg/dL</td>
-            </tr>
-            <tr>
-                <td>LDL cholesterol</td>
-                <td>&lt;100 mg/dL</td>
-                <td>130–159 mg/dL</td>
-                <td>≥160 mg/dL</td>
-            </tr>
-            <tr>
-                <td>HDL cholesterol</td>
-                <td>≥60 mg/dL</td>
-                <td>40–59 mg/dL</td>
-                <td>&lt;40 mg/dL</td>
-            </tr>
-            <tr>
-                <td>Triglycerides</td>
-                <td>&lt;150 mg/dL</td>
-                <td>150–199 mg/dL</td>
-                <td>≥200 mg/dL</td>
-            </tr>
-        </tbody>
-    </table>
-    <p style="font-size:10px; color:#555; margin-top:5px;">
-        Desirable levels of cholesterol and triglycerides are associated with a lower risk of heart disease, while high
-        levels
-        increase the risk. HDL cholesterol is often called "good" cholesterol, as it helps to remove excess cholesterol
-        from
-        the blood vessels. In contrast, LDL cholesterol is often called "bad" cholesterol, as it contributes to the
-        buildup
-        of plaque in the arteries.
-    </p>
-
-    <div class="page-break"></div>
-
-    {{-- ============================= PAGE 3 : LFT ============================= --}}
-    <div class="section-title" style="margin-top: 30px;">
-        <p>Liver Function Test (LFT)</p>
-    </div>
-    <div class="sub-section-title">
-        <img class="barcode-placeholder" src="{{ public_path('assets/images/barcode.png') }}" height="50px">
-    </div>
-    </div>
-
-    <table class="result-table">
-        <thead>
-            <tr>
-                <th style="width:45%">Test Description</th>
-                <th style="width:15%">Result</th>
-                <th style="width:8%">Flag</th>
-                <th style="width:20%">Ref. Range</th>
-                <th style="width:12%">Unit</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($lft as $row)
-                <tr>
-                    <td style="{{ isset($row['bold']) && $row['bold'] ? 'font-weight:700;' : '' }}">
-                        {{ $row['name'] }}
-                    </td>
-                    <td class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'abnormal-H' : 'abnormal-L') : '' }}">
-                        {{ $row['result'] }}
-                    </td>
-                    <td class="{{ isset($row['flag']) ? ($row['flag'] === 'H' ? 'flag-H' : 'flag-L') : '' }}">
-                        {{ $row['flag'] ?? '' }}
-                    </td>
-                    <td>{{ $row['range'] }}</td>
-                    <td>{{ $row['unit'] ?? '' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <p style="font-size:10px; margin:15px 0px 5px; font-weight:700;">Interpretation:</p>
-    <table class="interp-table">
-        <thead>
-            <tr>
-                <th style="width:25%">Test</th>
-                <th>Interpretation</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Total protein</td>
-                <td>Total protein measures the total amount of protein in the blood, including albumin and globulin.
-                    Abnormal results may indicate liver or kidney disease, malnutrition, or inflammation.</td>
-            </tr>
-            <tr>
-                <td>Albumin</td>
-                <td>Albumin is a protein produced by the liver. Abnormal results may indicate liver or kidney disease,
-                    malnutrition, or inflammation.</td>
-            </tr>
-            <tr>
-                <td>Bilirubin</td>
-                <td>Bilirubin is a substance produced by the breakdown of red blood cells. Abnormal results may indicate
-                    liver disease or other conditions affecting the liver or gallbladder.</td>
-            </tr>
-            <tr>
-                <td>Alkaline phosphatase (ALP)</td>
-                <td>ALP is an enzyme produced by the liver and other organs. Abnormal results may indicate liver or bone
-                    disease, or certain medications.</td>
-            </tr>
-            <tr>
-                <td>Alanine transaminase (ALT) / SGPT</td>
-                <td>ALT is an enzyme primarily produced by the liver. Abnormal results may indicate liver damage or
-                    disease.</td>
-            </tr>
-            <tr>
-                <td>Aspartate transaminase (AST) / SGOT</td>
-                <td>AST is an enzyme produced by the liver and other organs. Abnormal results may indicate liver damage
-                    or disease.</td>
-            </tr>
-        </tbody>
-    </table>
+    {{-- ── End of Report ── --}}
+    <div class="end-of-report">*** End of Report ***</div>
 
 </body>
 

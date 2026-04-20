@@ -327,7 +327,7 @@ class ResultEntryManager extends Component
         session()->flash('success', "Test status updated to {$newStatus}.");
     }
 
-    public function printSelected()
+    public function printSelected($withHeader = 1)
     {
         if (empty($this->selectedTests)) {
             session()->flash('error', 'Please select at least one test to print.');
@@ -335,7 +335,9 @@ class ResultEntryManager extends Component
         }
 
         $testIds = implode(',', $this->selectedTests);
-        $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'modern']) . '?tests=' . $testIds;
+        $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
+             . '?tests=' . $testIds
+             . '&header=' . ($withHeader ? '1' : '0');
         
         $this->dispatch('open-new-tab', ['url' => $url]);
     }

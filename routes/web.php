@@ -89,6 +89,9 @@ Route::get('/privacy', function () {
     return view('pages.privacy');
 })->name('privacy');
 
+// Public Report Verification / Download (for QR codes)
+Route::get('/v/{hash}', [\App\Http\Controllers\PublicReportController::class, 'download'])->name('public.report.download');
+
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', Login::class)->name('login');
