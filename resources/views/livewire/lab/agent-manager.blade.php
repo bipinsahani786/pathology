@@ -121,7 +121,7 @@
                                                     <i class="feather-trash-2 fs-14"></i>
                                                 </button>
                                             @endcan
-                                            @if(auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
+                                            @if(config('features.impersonation', true) && auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
                                                 <a href="{{ route('impersonate.start', $agent->id) }}" class="btn btn-sm btn-light border text-dark shadow-sm rounded align-center-btn transition-all hover-dark" title="Login As {{ $agent->name }}">
                                                     <i class="feather-user-check fs-14"></i>
                                                 </a>
@@ -183,6 +183,7 @@
                             @endif
 
                             <!-- Login Instructions Alert -->
+                            @if(config('features.partner_logins', true))
                             <div class="alert alert-soft-warning border-warning shadow-sm rounded-3 mb-4">
                                 <div class="d-flex gap-2">
                                     <i class="feather-info flex-shrink-0 mt-1"></i>
@@ -195,6 +196,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
                             <div class="row g-4">
                             <div class="col-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Agent Information</h6></div>
@@ -223,11 +225,13 @@
                                 @error('agency_name') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
+                            @if(config('features.partner_logins', true))
                             <div class="col-md-6">
                                 <label class="form-label fs-12 fw-bold text-muted text-uppercase">{{ $user_id ? 'Update Password' : 'Login Password' }}</label>
                                 <input type="text" class="form-control border-warning bg-soft-warning" wire:model="password" placeholder="{{ $user_id ? 'Leave blank to keep current' : 'Default is mobile number' }}">
                                 @error('password') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
+                            @endif
 
                             <div class="col-12 mt-4"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Business & Payout</h6></div>
 

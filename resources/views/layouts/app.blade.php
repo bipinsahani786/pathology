@@ -73,7 +73,7 @@
 
     @include('layouts.partials.header')
 
-    @if(session()->has('impersonate_original_id'))
+    @if(config('features.impersonation', true) && session()->has('impersonate_original_id'))
         <div class="impersonation-banner"
             style="background: linear-gradient(90deg, #ff416c, #ff4b2b); color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 1060; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);">
             <div class="d-flex align-items-center gap-3">

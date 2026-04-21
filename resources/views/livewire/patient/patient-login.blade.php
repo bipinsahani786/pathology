@@ -1,4 +1,5 @@
-<div class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
+<div
+    class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
     <!-- Left: Branding & Visual (Desktop Only) -->
     <div class="hidden lg:flex lg:w-1/2 p-2 relative overflow-hidden">
         <div class="w-full h-full rounded-[2.5rem] bg-zinc-900 border border-white/10 relative overflow-hidden group">
@@ -12,19 +13,25 @@
                     <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
                         <i class="feather-activity text-white text-xl"></i>
                     </div>
-                    <span class="font-display font-bold text-2xl tracking-tight text-white uppercase transition-all duration-300">
+                    <span
+                        class="font-display font-bold text-2xl tracking-tight text-white uppercase transition-all duration-300">
                         @php $siteSetting = \App\Models\SiteSetting::first(); @endphp
-                        {{ explode(' ', $siteSetting->site_name ?? 'SWS Pathology')[0] }} 
-                        <span class="text-brand-400">{{ implode(' ', array_slice(explode(' ', $siteSetting->site_name ?? 'SWS Pathology'), 1)) }}</span>
+                        {{ explode(' ', $siteSetting->site_name ?? 'SWS Pathology')[0] }}
+                        <span
+                            class="text-brand-400">{{ implode(' ', array_slice(explode(' ', $siteSetting->site_name ?? 'SWS Pathology'), 1)) }}</span>
                     </span>
                 </div>
 
                 <div class="max-w-md">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 mb-8">
-                        <span class="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Patient Portal</span>
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 mb-8">
+                        <span class="text-[10px] font-bold text-brand-400 uppercase tracking-widest">Patient
+                            Portal</span>
                     </div>
-                    <h2 class="text-5xl font-bold text-white mb-6 leading-tight tracking-tight">Your Health Records, <span class="text-brand-400">Instantly.</span></h2>
-                    <p class="text-xl text-zinc-400 leading-relaxed">Securely access your laboratory reports, track your diagnostic history, and stay connected with your healthcare providers.</p>
+                    <h2 class="text-5xl font-bold text-white mb-6 leading-tight tracking-tight">Your Health Records,
+                        <span class="text-brand-400">Instantly.</span></h2>
+                    <p class="text-xl text-zinc-400 leading-relaxed">Securely access your laboratory reports, track your
+                        diagnostic history, and stay connected with your healthcare providers.</p>
                 </div>
 
                 <div class="flex items-center gap-12 border-t border-white/10 pt-12">
@@ -32,7 +39,8 @@
                         <i class="feather-shield text-brand-400 text-3xl"></i>
                         <div>
                             <p class="text-white font-bold tracking-tight">Fully Secure</p>
-                            <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">256-Bit Encrypted</p>
+                            <p class="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">256-Bit Encrypted
+                            </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
@@ -55,15 +63,18 @@
                 <div class="bg-brand-600 p-2.5 rounded-xl">
                     <i class="feather-activity text-white text-xl"></i>
                 </div>
-                <span class="font-display font-bold text-xl tracking-tight text-zinc-900 dark:text-white uppercase transition-all duration-300">
-                    {{ explode(' ', $siteSetting->site_name ?? 'SWS Pathology')[0] }} 
-                    <span class="text-brand-600">{{ implode(' ', array_slice(explode(' ', $siteSetting->site_name ?? 'SWS Pathology'), 1)) }}</span>
+                <span
+                    class="font-display font-bold text-xl tracking-tight text-zinc-900 dark:text-white uppercase transition-all duration-300">
+                    {{ explode(' ', $siteSetting->site_name ?? 'SWS Pathology')[0] }}
+                    <span
+                        class="text-brand-600">{{ implode(' ', array_slice(explode(' ', $siteSetting->site_name ?? 'SWS Pathology'), 1)) }}</span>
                 </span>
             </div>
 
             <div>
                 <h1 class="text-4xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4">Access Reports</h1>
-                <p class="text-zinc-500 font-medium">Please enter your medical ID and registered mobile number to securely download your reports.</p>
+                <p class="text-zinc-500 font-medium">Please enter your medical ID and registered mobile number to
+                    securely download your reports.</p>
             </div>
 
             <form wire:submit.prevent="login" class="space-y-6">
@@ -71,7 +82,8 @@
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Medical ID</label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
                             <i class="feather-user-check"></i>
                         </div>
                         <input type="text" wire:model="patient_id" placeholder="e.g. PAT0032"
@@ -82,9 +94,11 @@
 
                 <!-- Mobile Number -->
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Registered Mobile Number</label>
+                    <label class="text-xs font-bold text-zinc-400 uppercase tracking-widest ml-1">Registered Mobile
+                        Number</label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none group-focus-within:text-brand-600 transition-colors text-zinc-400">
                             <i class="feather-phone"></i>
                         </div>
                         <input type="text" wire:model="mobile" placeholder="Enter 10-digit number"
@@ -94,9 +108,11 @@
                 </div>
 
                 @if($errorMessage)
-                    <div class="p-4 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-start gap-3 animate__animated animate__headShake">
+                    <div
+                        class="p-4 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-start gap-3 animate__animated animate__headShake">
                         <i class="feather-alert-octagon text-red-500 mt-0.5"></i>
-                        <p class="text-sm font-semibold text-red-600 dark:text-red-400 leading-tight">{{ $errorMessage }}</p>
+                        <p class="text-sm font-semibold text-red-600 dark:text-red-400 leading-tight">{{ $errorMessage }}
+                        </p>
                     </div>
                 @endif
 
@@ -104,14 +120,17 @@
                 <button type="submit"
                     class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-5 rounded-2xl shadow-xl shadow-brand-600/30 hover:shadow-brand-700/40 hover:-translate-y-1 transition-all flex justify-center items-center gap-3 group mt-4">
                     <span wire:loading.remove>View My Reports</span>
-                    <i wire:loading.remove class="feather-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                    <div wire:loading class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <i wire:loading.remove
+                        class="feather-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    <div wire:loading class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin">
+                    </div>
                     <span wire:loading>Verifying details...</span>
                 </button>
             </form>
 
             <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-sm">
-                 <a href="tel:{{ $siteSetting->contact_phone ?? '#' }}" class="inline-flex items-center gap-2 font-bold text-zinc-500 hover:text-brand-600 transition-colors">
+                <a href="tel:{{ $siteSetting->contact_phone ?? '#' }}"
+                    class="inline-flex items-center gap-2 font-bold text-zinc-500 hover:text-brand-600 transition-colors">
                     <i class="feather-headphones text-lg"></i> Help Desk
                 </a>
                 <div class="inline-flex items-center gap-2 font-bold text-emerald-600">

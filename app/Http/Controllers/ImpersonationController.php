@@ -13,6 +13,11 @@ class ImpersonationController extends Controller
      */
     public function loginAs(User $user)
     {
+        // 0. Feature Check
+        if (!config('features.impersonation', true)) {
+            abort(403, 'Impersonation feature is disabled by the administrator.');
+        }
+
         // 1. Security Check: Only admins can impersonate
         $originalUser = auth()->user();
         if (!$originalUser->hasAnyRole(['super_admin', 'lab_admin'])) {

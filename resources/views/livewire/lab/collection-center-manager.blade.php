@@ -51,9 +51,11 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light fs-11 fw-bold text-uppercase text-muted">
                             <tr>
-                                <th class="ps-4 py-3">Center Details</th>
+                                <th class="py-3">Center Details</th>
                                 <th class="py-3">Branch</th>
-                                <th class="py-3">Login Account</th>
+                                @if(config('features.partner_logins', true))
+                                    <th class="py-3">Login Account</th>
+                                @endif
                                 <th class="py-3">Address</th>
                                 <th class="py-3">Status</th>
                                 <th class="text-center pe-4 py-3" style="width: 120px;">Actions</th>
@@ -78,6 +80,7 @@
                                             <i class="feather-git-merge me-1 text-info"></i>{{ $center->branch->name ?? 'Global' }}
                                         </span>
                                     </td>
+                                    @if(config('features.partner_logins', true))
                                     <td>
                                         @if($center->user)
                                             <div class="fs-13 text-dark fw-bold mb-1"><i class="feather-user me-1 text-muted"></i>{{ $center->user->name }}</div>
@@ -88,6 +91,7 @@
                                             <span class="badge bg-soft-warning text-warning border px-2 py-1 fs-11">No Login Account</span>
                                         @endif
                                     </td>
+                                    @endif
                                     <td>
                                         <span class="fs-13 text-muted">{{ Str::limit($center->address, 40) ?? 'No address' }}</span>
                                     </td>
@@ -115,7 +119,7 @@
                                                     <i class="feather-trash-2 fs-14"></i>
                                                 </button>
                                             @endcan
-                                            @if($center->user && auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
+                                            @if(config('features.impersonation', true) && $center->user && auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
                                                 <a href="{{ route('impersonate.start', $center->user->id) }}" class="btn btn-sm btn-light border text-dark shadow-sm rounded align-center-btn transition-all hover-dark" title="Login As {{ $center->user->name }}">
                                                     <i class="feather-user-check fs-14"></i>
                                                 </a>
@@ -206,6 +210,7 @@
                                 @error('address') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
+                            @if(config('features.partner_logins', true))
                             <div class="col-12 mt-4"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Login Credentials</h6></div>
 
                             <div class="col-md-6">
@@ -226,6 +231,7 @@
                                 @error('password') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                                 <div class="form-text fs-11 text-muted">User will Use Mobile/Email to login. Role: <b>Collection Center</b></div>
                             </div>
+                            @endif
                         </div>
                     </div>
 
