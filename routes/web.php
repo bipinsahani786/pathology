@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
 // Impersonation Routes
 Route::get('/impersonate/start/{user}', [\App\Http\Controllers\ImpersonationController::class, 'loginAs'])->name('impersonate.start')->middleware('auth');
@@ -142,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
             // URL: /lab/dashboard  |  Route Name: lab.dashboard
             Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
+
             // Billing & Upgrade Page (Users will be redirected here when their trial expires)
             Route::get('/upgrade-plan', function () {
                 return view('lab.subscription-expired');
@@ -239,6 +240,11 @@ Route::middleware(['auth'])->group(function () {
 
 
 });
+ 
+// Global dashboard alias for tests/middleware
+Route::get('/dashboard', function () {
+    return redirect()->route('lab.dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 // ----------------------------------------------------
 // 4. PATIENT PORTAL ROUTES (External / Public Access)
@@ -262,5 +268,3 @@ Route::prefix('portal')->name('portal.')->group(function () {
     });
 });
 
-// Settings
-require __DIR__ . '/settings.php';

@@ -356,6 +356,10 @@ class PosManager extends Component
         }
         try {
             PaymentMode::create(['company_id' => auth()->user()->company_id, 'name' => trim($this->new_payment_mode_name), 'is_active' => true]);
+            
+            // Refresh the list so it updates in the UI instantly
+            $this->paymentModesList = PaymentMode::where('company_id', auth()->user()->company_id)->where('is_active', true)->get();
+
             $this->isPaymentModeModalOpen = false;
             $this->new_payment_mode_name = '';
             $this->modalError = '';
