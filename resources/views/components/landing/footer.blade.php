@@ -78,7 +78,8 @@
                 <h4 class="text-sm font-semibold text-white mb-6">Support</h4>
                 <ul class="space-y-4">
                     <li><a href="{{ route('portal.login') }}"
-                            class="text-sm font-bold text-brand-500 hover:text-brand-400 transition-colors duration-300">Download Report</a></li>
+                            class="text-sm font-bold text-brand-500 hover:text-brand-400 transition-colors duration-300">Download
+                            Report</a></li>
                     <li><a href="{{ route('faq') }}"
                             class="text-sm hover:text-white transition-colors duration-300">FAQ</a></li>
                     <li><a href="{{ route('terms') }}"

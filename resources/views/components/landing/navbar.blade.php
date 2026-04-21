@@ -53,7 +53,7 @@
                         $isActive = request()->url() === rtrim($link['url'], '/');
                     @endphp
                     <a href="{{ $link['url'] }}" class="relative px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 group
-                                  {{ $isActive ? 'text-brand-600' : 'text-zinc-600 hover:text-zinc-900' }}">
+                                      {{ $isActive ? 'text-brand-600' : 'text-zinc-600 hover:text-zinc-900' }}">
                         <span class="relative z-10">{{ $link['label'] }}</span>
                         <span
                             class="absolute inset-0 bg-brand-50 rounded-lg scale-75 opacity-0 transition-all duration-300 origin-center group-hover:scale-100 group-hover:opacity-100 {{ $isActive ? '!scale-100 !opacity-100' : '' }}"></span>

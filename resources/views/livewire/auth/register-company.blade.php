@@ -24,7 +24,8 @@
                     <div class="space-y-8 mt-20">
                         <div class="animate-fade-in-up" style="animation-delay: 0.1s">
                             <h2 class="text-4xl font-bold text-white mb-4 leading-tight tracking-tight">The Future of
-                                <span class="text-brand-400 italic">Lab Intelligence</span>.</h2>
+                                <span class="text-brand-400 italic">Lab Intelligence</span>.
+                            </h2>
                             <p class="text-lg text-zinc-400 leading-relaxed max-w-sm">Modernize your diagnostic workflow
                                 in minutes. Zero hardware, infinite scale.</p>
                         </div>
@@ -116,7 +117,8 @@
                                 required>
                         </div>
                         @error('lab_name') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">
-                        {{ $message }}</p> @enderror
+                            {{ $message }}
+                        </p> @enderror
                     </div>
 
                     <!-- Owner Name -->
@@ -151,7 +153,8 @@
                                 required>
                         </div>
                         @error('phone') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">
-                        {{ $message }}</p> @enderror
+                            {{ $message }}
+                        </p> @enderror
                     </div>
 
                     <!-- Email -->
@@ -168,7 +171,8 @@
                                 required>
                         </div>
                         @error('email') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">
-                        {{ $message }}</p> @enderror
+                            {{ $message }}
+                        </p> @enderror
                     </div>
 
                     <!-- Password -->
@@ -185,7 +189,8 @@
                                 required>
                         </div>
                         @error('password') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">
-                        {{ $message }}</p> @enderror
+                            {{ $message }}
+                        </p> @enderror
                     </div>
 
                     <!-- Password Confirm -->
@@ -224,7 +229,8 @@
                         be encrypted by default.</p>
                 </div>
                 @error('agree_terms') <p class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider">
-                {{ $message }}</p> @enderror
+                    {{ $message }}
+                </p> @enderror
 
                 <!-- Submit Button -->
                 <button type="submit"

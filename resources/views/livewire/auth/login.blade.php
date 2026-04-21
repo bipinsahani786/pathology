@@ -26,7 +26,8 @@
                             Ready</span>
                     </div>
                     <h2 class="text-5xl font-bold text-white mb-6 leading-tight tracking-tight">Intelligence at the
-                        <span class="text-brand-400">Core</span> of Diagnostics.</h2>
+                        <span class="text-brand-400">Core</span> of Diagnostics.
+                    </h2>
                     <p class="text-xl text-zinc-400 leading-relaxed">Securely manage laboratory reports, patient
                         demographics, and partner settlements in one unified cloud ecosystem.</p>
                 </div>
@@ -80,7 +81,8 @@
                     </div>
                     @error('email') <p
                         class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider animate-shake">
-                    {{ $message }}</p> @enderror
+                        {{ $message }}
+                    </p> @enderror
                 </div>
 
                 <!-- Password -->
@@ -102,7 +104,8 @@
                     </div>
                     @error('password') <p
                         class="text-[10px] font-bold text-red-500 ml-1 uppercase tracking-wider animate-shake">
-                    {{ $message }}</p> @enderror
+                        {{ $message }}
+                    </p> @enderror
                 </div>
 
                 <!-- Remember Me -->
