@@ -1,29 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 @php
 if (!function_exists('getIndianCurrency')) {
-    function getIndianCurrency(float $number)
-    {
+    function getIndianCurrency(float $number) {
         $decimal = round($number - ($no = floor($number)), 2) * 100;
-        $hundred = null;
-        $digits_length = strlen($no);
-        $i = 0;
-        $str = array();
-        $words = array(0 => '', 1 => 'one', 2 => 'two',
-            3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six',
-            7 => 'seven', 8 => 'eight', 9 => 'nine',
-            10 => 'ten', 11 => 'eleven', 12 => 'twelve',
-            13 => 'thirteen', 14 => 'fourteen', 15 => 'fifteen',
-            16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
-            19 => 'nineteen', 20 => 'twenty', 30 => 'thirty',
-            40 => 'forty', 50 => 'fifty', 60 => 'sixty',
-            70 => 'seventy', 80 => 'eighty', 90 => 'ninety');
+        $hundred = null; $digits_length = strlen($no); $i = 0; $str = array();
+        $words = array(0 => '', 1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six', 7 => 'seven', 8 => 'eight', 9 => 'nine',
+            10 => 'ten', 11 => 'eleven', 12 => 'twelve', 13 => 'thirteen', 14 => 'fourteen', 15 => 'fifteen', 16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
+            19 => 'nineteen', 20 => 'twenty', 30 => 'thirty', 40 => 'forty', 50 => 'fifty', 60 => 'sixty', 70 => 'seventy', 80 => 'eighty', 90 => 'ninety');
         $digits = array('', 'hundred','thousand','lakh', 'crore');
         while( $i < $digits_length ) {
             $divider = ($i == 2) ? 10 : 100;
-            $number = floor($no % $divider);
-            $no = floor($no / $divider);
-            $i += $divider == 10 ? 1 : 2;
+            $number = floor($no % $divider); $no = floor($no / $divider); $i += $divider == 10 ? 1 : 2;
             if ($number) {
                 $plural = (($counter = count($str)) && $number > 9) ? 's' : null;
                 $hundred = ($counter == 1 && $str[0]) ? ' ' : null;
@@ -36,376 +24,188 @@ if (!function_exists('getIndianCurrency')) {
 }
 @endphp
 <head>
-    <meta charset="utf-8">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Pro Invoice - {{ $invoice->invoice_number }}</title>
+
+    @php
+        $headerImgSrc = $settings['pdf_header_image'] ? public_path('storage/' . $settings['pdf_header_image']) : public_path('assets/images/pdf-header.jpeg');
+        $footerImgSrc = $settings['pdf_footer_image'] ? public_path('storage/' . $settings['pdf_footer_image']) : public_path('assets/images/pdf-footer.jpeg');
+        
+        $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
+        $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
+        $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
+        $fontSize     = ($settings['pdf_font_size'] ?? 13) . 'px';
+        $fontFamily   = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
+    @endphp
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Helvetica', Arial, sans-serif; 
-            font-size: 13px; 
-            color: #000; 
-            line-height: 1.4;
-            background: #fff;
-        }
-        @page { margin: 0; }
-        .container {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 0;
-            margin: 0;
-            position: relative;
-        }
-        
-        .watermark {
-            position: absolute;
-            top: 35%;
-            left: 50%;
-            width: 500px;
-            margin-left: -250px;
-            opacity: 0.08;
-            z-index: -1;
-            text-align: center;
-        }
-        .watermark img {
-            width: 100%;
-            filter: grayscale(100%);
-        }
+        body { font-family: {{ $fontFamily }}; font-size: {{ $fontSize }}; color: #000; margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px; line-height: 1.4; position: relative; }
 
-        .header-section {
-            width: 100%;
-            height: 40mm; /* Reserve approx 150px space */
-            overflow: hidden;
-        }
-        .header-content {
-            padding: 20px 30px 10px 30px;
-        }
-        .footer-section {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 25mm; /* Reserve approx 90px space */
-        }
-        .main-content {
-            padding: 0 15mm;
-            padding-bottom: 25mm; /* Avoid overlapping footer */
-        }
+        /* Watermark */
+        .watermark { position: absolute; top: 35%; left: 50%; width: 450px; margin-left: -225px; opacity: 0.06; z-index: -100; text-align: center; }
+        .watermark img { width: 100%; filter: grayscale(100%); }
 
-        /* Accent Elements */
-        .blue-border-top {
-            border-top: 15px solid #285fac;
-            padding-top: 15px;
-            margin-bottom: 15px;
-        }
-        .blue-strip {
-            background-color: #285fac;
-            width: 100%;
-            padding: 2px 30px;
-            height: 20px;
-            margin-bottom: 15px;
-            color: #fff;
-            font-size: 11px;
-        }
+        /* Fixed Header */
+        header { position: fixed; top: 0; left: 0; right: 0; height: {{ (int)$headerHeight + 20 }}px; overflow: visible; }
+        .header-banner { width: 100%; display: block; }
         
-        /* Grid */
-        .info-grid {
-            width: 100%;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-        .info-grid td { vertical-align: top; }
+        /* Patient Info (Standardized Grid) */
+        .patient-box { border: 1.5px solid #1e293b !important; margin: 4px 25px 0; padding: 10px; border-radius: 2px; background: #fff; }
+        .patient-table { width: 100%; border-collapse: collapse; }
+        .patient-table td { padding: 1px 2px; vertical-align: top; font-size: 10.5px; }
+        .patient-table .lbl { font-weight: 700; color: #4b5563; width: 14%; }
+        .patient-table .val { font-weight: 700; color: #000; width: 28%; }
+        .patient-table .qr-cell { width: 12%; text-align: center; border-left: 1px solid #000; }
         
-        .section-title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 15px 0;
-        }
+        .qr-code { width: 55px; height: 55px; margin: 0 auto; }
+        .barcode-img { max-width: 90px; height: 22px; margin-top: 5px; }
 
-        /* Tables */
-        .table-bordered {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #c2c2c2;
-            margin-bottom: 20px;
-        }
-        .table-bordered th, .table-bordered td {
-            border: 1px solid #c2c2c2;
-            padding: 8px 10px;
-        }
-        .table-bordered th {
-            font-weight: bold;
-            text-align: left;
-            background-color: #fcfcfc;
-        }
+        /* Fixed Footer */
+        footer { position: fixed; bottom: 0; left: 0; right: 0; height: {{ $footerHeight }}; }
+        .footer-banner { position: absolute; bottom: 0; width: 100%; }
+
+        /* Main Content */
+        .bill-title-container { text-align: center; margin: 15px 0 20px; }
+        .bill-title { font-weight: 900; font-size: 15px; color: #000; border-bottom: 2.5px solid #000; display: inline-block; padding: 0 10px 4px; text-transform: uppercase; letter-spacing: 2px; }
+
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1.5px solid #1e293b; }
+        .items-table th { background: #f3f4f6; color: #000; padding: 10px; font-size: 11px; text-align: left; text-transform: uppercase; border: 1px solid #1e293b; }
+        .items-table td { padding: 10px; border: 1px solid #e5e7eb; font-size: 11px; }
         
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        
-        .lbl { color: #555; }
-        .val { font-weight: bold; }
-        
+        /* Amount in Words Area */
+        .words-area { margin-top: 15px; padding: 8px 12px; background: #f9fafb; border: 1px dashed #9ca3af; font-size: 11px; color: #374151; }
+
         /* Totals Area */
-        .totals-label { font-weight: bold; text-align: right; padding-right: 15px; }
-        .totals-val { font-weight: bold; text-align: right; }
-        
-        /* Signatures */
-        .signature-table {
-            width: 100%;
-            margin-top: 40px;
-            page-break-inside: avoid;
-        }
-        .signature-table td {
-            vertical-align: bottom;
-        }
-        .sig-block {
-            display: inline-block;
-            text-align: center;
-        }
-        .sig-img {
-            max-height: 40px;
-            margin-bottom: 5px;
-        }
+        .summary-wrapper { margin-top: 20px; }
+        .totals-table { float: right; width: 260px; border-collapse: collapse; border: 1.5px solid #1e293b; }
+        .totals-table td { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
+        .grand-total { background: #1e293b; color: #fff; font-weight: 900; font-size: 15px !important; }
+
+        /* Payments History */
+        .payment-history { margin-top: 25px; }
+        .payment-title { font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; color: #4b5563; }
+        .payments-table { width: 60%; border-collapse: collapse; font-size: 10px; }
+        .payments-table th { text-align: left; background: #f9fafb; padding: 5px 8px; border-bottom: 1px solid #e5e7eb; }
+        .payments-table td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
+
+        .clearfix::after { content: ""; display: table; clear: both; }
+        .end-note { text-align: center; font-size: 10px; margin-top: 35px; color: #6b7280; font-style: italic; border-top: 1px solid #e5e7eb; padding-top: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    
-    {{-- Background Logo Watermark --}}
     @if($company->logo)
         <div class="watermark"><img src="{{ public_path('storage/' . $company->logo) }}"></div>
     @endif
 
-    {{-- HEADER AREA --}}
-    <div class="header-section">
-        @if($showHeader)
-            <div class="header-content">
-                <table width="100%">
-                    <tr>
-                        <td width="12%" valign="middle">
-                            @if($company->logo)
-                                <img src="{{ public_path('storage/' . $company->logo) }}" style="max-height: 70px;">
-                            @else
-                                <div style="height: 70px; width: 70px; background: #285fac; color: #fff; border-radius: 50%; text-align: center; line-height: 70px; font-size: 30px; font-weight: bold;">+</div>
-                            @endif
-                        </td>
-                        <td width="88%" valign="middle" align="left">
-                            <h1 style="font-size: 28px; color: #285fac; text-transform: uppercase;">{{ $company->name }}</h1>
-                            <div style="font-size: 13px; font-weight: bold; margin-top: 5px;">
-                                <span style="color: #285fac;">&#10004; {{ $company->tagline ?? 'Accurate | Caring | Instant' }}</span>
-                                @if($company->phone)
-                                    <span style="margin-left: 15px; color: #444;">&#9742; {{ $company->phone }}</span>
-                                @endif
-                                @if($company->email)
-                                    <span style="margin-left: 15px; color: #444;">&#9993; {{ $company->email }}</span>
-                                @endif
-                            </div>
-                            <div style="font-size: 11px; margin-top: 5px; color: #666;">
-                                {{ $company->address }}
-                            </div>
-                        </td>
-                    </tr>
+    <header>
+        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom:12px;">
+        <div class="patient-box">
+            <table class="patient-table">
+                <tr>
+                    <td class="lbl">Patient Name</td>
+                    <td class="val">: {{ strtoupper($invoice->patient->name) }}</td>
+                    <td class="lbl">Invoice No</td>
+                    <td class="val">: {{ $invoice->invoice_number }}</td>
+                    <td rowspan="4" class="qr-cell">
+                        @if(isset($qrCodeUri)) <img src="{{ $qrCodeUri }}" class="qr-code"> @endif
+                        @if(isset($barcodeUri)) <img src="{{ $barcodeUri }}" class="barcode-img"> @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td class="lbl">Age/Gender</td>
+                    <td class="val">: {{ $invoice->patient->patientProfile->age ?? '-' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</td>
+                    <td class="lbl">Date</td>
+                    <td class="val">: {{ $invoice->invoice_date->format('d/m/Y h:i A') }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Referred By</td>
+                    <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF / DIRECT' }}</td>
+                    <td class="lbl">Patient ID</td>
+                    <td class="val">: {{ $invoice->patient->patientProfile->patient_id_string ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Contact No</td>
+                    <td class="val">: {{ $invoice->patient->phone ?? 'N/A' }}</td>
+                    <td class="lbl">Center</td>
+                    <td class="val">: {{ $invoice->collectionCenter ? $invoice->collectionCenter->name : ($company->name ?? 'Main Center') }}</td>
+                </tr>
+            </table>
+        </div>
+    </header>
+
+    @if($showFooter && $footerImgSrc)
+        <footer> <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer"> </footer>
+    @endif
+
+    <div class="bill-title-container">
+        <div class="bill-title">OFFICIAL PAYMENT RECEIPT</div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th width="8%">#</th>
+                <th width="72%">Particulars / Description</th>
+                <th width="20%" style="text-align:right;">Amount (Rs.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($invoice->items as $idx => $item)
+                <tr>
+                    <td>{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td style="font-weight:700;">{{ strtoupper($item->test_name) }}</td>
+                    <td style="text-align:right;">{{ number_format($item->mrp, 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="words-area">
+        <strong>Received with Thanks:</strong> Rs. {{ getIndianCurrency($invoice->paid_amount) }} Only
+    </div>
+
+    <div class="summary-wrapper clearfix">
+        <table class="totals-table">
+            <tr><td>Gross Total</td><td style="text-align:right;font-weight:700;">Rs.{{ number_format($invoice->subtotal, 2) }}</td></tr>
+            @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
+            @if($totalDisc > 0)
+                <tr><td>Taxable Discount (-)</td><td style="text-align:right;font-weight:700;">- Rs.{{ number_format($totalDisc, 2) }}</td></tr>
+            @endif
+            <tr class="grand-total"><td>NET PAYABLE</td><td style="text-align:right;">Rs.{{ number_format($invoice->total_amount, 2) }}</td></tr>
+            <tr><td>Amount Received</td><td style="text-align:right;font-weight:700;">Rs.{{ number_format($invoice->paid_amount, 2) }}</td></tr>
+            @if($invoice->due_amount > 0)
+                <tr style="color:#dc2626; font-weight:700;"><td>Total Balance Due</td><td style="text-align:right;">Rs.{{ number_format($invoice->due_amount, 2) }}</td></tr>
+            @endif
+        </table>
+
+        @if($invoice->payments->count() > 0)
+            <div class="payment-history">
+                <div class="payment-title">Payment Transaction History</div>
+                <table class="payments-table">
+                    <thead><tr><th>Date</th><th>Mode</th><th style="text-align:right;">Amount</th></tr></thead>
+                    <tbody>
+                        @foreach($invoice->payments as $p)
+                            <tr>
+                                <td>{{ $p->created_at->format('d/m/Y') }}</td>
+                                <td>{{ $p->paymentMode->name ?? 'N/A' }} {{ $p->transaction_id ? '(Txn: '.$p->transaction_id.')' : '' }}</td>
+                                <td style="text-align:right;font-weight:700;">Rs.{{ number_format($p->amount, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
                 </table>
             </div>
-            <div class="blue-strip">
-                @if($company->website)
-                    <div style="text-align: right;">{{ $company->website }}</div>
-                @endif
-            </div>
         @endif
     </div>
 
-    {{-- MAIN CONTENT --}}
-    <div class="main-content">
-        
-        {{-- For cases where we don't have header but want the layout spacing, use border-top: 5px --}}
-        @if(!$showHeader)
-            <div style="padding-top: 20px;"></div>
-        @endif
-        
-        <!-- 3-Column Patient & Booking Info -->
-        <table class="info-grid">
-            <tr>
-                <td style="width: 40%; border-right: 1px solid #ccc; padding-right: 15px;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">{{ $invoice->patient->name }}</div>
-                    <div style="margin-bottom: 3px;"><span class="lbl">Age : </span><span class="val">{{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'Years' }}</span></div>
-                    <div style="margin-bottom: 3px;"><span class="lbl">Sex : </span><span class="val">{{ $invoice->patient->patientProfile->gender ?? 'Unspecified' }}</span></div>
-                    <div><span class="lbl">UHID : </span><span class="val">{{ $invoice->patient->formatted_id }}</span></div>
-                </td>
-                
-                <td style="width: 20%; text-align: center; border-right: 1px solid #ccc; vertical-align: middle;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data={{ urlencode(url('/')) }}" style="width: 80px; height: 80px;">
-                </td>
-                
-                <td style="width: 40%; padding-left: 20px;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">Booking</div>
-                    <div style="margin-bottom: 3px;"><span class="lbl">Booking Date : </span><span class="val">{{ $invoice->invoice_date->format('d.m.Y') }}</span></div>
-                    <div style="margin-bottom: 3px;"><span class="lbl">Booking No. : </span><span class="val">{{ $invoice->invoice_number }}</span></div>
-                    <div><span class="lbl">Reference Doctor: </span><span class="val">{{ $invoice->doctor ? $invoice->doctor->name : 'SELF' }}</span></div>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Invoice Title -->
-        <h2 class="section-title">Invoice</h2>
-
-        <!-- Items/Particulars Table -->
-        <table class="table-bordered">
-            <thead>
-                <tr>
-                    <th>Particulars</th>
-                    <th class="text-center">Invoice Date</th>
-                    <th class="text-right">Rate (Rs)</th>
-                    <th class="text-center">QTY</th>
-                    <th class="text-right">Amount (Rs)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($invoice->items as $item)
-                <tr>
-                    <td>{{ $item->test_name }}</td>
-                    <td class="text-center">{{ $invoice->invoice_date->format('d/m/Y') }}</td>
-                    <td class="text-right">{{ number_format($item->mrp, 2) }}</td>
-                    <td class="text-center">1.00</td>
-                    <td class="text-right">{{ number_format($item->mrp, 2) }}</td>
-                </tr>
-                @endforeach
-                
-                <!-- Totals inside the table structure -->
-                <tr>
-                    <td colspan="2" class="totals-label">Total</td>
-                    <td class="totals-val">{{ number_format($invoice->subtotal, 2) }}</td>
-                    <td class="text-center" style="font-weight: bold;">{{ number_format($invoice->items->count(), 2) }}</td>
-                    <td class="totals-val">{{ number_format($invoice->subtotal, 2) }}</td>
-                </tr>
-                
-                <tr>
-                    <td colspan="4" class="totals-label">Bill Amount:</td>
-                    <td class="totals-val">{{ number_format($invoice->subtotal, 2) }}</td>
-                </tr>
-                
-                @php
-                    $discount = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount;
-                @endphp
-                @if($discount > 0)
-                <tr>
-                    <td colspan="4" class="totals-label">Discount Amount:</td>
-                    <td class="totals-val">{{ number_format($discount, 2) }}</td>
-                </tr>
-                @endif
-                
-                <tr>
-                    <td colspan="4" class="totals-label">Final Bill Amount:</td>
-                    <td class="totals-val">{{ number_format($invoice->total_amount, 2) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="4" class="totals-label">Paid Amount:</td>
-                    <td class="totals-val">{{ number_format($invoice->paid_amount, 2) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="4" class="totals-label">Due Amount:</td>
-                    <td class="totals-val">{{ number_format($invoice->due_amount, 2) }}</td>
-                </tr>
-                
-                <tr>
-                    <td colspan="5" style="padding: 10px;">
-                        <strong>Received with Thanks:</strong> Rs. {{ getIndianCurrency($invoice->paid_amount) }} Only
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Payment History Table -->
-        @if($invoice->payments->count() > 0)
-        <h2 class="section-title">Payment</h2>
-        <table class="table-bordered">
-            <thead>
-                <tr>
-                    <th class="text-center">SN</th>
-                    <th>Receipt No</th>
-                    <th>Date</th>
-                    <th>Invoice No.</th>
-                    <th class="text-right">Amount (Rs)</th>
-                    <th>Paymode</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($invoice->payments as $idx => $p)
-                <tr>
-                    <td class="text-center">{{ $idx + 1 }}</td>
-                    <td>RCPT {{ str_pad($p->id, 3, '0', STR_PAD_LEFT) }}</td>
-                    <td>{{ $p->created_at->format('d/m/Y') }}</td>
-                    <td>{{ $invoice->invoice_number }}</td>
-                    <td class="text-right">{{ number_format($p->amount, 2) }}</td>
-                    <td>{{ $p->paymentMode->name ?? 'N/A' }}</td>
-                </tr>
-                @endforeach
-                
-                <tr>
-                    <td colspan="6" style="padding: 10px;">
-                        <strong>Received with Thanks:</strong> Rs. {{ getIndianCurrency($invoice->payments->sum('amount')) }} Only
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        @endif
-
-        {{-- Signatures Logic --}}
-        @php
-            $sig1Name = \App\Models\Configuration::getFor('authorized_signatory_name', 'Authorized Signatory');
-            $sig1Desig = \App\Models\Configuration::getFor('authorized_signatory_designation', 'Pathologist');
-            $sig1Path = \App\Models\Configuration::getFor('signature_image', null);
-            
-            $sig2Name = \App\Models\Configuration::getFor('global_sig_2_name', 'Accountant');
-            $sig2Desig = \App\Models\Configuration::getFor('global_sig_2_desig', '');
-            $sig2Path = \App\Models\Configuration::getFor('global_sig_2_path', null);
-        @endphp
-
-        <table class="signature-table">
-            <tr>
-                <td style="width: 50%; text-align: left; padding-left: 10px;">
-                    <div class="sig-block">
-                        @if($sig1Path)
-                            <img src="{{ public_path('storage/' . $sig1Path) }}" class="sig-img"><br>
-                        @else
-                            <div style="height: 40px;"></div>
-                        @endif
-                        <strong>{{ $sig1Name }}</strong><br>
-                        <span style="font-size: 11px;">({{ $sig1Desig }})</span>
-                    </div>
-                </td>
-                <td style="width: 50%; text-align: right; padding-right: 10px;">
-                    <div class="sig-block" style="text-align: center;">
-                        @if($sig2Path)
-                            <img src="{{ public_path('storage/' . $sig2Path) }}" class="sig-img"><br>
-                        @else
-                            <div style="font-family: 'Brush Script MT', cursive; font-size: 24px; color: #444; height: 35px; line-height: 35px; margin-bottom: 5px;">{{ $sig2Name }}</div>
-                        @endif
-                        <strong>{{ $sig2Name }}</strong>
-                        @if($sig2Desig)
-                            <br><span style="font-size: 11px;">({{ $sig2Desig }})</span>
-                        @endif
-                    </div>
-                </td>
-            </tr>
-        </table>
+    <div class="clearfix"></div>
+    <div class="end-note">
+        This is an official document generated by {{ $company->name }}. Use the QR code for instant digital verification.
+        <br>Thank you for your trust.
     </div>
-
-    {{-- FOOTER AREA --}}
-    <div class="footer-section">
-        @if($showFooter)
-            <div class="blue-strip" style="position: absolute; bottom: 0; margin-bottom: 0;">
-                @if($company->website)
-                    <div style="float: left;">{{ $company->website }}</div>
-                @endif
-                <div style="float: right;">Generated on: {{ now()->format('d/m/Y H:i') }}</div>
-                <div style="clear: both;"></div>
-            </div>
-        @endif
-    </div>
-
-</div>
 
 </body>
 </html>

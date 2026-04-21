@@ -66,12 +66,12 @@ class SettingsManager extends Component
     public $new_footer_image;       // upload
     
     // PDF Typography & Layout
-    public $pdf_font_size = 10;
+    public $pdf_font_size = 13;
     public $pdf_font_family = 'Helvetica';
-    public $pdf_margin_top = 295;
+    public $pdf_margin_top = 310;
     public $pdf_margin_bottom = 255;
-    public $pdf_header_height = 285;
-    public $pdf_footer_height = 245;
+    public $pdf_header_height = 200;
+    public $pdf_footer_height = 180;
 
     public $pdfSaved = false;
 
@@ -140,12 +140,12 @@ class SettingsManager extends Component
         $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null);
 
         // PDF Typography & Layout
-        $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 10);
+        $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 13);
         $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica');
-        $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 295);
+        $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 310);
         $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255);
-        $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 285);
-        $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 245);
+        $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200);
+        $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180);
         
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');

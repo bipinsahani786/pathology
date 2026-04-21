@@ -23,12 +23,12 @@
                 : null);
 
         // ── Margins from Settings ──
-        $marginTop    = ($settings['pdf_margin_top'] ?? 295) . 'px';
+        $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
-        $headerHeight = ($settings['pdf_header_height'] ?? 285) . 'px';
-        $footerHeight = ($settings['pdf_footer_height'] ?? 245) . 'px';
+        $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
+        $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
         
-        $fontSize     = ($settings['pdf_font_size'] ?? 10) . 'px';
+        $fontSize     = ($settings['pdf_font_size'] ?? 13) . 'px';
         $fontFamily   = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
     @endphp
 
@@ -520,7 +520,10 @@
     <footer>
         <div class="sig-container">
             {{-- ── Signature Section ── --}}
-            @if($settings['report_signature_mode'] === 'global_bottom' || $settings['report_signature_mode'] === '')
+            @php $sigMode = $settings['report_signature_mode'] ?? 'global_bottom'; @endphp
+            @if($sigMode === 'per_department')
+                {{-- Global footer sigs hidden, shown per department in body --}}
+            @elseif(($sigMode === 'global_bottom' || $sigMode === '') && empty($settings['global_sig_2_name']) && empty($settings['global_sig_3_name']))
                 <table class="sig-table">
                     <tr>
                         <td class="sig-checked">CHECKED BY</td>
@@ -671,20 +674,30 @@
                                 <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 22%; font-size: 8.5px; line-height: 1.2; vertical-align: middle;">
                                     @php
                                         $displayRange = $r->reference_range;
-                                        // Attempt to fetch master ranges for robust multi-gender display
-                                        if (isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
+                                        
+                                        // Backup: If range is empty, try to show the full master range list
+                                        if (empty(trim($displayRange)) && isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
                                             $masterParam = collect($r->labTest->parameters)->first(function($p) use ($r) {
                                                 $pName = is_array($p) ? ($p['name'] ?? '') : $p;
                                                 return $pName === $r->parameter_name;
                                             });
 
-                                            if ($masterParam && isset($masterParam['ranges']) && count($masterParam['ranges']) > 1) {
+                                            if ($masterParam && isset($masterParam['ranges']) && is_array($masterParam['ranges'])) {
                                                 $ranges = collect($masterParam['ranges']);
-                                                $maleRange = $ranges->firstWhere('gender', 'Male');
-                                                $femaleRange = $ranges->firstWhere('gender', 'Female');
+                                                
+                                                if ($ranges->count() > 1) {
+                                                    // Try to find M/F explicitly
+                                                    $maleRange = $ranges->firstWhere('gender', 'Male');
+                                                    $femaleRange = $ranges->firstWhere('gender', 'Female');
 
-                                                if ($maleRange && $femaleRange) {
-                                                    $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
+                                                    if ($maleRange && $femaleRange) {
+                                                        $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
+                                                    } else {
+                                                        // Just join all unique display ranges
+                                                        $displayRange = $ranges->pluck('display_range')->unique()->filter()->implode('<br>');
+                                                    }
+                                                } else {
+                                                    $displayRange = $ranges->first()['display_range'] ?? ($ranges->first()['normal_value'] ?? '');
                                                 }
                                             }
                                         }

@@ -397,9 +397,7 @@
                         @php
                             $templates = [
                                 'classic' => ['name' => 'Classic', 'icon' => 'feather-file-text', 'color' => '#3b71ca', 'desc' => 'Traditional layout with header, table, and footer. Best for formal medical reports.'],
-                                'modern' => ['name' => 'Modern', 'icon' => 'feather-layout', 'color' => '#14b8a6', 'desc' => 'Clean contemporary design with gradient banner and colored info cards.'],
                                 'pro' => ['name' => 'Professional', 'icon' => 'feather-shield', 'color' => '#1e293b', 'desc' => 'High-end Black & White design with clean borders, QR & Barcodes.'],
-                                'compact' => ['name' => 'Compact', 'icon' => 'feather-minimize-2', 'color' => '#f59e0b', 'desc' => 'Space-efficient layout for quick printing. Fits more data per page.'],
                                 'thermal' => ['name' => 'Thermal', 'icon' => 'feather-printer', 'color' => '#6366f1', 'desc' => 'Optimized for 80mm thermal printers. Narrow receipt format.'],
                             ];
                         @endphp

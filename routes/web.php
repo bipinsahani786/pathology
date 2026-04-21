@@ -89,8 +89,9 @@ Route::get('/privacy', function () {
     return view('pages.privacy');
 })->name('privacy');
 
-// Public Report Verification / Download (for QR codes)
+// Public Report & Bill Verification (for QR codes)
 Route::get('/v/{hash}', [\App\Http\Controllers\PublicReportController::class, 'download'])->name('public.report.download');
+Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, 'streamPublic'])->name('public.bill.download');
 
 
 Route::middleware(['guest'])->group(function () {

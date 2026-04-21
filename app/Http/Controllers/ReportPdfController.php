@@ -73,12 +73,12 @@ class ReportPdfController extends Controller
             'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', $companyId) ?: '',
             'global_sig_3_path'      => Configuration::getFor('global_sig_3_path', $companyId),
 
-            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 10,
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 295,
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
             'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
-            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 285,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 245,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
 
             // Visibility
             'pdf_show_header'        => Configuration::getFor('pdf_show_header', $companyId) !== '0',
@@ -120,7 +120,7 @@ class ReportPdfController extends Controller
         })->map(function ($deptGroup) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
-                'tests'      => $deptGroup->groupBy('lab_test_id')->map(function ($testGroup) {
+                'tests'      => $deptGroup->groupBy('invoice_item_id')->map(function ($testGroup) {
                     return [
                         'name'    => $testGroup->first()->labTest->name,
                         'labTest' => $testGroup->first()->labTest,

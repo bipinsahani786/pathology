@@ -127,21 +127,32 @@ class ResultEntryManager extends Component
     {
         if (!isset($param['ranges']) || !is_array($param['ranges'])) return null;
 
+        // 1. Try exact match (Gender + Age)
         foreach ($param['ranges'] as $range) {
-            // 1. Gender check
             $rGender = strtolower($range['gender'] ?? 'both');
             if ($rGender !== 'both' && $rGender !== $patientGender) continue;
 
-            // 2. Age check
             $unit = $range['age_unit'] ?? 'Years';
             $val = ($unit === 'Days') ? $days : (($unit === 'Months') ? $months : $years);
             
-            if ($val >= ($range['age_min'] ?? 0) && $val <= ($range['age_max'] ?? 120)) {
+            if ($val >= ($range['age_min'] ?? 0) && $val <= ($range['age_max'] ?? 150)) {
                 return $range;
             }
         }
 
-        return null;
+        // 2. Fallback 1: Try matching Gender only (widening age range)
+        foreach ($param['ranges'] as $range) {
+            $rGender = strtolower($range['gender'] ?? 'both');
+            if ($rGender === $patientGender) return $range;
+        }
+
+        // 3. Fallback 2: Try matching 'Both' gender
+        foreach ($param['ranges'] as $range) {
+            if (strtolower($range['gender'] ?? '') === 'both') return $range;
+        }
+
+        // 4. Fallback 3: Return the first range available if any
+        return count($param['ranges']) > 0 ? $param['ranges'][0] : null;
     }
 
     public function updatedResults($value, $key)
@@ -220,7 +231,7 @@ class ResultEntryManager extends Component
 
             if ($inputType === 'numeric' || $inputType === 'calculated') {
                 $numVal = (float)$val;
-                if ($range && !empty($range['min_val']) && !empty($range['max_val'])) {
+                if ($range && is_numeric($range['min_val'] ?? null) && is_numeric($range['max_val'] ?? null)) {
                     if ($numVal < (float)$range['min_val']) {
                         $isAbnormal = true; $flag = 'L';
                     } elseif ($numVal > (float)$range['max_val']) {
