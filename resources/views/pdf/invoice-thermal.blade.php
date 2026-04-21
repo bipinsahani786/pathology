@@ -1,99 +1,238 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <title>Receipt {{ $invoice->invoice_number }}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Receipt - {{ $invoice->invoice_number }}</title>
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DejaVu Sans', 'Courier New', monospace; font-size: 10px; color: #333; }
-        .container { padding: 10px 15px; max-width: 300px; margin: 0 auto; }
-        .center { text-align: center; }
-        .bold { font-weight: bold; }
-        .divider { border-top: 1px dashed #999; margin: 6px 0; }
-        .row { overflow: hidden; padding: 1px 0; }
-        .row .left { float: left; }
-        .row .right { float: right; font-weight: bold; }
-        .grand { font-size: 13px; border-top: 1px solid #333; margin-top: 4px; padding-top: 4px; }
-        .items td { padding: 2px 0; }
-        .items { width: 100%; }
+        /* Thermal 80mm Optimization */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DejaVu Sans', 'Courier New', monospace;
+            font-size: 10px;
+            color: #000;
+            width: 72mm;
+            /* ~80mm roll minus typical margins */
+            margin: 0 auto;
+            padding: 5px;
+            line-height: 1.4;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+        }
+
+        .header-section {
+            margin-bottom: 10px;
+        }
+
+        .lab-name {
+            font-size: 14px;
+            font-weight: 900;
+            color: #000;
+        }
+
+        .lab-info {
+            font-size: 8.5px;
+            margin-top: 2px;
+        }
+
+        .info-row {
+            display: block;
+            overflow: hidden;
+            margin-bottom: 2px;
+            font-size: 9px;
+        }
+
+        .info-row .lbl {
+            float: left;
+            width: 35%;
+        }
+
+        .info-row .val {
+            float: right;
+            width: 65%;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        .items-table th {
+            text-align: left;
+            font-size: 9px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+        }
+
+        .items-table td {
+            padding: 5px 0;
+            font-size: 9.5px;
+            vertical-align: top;
+            border-bottom: 0.2px solid #eee;
+        }
+
+        .totals-section {
+            margin-top: 10px;
+        }
+
+        .total-row {
+            display: block;
+            overflow: hidden;
+            padding: 2px 0;
+            font-size: 10px;
+        }
+
+        .total-row .lbl {
+            float: left;
+        }
+
+        .total-row .val {
+            float: right;
+            font-weight: bold;
+        }
+
+        .grand-total {
+            border-top: 1px solid #000;
+            margin-top: 5px;
+            padding-top: 5px;
+            font-size: 13px !important;
+        }
+
+        .qr-section {
+            margin-top: 15px;
+            text-align: center;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+        }
+
+        .qr-code {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .qr-help {
+            font-size: 7px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 8px;
+            margin-top: 15px;
+            border-top: 0.5px solid #ccc;
+            padding-top: 8px;
+        }
     </style>
 </head>
+
 <body>
-<div class="container">
 
-    @if($showHeader)
-        @if($headerImage)
-            <div class="center" style="margin-bottom:6px;"><img src="{{ public_path('storage/' . $headerImage) }}" style="max-width:280px;max-height:60px;"></div>
-        @else
-            <div class="center" style="margin-bottom:4px;">
-                <div class="bold" style="font-size:14px;">{{ strtoupper($company->name) }}</div>
-                @if($company->tagline)<div style="font-size:8px;">{{ $company->tagline }}</div>@endif
-                <div style="font-size:8px;">{{ $company->address ?? '' }}</div>
-                <div style="font-size:8px;">{{ $company->phone ?? '' }} @if($company->gst_number)· GST: {{ $company->gst_number }}@endif</div>
-            </div>
-        @endif
-    @endif
-
-    <div class="divider"></div>
-
-    <div style="font-size:9px;">
-        <div class="row"><span class="left">Bill #:</span><span class="right">{{ $invoice->invoice_number }}</span></div>
-        <div class="row"><span class="left">Date:</span><span class="right">{{ $invoice->invoice_date->format('d/m/Y H:i') }}</span></div>
-        <div class="row"><span class="left">Patient:</span><span class="right">{{ Str::limit($invoice->patient->name ?? 'N/A', 15) }} ({{ $invoice->patient->formatted_id }})</span></div>
-        <div class="row"><span class="left">Phone:</span><span class="right">{{ $invoice->patient->phone ?? '' }}</span></div>
-        @if($invoice->doctor)
-            <div class="row"><span class="left">Ref:</span><span class="right">{{ Str::limit($invoice->doctor->name, 18) }}</span></div>
-        @endif
+    <div class="header-section center">
+        <div class="lab-name">{{ strtoupper($company->name) }}</div>
+        <div class="lab-info">
+            {{ $company->address ?? '' }}<br>
+            📞 {{ $company->phone ?? '' }} @if($company->gst_number) | GST: {{ $company->gst_number }} @endif
+        </div>
     </div>
 
     <div class="divider"></div>
 
-    <table class="items">
-        @foreach($invoice->items as $i => $item)
+    <div class="info-row"><span class="lbl">Bill No:</span><span class="val">{{ $invoice->invoice_number }}</span></div>
+    <div class="info-row"><span class="lbl">Date:</span><span
+            class="val">{{ $invoice->invoice_date->format('d/m/Y h:i A') }}</span></div>
+    <div class="info-row"><span class="lbl">Patient:</span><span
+            class="val">{{ strtoupper($invoice->patient->name) }}</span></div>
+    <div class="info-row"><span class="lbl">Patient ID:</span><span
+            class="val">{{ $invoice->patient->patientProfile->patient_id_string ?? 'N/A' }}</span></div>
+    @if($invoice->doctor)
+        <div class="info-row"><span class="lbl">Ref By:</span><span class="val">{{ $invoice->doctor->name }}</span></div>
+    @endif
+
+    <div class="divider"></div>
+
+    <table class="items-table">
+        <thead>
             <tr>
-                <td>{{ $i + 1 }}. {{ Str::limit($item->test_name, 22) }}</td>
-                <td style="text-align:right;font-weight:bold;">{{ number_format($item->mrp, 0) }}</td>
+                <th width="70%">Investigation</th>
+                <th width="30%" style="text-align:right;">Price</th>
             </tr>
-        @endforeach
+        </thead>
+        <tbody>
+            @foreach($invoice->items as $item)
+                <tr>
+                    <td>{{ strtoupper($item->test_name) }}</td>
+                    <td style="text-align:right; font-weight:700;">{{ number_format($item->mrp, 2) }}</td>
+                </tr>
+            @endforeach
+        </tbody>
     </table>
 
-    <div class="divider"></div>
-
-    <div style="font-size:9px;">
-        <div class="row"><span class="left">Subtotal:</span><span class="right">₹{{ number_format($invoice->subtotal, 0) }}</span></div>
-        @php $totalDisc = $invoice->membership_discount_amount + $invoice->voucher_discount_amount + $invoice->discount_amount; @endphp
+    <div class="totals-section">
+        <div class="total-row"><span class="lbl">Subtotal:</span><span
+                class="val">Rs.{{ number_format($invoice->subtotal, 2) }}</span></div>
+        @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
         @if($totalDisc > 0)
-            <div class="row"><span class="left">Discount:</span><span class="right">-₹{{ number_format($totalDisc, 0) }}</span></div>
+            <div class="total-row"><span class="lbl">Total Savings:</span><span class="val">-
+                    Rs.{{ number_format($totalDisc, 2) }}</span></div>
         @endif
-        <div class="row grand"><span class="left bold">TOTAL:</span><span class="right">₹{{ number_format($invoice->total_amount, 0) }}</span></div>
-        <div class="row"><span class="left">Paid:</span><span class="right">₹{{ number_format($invoice->paid_amount, 0) }}</span></div>
+        <div class="total-row grand-total"><span class="lbl bold">NET PAYABLE:</span><span
+                class="val">Rs.{{ number_format($invoice->total_amount, 2) }}</span></div>
+        <div class="total-row"><span class="lbl">Paid Amount:</span><span
+                class="val">Rs.{{ number_format($invoice->paid_amount, 2) }}</span></div>
         @if($invoice->due_amount > 0)
-            <div class="row"><span class="left bold">DUE:</span><span class="right" style="color:#c00;">₹{{ number_format($invoice->due_amount, 0) }}</span></div>
+            <div class="total-row" style="color:#dc2626;"><span class="lbl bold">DUE BALANCE:</span><span
+                    class="val">Rs.{{ number_format($invoice->due_amount, 2) }}</span></div>
         @endif
     </div>
 
-    <div class="divider"></div>
-
     @if($invoice->payments->count() > 0)
-        <div style="font-size:8px;">
+        <div class="divider"></div>
+        <div style="font-size:8.5px;">
+            <div class="bold center" style="margin-bottom: 5px; white-space: nowrap; font-size: 9px;">PAYMENT DETAILS</div>
             @foreach($invoice->payments as $p)
-                <div class="row"><span class="left">{{ $p->paymentMode->name ?? 'N/A' }}</span><span class="right">₹{{ number_format($p->amount, 0) }}</span></div>
+                <div class="total-row"><span class="lbl">{{ $p->paymentMode->name ?? 'Mode' }}</span><span
+                        class="val">Rs.{{ number_format($p->amount, 2) }}</span></div>
             @endforeach
         </div>
-        <div class="divider"></div>
     @endif
 
-    @if($showFooter)
-        @if($footerImage)
-            <div class="center"><img src="{{ public_path('storage/' . $footerImage) }}" style="max-width:280px;max-height:40px;"></div>
-        @else
-            <div class="center" style="font-size:8px;">
-                <div>*** THANK YOU ***</div>
-                <div style="margin-top:2px;">{{ $invoice->barcode }}</div>
-            </div>
+    <div class="qr-section">
+        @if(isset($qrCodeUri))
+            <img src="{{ $qrCodeUri }}" class="qr-code">
+            <div class="qr-help">SCAN TO VERIFY RECEIPT ONLINE</div>
         @endif
-    @endif
+    </div>
 
-</div>
+    <div class="footer-note center">
+        *** THANK YOU FOR VISITING ***
+        <br>{{ $company->name }}
+        <br>{{ $invoice->barcode }}
+    </div>
+
 </body>
+
 </html>

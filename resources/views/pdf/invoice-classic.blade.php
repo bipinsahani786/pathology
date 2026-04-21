@@ -1,251 +1,352 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Bill Receipt - {{ $invoice->invoice_number }}</title>
+
+    @php
+        // ── Resolve image paths (Mirror of Report) ──
+        $headerImgSrc = $settings['pdf_header_image']
+            ? public_path('storage/' . $settings['pdf_header_image'])
+            : public_path('assets/images/pdf-header.jpeg');
+
+        $footerImgSrc = $settings['pdf_footer_image']
+            ? public_path('storage/' . $settings['pdf_footer_image'])
+            : public_path('assets/images/pdf-footer.jpeg');
+
+        // ── Margins from Settings ──
+        $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
+        $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
+        $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
+        
+        $fontSize     = ($settings['pdf_font_size'] ?? 13) . 'px';
+        $fontFamily   = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
+    @endphp
+
     <style>
+        /* ── RESET ── */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 11px; color: #333; line-height: 1.5; }
-        .container { padding: 20px 30px; }
 
-        /* Header */
-        .header { border-bottom: 3px solid #2563eb; padding-bottom: 15px; margin-bottom: 15px; }
-        .header-image { width: 100%; margin-bottom: 10px; }
-        .header-image img { max-height: 80px; }
-        .lab-name { font-size: 22px; font-weight: bold; color: #1a1a2e; }
-        .lab-tagline { font-size: 10px; color: #666; margin-top: 2px; }
-        .lab-contact { font-size: 9px; color: #888; margin-top: 4px; }
-        .invoice-title { font-size: 28px; font-weight: bold; color: #2563eb; text-align: right; }
-        .invoice-meta { text-align: right; font-size: 10px; color: #555; }
-        .invoice-meta strong { color: #333; }
+        body {
+            font-family: {{ $fontFamily }};
+            font-size: {{ $fontSize }};
+            color: #1a1a1a;
+            background: #fff;
+            line-height: 1.45;
+            margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px;
+        }
 
-        /* Info Boxes */
-        .info-section { margin-bottom: 15px; }
-        .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; }
-        .info-label { font-size: 8px; font-weight: bold; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 4px; }
-        .info-value { font-size: 12px; font-weight: bold; color: #1e293b; }
-        .info-sub { font-size: 9px; color: #64748b; }
+        /* ══════════════════════════════════════════════
+           FIXED HEADER (Mirror of Report)
+           ══════════════════════════════════════════════ */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: {{ (int)$headerHeight + 20 }}px;
+            overflow: visible;
+        }
 
-        /* Table */
-        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .items-table thead th { background: #1e293b; color: #fff; padding: 8px 10px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .items-table thead th:first-child { border-radius: 6px 0 0 0; }
-        .items-table thead th:last-child { border-radius: 0 6px 0 0; text-align: right; }
-        .items-table tbody td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; }
-        .items-table tbody tr:nth-child(even) { background: #f8fafc; }
-        .items-table .amount { text-align: right; font-weight: bold; }
-        .items-table .type-badge { background: #dbeafe; color: #2563eb; padding: 2px 8px; border-radius: 10px; font-size: 8px; font-weight: bold; }
-        .items-table .pkg-badge { background: #ede9fe; color: #7c3aed; }
+        .header-banner {
+            width: 100%;
+            display: block;
+        }
 
-        /* Totals */
-        .totals-section { margin-bottom: 15px; }
-        .totals-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; float: right; width: 280px; }
-        .total-row { display: block; overflow: hidden; padding: 3px 0; font-size: 10px; }
-        .total-label { float: left; color: #64748b; }
-        .total-value { float: right; font-weight: bold; }
-        .total-row.grand { border-top: 2px solid #2563eb; margin-top: 6px; padding-top: 8px; font-size: 14px; color: #2563eb; }
-        .total-row .discount { color: #16a34a; }
-        .total-row .due { color: #dc2626; }
-        .total-row .paid { color: #16a34a; }
+        /* ── PATIENT INFO BOX (Fixed in Header) ── */
+        .patient-box {
+            border: 1px solid #1a1a1a !important;
+            margin: 4px 25px 0;
+            padding: 8px 10px;
+            font-size: 10.5px;
+            display: block;
+            border-radius: 2px;
+        }
 
-        /* Payments */
-        .payments-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        .payments-table th { background: #f1f5f9; padding: 5px 8px; text-align: left; font-size: 9px; text-transform: uppercase; color: #64748b; }
-        .payments-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-        /* Footer */
-        .footer { border-top: 2px solid #e2e8f0; padding-top: 12px; margin-top: 20px; text-align: center; font-size: 9px; color: #94a3b8; }
-        .footer-image { width: 100%; margin-top: 10px; }
-        .footer-image img { max-height: 60px; }
+        .patient-table td {
+            padding: 0.5px 2px;
+            vertical-align: top;
+            line-height: 1.1;
+        }
+
+        .patient-table .lbl {
+            font-weight: 700;
+            color: #1a1a1a;
+            width: 14%;
+            white-space: nowrap;
+        }
+
+        .patient-table .val {
+            color: #1a1a1a;
+            width: 28%;
+        }
+
+        .patient-table .qr-cell {
+            text-align: center;
+            vertical-align: middle;
+            width: 12%;
+        }
+
+        .qr-code {
+            width: 55px;
+            height: 55px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .barcode-img {
+            max-width: 90px;
+            height: 22px;
+            margin-top: 5px;
+        }
+
+        /* ══════════════════════════════════════════════
+           FIXED FOOTER
+           ══════════════════════════════════════════════ */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: {{ $footerHeight }};
+        }
+
+        .footer-banner {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        /* ── MAIN CONTENT ── */
+        .bill-title-container {
+            text-align: center;
+            width: 100%;
+            margin: 15px 0 20px;
+        }
+
+        .bill-title {
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            border-bottom: 2px solid #1a1a1a;
+            display: inline-block;
+            padding: 0 10px 3px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 8px 5px;
+            border-top: 1.5px solid #1a1a1a;
+            border-bottom: 1.5px solid #1a1a1a;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 10px 5px;
+            border-bottom: 0.5px solid #ccc;
+            font-size: 11px;
+            vertical-align: middle;
+        }
+
+        .item-name { font-weight: 700; color: #1a1a1a; }
+        .item-sub { font-size: 9px; color: #555; }
+
+        /* ── Totals ── */
+        .summary-wrapper {
+            margin-top: 20px;
+        }
+
+        .status-badge {
+            float: left;
+            border: 2px solid #16a34a;
+            color: #16a34a;
+            padding: 5px 15px;
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            opacity: 0.3;
+            transform: rotate(-4deg);
+            margin-top: 20px;
+        }
+
+        .totals-table {
+            float: right;
+            width: 255px;
+            border-collapse: collapse;
+            border: 1px solid #1a1a1a;
+            background: #fbfbfb;
+        }
+
+        .totals-table td {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .grand-total {
+            border-top: 1.5px solid #1a1a1a;
+            font-weight: 900;
+            font-size: 14px !important;
+            color: #000;
+        }
 
         .clearfix::after { content: ""; display: table; clear: both; }
 
-        .status-paid { background: #dcfce7; color: #16a34a; padding: 3px 10px; border-radius: 10px; font-size: 9px; font-weight: bold; }
-        .status-partial { background: #fef3c7; color: #d97706; padding: 3px 10px; border-radius: 10px; font-size: 9px; font-weight: bold; }
-        .status-unpaid { background: #fee2e2; color: #dc2626; padding: 3px 10px; border-radius: 10px; font-size: 9px; font-weight: bold; }
+        .end-note {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 40px;
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
-<body>
-<div class="container">
 
-    {{-- ═══════ HEADER ═══════ --}}
-    @if($showHeader)
-        <div class="header clearfix">
-            @if($headerImage)
-                <div class="header-image">
-                    <img src="{{ public_path('storage/' . $headerImage) }}" alt="Header">
-                </div>
-            @else
-                <table width="100%">
-                    <tr>
-                        <td width="60%" valign="top">
-                            @if($company->logo)
-                                <img src="{{ public_path('storage/' . $company->logo) }}" alt="Logo" style="max-height:50px;margin-bottom:6px;">
-                                <br>
-                            @endif
-                            <span class="lab-name">{{ $company->name }}</span>
-                            @if($company->tagline)<div class="lab-tagline">{{ $company->tagline }}</div>@endif
-                            <div class="lab-contact">
-                                {{ $company->address ?? '' }}<br>
-                                @if($company->phone)📞 {{ $company->phone }}@endif
-                                @if($company->email) · ✉ {{ $company->email }}@endif
-                                @if($company->website)<br>🌐 {{ $company->website }}@endif
-                                @if($company->gst_number)<br>GST: {{ $company->gst_number }}@endif
+<body>
+
+    {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
+    <header>
+        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header"
+            style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom: 12px; display: block;">
+
+        {{-- Patient Info Box (Fixed in Header - Stays at top of every page) --}}
+        <div class="patient-box">
+            <table class="patient-table">
+                <tr>
+                    <td class="lbl">Name</td>
+                    <td class="val">: {{ strtoupper($invoice->patient->name) }}</td>
+                    <td class="lbl">Invoice No</td>
+                    <td class="val">: {{ $invoice->invoice_number }}</td>
+                    <td rowspan="4" class="qr-cell">
+                        @if(isset($qrCodeUri))
+                             <img src="{{ $qrCodeUri }}" class="qr-code">
+                        @endif
+                        @if(isset($barcodeUri))
+                            <div class="barcode">
+                                <img src="{{ $barcodeUri }}" class="barcode-img">
                             </div>
-                        </td>
-                        <td width="40%" valign="top" style="text-align:right;">
-                            <div class="invoice-title">INVOICE</div>
-                            <div class="invoice-meta">
-                                <strong>#{{ $invoice->invoice_number }}</strong><br>
-                                Date: {{ $invoice->invoice_date->format('d M Y, h:i A') }}<br>
-                                Barcode: {{ $invoice->barcode }}<br>
-                                <span class="status-{{ strtolower($invoice->payment_status) }}">{{ $invoice->payment_status }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            @endif
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <td class="lbl">Age/Gender</td>
+                    <td class="val">: {{ $invoice->patient->patientProfile->age ?? '-' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</td>
+                    <td class="lbl">Date</td>
+                    <td class="val">: {{ $invoice->invoice_date->format('d/m/Y h:i A') }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Referred By</td>
+                    <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF / DIRECT' }}</td>
+                    <td class="lbl">Patient ID</td>
+                    <td class="val">: {{ $invoice->patient->patientProfile->patient_id_string ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Contact No</td>
+                    <td class="val">: {{ $invoice->patient->phone ?? 'N/A' }}</td>
+                    <td class="lbl">Center</td>
+                    <td class="val">: {{ $invoice->collectionCenter ? $invoice->collectionCenter->name : ($company->name ?? 'Main Center') }}</td>
+                </tr>
+            </table>
         </div>
-    @else
-        {{-- Minimal info when no header --}}
-        <table width="100%" style="margin-bottom:15px;">
-            <tr>
-                <td><strong style="font-size:14px;">Invoice #{{ $invoice->invoice_number }}</strong></td>
-                <td style="text-align:right;font-size:10px;">Date: {{ $invoice->invoice_date->format('d M Y, h:i A') }} · {{ $invoice->barcode }}</td>
-            </tr>
-        </table>
+    </header>
+
+    {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
+    @if($showFooter && $footerImgSrc)
+        <footer>
+            <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
+        </footer>
     @endif
 
-    {{-- ═══════ PATIENT & DOCTOR INFO ═══════ --}}
-    <div class="info-section">
-        <table width="100%" cellspacing="0">
-            <tr>
-                <td width="48%" valign="top">
-                    <div class="info-box">
-                        <div class="info-label">👤 Patient Details</div>
-                        <div class="info-value">{{ $invoice->patient->name ?? 'N/A' }}</div>
-                        <div class="info-sub">📞 {{ $invoice->patient->phone ?? '—' }}</div>
-                        @if($invoice->patient->patientProfile)
-                            <div class="info-sub">
-                                ID: {{ $invoice->patient->patientProfile->patient_id_string ?? '' }}
-                                · {{ $invoice->patient->patientProfile->age ?? '' }} {{ $invoice->patient->patientProfile->age_type ?? 'Yrs' }}
-                                · {{ $invoice->patient->patientProfile->gender ?? '' }}
-                                @if($invoice->patient->patientProfile->blood_group) · {{ $invoice->patient->patientProfile->blood_group }}@endif
-                            </div>
-                        @endif
-                    </div>
-                </td>
-                <td width="4%"></td>
-                <td width="48%" valign="top">
-                    <div class="info-box">
-                        <div class="info-label">🏥 Collection Info</div>
-                        @if($invoice->doctor)
-                            <div class="info-value">Ref: {{ $invoice->doctor->name }}</div>
-                            @if($invoice->doctor->doctorProfile)
-                                <div class="info-sub">{{ $invoice->doctor->doctorProfile->specialization ?? '' }}</div>
-                            @endif
-                        @else
-                            <div class="info-sub">No referral</div>
-                        @endif
-                        @if($invoice->collectionCenter)
-                            <div class="info-sub">Center: {{ $invoice->collectionCenter->name }}</div>
-                        @endif
-                        <div class="info-sub">Type: {{ $invoice->collection_type ?? 'Center' }}</div>
-                    </div>
-                </td>
-            </tr>
-        </table>
+    {{-- ══════════════════ MAIN CONTENT ══════════════════ --}}
+    <div class="bill-title-container">
+        <div class="bill-title">BILL CUM RECEIPT</div>
     </div>
 
-    {{-- ═══════ ITEMS TABLE ═══════ --}}
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width:30px;">#</th>
-                <th>Test / Package Name</th>
-                <th style="width:70px;text-align:center;">Type</th>
-                <th style="width:90px;text-align:right;">Amount (₹)</th>
+                <th width="8%">#</th>
+                <th width="72%">Investigation / Description</th>
+                <th width="20%" style="text-align:right;">Amount (Rs.)</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($invoice->items as $i => $item)
+            @foreach($invoice->items as $idx => $item)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td style="font-weight:bold;">{{ $item->test_name }}</td>
-                    <td style="text-align:center;">
-                        @if($item->lab_test_id)
-                            <span class="type-badge {{ $item->is_package ? 'pkg-badge' : '' }}">{{ $item->is_package ? 'PKG' : 'TEST' }}</span>
-                        @else
-                            <span class="type-badge" style="background:#dcfce7;color:#16a34a;">PLAN</span>
-                        @endif
+                    <td style="color:#666;">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td>
+                        <div class="item-name">{{ strtoupper($item->test_name) }}</div>
+                        <div class="item-sub">Category: {{ $item->is_package ? 'PACKAGE' : 'TEST' }}</div>
                     </td>
-                    <td class="amount">₹{{ number_format($item->mrp, 2) }}</td>
+                    <td style="text-align:right; font-weight:700;">{{ number_format($item->mrp, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
 
-    {{-- ═══════ TOTALS ═══════ --}}
-    <div class="totals-section clearfix">
-        <div class="totals-box">
-            <div class="total-row clearfix"><span class="total-label">Subtotal</span><span class="total-value">₹{{ number_format($invoice->subtotal, 2) }}</span></div>
-            @if($invoice->membership_discount_amount > 0)
-                <div class="total-row clearfix">
-                    <span class="total-label">
-                        Discount ({{ $invoice->membership->name ?? 'Membership' }})
-                    </span>
-                    <span class="total-value discount">- ₹{{ number_format($invoice->membership_discount_amount, 2) }}</span>
-                </div>
-            @endif
-            @if($invoice->voucher_discount_amount > 0)
-                <div class="total-row clearfix"><span class="total-label">Voucher Discount</span><span class="total-value discount">- ₹{{ number_format($invoice->voucher_discount_amount, 2) }}</span></div>
-            @endif
-            @if($invoice->discount_amount > 0)
-                <div class="total-row clearfix"><span class="total-label">Manual Discount</span><span class="total-value discount">- ₹{{ number_format($invoice->discount_amount, 2) }}</span></div>
-            @endif
-            <div class="total-row grand clearfix"><span class="total-label" style="font-weight:bold;">NET PAYABLE</span><span class="total-value">₹{{ number_format($invoice->total_amount, 2) }}</span></div>
-            <div class="total-row clearfix"><span class="total-label">Paid Amount</span><span class="total-value paid">₹{{ number_format($invoice->paid_amount, 2) }}</span></div>
-            @if($invoice->due_amount > 0)
-                <div class="total-row clearfix"><span class="total-label">Due Amount</span><span class="total-value due">₹{{ number_format($invoice->due_amount, 2) }}</span></div>
+    <div class="summary-wrapper clearfix">
+        <div class="status-box">
+             @if($invoice->payment_status === 'Paid')
+                <div class="status-badge">FULLY PAID</div>
+            @elseif($invoice->payment_status === 'Partial')
+                <div class="status-badge" style="border-color:#d97706; color:#d97706;">PARTIAL</div>
+            @else
+                 <div class="status-badge" style="border-color:#dc2626; color:#dc2626;">UNPAID</div>
             @endif
         </div>
+
+        <table class="totals-table">
+            <tr>
+                <td class="total-lbl">Sub-Total</td>
+                <td class="total-val">Rs.{{ number_format($invoice->subtotal, 2) }}</td>
+            </tr>
+            @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
+            @if($totalDisc > 0)
+                <tr>
+                    <td class="total-lbl">Discount (-)</td>
+                    <td class="total-val" style="color:#16a34a;">- Rs.{{ number_format($totalDisc, 2) }}</td>
+                </tr>
+            @endif
+            <tr class="grand-total">
+                <td>NET PAYABLE</td>
+                <td class="total-val">Rs.{{ number_format($invoice->total_amount, 2) }}</td>
+            </tr>
+            <tr>
+                <td class="total-lbl">Paid Amount</td>
+                <td class="total-val" style="color:#16a34a;">Rs.{{ number_format($invoice->paid_amount, 2) }}</td>
+            </tr>
+            @if($invoice->due_amount > 0)
+                <tr style="color:#dc2626; font-weight:700;">
+                    <td>Balance Due</td>
+                    <td class="total-val">Rs.{{ number_format($invoice->due_amount, 2) }}</td>
+                </tr>
+            @endif
+        </table>
     </div>
 
-    {{-- ═══════ PAYMENT DETAILS ═══════ --}}
-    @if($invoice->payments->count() > 0)
-        <div style="clear:both;margin-top:10px;">
-            <div class="info-label" style="margin-bottom:5px;">💳 Payment Details</div>
-            <table class="payments-table">
-                <thead><tr><th>Payment Mode</th><th>Amount</th><th>Transaction ID</th></tr></thead>
-                <tbody>
-                    @foreach($invoice->payments as $p)
-                        <tr>
-                            <td>{{ $p->paymentMode->name ?? 'N/A' }}</td>
-                            <td style="font-weight:bold;">₹{{ number_format($p->amount, 2) }}</td>
-                            <td>{{ $p->transaction_id ?? '—' }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif
+    <div class="clearfix"></div>
 
-    {{-- ═══════ FOOTER ═══════ --}}
-    @if($showFooter)
-        <div class="footer">
-            @if($footerImage)
-                <div class="footer-image">
-                    <img src="{{ public_path('storage/' . $footerImage) }}" alt="Footer">
-                </div>
-            @else
-                <p>This is a computer-generated invoice. No signature is required.</p>
-                <p style="margin-top:4px;">Thank you for choosing <strong>{{ $company->name }}</strong>!
-                    @if($company->website) · 🌐 {{ $company->website }}@endif
-                </p>
-            @endif
-        </div>
-    @endif
+    <div class="end-note">
+        This is a computer-generated receipt and does not require a physical signature.
+        <br>Thank you for choosing {{ $company->name }}.
+    </div>
 
-</div>
 </body>
 </html>

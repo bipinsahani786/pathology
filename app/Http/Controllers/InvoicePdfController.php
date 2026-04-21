@@ -5,69 +5,105 @@ namespace App\Http\Controllers;
 use App\Models\{Invoice, Company, Configuration};
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Common\EccLevel;
+use chillerlan\QRCode\Output\QRGdImagePNG;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class InvoicePdfController extends Controller
 {
     public function download($id)
     {
-        $companyId = auth()->user()->company_id;
-        $invoice = Invoice::where('company_id', $companyId)
-            ->with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator'])
-            ->findOrFail($id);
-
-        $company = Company::find($companyId);
-        $template = Configuration::getFor('bill_template', 'classic');
-        $showHeader = Configuration::getFor('pdf_show_header', '1') === '1';
-        $showFooter = Configuration::getFor('pdf_show_footer', '1') === '1';
-        $headerImage = Configuration::getFor('pdf_header_image', null);
-        $footerImage = Configuration::getFor('pdf_footer_image', null);
-
-        $view = 'pdf.invoice-' . $template;
-        if (!view()->exists($view)) {
-            $view = 'pdf.invoice-classic';
-        }
-
-        $pdf = Pdf::loadView($view, [
-            'invoice' => $invoice,
-            'company' => $company,
-            'showHeader' => $showHeader,
-            'showFooter' => $showFooter,
-            'headerImage' => $headerImage,
-            'footerImage' => $footerImage,
-        ]);
-
-        $pdf->setPaper('a4', 'portrait');
-
-        return $pdf->stream('Invoice-' . $invoice->invoice_number . '.pdf');
+        return $this->generateInvoice($id, true, true);
     }
 
     public function downloadWithoutHeader($id)
     {
-        $companyId = auth()->user()->company_id;
-        $invoice = Invoice::where('company_id', $companyId)
-            ->with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator'])
+        return $this->generateInvoice($id, false, false);
+    }
+
+    /**
+     * Publicly stream an invoice PDF via QR code scan.
+     */
+    public function streamPublic($hash)
+    {
+        $id = base64_decode($hash);
+        if (!$id || !is_numeric($id)) {
+            abort(404, 'Invalid Bill Link');
+        }
+        return $this->generateInvoice($id, true, true, true);
+    }
+
+    /**
+     * Core logic for Invoice PDF generation
+     */
+    private function generateInvoice($id, $showHeader = true, $showFooter = true, $isPublic = false)
+    {
+        $invoice = Invoice::with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator', 'company'])
             ->findOrFail($id);
 
-        $company = Company::find($companyId);
-        $template = Configuration::getFor('bill_template', 'classic');
+        if (!$isPublic) {
+            $companyId = auth()->user()->company_id;
+            if ($invoice->company_id !== $companyId) {
+                abort(403);
+            }
+        } else {
+            $companyId = $invoice->company_id;
+        }
+
+        $company = $invoice->company;
+        $template = Configuration::getFor('bill_template', 'classic', $companyId);
+        
+        $headerImage = Configuration::getFor('pdf_header_image', null, $companyId);
+        $footerImage = Configuration::getFor('pdf_footer_image', null, $companyId);
 
         $view = 'pdf.invoice-' . $template;
         if (!view()->exists($view)) {
             $view = 'pdf.invoice-classic';
         }
 
+        $pdfSettings = [
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
+            'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
+            'pdf_header_image'       => $showHeader ? $headerImage : null,
+            'pdf_footer_image'       => $showFooter ? $footerImage : null,
+        ];
+
+        // ── QR Code ──
+        // Point to the public bill download route instead of the report route
+        $publicUrl = route('public.bill.download', ['hash' => base64_encode($invoice->id)]);
+        $options = new QROptions(['version' => 5, 'outputInterface' => QRGdImagePNG::class, 'eccLevel' => EccLevel::L, 'scale' => 4]);
+        $qrCodeUri = (new QRCode($options))->render($publicUrl);
+
+        // ── Barcode ──
+        $generator = new BarcodeGeneratorPNG();
+        $barcodeUri = 'data:image/png;base64,' . base64_encode($generator->getBarcode($invoice->invoice_number, $generator::TYPE_CODE_128, 1, 25));
+
         $pdf = Pdf::loadView($view, [
-            'invoice' => $invoice,
-            'company' => $company,
-            'showHeader' => false,
-            'showFooter' => false,
-            'headerImage' => null,
-            'footerImage' => null,
+            'invoice'     => $invoice,
+            'company'     => $company,
+            'showHeader'  => $showHeader,
+            'showFooter'  => $showFooter,
+            'headerImage' => $showHeader ? $headerImage : null,
+            'footerImage' => $showFooter ? $footerImage : null,
+            'settings'    => $pdfSettings,
+            'qrCodeUri'   => $qrCodeUri,
+            'barcodeUri'  => $barcodeUri,
         ]);
 
-        $pdf->setPaper('a4', 'portrait');
+        if ($template === 'thermal') {
+            // 80mm width is approx 226pt. Height can be long (e.g. 800pt)
+            $pdf->setPaper([0, 0, 226.77, 800], 'portrait');
+        } else {
+            $pdf->setPaper('a4', 'portrait');
+        }
 
-        return $pdf->stream('Invoice-' . $invoice->invoice_number . '-NoHeader.pdf');
+        return $pdf->stream('Invoice-' . $invoice->invoice_number . '.pdf');
     }
 
     public function previewTemplate($template)
@@ -75,7 +111,6 @@ class InvoicePdfController extends Controller
         $companyId = auth()->user()->company_id;
         $company = Company::find($companyId);
         
-        // Grab the latest invoice to use as dummy data for the preview
         $invoice = Invoice::where('company_id', $companyId)
             ->with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator'])
             ->latest()
@@ -90,16 +125,41 @@ class InvoicePdfController extends Controller
             $view = 'pdf.invoice-classic';
         }
 
+        $pdfSettings = [
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
+            'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
+            'pdf_header_image'       => null,
+            'pdf_footer_image'       => null,
+        ];
+
+        // ── QR & Barcode ──
+        $publicUrl = route('public.bill.download', ['hash' => base64_encode($invoice->id)]);
+        $options = new QROptions(['version' => 5, 'outputInterface' => QRGdImagePNG::class, 'eccLevel' => EccLevel::L, 'scale' => 4]);
+        $qrCodeUri = (new QRCode($options))->render($publicUrl);
+        $generator = new BarcodeGeneratorPNG();
+        $barcodeUri = 'data:image/png;base64,' . base64_encode($generator->getBarcode($invoice->invoice_number, $generator::TYPE_CODE_128, 1, 25));
+
         $pdf = Pdf::loadView($view, [
-            'invoice' => $invoice,
-            'company' => $company,
-            'showHeader' => true,
-            'showFooter' => true,
-            'headerImage' => null, // Configuration::getFor('pdf_header_image', null)
-            'footerImage' => null, // Configuration::getFor('pdf_footer_image', null)
+            'invoice'     => $invoice,
+            'company'     => $company,
+            'showHeader'  => true,
+            'showFooter'  => true,
+            'headerImage' => null,
+            'footerImage' => null,
+            'settings'    => $pdfSettings,
+            'qrCodeUri'   => $qrCodeUri,
+            'barcodeUri'  => $barcodeUri,
         ]);
 
-        $pdf->setPaper('a4', 'portrait');
+        if ($template === 'thermal') {
+            $pdf->setPaper([0, 0, 226.77, 800], 'portrait');
+        } else {
+            $pdf->setPaper('a4', 'portrait');
+        }
 
         return $pdf->stream('Preview-' . ucfirst($template) . '-Template.pdf');
     }
