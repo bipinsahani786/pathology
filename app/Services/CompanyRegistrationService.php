@@ -20,24 +20,33 @@ class CompanyRegistrationService
     public function registerNewLab(array $data)
     {
         return DB::transaction(function () use ($data) {
-            
+
             // 1. Fetch the default Free Plan from the database
             $freePlan = Plan::where('price', 0)->where('is_active', true)->first();
-            
+
             // Fallback to 15 days if no free plan is explicitly defined in the DB
-            $trialDays = $freePlan ? $freePlan->duration_in_days : 15; 
+            $trialDays = $freePlan ? $freePlan->duration_in_days : 15;
 
             // 2. Create the Company (Tenant)
             $company = Company::create([
                 'name' => $data['lab_name'],
-                'email' => $data['email'], 
+                'email' => $data['email'],
                 'phone' => $data['phone'],
                 'status' => 'active',
-                'plan_id' => $freePlan ? $freePlan->id : null, 
-                'trial_ends_at' => Carbon::now()->addDays($trialDays), 
+                'plan_id' => $freePlan ? $freePlan->id : null,
+                'trial_ends_at' => Carbon::now()->addDays($trialDays),
             ]);
 
-            // 3. Create the Main/Default Branch for this Company
+            // 3. Initialize Default PDF Settings for the new Company
+            Configuration::setFor('pdf_font_size', '13', $company->id);
+            Configuration::setFor('pdf_font_family', 'Helvetica', $company->id);
+            Configuration::setFor('pdf_margin_top', '310', $company->id);
+            Configuration::setFor('pdf_margin_bottom', '255', $company->id);
+            Configuration::setFor('pdf_header_height', '200', $company->id);
+            Configuration::setFor('pdf_footer_height', '180', $company->id);
+            Configuration::setFor('bill_template', 'classic', $company->id);
+
+            // 4. Create the Main/Default Branch for this Company
             $branch = Branch::create([
                 'company_id' => $company->id,
                 'name' => 'Main Lab',
@@ -51,7 +60,7 @@ class CompanyRegistrationService
                 'company_id' => $company->id,
                 'branch_id' => $branch->id,
                 'name' => $data['owner_name'],
-                'email' => $data['email'], 
+                'email' => $data['email'],
                 'phone' => $data['phone'],
                 'password' => Hash::make($data['password']),
                 'is_active' => true,

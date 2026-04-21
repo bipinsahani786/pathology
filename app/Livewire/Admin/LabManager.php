@@ -46,8 +46,8 @@ class LabManager extends Component
     {
         $query = Company::with('plan')
             ->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $this->searchTerm . '%');
+                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
+                    ->orWhere('email', 'ilike', '%' . $this->searchTerm . '%');
             });
 
         // Apply Subscription Filters

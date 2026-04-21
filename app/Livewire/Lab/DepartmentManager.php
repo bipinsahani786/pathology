@@ -25,7 +25,7 @@ class DepartmentManager extends Component
     {
         // Fetch both system departments and lab-specific departments
         $departments = Department::forCompany(auth()->user()->company_id)
-            ->where('name', 'like', '%' . $this->searchTerm . '%')
+            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
             ->orderBy('is_system', 'desc')
             ->orderBy('name')
             ->paginate(15);

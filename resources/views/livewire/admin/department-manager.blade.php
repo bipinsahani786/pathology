@@ -62,7 +62,7 @@
                         </thead>
                         <tbody>
                             @forelse($departments as $dept)
-                                <tr class="border-bottom border-light">
+                                <tr class="border-bottom border-light" wire:key="dept-{{ $dept->id }}">
                                     <td class="ps-4 py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-text avatar-md bg-soft-primary text-primary me-3 rounded-circle fw-bold text-center" style="width: 42px; height: 42px; line-height: 42px;">

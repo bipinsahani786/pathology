@@ -21,7 +21,7 @@ class DepartmentManager extends Component
         // System departments only for super admin
         $departments = Department::system()
             ->withCount('globalTests as globalTestsCount')
-            ->where('name', 'like', '%' . $this->searchTerm . '%')
+            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
             ->orderBy('name', 'asc')
             ->paginate(10);
 

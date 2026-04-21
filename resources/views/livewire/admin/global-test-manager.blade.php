@@ -34,26 +34,32 @@
             <div class="card-header bg-white py-3 border-bottom-0">
                 <div class="row g-3 align-items-center">
                     <div class="col-md-5">
-                        <div class="input-group search-group shadow-sm">
-                            <span class="input-group-text bg-white">
+                        <div class="input-group search-group shadow-sm" style="height: 48px;">
+                            <span class="input-group-text bg-white border-end-0">
                                 <i class="feather-search text-primary"></i>
                             </span>
                             <input type="text" wire:model.live.debounce.300ms="searchTerm" 
-                                class="form-control" 
+                                class="form-control border-start-0 ps-0 shadow-none" 
                                 placeholder="Search by name, code or keyword...">
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <select wire:model.live="filterDepartment" class="form-select shadow-sm">
-                            <option value="">All Departments</option>
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="input-group shadow-sm" style="height: 48px;">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="feather-filter text-primary"></i>
+                            </span>
+                            <select wire:model.live="filterDepartment" class="form-select border-start-0 ps-0 shadow-none" style="cursor: pointer;">
+                                <option value="">All Departments</option>
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <button wire:click="$set('filterDepartment',''); $set('searchTerm','')" 
-                            class="btn btn-soft-danger w-100 fw-bold d-flex align-items-center justify-content-center">
+                            class="btn btn-soft-danger w-100 fw-bold d-flex align-items-center justify-content-center" 
+                            style="height: 48px;">
                             <i class="feather-refresh-ccw me-2 fs-12"></i>RESET FILTERS
                         </button>
                     </div>

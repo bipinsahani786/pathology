@@ -117,7 +117,44 @@ class InvoicePdfController extends Controller
             ->first();
 
         if (!$invoice) {
-            abort(404, 'Need at least one invoice to generate a preview. Please create a bill first.');
+            // Generate dummy preview data for new labs
+            $prefix = Configuration::getFor('invoice_prefix', 'PRE', $companyId);
+            $invoice = new Invoice([
+                'invoice_number' => $prefix . date('ym') . '-0001',
+                'invoice_date' => now(),
+                'payment_status' => 'Paid',
+                'subtotal' => 1250.00,
+                'discount_amount' => 125.00,
+                'total_amount' => 1125.00,
+                'paid_amount' => 1125.00,
+                'due_amount' => 0.00,
+                'membership_discount_amount' => 0,
+                'voucher_discount_amount' => 0,
+            ]);
+            $invoice->id = 999;
+
+            // Mock Patient (User with profile)
+            $patient = new \App\Models\User(['name' => 'Sample Patient (John Doe)']);
+            $profile = new \App\Models\PatientProfile([
+                'age' => 30,
+                'age_type' => 'Y',
+                'gender' => 'Male',
+                'patient_id_string' => 'PAT-1001'
+            ]);
+            $patient->setRelation('patientProfile', $profile);
+            $invoice->setRelation('patient', $patient);
+
+            // Mock Items
+            $items = collect([
+                new \App\Models\InvoiceItem(['test_name' => 'Complete Blood Count (CBC)', 'mrp' => 800.00, 'is_package' => false]),
+                new \App\Models\InvoiceItem(['test_name' => 'Lipid Profile', 'mrp' => 450.00, 'is_package' => false]),
+            ]);
+            $invoice->setRelation('items', $items);
+            
+            // Mock empty relations
+            $invoice->setRelation('doctor', null);
+            $invoice->setRelation('collectionCenter', null);
+            $invoice->setRelation('company', $company);
         }
 
         $view = 'pdf.invoice-' . $template;
