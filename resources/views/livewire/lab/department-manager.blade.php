@@ -53,7 +53,7 @@
                                     </thead>
                                     <tbody>
                                         @forelse($departments as $dept)
-                                        <tr class="{{ $dept->is_system ? 'bg-soft-light cursor-not-allowed' : '' }}">
+                                        <tr class="{{ $dept->is_system ? 'bg-soft-light cursor-not-allowed' : '' }}" wire:key="dept-{{ $dept->id }}">
                                             <td class="ps-4">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-text avatar-sm {{ $dept->is_system ? 'bg-primary' : 'bg-soft-primary text-primary' }} me-3">

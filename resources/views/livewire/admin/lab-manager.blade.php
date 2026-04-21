@@ -31,22 +31,27 @@
             <div class="card-header bg-white py-3 border-bottom-0">
                 <div class="row g-3 align-items-center">
                     <div class="col-md-4">
-                        <div class="input-group search-group shadow-sm">
-                            <span class="input-group-text bg-white">
+                        <div class="input-group search-group shadow-sm" style="height: 48px;">
+                            <span class="input-group-text bg-white border-end-0">
                                 <i class="feather-search text-primary"></i>
                             </span>
                             <input type="text" wire:model.live.debounce.300ms="searchTerm" 
-                                class="form-control" 
+                                class="form-control border-start-0 ps-0 shadow-none" 
                                 placeholder="Search lab name, email or mobile...">
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <select wire:model.live="subscriptionFilter" class="form-select shadow-sm border-0" style="height: 48px; border-radius: 12px;">
-                            <option value="all">All Subscriptions</option>
-                            <option value="active">Active Plan</option>
-                            <option value="expiring_soon">Expiring (15 Days)</option>
-                            <option value="expired">Expired Plans</option>
-                        </select>
+                        <div class="input-group shadow-sm" style="height: 48px;">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="feather-activity text-primary"></i>
+                            </span>
+                            <select wire:model.live="subscriptionFilter" class="form-select border-start-0 ps-0 shadow-none" style="cursor: pointer;">
+                                <option value="all">All Subscriptions</option>
+                                <option value="active">Active Plan</option>
+                                <option value="expiring_soon">Expiring (15 Days)</option>
+                                <option value="expired">Expired Plans</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="col-md-5 text-md-end">
                         <span class="badge bg-soft-primary text-primary rounded-pill px-3 py-2 border">
@@ -73,7 +78,7 @@
                         </thead>
                         <tbody>
                             @forelse($labs as $lab)
-                                <tr class="border-bottom border-light">
+                                <tr class="border-bottom border-light" wire:key="lab-{{ $lab->id }}">
                                     <td class="ps-4 py-3">
                                         <div class="d-flex align-items-center">
                                             <div class="avatar-text avatar-md bg-soft-primary text-primary me-3 rounded-circle fw-bold text-center" style="width: 42px; height: 42px; line-height: 42px;">
