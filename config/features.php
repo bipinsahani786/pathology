@@ -16,4 +16,7 @@ return [
 
     // Ability for Agents and Collection Centers to have their own login accounts
     'partner_logins' => env('FEATURE_PARTNER_LOGINS', true),
+
+    // Inventory Management Module
+    'inventory' => env('FEATURE_INVENTORY', true),
 ];

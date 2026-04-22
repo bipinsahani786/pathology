@@ -215,6 +215,38 @@
                         </a>
                     </li>
 
+                    @if(config('features.inventory', true))
+                    <li class="nxl-item nxl-caption">
+                        <label>Inventory & Assets</label>
+                    </li>
+                    <li class="nxl-item nxl-hasmenu {{ request()->routeIs('lab.inventory.*') ? 'active nxl-trigger' : '' }}">
+                        <a href="javascript:void(0);" class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-box"></i></span>
+                            <span class="nxl-mtext">Inventory</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        </a>
+                        <ul class="nxl-submenu">
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.dashboard') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.dashboard') }}" wire:navigate><i class="feather-pie-chart me-2 fs-12"></i>Analytics Dashboard</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.items') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.items') }}" wire:navigate><i class="feather-list me-2 fs-12"></i>Items Master</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.suppliers') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.suppliers') }}" wire:navigate><i class="feather-truck me-2 fs-12"></i>Suppliers</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.purchase') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.purchase') }}" wire:navigate><i class="feather-download me-2 fs-12"></i>Receive Stock</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.issuance') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.issuance') }}" wire:navigate><i class="feather-external-link me-2 fs-12"></i>Staff Issuance</a>
+                            </li>
+                            <li class="nxl-item {{ request()->routeIs('lab.inventory.stock') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.inventory.stock') }}" wire:navigate><i class="feather-database me-2 fs-12"></i>Current Stock</a>
+                            </li>
+                        </ul>
+                    </li>
+                    @endif
+
                     <li class="nxl-item nxl-caption">
                         <label>Settings & Account</label>
                     </li>

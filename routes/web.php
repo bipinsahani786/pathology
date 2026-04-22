@@ -218,6 +218,16 @@ Route::middleware(['auth'])->group(function () {
 
             // Membership Card
             Route::get('/membership-card/{id}/print', [\App\Http\Controllers\MembershipCardController::class, 'print'])->name('membership.card.print');
+
+            // Inventory Management
+            Route::prefix('inventory')->name('inventory.')->group(function () {
+                Route::get('/dashboard', \App\Livewire\Lab\Inventory\Dashboard::class)->name('dashboard');
+                Route::get('/suppliers', \App\Livewire\Lab\Inventory\SupplierManager::class)->name('suppliers');
+                Route::get('/items', \App\Livewire\Lab\Inventory\ItemManager::class)->name('items');
+                Route::get('/stock', \App\Livewire\Lab\Inventory\StockManager::class)->name('stock');
+                Route::get('/purchase', \App\Livewire\Lab\Inventory\PurchaseManager::class)->name('purchase');
+                Route::get('/issuance', \App\Livewire\Lab\Inventory\IssuanceManager::class)->name('issuance');
+            });
         });
 
     // ----------------------------------------------------
