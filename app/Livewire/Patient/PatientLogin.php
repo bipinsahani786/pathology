@@ -25,24 +25,24 @@ class PatientLogin extends Component
         // 1. Clean data
         $inputId = strtoupper(trim($this->patient_id));
         $inputMobile = trim($this->mobile);
-        
+
         // 2. Extract strictly numeric part
         // If PAT-0032 or PAT0032, this gives 32.
         $numericId = (int) preg_replace('/[^0-9]/', '', $inputId);
-        
+
         // Attempt search:
         // We explicitly avoid checking Spatie's role('patient') just in case
         // demo seeders or manual entries didn't assign the exact role string.
         // Checking for the existence of `patientProfile` is mathematically secure.
         $user = User::where('phone', $inputMobile)
             ->whereHas('patientProfile') // Ensure they actually are a patient
-            ->where(function($query) use ($inputId, $numericId) {
+            ->where(function ($query) use ($inputId, $numericId) {
                 if ($numericId > 0) {
                     $query->where('id', $numericId);
                 }
-                
+
                 // Also check by PatientProfile patient_id_string
-                $query->orWhereHas('patientProfile', function($q) use ($inputId) {
+                $query->orWhereHas('patientProfile', function ($q) use ($inputId) {
                     $q->where('patient_id_string', 'like', '%' . $inputId . '%');
                 });
             })
@@ -50,10 +50,10 @@ class PatientLogin extends Component
 
         if ($user) {
             \Illuminate\Support\Facades\Auth::login($user, true); // Log in using standard auth
-            
+
             // Clean up old custom session if it exists to prevent side effects
             Session::forget('patient_id');
-            
+
             return redirect()->route('portal.dashboard');
         }
 

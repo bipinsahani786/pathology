@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $title ?? 'Pathology SaaS' }}</title>
     <script>
-        (function() {
+        (function () {
             try {
                 var skinCustomizer = localStorage.getItem('app-skin') || '';
                 var skinToggle = localStorage.getItem('app-skin-dark') || '';
@@ -22,7 +22,7 @@
                     document.documentElement.classList.remove('app-skin-dark');
                 }
                 document.cookie = "nxl_theme=" + (isDark ? 'dark' : 'light') + "; path=/; max-age=31536000; SameSite=Lax";
-            } catch (e) {}
+            } catch (e) { }
         })();
     </script>
     <style>
@@ -39,8 +39,10 @@
     <!-- Tailwind CDN for login page Tailwind classes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
     @livewireStyles
