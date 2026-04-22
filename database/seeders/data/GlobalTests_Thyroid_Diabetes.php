@@ -6,7 +6,21 @@ return [
         'name' => 'Thyroid Function Test (T3, T4, TSH)',
         'category' => 'Biochemistry',
         'description' => 'Complete thyroid profile. Early morning sample preferred.',
-        'interpretation' => '<table><tr><th>Pattern</th><th>TSH</th><th>T3/T4</th><th>Diagnosis</th></tr><tr><td>Primary Hypothyroid</td><td>High</td><td>Low</td><td>Hashimoto, Iodine deficiency</td></tr><tr><td>Primary Hyperthyroid</td><td>Low</td><td>High</td><td>Graves disease, Toxic nodule</td></tr><tr><td>Subclinical Hypothyroid</td><td>High</td><td>Normal</td><td>Early thyroid failure</td></tr><tr><td>Subclinical Hyperthyroid</td><td>Low</td><td>Normal</td><td>Early excess</td></tr></table>',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-primary mb-3">Thyroid Profile (T3, T4, TSH) Clinical Matrix</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm fs-11">
+            <thead class="bg-light"><tr><th>Pattern</th><th>TSH</th><th>T3/T4</th><th>Diagnostic Consideration</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Primary Hypothyroid</strong></td><td>High</td><td>Low</td><td>Hashimoto Thyroiditis, Iodine Deficiency.</td></tr>
+                <tr><td><strong>Primary Hyperthyroid</strong></td><td>Low</td><td>High</td><td>Graves Disease, Toxic Multinodular Goiter.</td></tr>
+                <tr><td><strong>Subclinical Hypothyroid</strong></td><td>High</td><td>Normal</td><td>Early thyroid failure, monitor for symptoms.</td></tr>
+                <tr><td><strong>Subclinical Hyperthyroid</strong></td><td>Low</td><td>Normal</td><td>Early thyroid excess, risk of arrhythmias.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="alert alert-soft-secondary py-2 px-3 fs-10 mt-2">TSH is the most sensitive screening test for thyroid dysfunction.</div>
+</div>',
         'suggested_price' => 500,
         'default_parameters' => [
             [
@@ -122,7 +136,15 @@ return [
         'name' => 'C-Reactive Protein (CRP)',
         'category' => 'Biochemistry',
         'description' => 'Marker of inflammation.',
-        'interpretation' => 'Elevated in infection/inflammation.',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-danger mb-2">C-Reactive Protein (CRP) Clinical Utility</h6>
+    <p class="fs-12">CRP is an acute-phase reactant produced by the liver. Its concentration increases significantly during systemic inflammation.</p>
+    <ul class="fs-11">
+        <li><strong>Bacterial Infections:</strong> Typically causes high elevation (>50 mg/L).</li>
+        <li><strong>Viral Infections:</strong> Usually shows mild to moderate elevation (10-40 mg/L).</li>
+        <li><strong>Inflammatory Conditions:</strong> Rheumatoid arthritis, Vasculitis, Tissue injury.</li>
+    </ul>
+</div>',
         'suggested_price' => 500,
         'default_parameters' => [
             [

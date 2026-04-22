@@ -6,7 +6,25 @@ return [
         'name' => 'Complete Blood Count (CBC)',
         'category' => 'Haematology',
         'description' => 'Evaluates overall health and detects a wide range of disorders including anemia, infection and leukemia.',
-        'interpretation' => '<table><tr><th>Parameter</th><th>Low Indicates</th><th>High Indicates</th></tr><tr><td>Hemoglobin</td><td>Anemia, Blood loss</td><td>Polycythemia, Dehydration</td></tr><tr><td>WBC</td><td>Bone marrow failure, Autoimmune</td><td>Infection, Inflammation, Leukemia</td></tr><tr><td>Platelets</td><td>Thrombocytopenia, Dengue</td><td>Thrombocytosis, Infection</td></tr><tr><td>RBC</td><td>Anemia, Hemorrhage</td><td>Polycythemia Vera</td></tr></table>',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-primary mb-3">Clinical Interpretation of Complete Blood Count (CBC)</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm fs-12">
+            <thead class="bg-light">
+                <tr><th>Parameter</th><th>Low Levels (Cytopenia)</th><th>High Levels (Cytosis)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Hemoglobin (Hb)</strong></td><td>Anemia, Chronic blood loss, Nutritional deficiency (Iron/B12).</td><td>Polycythemia vera, Congenital heart disease, Chronic smoking, Dehydration.</td></tr>
+                <tr><td><strong>WBC Count</strong></td><td>Leukopenia: Viral infections, Bone marrow suppression, Autoimmune disorders.</td><td>Leukocytosis: Acute infection, Inflammation, Tissue necrosis, Leukemia.</td></tr>
+                <tr><td><strong>Platelet Count</strong></td><td>Thrombocytopenia: Dengue, Malaria, ITP, Bone marrow failure.</td><td>Thrombocytosis: Chronic inflammation, Splenectomy, Essential thrombocythemia.</td></tr>
+                <tr><td><strong>RBC Indices</strong></td><td>Microcytic (Low MCV): Iron deficiency. Macrocytic (High MCV): B12/Folate deficiency.</td><td>Indicators of RBC morphology and hemoglobin concentration.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-3 p-2 bg-soft-info border rounded-3 fs-11">
+        <i class="feather-info me-2"></i><strong>Note:</strong> CBC results must be correlated with clinical symptoms and peripheral smear findings for definitive diagnosis.
+    </div>
+</div>',
         'suggested_price' => 350,
         'default_parameters' => [
             [
@@ -103,7 +121,22 @@ return [
         'name' => 'Blood Group & Rh Type',
         'category' => 'Haematology',
         'description' => 'Determination of ABO blood group and Rhesus factor.',
-        'interpretation' => 'Blood group is determined by the presence of antigens on red blood cells. Rh factor is important for transfusion compatibility and pregnancy.',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-primary mb-2">ABO & Rh Factor Significance</h6>
+    <p class="fs-12">The ABO blood group system is the most important blood type system in human blood transfusion. Antigens are located on the surface of the red blood cells.</p>
+    <div class="row g-3 fs-11 mt-1">
+        <div class="col-6">
+            <div class="p-2 border rounded bg-light">
+                <strong>Compatibility:</strong> Critical for blood transfusions to prevent acute hemolytic reactions.
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="p-2 border rounded bg-light">
+                <strong>Pregnancy:</strong> Rh compatibility between mother and fetus is essential to prevent Erythroblastosis Fetalis.
+            </div>
+        </div>
+    </div>
+</div>',
         'suggested_price' => 150,
         'default_parameters' => [
             [
@@ -125,7 +158,15 @@ return [
         'name' => 'Erythrocyte Sedimentation Rate (ESR)',
         'category' => 'Haematology',
         'description' => 'Non-specific measure of inflammation. Westergren method.',
-        'interpretation' => 'Elevated in: Infections, Autoimmune disorders, Malignancy. Westergren method is standard.',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-danger mb-2">ESR Clinical Correlation</h6>
+    <p class="fs-12">The Erythrocyte Sedimentation Rate is a non-specific marker of inflammation. It measures how quickly red blood cells sink to the bottom of a tube of anticoagulated blood.</p>
+    <ul class="fs-12">
+        <li><strong>Significant Elevation (>100 mm/hr):</strong> Suggests Multiple Myeloma, Temporal Arteritis, or severe systemic infection.</li>
+        <li><strong>Moderate Elevation:</strong> Seen in Pregnancy, Rheumatoid Arthritis, Anemia, and various infections.</li>
+    </ul>
+    <div class="alert alert-soft-warning py-2 px-3 fs-11">ESR is not used for specific diagnosis but for monitoring disease activity and response to treatment.</div>
+</div>',
         'suggested_price' => 100,
         'default_parameters' => [
             [
@@ -183,7 +224,20 @@ return [
         'name' => 'Prothrombin Time (PT/INR)',
         'category' => 'Haematology',
         'description' => 'Evaluates extrinsic and common coagulation pathways. Essential for warfarin monitoring.',
-        'interpretation' => '<table><tr><th>INR Value</th><th>Interpretation</th></tr><tr><td>&lt; 1.1</td><td>Normal coagulation</td></tr><tr><td>2.0 - 3.0</td><td>Target for most indications on Warfarin</td></tr><tr><td>2.5 - 3.5</td><td>Target for mechanical heart valves</td></tr><tr><td>&gt; 4.0</td><td>High bleeding risk</td></tr></table>',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-primary mb-2">PT/INR Clinical Guidelines</h6>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered fs-11">
+            <thead class="bg-light"><tr><th>INR Range</th><th>Interpretation & Clinical Use</th></tr></thead>
+            <tbody>
+                <tr><td><strong>&lt; 1.1</strong></td><td>Normal range for healthy individuals not on anticoagulants.</td></tr>
+                <tr><td><strong>2.0 - 3.0</strong></td><td>Target range for patients on Warfarin for DVT, PE, or Atrial Fibrillation.</td></tr>
+                <tr><td><strong>2.5 - 3.5</strong></td><td>Target range for patients with mechanical prosthetic heart valves.</td></tr>
+                <tr><td><strong>&gt; 4.5</strong></td><td>Critical Value: High risk of spontaneous bleeding. Requires immediate clinical attention.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>',
         'suggested_price' => 350,
         'default_parameters' => [
             ['name' => 'Prothrombin Time (PT)', 'unit' => 'seconds', 'short_code' => 'PT', 'input_type' => 'numeric', 'method' => 'Coagulometry (Clot Detection)', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '11', 'max_val' => '16', 'display_range' => '11 - 16']]],

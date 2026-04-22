@@ -97,7 +97,7 @@ Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, '
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', Login::class)->name('login');
 
-    Route::get('/register-lab', RegisterCompany::class)->name('register.lab');
+// Route::get('/register-lab', RegisterCompany::class)->name('register.lab');
 });
 
 
