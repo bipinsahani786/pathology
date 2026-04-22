@@ -198,7 +198,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
-            Route::get('/audit-logs', \App\Livewire\Lab\AuditLogManager::class)->name('audit-logs');
+            Route::get('/audit-logs', \App\Livewire\Lab\AuditLogManager::class)->name('audit-logs')->middleware('can:view audit_logs');
             Route::get('/profile', PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
@@ -222,7 +222,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/membership-card/{id}/print', [\App\Http\Controllers\MembershipCardController::class, 'print'])->name('membership.card.print');
 
             // Inventory Management
-            Route::prefix('inventory')->name('inventory.')->group(function () {
+            Route::prefix('inventory')->name('inventory.')->middleware('can:view inventory')->group(function () {
                 Route::get('/dashboard', \App\Livewire\Lab\Inventory\Dashboard::class)->name('dashboard');
                 Route::get('/suppliers', \App\Livewire\Lab\Inventory\SupplierManager::class)->name('suppliers');
                 Route::get('/items', \App\Livewire\Lab\Inventory\ItemManager::class)->name('items');

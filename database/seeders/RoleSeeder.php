@@ -37,7 +37,8 @@ class RoleSeeder extends Seeder
             'pos',
             'wallets',
             'inventory',
-            'equipment'
+            'equipment',
+            'audit_logs'
         ];
         $actions = ['view', 'create', 'edit', 'delete'];
 
