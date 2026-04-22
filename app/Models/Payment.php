@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, \App\Traits\Auditable;
     protected $guarded = [];
 
     /**

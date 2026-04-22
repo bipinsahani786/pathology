@@ -9,11 +9,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\BelongsToCompany;
+use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasRoles, HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, BelongsToCompany, Auditable;
 
     /**
      * The attributes that are mass assignable.

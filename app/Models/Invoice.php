@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, \App\Traits\Auditable;
     // Allow all fields to be mass-assigned safely
     protected $guarded = []; 
     

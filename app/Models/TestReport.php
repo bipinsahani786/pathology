@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TestReport extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, \App\Traits\Auditable;
 
     protected $fillable = [
         'company_id',

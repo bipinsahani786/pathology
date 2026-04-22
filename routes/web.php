@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/site-settings', \App\Livewire\Admin\SiteSettingsManager::class)->name('site-settings');
         Route::get('/landing-content', \App\Livewire\Admin\LandingContentManager::class)->name('landing-content');
         Route::get('/enquiries', \App\Livewire\Admin\EnquiryManager::class)->name('enquiries');
+        Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
     });
 
 
@@ -197,6 +198,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
+            Route::get('/audit-logs', \App\Livewire\Lab\AuditLogManager::class)->name('audit-logs');
             Route::get('/profile', PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');
@@ -218,6 +220,16 @@ Route::middleware(['auth'])->group(function () {
 
             // Membership Card
             Route::get('/membership-card/{id}/print', [\App\Http\Controllers\MembershipCardController::class, 'print'])->name('membership.card.print');
+
+            // Inventory Management
+            Route::prefix('inventory')->name('inventory.')->group(function () {
+                Route::get('/dashboard', \App\Livewire\Lab\Inventory\Dashboard::class)->name('dashboard');
+                Route::get('/suppliers', \App\Livewire\Lab\Inventory\SupplierManager::class)->name('suppliers');
+                Route::get('/items', \App\Livewire\Lab\Inventory\ItemManager::class)->name('items');
+                Route::get('/stock', \App\Livewire\Lab\Inventory\StockManager::class)->name('stock');
+                Route::get('/purchase', \App\Livewire\Lab\Inventory\PurchaseManager::class)->name('purchase');
+                Route::get('/issuance', \App\Livewire\Lab\Inventory\IssuanceManager::class)->name('issuance');
+            });
         });
 
     // ----------------------------------------------------
