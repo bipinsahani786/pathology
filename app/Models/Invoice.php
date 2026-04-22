@@ -111,6 +111,36 @@ class Invoice extends Model
     }
 
     /**
+     * Generate a WhatsApp sharing link for this invoice or its report.
+     */
+    public function getWhatsappLink($type = 'invoice')
+    {
+        $phone = $this->patient->phone;
+        if (!$phone) return null;
+
+        // Clean phone number (remove non-numeric)
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (strlen($phone) == 10) {
+            $phone = '91' . $phone; // Default to India prefix if 10 digits
+        }
+
+        $labName = $this->company->name ?? 'Lab';
+        $patientName = $this->patient->name;
+        $invoiceNo = $this->invoice_number;
+        $hash = base64_encode($this->id);
+        
+        if ($type === 'invoice') {
+            $url = route('public.bill.download', ['hash' => $hash]);
+            $message = "Hi *{$patientName}*, your invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can download it here: {$url}";
+        } else {
+            $url = route('public.report.download', ['hash' => $hash]);
+            $message = "Hi *{$patientName}*, your test report for invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can view it here: {$url}";
+        }
+
+        return "https://wa.me/{$phone}?text=" . urlencode($message);
+    }
+
+    /**
      * Cancel the invoice and reverse any commissions credited to wallets.
      */
     public function cancel()

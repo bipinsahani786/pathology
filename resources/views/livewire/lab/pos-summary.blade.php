@@ -38,9 +38,19 @@
             <a href="{{ route('lab.invoice.barcode.stickers', $invoice->id) }}" target="_blank" class="btn btn-outline-dark fw-bold me-2">
                 <i class="feather-code me-2"></i>Print Barcode
             </a>
-            <button class="btn btn-outline-success fw-bold" disabled title="WhatsApp feature coming soon">
-                <i class="bi bi-whatsapp me-2"></i>WhatsApp
-            </button>
+            <div class="dropdown ms-2">
+                <button class="btn btn-outline-success fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" @if(!$invoice->patient->phone) disabled title="Patient phone number missing" @endif>
+                    <i class="bi bi-whatsapp me-2"></i>WhatsApp Share
+                </button>
+                <ul class="dropdown-menu shadow-sm border-0">
+                    <li><a class="dropdown-item py-2" href="{{ $invoice->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i>Share Invoice</a></li>
+                    @if($invoice->status === 'Completed' || $invoice->sample_status === 'Ready')
+                        <li><a class="dropdown-item py-2" href="{{ $invoice->getWhatsappLink('report') }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i>Share Report</a></li>
+                    @else
+                        <li><a class="dropdown-item py-2 disabled text-muted" href="#"><i class="feather-clock me-2"></i>Report Pending</a></li>
+                    @endif
+                </ul>
+            </div>
             @if($invoice->status === 'Completed')
                 <a href="{{ route('lab.reports.print', $invoice->id) }}" target="_blank" class="btn btn-primary fw-bold ms-2 px-4 shadow-sm">
                     <i class="feather-printer me-2"></i>View / Print Report

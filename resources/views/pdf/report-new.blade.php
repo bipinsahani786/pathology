@@ -455,7 +455,11 @@
 <body>
 
     {{-- ══════════════════ WATERMARK ══════════════════ --}}
-    @if(file_exists(public_path('assets/images/healthcare-logo.png')))
+    @if(isset($company->logo) && $company->logo)
+        <div class="watermark">
+            <img src="{{ public_path('storage/' . $company->logo) }}">
+        </div>
+    @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
         <div class="watermark">
             <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
         </div>

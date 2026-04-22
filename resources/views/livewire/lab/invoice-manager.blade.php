@@ -295,6 +295,17 @@
                                                     <i class="feather-edit-3 fs-12"></i>
                                                 </a>
                                             @endcan
+                                                <button class="btn btn-sm btn-outline-success dropdown-toggle px-2"
+                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
+                                                    <i class="bi bi-whatsapp fs-12"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                    <li><a class="dropdown-item fs-11" href="{{ $inv->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i>Share Invoice</a></li>
+                                                    @if($inv->status === 'Completed' || $inv->sample_status === 'Ready')
+                                                        <li><a class="dropdown-item fs-11" href="{{ $inv->getWhatsappLink('report') }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i>Share Report</a></li>
+                                                    @endif
+                                                </ul>
+                                            </div>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2"
                                                     type="button" data-bs-toggle="dropdown" aria-expanded="false">
