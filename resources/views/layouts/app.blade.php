@@ -60,8 +60,14 @@
         }
     </style>
 
-    <link rel="shortcut icon" type="image/x-icon"
-        href="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/icon.webp') }}" />
+    @php
+        $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
+        $labFavicon = \App\Models\Configuration::getFor('lab_favicon');
+        $faviconUrl = $labFavicon 
+            ? asset('storage/' . $labFavicon) 
+            : ($siteFavicon ? asset('storage/' . $siteFavicon) : asset('assets/images/icon.webp'));
+    @endphp
+    <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/bootstrap.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/vendors.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/daterangepicker.min.css') }}" />
