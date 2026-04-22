@@ -1,4 +1,20 @@
 /* ========= CUSTOM THEME OVERRIDES ========= */
+html {
+    font-size: var(--ui-font-scale, 100%) !important;
+}
+
+/* Scaling utility classes to respond to the global scale */
+.fs-10 { font-size: calc(10px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-11 { font-size: calc(11px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-12 { font-size: calc(12px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-13 { font-size: calc(13px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-14 { font-size: calc(14px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-15 { font-size: calc(15px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-16 { font-size: calc(16px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-18 { font-size: calc(18px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-20 { font-size: calc(20px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-22 { font-size: calc(22px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-24 { font-size: calc(24px * (var(--ui-font-scale, 100) / 100)) !important; }
 
 /* COLOR THEMES */
 html.theme-color-teal {
