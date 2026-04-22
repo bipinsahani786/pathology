@@ -59,7 +59,7 @@
                                                 </div>
                                                 <div>
                                                     <div class="fw-bold text-dark" style="font-size: 13px;">{{ $log->user->name ?? 'System' }}</div>
-                                                    <small class="text-muted" style="font-size: 11px;">{{ $log->user->roles->first()->name ?? 'No Role' }}</small>
+                                                    <small class="text-muted" style="font-size: 11px;">{{ $log->user?->roles?->first()?->name ?? 'System Action' }}</small>
                                                 </div>
                                             </div>
                                         </td>

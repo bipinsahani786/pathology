@@ -66,7 +66,7 @@
                                         </td>
                                         <td>
                                             <div class="fw-medium text-dark">{{ $log->user->name ?? 'System' }}</div>
-                                            <small class="text-muted">{{ $log->user->roles->first()->name ?? 'N/A' }}</small>
+                                            <small class="text-muted">{{ $log->user?->roles?->first()?->name ?? 'System Action' }}</small>
                                         </td>
                                         <td>
                                             @php
