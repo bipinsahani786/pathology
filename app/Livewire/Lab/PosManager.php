@@ -531,8 +531,19 @@ class PosManager extends Component
             // Generate a unique Patient ID from settings
             $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
             $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
-            $nextPId = PatientProfile::where('company_id', $companyId)->count() + 1;
+            
+            // Use MAX of ID to avoid collisions on deletion
+            $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
+            $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
+            
+            // To be absolutely sure, check if this specific string exists (though unlikely with max ID)
             $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+            
+            // Loop until unique (safety valve)
+            while(PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+                $nextPId++;
+                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+            }
 
             PatientProfile::create([
                 'company_id' => $companyId,

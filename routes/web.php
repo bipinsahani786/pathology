@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/site-settings', \App\Livewire\Admin\SiteSettingsManager::class)->name('site-settings');
         Route::get('/landing-content', \App\Livewire\Admin\LandingContentManager::class)->name('landing-content');
         Route::get('/enquiries', \App\Livewire\Admin\EnquiryManager::class)->name('enquiries');
+        Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
     });
 
 
@@ -197,6 +198,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Settings
             Route::get('/settings', SettingsManager::class)->name('settings');
+            Route::get('/audit-logs', \App\Livewire\Lab\AuditLogManager::class)->name('audit-logs');
             Route::get('/profile', PartnerProfile::class)->name('profile');
             Route::get('/invoice/{id}/pdf', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.pdf');
             Route::get('/invoice/{id}/pdf-plain', [\App\Http\Controllers\InvoicePdfController::class, 'downloadWithoutHeader'])->name('invoice.pdf.plain');

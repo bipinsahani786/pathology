@@ -35,7 +35,9 @@ class RoleSeeder extends Seeder
             'staff_roles',
             'settings',
             'pos',
-            'wallets'
+            'wallets',
+            'inventory',
+            'equipment'
         ];
         $actions = ['view', 'create', 'edit', 'delete'];
 
@@ -97,7 +99,9 @@ class RoleSeeder extends Seeder
             'generate reports',
             'download reports',
             'view pos',
-            'create pos'
+            'create pos',
+            'view inventory',
+            'create inventory'
         ]);
 
         // Collection Center User
@@ -119,7 +123,8 @@ class RoleSeeder extends Seeder
             'view pos',
             'create pos',
             'view marketing',
-            'create marketing'
+            'create marketing',
+            'view inventory'
         ]);
 
         // Customer (Patient)

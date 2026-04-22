@@ -521,10 +521,24 @@ class PosEditManager extends Component
                 'company_id' => $companyId,
                 'branch_id' => $this->branch_id,
             ]);
+            // Generate a unique Patient ID from settings
+            $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
+            $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
+            
+            $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
+            $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
+            
+            $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+            
+            while(PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+                $nextPId++;
+                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+            }
+
             PatientProfile::create([
                 'company_id' => $companyId,
                 'user_id' => $user->id,
-                'patient_id_string' => 'PAT-' . date('ym') . str_pad(PatientProfile::where('company_id', $companyId)->count() + 1, 4, '0', STR_PAD_LEFT),
+                'patient_id_string' => $patientIdString,
                 'age' => $this->new_age,
                 'gender' => $this->new_gender,
             ]);

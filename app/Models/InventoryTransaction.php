@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryTransaction extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $table = 'inventory_transactions';
 
     protected $fillable = [

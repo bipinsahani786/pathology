@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Department extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $fillable = ['company_id', 'name', 'is_active', 'is_system'];
 
     protected static function boot()

@@ -94,6 +94,12 @@
                             @endif
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.audit-logs') ? 'active' : '' }}">
+                        <a href="{{ route('admin.audit-logs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
+                            <span class="nxl-mtext">Global Audit Logs</span>
+                        </a>
+                    </li>
                 @endrole
 
 
@@ -249,6 +255,12 @@
 
                     <li class="nxl-item nxl-caption">
                         <label>Settings & Account</label>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('lab.audit-logs') ? 'active' : '' }}">
+                        <a href="{{ route('lab.audit-logs') }}" class="nxl-link" wire:navigate>
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
+                            <span class="nxl-mtext">Audit Logs</span>
+                        </a>
                     </li>
                     <li class="nxl-item {{ request()->routeIs('lab.settings') ? 'active' : '' }}">
                         <a href="{{ route('lab.settings') }}" class="nxl-link" wire:navigate>

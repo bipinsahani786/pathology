@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReportResult extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $fillable = [
         'test_report_id',
         'invoice_item_id',

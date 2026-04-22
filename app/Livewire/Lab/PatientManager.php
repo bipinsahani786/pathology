@@ -158,9 +158,18 @@ class PatientManager extends Component
                 // 2. Generate a unique Patient ID from settings
                 $pPrefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
                 $pDigits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
-                $nextPId = \App\Models\PatientProfile::where('company_id', $companyId)->count() + 1;
+                
+                // Use MAX ID to avoid collisions on deletion
+                $lastPatient = \App\Models\PatientProfile::where('company_id', $companyId)->latest('id')->first();
+                $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
                 
                 $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                
+                // Loop until unique (safety valve)
+                while(\App\Models\PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+                    $nextPId++;
+                    $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                }
 
                 // 3. Create the Patient Profile record
                 PatientProfile::create([

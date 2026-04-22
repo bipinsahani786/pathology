@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LabTest extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, \App\Traits\Auditable;
 
     protected $fillable = [
         'company_id', 'global_test_id', 'department_id', 'test_code', 'name', 'method', 'department',
