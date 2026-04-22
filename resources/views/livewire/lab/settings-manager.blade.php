@@ -84,6 +84,14 @@
                     <h6 class="card-title mb-0 fs-13 text-info"><i class="feather-maximize me-2"></i>UI Accessibility & Scaling</h6>
                 </div>
                 <div class="card-body">
+                    @if(session()->has('ui_updated'))
+                        <div class="alert alert-info py-2 fs-12 mb-3 d-flex align-items-center gap-2 border-0 shadow-sm" style="background:rgba(13,202,240,0.1); color:#0dcaf0;">
+                            <i class="feather-check-circle"></i> {{ session('ui_updated') }} Refreshing page...
+                        </div>
+                        <script>
+                            setTimeout(function() { window.location.reload(); }, 1200);
+                        </script>
+                    @endif
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <div class="fw-bold fs-13 text-dark">Global UI Scale (Font Size)</div>
