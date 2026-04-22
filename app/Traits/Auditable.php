@@ -35,8 +35,8 @@ trait Auditable
             $newValues = null;
         }
 
-        // Hide sensitive fields
-        $hidden = ['password', 'remember_token'];
+        // Hide sensitive fields from logs
+        $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'otp', 'token'];
         if ($oldValues) {
             foreach ($hidden as $field) unset($oldValues[$field]);
         }
