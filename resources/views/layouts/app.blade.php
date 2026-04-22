@@ -51,6 +51,9 @@
 
     {{-- Inline critical dark-mode styles so there's zero flash even before CSS loads --}}
     <style>
+        :root {
+            --ui-font-scale: {{ \App\Models\Configuration::getFor('ui_font_scale', 100) }}%;
+        }
         html.app-skin-dark,
         html.app-skin-dark body {
             background-color: #1a1d29 !important;

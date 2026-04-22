@@ -23,6 +23,9 @@ class SettingsManager extends Component
     public $new_logo, $new_favicon;
     public $profileSaved = false;
 
+    // UI SETTINGS
+    public $ui_font_scale = 100;
+
     // ==========================================
     // INVOICE SETTINGS
     // ==========================================
@@ -173,6 +176,9 @@ class SettingsManager extends Component
         $this->branch_share_tests = Configuration::getFor('branch_share_tests', '1') === '1';
         $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1') === '1';
 
+        // UI Scaling
+        $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100);
+
         // Branch Admin Restriction: Force default tab to staff
         if (auth()->user()->hasRole('branch_admin')) {
             $this->activeTab = 'staff';
@@ -222,6 +228,8 @@ class SettingsManager extends Component
             'tagline' => $this->lab_tagline,
             'logo' => $logoPath,
         ]);
+
+        Configuration::setFor('ui_font_scale', $this->ui_font_scale);
 
         $this->lab_logo = $logoPath;
         $this->lab_favicon = $faviconPath;

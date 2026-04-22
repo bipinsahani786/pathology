@@ -78,6 +78,36 @@
         {{-- TAB 0: GENERAL SETTINGS --}}
         {{-- ═══════════════════════════════════════════════════════ --}}
         @if($activeTab === 'general')
+            {{-- UI Scaling Section --}}
+            <div class="card mb-4 border-info" style="background: rgba(59, 113, 202, 0.03);">
+                <div class="card-header bg-transparent border-info">
+                    <h6 class="card-title mb-0 fs-13 text-info"><i class="feather-maximize me-2"></i>UI Accessibility & Scaling</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="fw-bold fs-13 text-dark">Global UI Scale (Font Size)</div>
+                            <div class="fs-11 text-muted">Increase this if the text on screen feels too small. This will scale fonts and spacing globally across the entire application.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
+                                <span class="fs-11 text-muted">Smaller</span>
+                                <input type="range" class="form-range" min="90" max="120" step="5" wire:model.live="ui_font_scale">
+                                <span class="fs-11 text-muted">Larger</span>
+                                <span class="badge bg-info fs-12 fw-bold py-2" style="min-width: 60px;">{{ $ui_font_scale }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    @can('edit settings')
+                    <div class="mt-3 text-end">
+                         <button wire:click="saveProfile" class="btn btn-sm btn-info fw-bold">
+                            <i class="feather-save me-1"></i>Apply UI Scale
+                         </button>
+                    </div>
+                    @endcan
+                </div>
+            </div>
+
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="card">
