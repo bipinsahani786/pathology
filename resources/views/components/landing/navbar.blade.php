@@ -66,7 +66,9 @@
                     @php
                         $user = auth()->user();
                         $dashboardRoute = 'lab.dashboard';
-                        if ($user->patientProfile) {
+                        if ($user->hasRole('super_admin')) {
+                            $dashboardRoute = 'admin.dashboard';
+                        } elseif ($user->patientProfile) {
                             $dashboardRoute = 'portal.dashboard';
                         } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id || $user->doctorProfile || $user->agentProfile) {
                             $dashboardRoute = 'partner.dashboard';
@@ -128,7 +130,9 @@
                     @php
                         $user = auth()->user();
                         $dashboardRoute = 'lab.dashboard';
-                        if ($user->patientProfile) {
+                        if ($user->hasRole('super_admin')) {
+                            $dashboardRoute = 'admin.dashboard';
+                        } elseif ($user->patientProfile) {
                             $dashboardRoute = 'portal.dashboard';
                         } elseif ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id || $user->doctorProfile || $user->agentProfile) {
                             $dashboardRoute = 'partner.dashboard';

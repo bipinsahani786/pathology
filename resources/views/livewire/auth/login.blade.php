@@ -1,5 +1,27 @@
-<div
-    class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
+@php
+    $siteName = \App\Models\SiteSetting::get('site_name', 'SWS Pathology');
+    $siteLogo = \App\Models\SiteSetting::get('site_logo');
+    $primaryColor = \App\Models\SiteSetting::get('primary_color', '#0284c7');
+
+    // Split name for styling
+    $nameParts = explode(' ', $siteName);
+    $firstName = $nameParts[0] ?? 'SWS';
+    $lastName = implode(' ', array_slice($nameParts, 1)) ?: 'Pathology';
+@endphp
+
+<div class="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col lg:flex-row font-sans selection:bg-brand-500 selection:text-white transition-colors duration-300">
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-50: color-mix(in srgb, {{ $primaryColor }}, white 95%);
+            --color-brand-100: color-mix(in srgb, {{ $primaryColor }}, white 90%);
+            --color-brand-200: color-mix(in srgb, {{ $primaryColor }}, white 80%);
+            --color-brand-400: color-mix(in srgb, {{ $primaryColor }}, white 40%);
+            --color-brand-500: {{ $primaryColor }};
+            --color-brand-600: color-mix(in srgb, {{ $primaryColor }}, black 10%);
+            --color-brand-700: color-mix(in srgb, {{ $primaryColor }}, black 20%);
+        }
+    </style>
+
     <!-- Left: Branding & Visual (Desktop Only) -->
     <div class="hidden lg:flex lg:w-1/2 p-2 relative overflow-hidden">
         <div class="w-full h-full rounded-[2.5rem] bg-zinc-900 border border-white/10 relative overflow-hidden group">
@@ -10,12 +32,16 @@
 
             <div class="relative z-10 w-full h-full p-20 flex flex-col justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-                        <x-app-logo-icon class="h-8 w-8 text-white" />
+                    <div class="bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20">
+                        @if($siteLogo)
+                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}" class="h-10 w-auto">
+                        @else
+                            <x-app-logo-icon class="h-8 w-8 text-white" />
+                        @endif
                     </div>
                     <span
                         class="font-display font-bold text-2xl tracking-tight text-white uppercase transition-all duration-300">
-                        SWS <span class="text-brand-400">Pathology</span>
+                        {{ $firstName }} <span class="text-brand-400">{{ $lastName }}</span>
                     </span>
                 </div>
 
@@ -52,11 +78,16 @@
             <!-- Mobile Logo -->
             <div class="flex items-center gap-3 lg:hidden mb-12">
                 <div class="bg-brand-600 p-2.5 rounded-xl">
-                    <x-app-logo-icon class="h-6 w-6 text-white" />
+                    @if($siteLogo)
+                        <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}"
+                            class="h-8 w-auto brightness-0 invert">
+                    @else
+                        <x-app-logo-icon class="h-6 w-6 text-white" />
+                    @endif
                 </div>
                 <span
                     class="font-display font-bold text-xl tracking-tight text-zinc-900 dark:text-white uppercase transition-all duration-300">
-                    SWS <span class="text-brand-600">Pathology</span>
+                    {{ $firstName }} <span class="text-brand-600">{{ $lastName }}</span>
                 </span>
             </div>
 

@@ -62,7 +62,7 @@ class SiteSettingsManager extends Component
     protected function loadSettings()
     {
         $fields = [
-            'site_name', 'site_tagline', 'primary_color',
+            'site_name', 'site_tagline', 'primary_color', 'site_logo', 'site_logo_dark', 'site_favicon',
             'hero_title', 'hero_subtitle', 'hero_cta_text', 'hero_cta_url',
             'about_title', 'about_description', 'about_stat_labs', 'about_stat_labs_label',
             'about_stat_uptime', 'about_stat_uptime_label', 'about_stat_reports', 'about_stat_reports_label',

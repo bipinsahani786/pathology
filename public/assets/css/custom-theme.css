@@ -4,17 +4,49 @@ html {
 }
 
 /* Scaling utility classes to respond to the global scale */
-.fs-10 { font-size: calc(10px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-11 { font-size: calc(11px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-12 { font-size: calc(12px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-13 { font-size: calc(13px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-14 { font-size: calc(14px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-15 { font-size: calc(15px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-16 { font-size: calc(16px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-18 { font-size: calc(18px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-20 { font-size: calc(20px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-22 { font-size: calc(22px * (var(--ui-font-scale, 100) / 100)) !important; }
-.fs-24 { font-size: calc(24px * (var(--ui-font-scale, 100) / 100)) !important; }
+.fs-10 {
+    font-size: calc(10px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-11 {
+    font-size: calc(11px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-12 {
+    font-size: calc(12px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-13 {
+    font-size: calc(13px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-14 {
+    font-size: calc(14px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-15 {
+    font-size: calc(15px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-16 {
+    font-size: calc(16px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-18 {
+    font-size: calc(18px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-20 {
+    font-size: calc(20px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-22 {
+    font-size: calc(22px * (var(--ui-font-scale, 100) / 100)) !important;
+}
+
+.fs-24 {
+    font-size: calc(24px * (var(--ui-font-scale, 100) / 100)) !important;
+}
 
 /* COLOR THEMES */
 html.theme-color-teal {
@@ -192,8 +224,8 @@ html.app-skin-dark .form-check-input:checked {
 }
 
 /* CKEditor 5 Dark Mode Fixes */
-html.app-skin-dark .ck.ck-editor__main > .ck-editor__editable,
-html.app-skin-dark .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+html.app-skin-dark .ck.ck-editor__main>.ck-editor__editable,
+html.app-skin-dark .ck.ck-editor__main>.ck-editor__editable.ck-focused {
     background-color: #1a1a2e !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     color: #e2e8f0 !important;
@@ -219,11 +251,11 @@ html.app-skin-dark .ck-dropdown__panel {
     border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-html.app-skin-dark .ck-list__item > .ck-button {
+html.app-skin-dark .ck-list__item>.ck-button {
     color: #a0a5b1 !important;
 }
 
-html.app-skin-dark .ck-list__item > .ck-button:hover {
+html.app-skin-dark .ck-list__item>.ck-button:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
