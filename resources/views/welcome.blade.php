@@ -40,7 +40,7 @@
                         </p>
 
                         <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="{{ route('register.lab') }}" class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-zinc-900 hover:bg-brand-600 text-white rounded-full font-semibold text-[15px] shadow-lg shadow-zinc-900/10 transition-all duration-300 transform hover:-translate-y-0.5">
+                            <a href="#contact" class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-zinc-900 hover:bg-brand-600 text-white rounded-full font-semibold text-[15px] shadow-lg shadow-zinc-900/10 transition-all duration-300 transform hover:-translate-y-0.5">
                                 {{ $heroCta }} <i class="feather-arrow-right"></i>
                             </a>
                             <a href="{{ route('portal.login') }}" class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-white hover:bg-zinc-50 text-zinc-700 rounded-full font-semibold text-[15px] border border-zinc-200 transition-all duration-300 shadow-sm hover:shadow-md">
@@ -282,8 +282,8 @@
                                 </ul>
                             @endif
 
-                            <a href="{{ route('register.lab') }}" class="block w-full py-4 text-center rounded-xl font-semibold text-sm transition-all duration-300 {{ $isPopular ? 'bg-zinc-900 text-white shadow-lg hover:bg-black' : 'bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100' }}">
-                                {{ $plan->landing_cta_text ?? 'Get Started' }}
+                            <a href="#contact" class="block w-full py-4 text-center rounded-xl font-semibold text-sm transition-all duration-300 {{ $isPopular ? 'bg-zinc-900 text-white shadow-lg hover:bg-black' : 'bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100' }}">
+                                {{ $plan->landing_cta_text ?? 'Contact Us' }}
                             </a>
                         </div>
                     @endforeach
@@ -384,8 +384,8 @@
                 <h2 class="font-display text-5xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">Ready to Modernize?</h2>
                 <p class="text-xl text-brand-100 mb-12 max-w-2xl mx-auto font-medium">Join top laboratories automating their workflow, reducing errors, and scaling revenue.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="{{ route('register.lab') }}" class="inline-flex justify-center items-center px-10 py-5 bg-white text-brand-600 rounded-full font-bold text-lg shadow-2xl transition-transform hover:-translate-y-1">
-                        Create Free Account
+                    <a href="#contact" class="inline-flex justify-center items-center px-10 py-5 bg-white text-brand-600 rounded-full font-bold text-lg shadow-2xl transition-transform hover:-translate-y-1">
+                        Get Started Today
                     </a>
                     <a href="#contact" class="inline-flex justify-center items-center px-10 py-5 bg-brand-700 hover:bg-brand-800 text-white rounded-full font-bold text-lg border border-brand-500 transition-all">
                         Request a Demo

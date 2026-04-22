@@ -108,7 +108,7 @@ class LabTestService
             'description' => $global->description ?? null,
             'interpretation' => $global->interpretation ?? null,
             'parameters' => $mappedParams,
-            'mrp' => $global->suggested_price ?? 0,
+            'mrp' => $global->mrp ?? 0,
             'b2b_price' => 0,
             'is_active' => true,
         ]);

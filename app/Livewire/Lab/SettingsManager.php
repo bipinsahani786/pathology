@@ -235,6 +235,8 @@ class SettingsManager extends Component
         $this->lab_favicon = $faviconPath;
         $this->new_logo = null;
         $this->new_favicon = null;
+        
+        session()->flash('ui_updated', 'Settings updated successfully!');
         $this->profileSaved = true;
     }
 

@@ -39,7 +39,30 @@ return [
         'name' => 'Glycosylated Hemoglobin (HbA1c)',
         'category' => 'Biochemistry',
         'description' => 'Reflects average blood glucose over the past 2-3 months. Gold standard for diabetes monitoring.',
-        'interpretation' => '<table><tr><th>HbA1c (%)</th><th>Category</th><th>Estimated Average Glucose</th></tr><tr><td>&lt; 5.7</td><td>Normal</td><td>&lt; 117 mg/dL</td></tr><tr><td>5.7 - 6.4</td><td>Pre-Diabetes</td><td>117 - 137 mg/dL</td></tr><tr><td>&ge; 6.5</td><td>Diabetes Mellitus</td><td>&ge; 140 mg/dL</td></tr><tr><td>&lt; 7.0</td><td>Good Diabetic Control</td><td>&lt; 154 mg/dL</td></tr><tr><td>7.0 - 8.0</td><td>Fair Control</td><td>154 - 183 mg/dL</td></tr><tr><td>&gt; 8.0</td><td>Poor Control</td><td>&gt; 183 mg/dL</td></tr></table>',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-primary mb-3">HbA1c & Long-term Glycemic Control</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm fs-11">
+            <thead class="bg-light">
+                <tr><th>HbA1c (%)</th><th>Category</th><th>Average Glucose (eAG)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>&lt; 5.7</strong></td><td>Normal / Non-diabetic</td><td>&lt; 117 mg/dL</td></tr>
+                <tr><td><strong>5.7 - 6.4</strong></td><td>Pre-diabetes (Increased Risk)</td><td>117 - 137 mg/dL</td></tr>
+                <tr><td><strong>&ge; 6.5</strong></td><td>Diabetes Mellitus</td><td>&ge; 140 mg/dL</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <h6 class="fw-bold text-info mt-3 mb-2 fs-12">Therapeutic Targets for Diabetics:</h6>
+    <ul class="fs-11">
+        <li><strong>&lt; 7.0:</strong> Good Control (Target for most adults).</li>
+        <li><strong>7.0 - 8.0:</strong> Fair Control (Consider treatment adjustment).</li>
+        <li><strong>&gt; 8.0:</strong> Poor Control (High risk of complications).</li>
+    </ul>
+    <div class="alert alert-soft-secondary py-2 px-3 fs-10 mt-2">
+        Note: HbA1c may be misleading in patients with certain anemias, hemoglobinopathies, or recent blood transfusions.
+    </div>
+</div>',
         'suggested_price' => 450,
         'default_parameters' => [
             ['name' => 'HbA1c', 'unit' => '%', 'short_code' => 'HBA1C', 'input_type' => 'numeric', 'method' => 'HPLC (High-Performance Liquid Chromatography)', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.0', 'max_val' => '5.6', 'display_range' => '4.0 - 5.6']]],
@@ -107,7 +130,21 @@ return [
         'name' => 'Vitamin D (25-OH)',
         'category' => 'Vitamins',
         'description' => '25-Hydroxyvitamin D. Gold standard for vitamin D status assessment.',
-        'interpretation' => '<table><tr><th>Level (ng/mL)</th><th>Status</th></tr><tr><td>&lt; 10</td><td>Severe Deficiency</td></tr><tr><td>10 - 20</td><td>Deficiency</td></tr><tr><td>20 - 30</td><td>Insufficiency</td></tr><tr><td>30 - 100</td><td>Sufficient</td></tr><tr><td>&gt; 100</td><td>Toxicity Risk</td></tr></table>',
+        'interpretation' => '<div class="detailed-interpretation">
+    <h6 class="fw-bold text-warning mb-2">Vitamin D Status Assessment</h6>
+    <p class="fs-12">Vitamin D is essential for calcium absorption and bone health. 25-Hydroxyvitamin D is the best indicator of overall Vitamin D status.</p>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered fs-11">
+            <thead class="bg-light"><tr><th>Level (ng/mL)</th><th>Clinical Status</th></tr></thead>
+            <tbody>
+                <tr class="table-danger"><td>&lt; 20</td><td>Deficiency (Risk of Rickets / Osteomalacia)</td></tr>
+                <tr class="table-warning"><td>20 - 30</td><td>Insufficiency (Sub-optimal bone health)</td></tr>
+                <tr class="table-success"><td>30 - 100</td><td>Sufficiency (Optimal level)</td></tr>
+                <tr class="table-danger"><td>&gt; 100</td><td>Potential Toxicity (Hypercalcemia risk)</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>',
         'suggested_price' => 1200,
         'default_parameters' => [
             ['name' => '25-OH Vitamin D', 'unit' => 'ng/mL', 'short_code' => 'VITD', 'input_type' => 'numeric', 'method' => 'CLIA (Chemiluminescence Immunoassay)', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '30', 'max_val' => '100', 'display_range' => '30 - 100']]],

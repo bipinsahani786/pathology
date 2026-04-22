@@ -141,10 +141,7 @@
             </form>
 
             <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center">
-                <p class="text-zinc-500 font-medium">New to the platform? <a href="{{ route('register.lab') }}"
-                        wire:navigate
-                        class="text-brand-600 hover:text-brand-700 font-bold border-b-2 border-brand-500/20 hover:border-brand-600 transition-all pb-1">Create
-                        Lab Merchant Account</a></p>
+                <p class="text-zinc-500 font-medium">Please contact administration for access.</p>
             </div>
         </div>
     </div>
