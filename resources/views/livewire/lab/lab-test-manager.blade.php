@@ -167,13 +167,26 @@
 
                         <div class="row g-3">
                             @foreach($globalTests as $gt)
+                                @php $isImported = in_array($gt->id, $importedGlobalTestIds); @endphp
                                 <div class="col-md-6" wire:key="global-{{ $gt->id }}">
-                                    <div class="card border rounded-3 p-3 shadow-none h-100 hover-border-primary transition-all">
+                                    <div class="card border rounded-3 p-3 shadow-none h-100 hover-border-primary transition-all {{ $isImported ? 'bg-light border-success-subtle' : '' }}">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <span class="badge bg-soft-primary text-primary fs-10 px-2">{{ $gt->test_code }}</span>
-                                            <button wire:click="importGlobalTest({{ $gt->id }})" class="btn btn-sm btn-primary rounded-pill px-3 fs-11">
-                                                Import
-                                            </button>
+                                            
+                                            @if($isImported)
+                                                <div class="text-end">
+                                                    <span class="badge bg-success text-white fs-10 px-3 py-1 rounded-pill mb-1 d-block">
+                                                        <i class="feather-check me-1"></i>Imported
+                                                    </span>
+                                                    <a href="#" wire:click.prevent="importGlobalTest({{ $gt->id }})" 
+                                                        wire:confirm="This test is already in your catalog. Do you want to import it again?" 
+                                                        class="text-primary fs-10 text-decoration-underline">Import again?</a>
+                                                </div>
+                                            @else
+                                                <button wire:click="importGlobalTest({{ $gt->id }})" class="btn btn-sm btn-primary rounded-pill px-3 fs-11">
+                                                    Import
+                                                </button>
+                                            @endif
                                         </div>
                                         <h6 class="fw-bold text-dark mb-1">{{ $gt->name }}</h6>
                                         <p class="text-muted fs-11 mb-2">{{ $gt->dept?->name ?? 'N/A' }}</p>

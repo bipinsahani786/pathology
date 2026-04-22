@@ -214,6 +214,22 @@
             background-color: #fafafa;
         }
         
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1000;
+            opacity: 0.08;
+            text-align: center;
+        }
+
+        .watermark img {
+            width: 300px;
+            filter: grayscale(100%);
+        }
+
         /* Clearfix */
         .clearfix::after {
             content: "";
@@ -223,6 +239,16 @@
     </style>
 </head>
 <body>
+    {{-- Watermark --}}
+    @if(isset($company->logo) && $company->logo)
+        <div class="watermark">
+            <img src="{{ public_path('storage/' . $company->logo) }}">
+        </div>
+    @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
+        <div class="watermark">
+            <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
+        </div>
+    @endif
 
     {{-- HEADER --}}
     @if($settings['pdf_show_header'])

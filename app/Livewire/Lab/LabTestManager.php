@@ -95,10 +95,16 @@ class LabTestManager extends Component
             ->orderBy('name')
             ->get();
 
+        $importedGlobalTestIds = \App\Models\LabTest::where('company_id', auth()->user()->company_id)
+            ->whereNotNull('global_test_id')
+            ->pluck('global_test_id')
+            ->toArray();
+
         return view('livewire.lab.lab-test-manager', [
             'tests' => $tests,
             'globalTests' => $globalTests,
-            'departments' => $departments
+            'departments' => $departments,
+            'importedGlobalTestIds' => $importedGlobalTestIds
         ])->layout('layouts.app');
     }
 }

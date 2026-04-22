@@ -2,11 +2,24 @@
     <div class="navbar-wrapper">
         <div class="m-header">
             <a href="{{ url('/') }}" wire:navigate class="b-brand">
-                @if(auth()->user()->company && auth()->user()->company->logo)
-                    <img src="{{ asset('storage/' . auth()->user()->company->logo) }}" alt="Logo" height="50px" class="logo logo-lg" style="object-fit: contain;" />
+                @php
+                    $logoPath = null;
+                    if (auth()->user()->company && auth()->user()->company->logo) {
+                        $logoPath = asset('storage/' . auth()->user()->company->logo);
+                    } else {
+                        $siteLogo = \App\Models\SiteSetting::get('site_logo');
+                        if ($siteLogo) {
+                            $logoPath = asset('storage/' . $siteLogo);
+                        }
+                    }
+                @endphp
+
+                @if($logoPath)
+                    <img src="{{ $logoPath }}" alt="Logo" height="50px" class="logo logo-lg" style="object-fit: contain;" />
                 @else
                     <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
                 @endif
+
                 <img src="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
             </a>
         </div>
