@@ -105,9 +105,9 @@
     <script src="{{ asset('assets/vendors/js/daterangepicker.min.js') }}" data-navigate-once></script>
     <script src="{{ asset('assets/vendors/js/apexcharts.min.js') }}" data-navigate-once></script>
     <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}" data-navigate-once></script>
-    <script src="{{ asset('assets/js/common-init.min.js') }}" data-navigate-once></script>
-    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}" data-navigate-once></script>
-    <script src="{{ asset('assets/js/dashboard-init.min.js') }}" data-navigate-once></script>
+    <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
+    <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
+    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
 
     <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js" data-navigate-once></script>
 
@@ -299,6 +299,8 @@
 
                 if (isDark) {
                     document.documentElement.classList.add('app-skin-dark');
+                } else {
+                    document.documentElement.classList.remove('app-skin-dark');
                 }
 
                 // Restore other theme classes
@@ -313,12 +315,116 @@
                     document.documentElement.classList.add(header);
                 }
                 var font = localStorage.getItem('font-family');
-                if (font) document.documentElement.classList.add(font);
+                if (font) {
+                    // Remove all possible font classes first
+                    document.documentElement.classList.remove('app-font-family-lato', 'app-font-family-rubik', 'app-font-family-inter', 'app-font-family-cinzel', 'app-font-family-poppins', 'app-font-family-montserrat', 'app-font-family-roboto', 'app-font-family-nunito');
+                    document.documentElement.classList.add(font);
+                }
                 var color = localStorage.getItem('app-color');
-                if (color) document.documentElement.classList.add(color);
+                if (color) {
+                    // Remove all possible color classes first
+                    document.documentElement.classList.remove('theme-color-blue', 'theme-color-teal', 'theme-color-purple', 'theme-color-green', 'theme-color-orange', 'theme-color-red');
+                    document.documentElement.classList.add(color);
+                }
 
                 // Sync button states
                 syncThemeState();
+                // Sync Customizer UI radios
+                syncCustomizerUI();
+            }
+
+            // ── Helper: Sync Customizer UI Radio Buttons with LocalStorage ──
+            function syncCustomizerUI() {
+                const settings = {
+                    'app-navigation': localStorage.getItem('app-navigation'),
+                    'app-header': localStorage.getItem('app-header'),
+                    'app-skin': localStorage.getItem('app-skin'),
+                    'font-family': localStorage.getItem('font-family'),
+                    'app-color': localStorage.getItem('app-color')
+                };
+
+                for (const [name, value] of Object.entries(settings)) {
+                    if (value) {
+                        const radio = document.querySelector(`input[name="${name}"][data-${name}="${value}"]`);
+                        if (radio) radio.checked = true;
+                    }
+                }
+            }
+
+            // ── Helper: Global Event Delegation for Theme Controls ──
+            function initThemeDelegation() {
+                document.addEventListener('click', function(e) {
+                    // 1. Dark/Light Mode Toggles (Header)
+                    const darkBtn = e.target.closest('.dark-button');
+                    const lightBtn = e.target.closest('.light-button');
+                    
+                    if (darkBtn || lightBtn) {
+                        e.preventDefault();
+                        const isTurningDark = !!darkBtn;
+                        if (isTurningDark) {
+                            document.documentElement.classList.add('app-skin-dark');
+                        } else {
+                            document.documentElement.classList.remove('app-skin-dark');
+                        }
+                        syncThemeState();
+                        syncCustomizerUI();
+                        return;
+                    }
+
+                    // 2. Customizer Open/Close
+                    const openBtn = e.target.closest('.cutomizer-open-trigger');
+                    const closeBtn = e.target.closest('.cutomizer-close-trigger');
+                    if (openBtn) {
+                        e.preventDefault();
+                        document.querySelector('.theme-customizer')?.classList.add('theme-customizer-open');
+                        return;
+                    }
+                    if (closeBtn) {
+                        e.preventDefault();
+                        document.querySelector('.theme-customizer')?.classList.remove('theme-customizer-open');
+                        return;
+                    }
+
+                    // 3. Reset All
+                    const resetBtn = e.target.closest('[data-style="reset-all-common-style"]');
+                    if (resetBtn) {
+                        e.preventDefault();
+                        localStorage.clear();
+                        window.location.reload();
+                        return;
+                    }
+                });
+
+                document.addEventListener('change', function(e) {
+                    const radio = e.target.closest('.theme-options-set input[type="radio"]');
+                    if (radio) {
+                        const name = radio.name;
+                        const value = radio.getAttribute(`data-${name}`);
+                        
+                        if (name === 'app-skin') {
+                            if (value === 'app-skin-dark') {
+                                document.documentElement.classList.add('app-skin-dark');
+                            } else {
+                                document.documentElement.classList.remove('app-skin-dark');
+                            }
+                        } else if (name === 'font-family') {
+                            // Remove existing font classes
+                            document.documentElement.classList.remove('app-font-family-lato', 'app-font-family-rubik', 'app-font-family-inter', 'app-font-family-cinzel', 'app-font-family-poppins', 'app-font-family-montserrat', 'app-font-family-roboto', 'app-font-family-nunito');
+                            document.documentElement.classList.add(value);
+                        } else if (name === 'app-color') {
+                            document.documentElement.classList.remove('theme-color-blue', 'theme-color-teal', 'theme-color-purple', 'theme-color-green', 'theme-color-orange', 'theme-color-red');
+                            document.documentElement.classList.add(value);
+                        } else {
+                            // Navigation and Header styles
+                            const prefix = name === 'app-navigation' ? 'app-navigation-' : 'app-header-';
+                            document.documentElement.classList.remove(prefix + 'light', prefix + 'dark');
+                            document.documentElement.classList.add(value);
+                        }
+
+                        localStorage.setItem(name, value);
+                        syncThemeState();
+                    }
+                });
             }
 
             // ── 1. After every Livewire SPA navigation ──
@@ -408,8 +514,10 @@
                 });
             }
 
-            // ── 6. Initial sync on page load ──
+            // ── 6. Initial sync and delegation on page load ──
             syncThemeState();
+            syncCustomizerUI();
+            initThemeDelegation();
             
             // Re-init specialized sidebar behavior on load
             setTimeout(function() {
