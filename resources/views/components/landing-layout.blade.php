@@ -8,6 +8,10 @@
     </title>
     <meta name="description"
         content="{{ \App\Models\SiteSetting::get('meta_description', 'Leading pathology management platform') }}">
+    @php
+        $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
+    @endphp
+    <link rel="shortcut icon" type="image/x-icon" href="{{ $siteFavicon ? asset('storage/' . $siteFavicon) : asset('assets/images/icon.webp') }}" />
 
     <!-- Fonts: Outfit for display, Inter for body -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
