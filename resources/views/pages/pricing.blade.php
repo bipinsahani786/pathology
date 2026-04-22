@@ -70,9 +70,9 @@
                                     </ul>
                                 @endif
 
-                                <a href="{{ route('register.lab') }}"
+                                <a href="#contact"
                                     class="block w-full py-4 text-center rounded-2xl font-bold text-sm {{ $isPopular ? 'bg-gradient-to-r from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50' : 'bg-zinc-900 text-white hover:bg-zinc-800' }} transition-all duration-300 hover:-translate-y-0.5">
-                                    {{ $plan->landing_cta_text ?? 'Get Started' }}
+                                    {{ $plan->landing_cta_text ?? 'Contact Us' }}
                                 </a>
                             </div>
                         </div>
@@ -117,9 +117,9 @@
                     class="text-brand-400">Diagnostic Intelligence</span></h2>
             <p class="text-zinc-400 max-w-2xl mx-auto mb-12 text-lg">Start your free trial today. No credit card
                 required.</p>
-            <a href="{{ route('register.lab') }}"
+            <a href="#contact"
                 class="inline-block px-14 py-5 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-2xl font-bold text-lg shadow-2xl shadow-brand-500/30 hover:-translate-y-1 transition-all duration-300">
-                Start Free Trial
+                Contact Sales
             </a>
         </div>
     </section>

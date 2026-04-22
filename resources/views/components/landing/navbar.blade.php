@@ -81,9 +81,9 @@
                         class="text-sm font-medium text-zinc-600 hover:text-brand-600 transition-colors duration-300">
                         Log In
                     </a>
-                    <a href="{{ route('register.lab') }}"
+                    <a href="{{ url('/#contact') }}"
                         class="text-sm font-semibold text-white bg-zinc-900 hover:bg-brand-600 px-6 py-2.5 rounded-full shadow-md shadow-zinc-900/10 hover:shadow-brand-500/25 transition-all duration-300 transform hover:-translate-y-0.5 focus:ring-4 focus:ring-brand-500/20">
-                        Start Free Trial
+                        Contact Us
                     </a>
                 @endauth
             </div>
@@ -143,9 +143,9 @@
                         class="w-full text-center py-3.5 rounded-xl font-semibold text-zinc-700 border border-zinc-200 hover:bg-zinc-50 transition-all">
                         Log In
                     </a>
-                    <a href="{{ route('register.lab') }}"
+                    <a href="{{ url('/#contact') }}"
                         class="w-full text-center py-3.5 rounded-xl font-semibold text-white bg-brand-600 shadow-lg shadow-brand-500/25 hover:bg-brand-700 transition-all">
-                        Start Free Trial
+                        Contact Us
                     </a>
                 @endauth
             </div>

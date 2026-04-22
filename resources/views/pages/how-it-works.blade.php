@@ -59,7 +59,7 @@
             <h2 class="font-display text-4xl font-bold mb-8 tracking-tight">Ready to <span class="gradient-text">Get Started?</span></h2>
             <p class="text-zinc-500 mb-10 text-lg">See how simple it is to transform your lab operations.</p>
             <div class="flex flex-wrap justify-center gap-4">
-                <a href="{{ route('register.lab') }}" class="px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-2xl font-bold shadow-xl shadow-brand-500/25 hover:-translate-y-1 transition-all duration-300">Start Free Trial</a>
+                <a href="#contact" class="px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-2xl font-bold shadow-xl shadow-brand-500/25 hover:-translate-y-1 transition-all duration-300">Contact Us</a>
                 <a href="{{ route('enquiry') }}" class="px-8 py-4 bg-white text-zinc-700 rounded-2xl font-bold border border-zinc-200 hover:border-brand-300 hover:text-brand-600 transition-all duration-300">Request Demo</a>
             </div>
         </div>

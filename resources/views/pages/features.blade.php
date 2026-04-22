@@ -151,8 +151,8 @@
                     Stop managing paper. Start managing health outcomes.
                 </p>
                 
-                <a href="{{ route('register.lab') }}" class="inline-flex justify-center items-center gap-2 px-10 py-5 bg-white text-brand-600 rounded-full font-bold text-lg shadow-xl shadow-brand-900/20 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    Launch Your Digital Lab <i class="feather-arrow-right"></i>
+                <a href="#contact" class="inline-flex justify-center items-center gap-2 px-10 py-5 bg-white text-brand-600 rounded-full font-bold text-lg shadow-xl shadow-brand-900/20 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                    Contact Us Today <i class="feather-arrow-right"></i>
                 </a>
             </div>
         </section>
