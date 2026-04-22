@@ -14,11 +14,12 @@ return new class extends Migration
     {
         // For Postgres, we need to drop the check constraint and add a new one
         // Laravel's enum() on Postgres creates a CHECK constraint
-        DB::statement("ALTER TABLE enquiries DROP CONSTRAINT IF EXISTS enquiries_enquiry_type_check");
-        
-        // Change the column to include 'website'
-        // We use a raw statement to ensure it works on Postgres
-        DB::statement("ALTER TABLE enquiries ADD CONSTRAINT enquiries_enquiry_type_check CHECK (enquiry_type IN ('contact', 'enquiry', 'demo_request', 'website'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE enquiries DROP CONSTRAINT IF EXISTS enquiries_enquiry_type_check");
+            
+            // Change the column to include 'website'
+            DB::statement("ALTER TABLE enquiries ADD CONSTRAINT enquiries_enquiry_type_check CHECK (enquiry_type IN ('contact', 'enquiry', 'demo_request', 'website'))");
+        }
     }
 
     /**
@@ -26,7 +27,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE enquiries DROP CONSTRAINT IF EXISTS enquiries_enquiry_type_check");
-        DB::statement("ALTER TABLE enquiries ADD CONSTRAINT enquiries_enquiry_type_check CHECK (enquiry_type IN ('contact', 'enquiry', 'demo_request'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE enquiries DROP CONSTRAINT IF EXISTS enquiries_enquiry_type_check");
+            DB::statement("ALTER TABLE enquiries ADD CONSTRAINT enquiries_enquiry_type_check CHECK (enquiry_type IN ('contact', 'enquiry', 'demo_request'))");
+        }
     }
 };
