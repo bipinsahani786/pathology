@@ -5,11 +5,11 @@
                 @php
                     $logoPath = null;
                     if (auth()->user()->company && auth()->user()->company->logo) {
-                        $logoPath = asset('storage/' . auth()->user()->company->logo);
+                        $logoPath = secure_storage_url(auth()->user()->company->logo);
                     } else {
                         $siteLogo = \App\Models\SiteSetting::get('site_logo');
                         if ($siteLogo) {
-                            $logoPath = asset('storage/' . $siteLogo);
+                            $logoPath = secure_storage_url($siteLogo);
                         }
                     }
                 @endphp
@@ -20,7 +20,7 @@
                     <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
                 @endif
 
-                <img src="{{ \App\Models\Configuration::getFor('lab_favicon') ? asset('storage/' . \App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
+                <img src="{{ \App\Models\Configuration::getFor('lab_favicon') ? secure_storage_url(\App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
             </a>
         </div>
         <div class="navbar-content">

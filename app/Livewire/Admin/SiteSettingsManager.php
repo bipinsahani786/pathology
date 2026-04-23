@@ -99,7 +99,7 @@ class SiteSettingsManager extends Component
         $fileFields = ['site_logo', 'site_logo_dark', 'site_favicon', 'hero_image', 'about_image'];
         foreach ($fileFields as $field) {
             if ($this->$field && !is_string($this->$field)) {
-                $path = $this->$field->store('site', 'public');
+                $path = $this->$field->store('site');
                 SiteSetting::set($field, $path, $this->getGroupForField($field));
                 $this->$field = null;
             }

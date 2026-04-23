@@ -57,21 +57,21 @@ class ReportPdfController extends Controller
 
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
-            'pdf_header_image'       => Configuration::getFor('pdf_header_image', $companyId),
-            'pdf_footer_image'       => Configuration::getFor('pdf_footer_image', $companyId),
+            'pdf_header_image'       => storage_base64(Configuration::getFor('pdf_header_image', $companyId)),
+            'pdf_footer_image'       => storage_base64(Configuration::getFor('pdf_footer_image', $companyId)),
             'report_signature_mode'  => Configuration::getFor('report_signature_mode', $companyId) ?: 'global_bottom',
 
             'global_sig_1_name'      => Configuration::getFor('authorized_signatory_name', $companyId) ?: 'Authorized Signatory',
             'global_sig_1_desig'     => Configuration::getFor('authorized_signatory_designation', $companyId) ?: '',
-            'global_sig_1_path'      => Configuration::getFor('signature_image', $companyId),
+            'global_sig_1_path'      => storage_base64(Configuration::getFor('signature_image', $companyId)),
 
             'global_sig_2_name'      => Configuration::getFor('global_sig_2_name', $companyId) ?: '',
             'global_sig_2_desig'     => Configuration::getFor('global_sig_2_desig', $companyId) ?: '',
-            'global_sig_2_path'      => Configuration::getFor('global_sig_2_path', $companyId),
+            'global_sig_2_path'      => storage_base64(Configuration::getFor('global_sig_2_path', $companyId)),
 
             'global_sig_3_name'      => Configuration::getFor('global_sig_3_name', $companyId) ?: '',
             'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', $companyId) ?: '',
-            'global_sig_3_path'      => Configuration::getFor('global_sig_3_path', $companyId),
+            'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', $companyId)),
 
             'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',

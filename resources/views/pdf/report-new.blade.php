@@ -9,15 +9,15 @@
     @php
         // ── Resolve image paths ──
         $headerImgSrc = $settings['pdf_header_image']
-            ? public_path('storage/' . $settings['pdf_header_image'])
+            ? $settings['pdf_header_image']
             : public_path('assets/images/pdf-header.jpeg');
 
         $footerImgSrc = $settings['pdf_footer_image']
-            ? public_path('storage/' . $settings['pdf_footer_image'])
+            ? $settings['pdf_footer_image']
             : public_path('assets/images/pdf-footer.jpeg');
 
         $sigImgSrc = $settings['global_sig_1_path']
-            ? public_path('storage/' . $settings['global_sig_1_path'])
+            ? $settings['global_sig_1_path']
             : (file_exists(public_path('assets/images/signature.jpg'))
                 ? public_path('assets/images/signature.jpg')
                 : null);
@@ -457,7 +457,7 @@
     {{-- ══════════════════ WATERMARK ══════════════════ --}}
     @if(isset($company->logo) && $company->logo)
         <div class="watermark">
-            <img src="{{ public_path('storage/' . $company->logo) }}">
+            <img src="{{ storage_base64($company->logo) }}">
         </div>
     @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
         <div class="watermark">
@@ -552,7 +552,7 @@
                         @if($settings['global_sig_2_name'])
                             <td>
                                 @if($settings['global_sig_2_path'])
-                                    <img class="sign-img" src="{{ public_path('storage/' . $settings['global_sig_2_path']) }}"><br>
+                                    <img class="sign-img" src="{{ $settings['global_sig_2_path'] }}"><br>
                                 @endif
                                 <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
                                 <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
@@ -565,10 +565,10 @@
                             <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
                             <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
                         </td>
-                        @if($settings['global_sig_3_name'])
+                        @if($settings['global_sig_3_path'])
                             <td>
                                 @if($settings['global_sig_3_path'])
-                                    <img class="sign-img" src="{{ public_path('storage/' . $settings['global_sig_3_path']) }}"><br>
+                                    <img class="sign-img" src="{{ $settings['global_sig_3_path'] }}"><br>
                                 @endif
                                 <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
                                 <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>
@@ -772,14 +772,14 @@
                             </td>
                             @if(isset($dept->sig_1_path) && $dept->sig_1_path)
                                 <td>
-                                    <img style="max-height:40px;" src="{{ public_path('storage/' . $dept->sig_1_path) }}"><br>
+                                    <img style="max-height:40px;" src="{{ storage_base64($dept->sig_1_path) }}"><br>
                                     <span class="doc-name">{{ $dept->sig_1_name ?? '' }}</span>
                                     <span class="doc-desig">{{ $dept->sig_1_desig ?? '' }}</span>
                                 </td>
                             @endif
                             @if(isset($dept->sig_2_path) && $dept->sig_2_path)
                                 <td>
-                                    <img style="max-height:40px;" src="{{ public_path('storage/' . $dept->sig_2_path) }}"><br>
+                                    <img style="max-height:40px;" src="{{ storage_base64($dept->sig_2_path) }}"><br>
                                     <span class="doc-name">{{ $dept->sig_2_name ?? '' }}</span>
                                     <span class="doc-desig">{{ $dept->sig_2_desig ?? '' }}</span>
                                 </td>

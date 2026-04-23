@@ -6,11 +6,12 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\{User, UserDetail};
 use Illuminate\Support\Facades\{Auth, Hash, Storage};
+use App\Traits\HasSecureStorage;
 use Illuminate\Validation\Rules\Password;
 
 class PartnerProfile extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, HasSecureStorage;
 
     public $name;
     public $email;
@@ -30,7 +31,7 @@ class PartnerProfile extends Component
         
         // Load profile photo from details
         if ($user->details && $user->details->profile_photo) {
-            $this->profile_photo_url = Storage::url($user->details->profile_photo);
+            $this->profile_photo_url = $this->getSecureUrl($user->details->profile_photo);
         }
     }
 
@@ -53,7 +54,7 @@ class PartnerProfile extends Component
 
         // Handle Photo Upload
         if ($this->new_photo) {
-            $path = $this->new_photo->store('profile-photos', 'public');
+            $path = $this->new_photo->store('profile-photos');
             
             $details = UserDetail::updateOrCreate(
                 ['user_id' => $user->id],
@@ -63,7 +64,7 @@ class PartnerProfile extends Component
                 ]
             );
 
-            $this->profile_photo_url = Storage::url($path);
+            $this->profile_photo_url = $this->getSecureUrl($path);
             $this->new_photo = null;
             
             $this->dispatch('profile-updated');
