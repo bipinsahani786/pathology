@@ -50,8 +50,8 @@
                     </div>
 
                     <div class="reveal delay-2 hidden lg:block relative">
-                        @if($heroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($heroImage))
-                            <img src="{{ asset('storage/' . $heroImage) }}" alt="Lab Background" class="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-multiply">
+                        @if($heroImage && \Illuminate\Support\Facades\Storage::exists($heroImage))
+                            <img src="{{ secure_storage_url($heroImage) }}" alt="Lab Background" class="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-multiply">
                         @endif
                         <div class="relative w-full aspect-[4/3] bg-zinc-100 rounded-[2rem] border border-zinc-200 shadow-2xl overflow-hidden p-2">
                              <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="SWS Pathology Dashboard Mockup" class="w-full h-full object-cover rounded-xl grayscale-[20%]">

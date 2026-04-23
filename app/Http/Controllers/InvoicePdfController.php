@@ -70,8 +70,8 @@ class InvoicePdfController extends Controller
             'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
             'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
             'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
-            'pdf_header_image'       => $showHeader ? $headerImage : null,
-            'pdf_footer_image'       => $showFooter ? $footerImage : null,
+            'pdf_header_image'       => $showHeader ? storage_base64($headerImage) : null,
+            'pdf_footer_image'       => $showFooter ? storage_base64($footerImage) : null,
         ];
 
         // ── QR Code ──

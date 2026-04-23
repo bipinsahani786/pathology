@@ -191,7 +191,7 @@
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 @if($lab_logo)
-                                    <img src="{{ asset('storage/' . $lab_logo) }}" alt="Lab Logo" class="rounded border" style="max-height:80px;max-width:140px;object-fit:contain;">
+                                    <img src="{{ secure_storage_url($lab_logo) }}" alt="Lab Logo" class="rounded border" style="max-height:80px;max-width:140px;object-fit:contain;">
                                 @else
                                     <div class="avatar-text avatar-xl mx-auto rounded" style="background:rgba(59,113,202,0.1);">
                                         <i class="feather-image text-primary" style="font-size:32px;"></i>
@@ -215,7 +215,7 @@
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 @if($lab_favicon)
-                                    <img src="{{ asset('storage/' . $lab_favicon) }}" alt="Favicon" class="rounded border p-1" style="height:48px;width:48px;object-fit:contain;">
+                                    <img src="{{ secure_storage_url($lab_favicon) }}" alt="Favicon" class="rounded border p-1" style="height:48px;width:48px;object-fit:contain;">
                                 @else
                                     <div class="avatar-text avatar-md mx-auto rounded" style="background:rgba(20,184,166,0.1);">
                                         <i class="feather-compass text-teal" style="font-size:24px;"></i>
@@ -547,7 +547,7 @@
                                 <label class="form-label fw-bold fs-11">📄 Custom Header Image</label>
                                 @if($pdf_header_image)
                                     <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
-                                        <img src="{{ asset('storage/' . $pdf_header_image) }}" alt="Header" style="max-height:60px;max-width:100%;object-fit:contain;">
+                                        <img src="{{ secure_storage_url($pdf_header_image) }}" alt="Header" style="max-height:60px;max-width:100%;object-fit:contain;">
                                         <div class="mt-1">
                                             <button wire:click="removeHeaderImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
                                         </div>
@@ -568,7 +568,7 @@
                                 <label class="form-label fw-bold fs-11">📋 Custom Footer Image</label>
                                 @if($pdf_footer_image)
                                     <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
-                                        <img src="{{ asset('storage/' . $pdf_footer_image) }}" alt="Footer" style="max-height:50px;max-width:100%;object-fit:contain;">
+                                        <img src="{{ secure_storage_url($pdf_footer_image) }}" alt="Footer" style="max-height:50px;max-width:100%;object-fit:contain;">
                                         <div class="mt-1">
                                             <button wire:click="removeFooterImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
                                         </div>
@@ -757,7 +757,7 @@
                                         @if($new_signature_image)
                                             <img src="{{ $new_signature_image->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                         @elseif($signature_image)
-                                            <img src="{{ asset('storage/' . $signature_image) }}" class="w-100 h-100 object-fit-contain">
+                                            <img src="{{ secure_storage_url($signature_image) }}" class="w-100 h-100 object-fit-contain">
                                         @else
                                             <i class="feather-upload-cloud fs-4 text-muted"></i>
                                         @endif
@@ -781,7 +781,7 @@
                                         @if($new_global_sig_2)
                                             <img src="{{ $new_global_sig_2->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                         @elseif($global_sig_2_path)
-                                            <img src="{{ asset('storage/' . $global_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
+                                            <img src="{{ secure_storage_url($global_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
                                         @else
                                             <i class="feather-upload-cloud fs-4 text-muted"></i>
                                         @endif
@@ -805,7 +805,7 @@
                                         @if($new_global_sig_3)
                                             <img src="{{ $new_global_sig_3->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                         @elseif($global_sig_3_path)
-                                            <img src="{{ asset('storage/' . $global_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
+                                            <img src="{{ secure_storage_url($global_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
                                         @else
                                             <i class="feather-upload-cloud fs-4 text-muted"></i>
                                         @endif
@@ -858,7 +858,7 @@
                                                 @if($new_dept_sig_1)
                                                     <img src="{{ $new_dept_sig_1->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                                 @elseif($dept_sig_1_path)
-                                                    <img src="{{ asset('storage/' . $dept_sig_1_path) }}" class="w-100 h-100 object-fit-contain">
+                                                    <img src="{{ secure_storage_url($dept_sig_1_path) }}" class="w-100 h-100 object-fit-contain">
                                                 @else
                                                     <i class="feather-plus text-muted"></i>
                                                 @endif
@@ -876,7 +876,7 @@
                                                 @if($new_dept_sig_2)
                                                     <img src="{{ $new_dept_sig_2->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                                 @elseif($dept_sig_2_path)
-                                                    <img src="{{ asset('storage/' . $dept_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
+                                                    <img src="{{ secure_storage_url($dept_sig_2_path) }}" class="w-100 h-100 object-fit-contain">
                                                 @else
                                                     <i class="feather-plus text-muted"></i>
                                                 @endif
@@ -894,7 +894,7 @@
                                                 @if($new_dept_sig_3)
                                                     <img src="{{ $new_dept_sig_3->temporaryUrl() }}" class="w-100 h-100 object-fit-contain">
                                                 @elseif($dept_sig_3_path)
-                                                    <img src="{{ asset('storage/' . $dept_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
+                                                    <img src="{{ secure_storage_url($dept_sig_3_path) }}" class="w-100 h-100 object-fit-contain">
                                                 @else
                                                     <i class="feather-plus text-muted"></i>
                                                 @endif

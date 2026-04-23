@@ -8,11 +8,11 @@
     @php
         // ── Resolve image paths (Mirror of Report) ──
         $headerImgSrc = $settings['pdf_header_image']
-            ? public_path('storage/' . $settings['pdf_header_image'])
+            ? $settings['pdf_header_image']
             : public_path('assets/images/pdf-header.jpeg');
 
         $footerImgSrc = $settings['pdf_footer_image']
-            ? public_path('storage/' . $settings['pdf_footer_image'])
+            ? $settings['pdf_footer_image']
             : public_path('assets/images/pdf-footer.jpeg');
 
         // ── Margins from Settings ──

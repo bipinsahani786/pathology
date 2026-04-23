@@ -34,7 +34,7 @@
                 <div class="flex items-center gap-3">
                     <div class="bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20">
                         @if($siteLogo)
-                            <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}" class="h-10 w-auto">
+                            <img src="{{ secure_storage_url($siteLogo) }}" alt="{{ $siteName }}" class="h-10 w-auto">
                         @else
                             <x-app-logo-icon class="h-8 w-8 text-white" />
                         @endif
@@ -79,7 +79,7 @@
             <div class="flex items-center gap-3 lg:hidden mb-12">
                 <div class="bg-brand-600 p-2.5 rounded-xl">
                     @if($siteLogo)
-                        <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}"
+                        <img src="{{ secure_storage_url($siteLogo) }}" alt="{{ $siteName }}"
                             class="h-8 w-auto brightness-0 invert">
                     @else
                         <x-app-logo-icon class="h-6 w-6 text-white" />

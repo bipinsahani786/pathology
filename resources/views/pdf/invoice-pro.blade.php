@@ -29,8 +29,8 @@ if (!function_exists('getIndianCurrency')) {
     <title>Pro Invoice - {{ $invoice->invoice_number }}</title>
 
     @php
-        $headerImgSrc = $settings['pdf_header_image'] ? public_path('storage/' . $settings['pdf_header_image']) : public_path('assets/images/pdf-header.jpeg');
-        $footerImgSrc = $settings['pdf_footer_image'] ? public_path('storage/' . $settings['pdf_footer_image']) : public_path('assets/images/pdf-footer.jpeg');
+        $headerImgSrc = $settings['pdf_header_image'] ? $settings['pdf_header_image'] : public_path('assets/images/pdf-header.jpeg');
+        $footerImgSrc = $settings['pdf_footer_image'] ? $settings['pdf_footer_image'] : public_path('assets/images/pdf-footer.jpeg');
         
         $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
@@ -98,7 +98,7 @@ if (!function_exists('getIndianCurrency')) {
 <body>
 
     @if($company->logo)
-        <div class="watermark"><img src="{{ public_path('storage/' . $company->logo) }}"></div>
+        <div class="watermark"><img src="{{ storage_base64($company->logo) }}"></div>
     @endif
 
     <header>
