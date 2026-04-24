@@ -192,7 +192,7 @@
                                         <p class="text-muted fs-11 mb-2">{{ $gt->dept?->name ?? 'N/A' }}</p>
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="fs-11 text-muted"><i class="feather-list me-1"></i>{{ is_array($gt->default_parameters) ? count($gt->default_parameters) : 0 }} Params</span>
-                                            <span class="fs-11 text-muted"><i class="feather-tag me-1"></i>₹{{ number_format($gt->suggested_price ?? 0, 2) }} (Sugg.)</span>
+                                            <span class="fs-11 text-muted"><i class="feather-tag me-1"></i>₹{{ number_format($gt->mrp ?? 0, 2) }} (Sugg.)</span>
                                         </div>
                                     </div>
                                 </div>

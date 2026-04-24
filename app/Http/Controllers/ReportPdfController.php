@@ -61,9 +61,27 @@ class ReportPdfController extends Controller
             'results.labTest.dept'
         ])->where('invoice_id', $invoiceId)->firstOrFail();
 
-        // Auth check for non-public access
-        if (!$isPublic && $report->invoice->company_id !== auth()->user()->company_id) {
-            abort(403);
+        // Auth & Isolation check for non-public access
+        if (!$isPublic) {
+            $user = auth()->user();
+            
+            // 1. Company Isolation
+            if ($report->invoice->company_id !== $user->company_id) {
+                abort(403, 'Unauthorized company access.');
+            }
+
+            // 2. Patient Isolation: Patients can only see their own reports
+            if ($user->hasRole('patient') && $report->invoice->patient_id !== $user->id) {
+                abort(403, 'You are not authorized to view this report.');
+            }
+            
+            // 3. Branch Isolation: If enabled, staff can only see their branch's reports
+            $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
+            $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
+            
+            if ($restrictBranch && !$isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
+                abort(403, 'You do not have access to reports from this branch.');
+            }
         }
 
         $companyId = $report->invoice->company_id;
