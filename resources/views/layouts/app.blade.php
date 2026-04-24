@@ -64,8 +64,8 @@
         $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
         $labFavicon = \App\Models\Configuration::getFor('lab_favicon');
         $faviconUrl = $labFavicon 
-            ? asset('storage/' . $labFavicon) 
-            : ($siteFavicon ? asset('storage/' . $siteFavicon) : asset('assets/images/icon.webp'));
+            ? secure_storage_url($labFavicon) 
+            : ($siteFavicon ? secure_storage_url($siteFavicon) : asset('assets/images/icon.webp'));
     @endphp
     <link rel="shortcut icon" type="image/x-icon" href="{{ $faviconUrl }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/bootstrap.min.css') }}" />

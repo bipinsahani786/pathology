@@ -29,7 +29,7 @@
             <div class="flex-shrink-0 z-50 relative">
                 <a href="/" class="flex items-center gap-3 group focus:outline-none">
                     @if($siteLogo)
-                        <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}"
+                        <img src="{{ secure_storage_url($siteLogo) }}" alt="{{ $siteName }}"
                             class="h-10 w-auto transition-transform duration-500 ease-out group-hover:scale-105">
                     @else
                         <div

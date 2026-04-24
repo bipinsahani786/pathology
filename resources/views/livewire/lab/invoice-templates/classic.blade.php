@@ -21,7 +21,7 @@
                 <div class="row mb-4 pb-3 border-bottom">
                     <div class="col-6">
                         @if($company->logo)
-                            <img src="{{ asset('storage/' . $company->logo) }}" alt="Logo" style="max-height:60px;" class="mb-2">
+                            <img src="{{ secure_storage_url($company->logo) }}" alt="Logo" style="max-height:60px;" class="mb-2">
                         @endif
                         <h4 class="fw-bold mb-1">{{ $company->name }}</h4>
                         @if($company->tagline)<p class="fs-11 text-muted mb-1">{{ $company->tagline }}</p>@endif

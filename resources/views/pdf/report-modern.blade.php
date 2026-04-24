@@ -242,7 +242,7 @@
     {{-- Watermark --}}
     @if(isset($company->logo) && $company->logo)
         <div class="watermark">
-            <img src="{{ public_path('storage/' . $company->logo) }}">
+            <img src="{{ storage_base64($company->logo) }}">
         </div>
     @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
         <div class="watermark">
@@ -254,7 +254,7 @@
     @if($settings['pdf_show_header'])
         <header>
             @if($settings['pdf_header_image'])
-                <img src="{{ public_path('storage/' . $settings['pdf_header_image']) }}" class="custom-header-img" alt="Header">
+                <img src="{{ $settings['pdf_header_image'] }}" class="custom-header-img" alt="Header">
             @else
                 <div class="header-content">
                     <div class="header-logo">
@@ -274,7 +274,7 @@
     @if($settings['pdf_show_footer'])
         <footer>
             @if($settings['pdf_footer_image'])
-                <img src="{{ public_path('storage/' . $settings['pdf_footer_image']) }}" class="custom-footer-img" alt="Footer">
+                <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
             @else
                 <div style="text-align: center;">
                     <strong>{{ $company->name }}</strong> - {{ $company->tagline }}<br>
@@ -438,7 +438,7 @@
         <div class="signature-row">
             @if($settings['global_sig_1_path'])
                 <div class="signature-col">
-                    <img src="{{ public_path('storage/' . $settings['global_sig_1_path']) }}" class="signature-img"><br>
+                    <img src="{{ $settings['global_sig_1_path'] }}" class="signature-img"><br>
                     <strong>{{ $settings['global_sig_1_name'] }}</strong><br>
                     {{ $settings['global_sig_1_desig'] }}
                 </div>
@@ -446,7 +446,7 @@
 
             @if($settings['global_sig_2_path'])
                 <div class="signature-col">
-                    <img src="{{ public_path('storage/' . $settings['global_sig_2_path']) }}" class="signature-img"><br>
+                    <img src="{{ $settings['global_sig_2_path'] }}" class="signature-img"><br>
                     <strong>{{ $settings['global_sig_2_name'] }}</strong><br>
                     {{ $settings['global_sig_2_desig'] }}
                 </div>
@@ -454,7 +454,7 @@
 
             @if($settings['global_sig_3_path'])
                 <div class="signature-col">
-                    <img src="{{ public_path('storage/' . $settings['global_sig_3_path']) }}" class="signature-img"><br>
+                    <img src="{{ $settings['global_sig_3_path'] }}" class="signature-img"><br>
                     <strong>{{ $settings['global_sig_3_name'] }}</strong><br>
                     {{ $settings['global_sig_3_desig'] }}
                 </div>

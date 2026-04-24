@@ -14,6 +14,7 @@ class TestReport extends Model
         'invoice_id',
         'patient_id',
         'status',
+        'pdf_path',
         'comments',
         'approved_by',
         'approved_at',

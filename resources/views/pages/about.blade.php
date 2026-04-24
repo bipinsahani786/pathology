@@ -44,8 +44,8 @@
                         <div class="absolute -inset-4 bg-gradient-to-tr from-brand-100 to-indigo-50 blur-2xl rounded-[3rem] group-hover:scale-105 transition-transform duration-700 opacity-70"></div>
                         
                         <div class="relative rounded-[2.5rem] bg-zinc-100 aspect-[4/5] overflow-hidden border border-zinc-200 shadow-2xl">
-                            @if($aboutImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($aboutImage))
-                                <img src="{{ asset('storage/' . $aboutImage) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                            @if($aboutImage && \Illuminate\Support\Facades\Storage::exists($aboutImage))
+                                <img src="{{ secure_storage_url($aboutImage) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                             @else
                                 <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Our Medical Team">
                             @endif

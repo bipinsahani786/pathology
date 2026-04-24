@@ -32,14 +32,27 @@ class InvoicePdfController extends Controller
         if (!$id || !is_numeric($id)) {
             abort(404, 'Invalid Bill Link');
         }
+
+        $invoice = Invoice::find($id);
+        if ($invoice && $invoice->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($invoice->pdf_path)) {
+            $url = \Illuminate\Support\Facades\Storage::disk('r2')->url($invoice->pdf_path);
+            return redirect($url);
+        }
+
         return $this->generateInvoice($id, true, true, true);
     }
 
-    /**
-     * Core logic for Invoice PDF generation
-     */
     private function generateInvoice($id, $showHeader = true, $showFooter = true, $isPublic = false)
     {
+        // ── R2 Offload Check ────────────────────────────────────────────────
+        // If this is a standard full invoice request, try to serve from R2
+        if ($showHeader && $showFooter) {
+            $invoice = Invoice::find($id);
+            if ($invoice && $invoice->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($invoice->pdf_path)) {
+                return redirect(\Illuminate\Support\Facades\Storage::disk('r2')->url($invoice->pdf_path));
+            }
+        }
+
         $invoice = Invoice::with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator', 'company'])
             ->findOrFail($id);
 
@@ -64,12 +77,12 @@ class InvoicePdfController extends Controller
         }
 
         $pdfSettings = [
-            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
-            'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
-            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
-            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
+            'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
             'pdf_header_image'       => $showHeader ? storage_base64($headerImage) : null,
             'pdf_footer_image'       => $showFooter ? storage_base64($footerImage) : null,
         ];
@@ -163,12 +176,12 @@ class InvoicePdfController extends Controller
         }
 
         $pdfSettings = [
-            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
-            'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
-            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
-            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
+            'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
             'pdf_header_image'       => null,
             'pdf_footer_image'       => null,
         ];
