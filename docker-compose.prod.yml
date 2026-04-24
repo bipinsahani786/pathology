@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: pathology-app-prod
+    container_name: pathology_app_prod
+    restart: always
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    env_file:
+      - .env
+    volumes:
+      - app-public:/var/www/public
+      - storage-data:/var/www/storage
+    networks:
+      - pathology-network
+
+  web:
+    image: nginx:alpine
+    container_name: pathology_web_prod
+    restart: always
+    ports:
+      - "90:80"
+    volumes:
+      - app-public:/var/www/public
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - pathology-network
+
+  dbpostgres:
+    image: postgres:15-alpine
+    container_name: pathology_db_prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pathology_saas}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - pathology-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: pathology_redis_prod
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pathology-network
+
+networks:
+  pathology-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  redis-data:
+  app-public:
+  storage-data:
