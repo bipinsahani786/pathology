@@ -7,13 +7,8 @@
 
     @php
         // ── Resolve image paths (Mirror of Report) ──
-        $headerImgSrc = $settings['pdf_header_image']
-            ? $settings['pdf_header_image']
-            : public_path('assets/images/pdf-header.jpeg');
-
-        $footerImgSrc = $settings['pdf_footer_image']
-            ? $settings['pdf_footer_image']
-            : public_path('assets/images/pdf-footer.jpeg');
+        $headerImgSrc = $settings['pdf_header_image'] ?? null;
+        $footerImgSrc = $settings['pdf_footer_image'] ?? null;
 
         // ── Margins from Settings ──
         $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';

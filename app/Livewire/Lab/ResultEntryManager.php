@@ -354,6 +354,15 @@ class ResultEntryManager extends Component
             return;
         }
 
+        // Check if header/footer exists if trying to print with header
+        if ($withHeader) {
+            $header = \App\Models\Configuration::getFor('pdf_header_image');
+            if (!$header) {
+                session()->flash('error', 'Please upload your Letterhead (Header) in Settings before printing with header.');
+                return;
+            }
+        }
+
         $testIds = implode(',', $this->selectedTests);
         $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
              . '?tests=' . $testIds

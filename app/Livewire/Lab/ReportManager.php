@@ -80,6 +80,15 @@ class ReportManager extends Component
             return;
         }
 
+        // Check if header/footer exists if trying to print with header
+        if ($withHeader) {
+            $header = \App\Models\Configuration::getFor('pdf_header_image');
+            if (!$header) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+                return;
+            }
+        }
+
         $testIds = implode(',', $this->selectedTests);
         $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
              . '?tests=' . $testIds
@@ -209,5 +218,19 @@ class ReportManager extends Component
             'agents' => $agents,
             'centers' => $centers,
         ])->layout('layouts.app');
+    }
+
+    public function printReport($invoiceId, $withHeader)
+    {
+        if ($withHeader) {
+            $header = \App\Models\Configuration::getFor('pdf_header_image');
+            if (!$header) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+                return;
+            }
+        }
+        
+        $url = route('lab.reports.print', [$invoiceId, 'new']) . '?header=' . ($withHeader ? '1' : '0');
+        $this->dispatch('open-new-tab', ['url' => $url]);
     }
 }

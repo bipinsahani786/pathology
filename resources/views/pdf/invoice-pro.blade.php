@@ -29,8 +29,8 @@ if (!function_exists('getIndianCurrency')) {
     <title>Pro Invoice - {{ $invoice->invoice_number }}</title>
 
     @php
-        $headerImgSrc = $settings['pdf_header_image'] ? $settings['pdf_header_image'] : public_path('assets/images/pdf-header.jpeg');
-        $footerImgSrc = $settings['pdf_footer_image'] ? $settings['pdf_footer_image'] : public_path('assets/images/pdf-footer.jpeg');
+        $headerImgSrc = $settings['pdf_header_image'] ?? null;
+        $footerImgSrc = $settings['pdf_footer_image'] ?? null;
         
         $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';

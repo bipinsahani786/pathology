@@ -105,13 +105,14 @@ class ReportPdfController extends Controller
             'global_sig_3_name'      => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
             'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
             'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
-
             'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
-            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255,
+            'pdf_margin_top'         => $showHeader ? (Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310) : 30,
+            'pdf_margin_bottom'      => $showHeader ? (Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255) : 30,
             'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
             'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
+            'pdf_header_image'       => $showHeader ? storage_base64(Configuration::getFor('pdf_header_image', null, $companyId)) : null,
+            'pdf_footer_image'       => $showHeader ? storage_base64(Configuration::getFor('pdf_footer_image', null, $companyId)) : null,
 
             // Visibility
             'pdf_show_header'        => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
