@@ -11,10 +11,12 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libpq-dev \
     nodejs \
-    npm
+    npm \
+    postgresql-client
 
 # PHP extensions install 
 RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
+RUN pecl install redis && docker-php-ext-enable redis
 
 # Composer install 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

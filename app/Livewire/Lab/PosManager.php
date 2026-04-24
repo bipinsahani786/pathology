@@ -114,18 +114,24 @@ class PosManager extends Component
         $this->sample_received_at = now()->format('Y-m-d\TH:i');
         $this->addPaymentRow();
 
-        // Cache static dropdown data once on mount
-        $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
-        $this->cachedMemberships = Membership::where('company_id', $companyId)->where('is_active', true)->get();
+        // Cache static dropdown data once for 1 hour (Redis)
+        $this->paymentModesList = \Illuminate\Support\Facades\Cache::remember("payment_modes_{$companyId}", 3600, function() use ($companyId) {
+            return PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
+        });
+        $this->cachedMemberships = \Illuminate\Support\Facades\Cache::remember("memberships_{$companyId}", 3600, function() use ($companyId) {
+            return Membership::where('company_id', $companyId)->where('is_active', true)->get();
+        });
 
-        // Branch-Aware Dropdowns
-        if ($user->hasRole('branch_admin') && $restrictAccess) {
-            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', $user->branch_id)->where('is_active', true)->get();
-            $this->cachedBranches = Branch::where('id', $user->branch_id)->get();
-        } else {
-            $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
-            $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
-        }
+        // Branch-Aware Dropdowns (Cached for 1 hour)
+        $this->cachedCenters = \Illuminate\Support\Facades\Cache::remember("centers_{$companyId}_{$this->branch_id}", 3600, function() use ($companyId, $user, $restrictAccess) {
+            if ($user->hasRole('branch_admin') && $restrictAccess) {
+                return CollectionCenter::where('company_id', $companyId)->where('branch_id', $user->branch_id)->where('is_active', true)->get();
+            }
+            return CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
+        });
+        $this->cachedBranches = \Illuminate\Support\Facades\Cache::remember("branches_{$companyId}", 3600, function() use ($companyId) {
+            return Branch::where('company_id', $companyId)->where('is_active', true)->get();
+        });
     }
 
     // ==========================================

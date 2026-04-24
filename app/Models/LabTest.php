@@ -28,4 +28,15 @@ class LabTest extends Model
     {
         return $this->belongsTo(Department::class, 'department_id');
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($test) {
+            \Illuminate\Support\Facades\Cache::forget("company_tests_{$test->company_id}");
+        });
+
+        static::deleted(function ($test) {
+            \Illuminate\Support\Facades\Cache::forget("company_tests_{$test->company_id}");
+        });
+    }
 }

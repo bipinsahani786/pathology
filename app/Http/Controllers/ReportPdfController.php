@@ -57,32 +57,32 @@ class ReportPdfController extends Controller
 
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
-            'pdf_header_image'       => storage_base64(Configuration::getFor('pdf_header_image', $companyId)),
-            'pdf_footer_image'       => storage_base64(Configuration::getFor('pdf_footer_image', $companyId)),
-            'report_signature_mode'  => Configuration::getFor('report_signature_mode', $companyId) ?: 'global_bottom',
+            'pdf_header_image'       => storage_base64(Configuration::getFor('pdf_header_image', null, $companyId)),
+            'pdf_footer_image'       => storage_base64(Configuration::getFor('pdf_footer_image', null, $companyId)),
+            'report_signature_mode'  => Configuration::getFor('report_signature_mode', null, $companyId) ?: 'global_bottom',
 
-            'global_sig_1_name'      => Configuration::getFor('authorized_signatory_name', $companyId) ?: 'Authorized Signatory',
-            'global_sig_1_desig'     => Configuration::getFor('authorized_signatory_designation', $companyId) ?: '',
-            'global_sig_1_path'      => storage_base64(Configuration::getFor('signature_image', $companyId)),
+            'global_sig_1_name'      => Configuration::getFor('authorized_signatory_name', null, $companyId) ?: 'Authorized Signatory',
+            'global_sig_1_desig'     => Configuration::getFor('authorized_signatory_designation', null, $companyId) ?: '',
+            'global_sig_1_path'      => storage_base64(Configuration::getFor('signature_image', null, $companyId)),
 
-            'global_sig_2_name'      => Configuration::getFor('global_sig_2_name', $companyId) ?: '',
-            'global_sig_2_desig'     => Configuration::getFor('global_sig_2_desig', $companyId) ?: '',
-            'global_sig_2_path'      => storage_base64(Configuration::getFor('global_sig_2_path', $companyId)),
+            'global_sig_2_name'      => Configuration::getFor('global_sig_2_name', '', $companyId) ?: '',
+            'global_sig_2_desig'     => Configuration::getFor('global_sig_2_desig', '', $companyId) ?: '',
+            'global_sig_2_path'      => storage_base64(Configuration::getFor('global_sig_2_path', null, $companyId)),
 
-            'global_sig_3_name'      => Configuration::getFor('global_sig_3_name', $companyId) ?: '',
-            'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', $companyId) ?: '',
-            'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', $companyId)),
+            'global_sig_3_name'      => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
+            'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
+            'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
 
-            'pdf_font_size'          => Configuration::getFor('pdf_font_size', $companyId) ?: 13,
-            'pdf_font_family'        => Configuration::getFor('pdf_font_family', $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', $companyId) ?: 310,
-            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', $companyId) ?: 255,
-            'pdf_header_height'      => Configuration::getFor('pdf_header_height', $companyId) ?: 200,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', $companyId) ?: 180,
+            'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
+            'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255,
+            'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
 
             // Visibility
-            'pdf_show_header'        => Configuration::getFor('pdf_show_header', $companyId) !== '0',
-            'pdf_show_footer'        => Configuration::getFor('pdf_show_footer', $companyId) !== '0',
+            'pdf_show_header'        => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
+            'pdf_show_footer'        => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)

@@ -45,7 +45,19 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - pathology-network
-# 4. Adminer Web Database Manager
+# 4. Redis Cache Container
+  redis:
+    image: redis:7-alpine
+    container_name: pathology_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pathology-network
+
+# 5. Adminer Web Database Manager
   adminer:
     image: adminer
     container_name: pathology_adminer
@@ -62,3 +74,4 @@ networks:
 
 volumes:
   db-data:
+  redis-data:

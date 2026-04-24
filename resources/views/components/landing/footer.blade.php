@@ -26,7 +26,7 @@
             <div class="lg:col-span-4 pr-0 lg:pr-8">
                 <a href="/" class="flex items-center gap-3 mb-6 group inline-flex">
                     @if($siteLogo)
-                        <img src="{{ asset('storage/' . $siteLogo) }}" alt="{{ $siteName }}"
+                        <img src="{{ secure_storage_url($siteLogo) }}" alt="{{ $siteName }}"
                             class="h-9 w-auto brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity">
                     @else
                         <div

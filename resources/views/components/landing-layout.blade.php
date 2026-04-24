@@ -11,7 +11,7 @@
     @php
         $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
     @endphp
-    <link rel="shortcut icon" type="image/x-icon" href="{{ $siteFavicon ? asset('storage/' . $siteFavicon) : asset('assets/images/icon.webp') }}" />
+    <link rel="shortcut icon" type="image/x-icon" href="{{ $siteFavicon ? secure_storage_url($siteFavicon) : asset('assets/images/icon.webp') }}" />
 
     <!-- Fonts: Outfit for display, Inter for body -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

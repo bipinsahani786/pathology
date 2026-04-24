@@ -84,7 +84,7 @@
     <div class="card">
         <div class="header">
             @if($company->logo)
-                <img src="{{ public_path('storage/' . $company->logo) }}" style="max-height:10mm; max-width:10mm;">
+                <img src="{{ storage_base64($company->logo) }}" style="max-height:10mm; max-width:10mm;">
             @else
                 <div class="lab-logo"></div>
             @endif
@@ -94,7 +94,7 @@
         <div class="content clearfix">
             <div class="patient-photo">
                 @if($patient->patientProfile && $patient->patientProfile->photo)
-                    <img src="{{ public_path('storage/' . $patient->patientProfile->photo) }}" style="width:100%; height:100%; object-fit: cover;">
+                    <img src="{{ storage_base64($patient->patientProfile->photo) }}" style="width:100%; height:100%; object-fit: cover;">
                 @else
                     PHOTO
                 @endif
