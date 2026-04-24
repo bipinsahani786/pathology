@@ -86,11 +86,11 @@
 
                         <div class="d-flex align-items-center gap-5">
                             <div class="text-center">
-                                @if($report->status === 'approved')
+                                @if(strtolower($report->status) === 'approved')
                                     <span class="status-badge bg-soft-success text-success border border-success border-opacity-10">
                                         <i class="feather-check-circle me-1"></i> Ready for Download
                                     </span>
-                                @elseif($report->status === 'pending')
+                                @elseif(strtolower($report->status) === 'pending' || strtolower($report->status) === 'draft')
                                     <span class="status-badge bg-soft-warning text-warning border border-warning border-opacity-10">
                                         <i class="feather-clock me-1"></i> Processing...
                                     </span>
@@ -107,7 +107,7 @@
                                     <i class="feather-printer me-2"></i>PRINT BILL
                                 </a>
                                 
-                                @if($report->status === 'approved')
+                                @if(strtolower($report->status) === 'approved')
                                     <a href="{{ route('portal.report.download', $report->id) }}" target="_blank" 
                                        class="btn btn-primary fw-900 fs-11 px-4 py-2 rounded-pill shadow-sm border-0">
                                         <i class="feather-download me-2"></i>GET REPORT

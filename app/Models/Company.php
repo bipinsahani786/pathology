@@ -17,6 +17,8 @@ class Company extends Model
         'status',
         'settings',
         'plan_id',
+        'sales_agent_id',
+        'referred_by',
         'trial_ends_at',
         'website',
         'gst_number',
@@ -31,5 +33,10 @@ class Company extends Model
     public function plan()
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    public function salesAgent()
+    {
+        return $this->belongsTo(SalesAgent::class);
     }
 }

@@ -25,11 +25,19 @@ class LabManager extends Component
     public $adminName;
     public $adminEmail;
     public $adminPassword;
+    public $referredBy; // Legacy field
+    public $salesAgentId; // Professional system
     
     // UI State
     public $editingLabId = null;
     public $isViewModalOpen = false;
     public $selectedLab = null;
+
+    // Renewal / Upgrade State
+    public $isRenewModalOpen = false;
+    public $renewLabId;
+    public $renewPlanId;
+    public $renewAmount;
 
     protected $rules = [
         'labName' => 'required|string|max:255',
@@ -73,17 +81,19 @@ class LabManager extends Component
         });
 
         $plans = \App\Models\Plan::where('is_active', true)->get();
+        $salesAgents = \App\Models\SalesAgent::where('status', 'active')->get();
 
         return view('livewire.admin.lab-manager', [
             'labs' => $labs,
-            'plans' => $plans
+            'plans' => $plans,
+            'salesAgents' => $salesAgents
         ])->layout('layouts.app');
     }
 
     public function openRegistrationModal()
     {
         $this->resetValidation();
-        $this->reset(['editingLabId', 'labName', 'labEmail', 'labPhone', 'labAddress', 'planId', 'adminName', 'adminEmail', 'adminPassword']);
+        $this->reset(['editingLabId', 'labName', 'labEmail', 'labPhone', 'labAddress', 'planId', 'adminName', 'adminEmail', 'adminPassword', 'referredBy', 'salesAgentId']);
         $this->isRegistrationModalOpen = true;
     }
 
@@ -98,6 +108,8 @@ class LabManager extends Component
         $this->labPhone = $lab->phone;
         $this->labAddress = $lab->address;
         $this->planId = $lab->plan_id;
+        $this->referredBy = $lab->referred_by;
+        $this->salesAgentId = $lab->sales_agent_id;
         
         // Find the lab admin user
         $admin = \App\Models\User::where('company_id', $id)
@@ -147,6 +159,8 @@ class LabManager extends Component
                 'phone' => $this->labPhone,
                 'address' => $this->labAddress,
                 'plan_id' => $this->planId,
+                'sales_agent_id' => $this->salesAgentId,
+                'referred_by' => $this->referredBy,
                 'status' => 'active',
                 'trial_ends_at' => now()->addDays($plan->duration_in_days ?? 30),
             ]);
@@ -200,6 +214,8 @@ class LabManager extends Component
                 'phone' => $this->labPhone,
                 'address' => $this->labAddress,
                 'plan_id' => $this->planId,
+                'sales_agent_id' => $this->salesAgentId,
+                'referred_by' => $this->referredBy,
             ]);
 
             // If plan changed, maybe extend trial?
@@ -229,6 +245,59 @@ class LabManager extends Component
 
         session()->flash('success', 'Lab details updated successfully!');
         $this->closeRegistrationModal();
+    }
+
+    public function openRenewModal($id)
+    {
+        $lab = Company::findOrFail($id);
+        $this->renewLabId = $id;
+        $this->renewPlanId = $lab->plan_id;
+        $this->renewAmount = $lab->plan ? $lab->plan->price : 0;
+        $this->isRenewModalOpen = true;
+    }
+
+    public function processRenewal()
+    {
+        $this->validate([
+            'renewPlanId' => 'required|exists:plans,id',
+            'renewAmount' => 'required|numeric|min:0',
+        ]);
+
+        $lab = Company::findOrFail($this->renewLabId);
+        $plan = \App\Models\Plan::findOrFail($this->renewPlanId);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($lab, $plan) {
+            // Calculate commission based on the agent assigned to the lab
+            $agent = $lab->salesAgent;
+            $commission = 0;
+            if ($agent) {
+                $commission = ($this->renewAmount * $agent->commission_rate) / 100;
+            }
+
+            // Create Platform Invoice (Marked as paid since admin is manually renewing)
+            \App\Models\PlatformInvoice::create([
+                'company_id' => $lab->id,
+                'plan_id' => $plan->id,
+                'amount' => $this->renewAmount,
+                'status' => 'paid',
+                'paid_at' => now(),
+                'sales_agent_id' => $lab->sales_agent_id,
+                'agent_commission' => $commission,
+                'payment_method' => 'Manual/Admin',
+            ]);
+
+            // Extend Lab Subscription
+            // If current sub is still active, add to the end of it. Otherwise, start from now.
+            $baseDate = ($lab->trial_ends_at && $lab->trial_ends_at->isFuture()) ? $lab->trial_ends_at : now();
+            
+            $lab->update([
+                'plan_id' => $plan->id,
+                'trial_ends_at' => $baseDate->addDays($plan->duration_in_days ?? 30),
+            ]);
+        });
+
+        session()->flash('success', 'Lab subscription renewed/upgraded successfully!');
+        $this->isRenewModalOpen = false;
     }
 
     public function toggleStatus($id)

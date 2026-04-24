@@ -92,7 +92,7 @@
                                     </td>
                                     <td>
                                         <div class="fs-13 text-dark fw-medium">{{ $lab->email }}</div>
-                                        <div class="text-muted fs-11">{{ $lab->mobile ?? 'No phone' }}</div>
+                                        <div class="text-muted fs-11">{{ $lab->phone ?? 'No phone' }}</div>
                                     </td>
                                     <td>
                                         @if($lab->plan)
@@ -129,11 +129,14 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">
-                                            <button class="btn btn-sm btn-icon btn-soft-primary" wire:click="viewDetails({{ $lab->id }})" title="View Details">
-                                                <i class="feather-eye"></i>
-                                            </button>
+                                            <button class="btn btn-sm btn-icon btn-soft-success" wire:click="openRenewModal({{ $lab->id }})" title="Renew/Upgrade Plan">
+                                                 <i class="feather-refresh-cw"></i>
+                                             </button>
+                                             <button class="btn btn-sm btn-icon btn-soft-primary" wire:click="viewDetails({{ $lab->id }})" title="View Details">
+                                                 <i class="feather-eye"></i>
+                                             </button>
                                             <button class="btn btn-sm btn-icon btn-soft-info" wire:click="editLab({{ $lab->id }})" title="Edit Lab">
-                                                <i class="feather-edit"></i>
+                                                <i class="feather-edit-2"></i>
                                             </button>
                                             <button class="btn btn-sm btn-icon btn-soft-danger" wire:click="toggleStatus({{ $lab->id }})" title="{{ $lab->status === 'active' ? 'Deactivate' : 'Activate' }}">
                                                 <i class="feather-{{ $lab->status === 'active' ? 'slash' : 'check' }}"></i>
@@ -143,7 +146,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="text-muted"><i class="feather-user-x fs-1 d-block mb-2"></i> No labs found in the network.</div>
                                     </td>
                                 </tr>
@@ -201,6 +204,21 @@
                                 <label class="form-label fw-semibold">Lab Full Address <span class="text-danger">*</span></label>
                                 <textarea class="form-control" wire:model.defer="labAddress" rows="2" placeholder="Street, City, ZIP"></textarea>
                                 @error('labAddress') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Assign Sales Agent</label>
+                                <select class="form-select" wire:model.defer="salesAgentId">
+                                    <option value="">No Specific Agent</option>
+                                    @foreach($salesAgents as $agent)
+                                        <option value="{{ $agent->id }}">{{ $agent->name }} ({{ $agent->commission_rate }}%)</option>
+                                    @endforeach
+                                </select>
+                                @error('salesAgentId') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Other Referral / Source</label>
+                                <input type="text" class="form-control" wire:model.defer="referredBy" placeholder="E.g. Website, Self, or Legacy">
+                                @error('referredBy') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -271,6 +289,14 @@
                             <label class="fs-10 text-muted text-uppercase fw-bold mb-1">Phone</label>
                             <div class="fs-13 text-dark fw-medium">{{ $selectedLab->phone ?? 'N/A' }}</div>
                         </div>
+                        <div class="col-12 mt-2">
+                            <label class="fs-10 text-muted text-uppercase fw-bold mb-1">Onboarded Through</label>
+                            @if($selectedLab->salesAgent)
+                                <div class="fs-13 text-success fw-bold"><i class="feather-user me-1"></i>{{ $selectedLab->salesAgent->name }} (Agent)</div>
+                            @else
+                                <div class="fs-13 text-primary fw-bold">{{ $selectedLab->referred_by ?? 'Direct / Unknown' }}</div>
+                            @endif
+                        </div>
                         <div class="col-12 mt-3">
                             <label class="fs-10 text-muted text-uppercase fw-bold mb-1">Address</label>
                             <div class="fs-12 text-muted">{{ $selectedLab->address }}</div>
@@ -294,8 +320,62 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-secondary w-100 py-2 rounded-3 shadow-none fw-bold" wire:click="$set('isViewModalOpen', false)">Close Overview</button>
+                <div class="modal-footer border-top-0 pt-0 hstack gap-2">
+                    <button type="button" class="btn btn-light flex-fill py-2 rounded-3 shadow-none fw-bold" wire:click="$set('isViewModalOpen', false)">Close</button>
+                    <button type="button" class="btn btn-primary flex-fill py-2 rounded-3 shadow-none fw-bold" 
+                        wire:click="editLab({{ $selectedLab->id }}); $set('isViewModalOpen', false);">
+                        <i class="feather-edit-2 me-2"></i>Edit Lab
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Renewal Modal -->
+    @if($isRenewModalOpen)
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5); z-index: 1052;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Renew / Upgrade Subscription</h5>
+                    <button type="button" class="btn-close" wire:click="$set('isRenewModalOpen', false)"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form wire:submit.prevent="processRenewal">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Plan</label>
+                            <select class="form-select" wire:model.live="renewPlanId">
+                                @foreach($plans as $plan)
+                                    <option value="{{ $plan->id }}">{{ $plan->name }} (Rs. {{ $plan->price }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Amount Received (INR)</label>
+                            <input type="number" step="0.01" class="form-control" wire:model="renewAmount">
+                            <div class="fs-11 text-muted mt-1">This amount will be used to calculate agent commission.</div>
+                        </div>
+                        <div class="p-3 bg-light rounded-3 mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fs-12">Plan Price:</span>
+                                <span class="fw-bold">₹{{ number_format($renewAmount, 2) }}</span>
+                            </div>
+                            @php
+                                $currentLab = \App\Models\Company::find($renewLabId);
+                                $commissionRate = $currentLab && $currentLab->salesAgent ? $currentLab->salesAgent->commission_rate : 0;
+                                $estimatedComm = ($renewAmount * $commissionRate) / 100;
+                            @endphp
+                            <div class="d-flex justify-content-between text-success">
+                                <span class="fs-12">Agent Commission ({{ $commissionRate }}%):</span>
+                                <span class="fw-bold">₹{{ number_format($estimatedComm, 2) }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-light" wire:click="$set('isRenewModalOpen', false)">Cancel</button>
+                            <button type="submit" class="btn btn-success px-4">Confirm Renewal</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

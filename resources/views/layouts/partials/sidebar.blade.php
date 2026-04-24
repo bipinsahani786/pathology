@@ -4,12 +4,35 @@
             <a href="{{ url('/') }}" wire:navigate class="b-brand">
                 @php
                     $logoPath = null;
-                    if (auth()->user()->company && auth()->user()->company->logo) {
-                        $logoPath = secure_storage_url(auth()->user()->company->logo);
-                    } else {
+                    $faviconPath = null;
+
+                    // 1. Check for Lab-specific branding
+                    if (auth()->user()->company) {
+                        if (auth()->user()->company->logo) {
+                            $logoPath = secure_storage_url(auth()->user()->company->logo);
+                        }
+                        
+                        $labFavicon = \App\Models\Configuration::getFor('lab_favicon');
+                        if ($labFavicon) {
+                            $faviconPath = secure_storage_url($labFavicon);
+                        }
+                    }
+
+                    // 2. Fallback to Site-wide branding (Superadmin)
+                    if (!$logoPath) {
                         $siteLogo = \App\Models\SiteSetting::get('site_logo');
                         if ($siteLogo) {
                             $logoPath = secure_storage_url($siteLogo);
+                        }
+                    }
+
+                    if (!$faviconPath) {
+                        $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
+                        if ($siteFavicon) {
+                            $faviconPath = secure_storage_url($siteFavicon);
+                        } else {
+                            // Ultimate fallback
+                            $faviconPath = asset('assets/images/icon.webp');
                         }
                     }
                 @endphp
@@ -20,7 +43,7 @@
                     <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
                 @endif
 
-                <img src="{{ \App\Models\Configuration::getFor('lab_favicon') ? secure_storage_url(\App\Models\Configuration::getFor('lab_favicon')) : asset('assets/images/logo-abbr.png') }}" alt="Logo" class="logo logo-sm" />
+                <img src="{{ $faviconPath }}" alt="Logo" class="logo logo-sm" />
             </a>
         </div>
         <div class="navbar-content">
@@ -66,6 +89,12 @@
                         <a href="{{ route('admin.labs') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
                             <span class="nxl-mtext">Labs</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.sales-agents') ? 'active' : '' }}">
+                        <a href="{{ route('admin.sales-agents') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">Sales Agents</span>
                         </a>
                     </li>
 

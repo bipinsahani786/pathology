@@ -223,12 +223,65 @@
             z-index: 9999 !important;
         }
 
+        /* Fix background scroll when modal is open */
+        body:has(.modal.show), 
+        body.modal-open {
+            overflow: hidden !important;
+            padding-right: 0 !important;
+        }
+
+        /* BRUTE FORCE MODAL SCROLL FIX */
+        .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.5);
+            padding: 1rem;
+        }
+
+        .modal.show .modal-dialog {
+            max-height: 95vh;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: auto;
+        }
+
+        .modal.show .modal-content {
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        /* If there's a form directly inside modal-content (common in Livewire) */
+        .modal.show .modal-content > form {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .modal.show .modal-body {
+            overflow-y: auto !important;
+            flex: 1 1 auto;
+        }
+
+        .modal.show .modal-footer {
+            flex-shrink: 0;
+        }
+
         /* THE ULTIMATE BLUR KILLER */
-        body.modal-open>*:not(.modal):not(.modal-backdrop) {
+        body:has(.modal.show) > *:not(.modal):not(.modal-backdrop),
+        body.modal-open > *:not(.modal):not(.modal-backdrop) {
             filter: none !important;
             backdrop-filter: none !important;
         }
 
+        body:has(.modal.show) .nxl-container,
+        body:has(.modal.show) .nxl-navigation,
+        body:has(.modal.show) .nxl-header,
         body.modal-open .nxl-container,
         body.modal-open .nxl-navigation,
         body.modal-open .nxl-header {

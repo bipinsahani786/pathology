@@ -77,19 +77,27 @@
                 </div>
             </div>
 
-            <!-- Stats Card: Active Plans -->
+            <!-- Stats Card: Sales Network -->
             <div class="col-xxl-3 col-md-6">
                 <div class="card stretch stretch-full border-0 shadow-sm rounded-4 h-100">
                     <div class="card-body p-4">
-                        <div class="d-flex align-items-start justify-content-between">
-                            <div class="d-flex gap-4 align-items-center">
-                                <div class="avatar-text avatar-lg bg-soft-info text-info rounded-circle shadow-sm fw-bold text-center" style="width: 54px; height: 54px; line-height: 54px; font-size: 24px;">
-                                    <i class="feather-credit-card"></i>
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div class="d-flex gap-3 align-items-center">
+                                <div class="avatar-text avatar-md bg-soft-secondary text-secondary rounded-circle shadow-sm fw-bold text-center" style="width: 42px; height: 42px; line-height: 42px;">
+                                    <i class="feather-users"></i>
                                 </div>
-                                <div>
-                                    <div class="fs-4 fw-bold text-dark mb-0">{{ $activePlans }} / {{ $totalPlans }}</div>
-                                    <h6 class="fs-13 fw-semibold text-muted mb-0">Active SaaS Plans</h6>
-                                </div>
+                                <h6 class="fs-13 fw-semibold text-muted mb-0">Sales Agents</h6>
+                            </div>
+                            <div class="fs-5 fw-bold text-dark">{{ \App\Models\SalesAgent::count() }}</div>
+                        </div>
+                        <div class="border-top pt-3 mt-2">
+                            <div class="d-flex justify-content-between mb-1 fs-12">
+                                <span class="text-muted">Total Earnings:</span>
+                                <span class="fw-bold text-success">₹{{ number_format($totalCommission, 2) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-12">
+                                <span class="text-muted">Paid Out:</span>
+                                <span class="fw-bold text-danger">₹{{ number_format($totalPayouts, 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -159,6 +167,53 @@
                         <div class="d-grid gap-2">
                             <a href="{{ route('admin.global-tests') }}" wire:navigate class="btn btn-outline-primary shadow-sm"><i class="feather-activity me-2"></i>Global Tests Library</a>
                             <a href="{{ route('admin.plans') }}" wire:navigate class="btn btn-outline-dark shadow-sm"><i class="feather-credit-card me-2"></i>Manage SaaS Plans</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales Performance Row -->
+        <div class="row g-4 mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold text-dark"><i class="feather-trending-up me-2 text-success"></i>Onboarding & Sales Analytics</h6>
+                        <a href="{{ route('admin.sales-agents') }}" wire:navigate class="btn btn-sm btn-light border text-primary fw-bold">Manage Agents</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle mb-0">
+                                <thead class="bg-light fs-11 text-uppercase text-muted fw-bold">
+                                    <tr>
+                                        <th class="ps-4">Sales Person / Source</th>
+                                        <th class="text-center">Total Labs Onboarded</th>
+                                        <th class="text-end pe-4">Estimated MRR Contribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($salesStats as $stat)
+                                        <tr class="border-bottom border-light">
+                                            <td class="ps-4">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-text avatar-xs bg-soft-info text-info me-2 rounded-circle fw-bold text-center" style="width: 30px; height: 30px; line-height: 30px; font-size: 12px;">
+                                                        {{ substr($stat['agent'], 0, 1) }}
+                                                    </div>
+                                                    <span class="fw-bold text-dark">{{ $stat['agent'] }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark border fw-bold px-3 py-1">{{ $stat['total_labs'] }} Labs</span>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <div class="fw-bold text-success">₹{{ number_format($stat['total_revenue'], 2) }}</div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="3" class="text-center py-4">No sales data available yet.</td></tr>
+                                @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
