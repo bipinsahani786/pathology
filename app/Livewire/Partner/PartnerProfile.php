@@ -80,7 +80,7 @@ class PartnerProfile extends Component
         ]);
 
         Auth::user()->update([
-            'password' => Hash::make($this->password)
+            'password' => $this->password
         ]);
 
         $this->reset(['password', 'password_confirmation']);

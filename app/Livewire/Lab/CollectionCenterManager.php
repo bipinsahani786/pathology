@@ -135,7 +135,7 @@ class CollectionCenterManager extends Component
                     'is_active' => $this->is_active,
                 ];
                 if ($this->password) {
-                    $userData['password'] = Hash::make($this->password);
+                    $userData['password'] = $this->password;
                 }
                 $user->update($userData);
             } elseif ($this->phone || $this->email) {
@@ -145,7 +145,7 @@ class CollectionCenterManager extends Component
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null,
-                    'password' => Hash::make($this->password ?? $this->phone ?? '12345678'),
+                    'password' => $this->password ?? $this->phone ?? '12345678',
                     'is_active' => $this->is_active,
                 ]);
 

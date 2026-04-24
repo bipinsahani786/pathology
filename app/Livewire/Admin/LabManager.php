@@ -27,7 +27,7 @@ class LabManager extends Component
     public $adminPassword;
     public $referredBy; // Legacy field
     public $salesAgentId; // Professional system
-    
+
     // UI State
     public $editingLabId = null;
     public $isViewModalOpen = false;
@@ -69,7 +69,7 @@ class LabManager extends Component
 
         $labs = $query->orderBy('created_at', 'desc')
             ->paginate(10);
-            
+
         // Calculate days left for each lab row
         $labs->getCollection()->transform(function ($lab) {
             if ($lab->trial_ends_at) {
@@ -102,7 +102,7 @@ class LabManager extends Component
         $this->resetValidation();
         $this->editingLabId = $id;
         $lab = Company::findOrFail($id);
-        
+
         $this->labName = $lab->name;
         $this->labEmail = $lab->email;
         $this->labPhone = $lab->phone;
@@ -110,12 +110,12 @@ class LabManager extends Component
         $this->planId = $lab->plan_id;
         $this->referredBy = $lab->referred_by;
         $this->salesAgentId = $lab->sales_agent_id;
-        
+
         // Find the lab admin user
         $admin = \App\Models\User::where('company_id', $id)
             ->role('lab_admin')
             ->first();
-            
+
         if ($admin) {
             $this->adminName = $admin->name;
             $this->adminEmail = $admin->email;
@@ -128,12 +128,12 @@ class LabManager extends Component
     public function viewDetails($id)
     {
         $this->selectedLab = Company::with(['plan'])->findOrFail($id);
-        
+
         // Add stats or more info if needed
         $this->selectedLab->admin = \App\Models\User::where('company_id', $id)
             ->role('lab_admin')
             ->first();
-            
+
         $this->isViewModalOpen = true;
     }
 
@@ -176,7 +176,7 @@ class LabManager extends Component
             $user = \App\Models\User::create([
                 'name' => $this->adminName,
                 'email' => $this->adminEmail,
-                'password' => \Illuminate\Support\Facades\Hash::make($this->adminPassword),
+                'password' => $this->adminPassword,
                 'company_id' => $company->id,
                 'branch_id' => $branch->id,
                 'is_active' => true,
@@ -230,14 +230,14 @@ class LabManager extends Component
             $admin = \App\Models\User::where('company_id', $this->editingLabId)
                 ->role('lab_admin')
                 ->first();
-                
+
             if ($admin) {
                 $userData = [
                     'name' => $this->adminName,
                     'email' => $this->adminEmail,
                 ];
                 if ($this->adminPassword) {
-                    $userData['password'] = \Illuminate\Support\Facades\Hash::make($this->adminPassword);
+                    $userData['password'] = $this->adminPassword;
                 }
                 $admin->update($userData);
             }
@@ -289,7 +289,7 @@ class LabManager extends Component
             // Extend Lab Subscription
             // If current sub is still active, add to the end of it. Otherwise, start from now.
             $baseDate = ($lab->trial_ends_at && $lab->trial_ends_at->isFuture()) ? $lab->trial_ends_at : now();
-            
+
             $lab->update([
                 'plan_id' => $plan->id,
                 'trial_ends_at' => $baseDate->addDays($plan->duration_in_days ?? 30),

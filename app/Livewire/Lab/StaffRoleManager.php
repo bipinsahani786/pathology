@@ -103,7 +103,7 @@ class StaffRoleManager extends Component
             ];
 
             if ($this->password) {
-                $data['password'] = Hash::make($this->password);
+                $data['password'] = $this->password;
             }
 
             if ($this->staff_id) {
