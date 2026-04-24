@@ -29,7 +29,7 @@ services:
       - pathology-network
 
   # 3. PostgreSQL Database Container
-  dbpostgres:
+  db:
     image: postgres:15-alpine
     container_name: pathology_db
     restart: unless-stopped
@@ -63,7 +63,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - dbpostgres
+      - db
     networks:
       - pathology-network
 
@@ -81,7 +81,7 @@ services:
       - app
       - dbpostgres
       - redis
-    command: ["php", "artisan", "schedule:work"]
+    command: [ "php", "artisan", "schedule:work" ]
     networks:
       - pathology-network
 networks:

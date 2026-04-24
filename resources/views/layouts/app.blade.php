@@ -568,6 +568,46 @@
                         if (url) window.open(url, '_blank');
                     });
 
+                    Livewire.on('notify', function(data) {
+                        var info = Array.isArray(data) ? data[0] : data;
+                        
+                        // Create a simple toast if no library is present
+                        const toast = document.createElement('div');
+                        toast.className = `fixed top-5 right-5 z-[9999] p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-20px] opacity-0 flex items-center gap-3`;
+                        toast.style.backgroundColor = info.type === 'error' ? '#fee2e2' : '#dcfce7';
+                        toast.style.borderColor = info.type === 'error' ? '#fecaca' : '#bbf7d0';
+                        toast.style.color = info.type === 'error' ? '#991b1b' : '#166534';
+                        toast.style.position = 'fixed';
+                        toast.style.top = '20px';
+                        toast.style.right = '20px';
+                        toast.style.minWidth = '300px';
+                        
+                        toast.innerHTML = `
+                            <div style="background: ${info.type === 'error' ? '#ef4444' : '#22c55e'}; color: white; padding: 4px; rounded-full: 9999px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;">
+                                <i class="feather-${info.type === 'error' ? 'alert-circle' : 'check'}"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${info.type === 'error' ? 'Error' : 'Success'}</h4>
+                                <p style="margin: 0; font-size: 13px; font-weight: 500; opacity: 0.9;">${info.message}</p>
+                            </div>
+                        `;
+                        
+                        document.body.appendChild(toast);
+                        
+                        // Animate in
+                        setTimeout(() => {
+                            toast.style.opacity = '1';
+                            toast.style.transform = 'translateY(0)';
+                        }, 10);
+                        
+                        // Remove after 5 seconds
+                        setTimeout(() => {
+                            toast.style.opacity = '0';
+                            toast.style.transform = 'translateY(-20px)';
+                            setTimeout(() => toast.remove(), 300);
+                        }, 5000);
+                    });
+
                     Livewire.on('print-window', function() {
                         window.print();
                     });

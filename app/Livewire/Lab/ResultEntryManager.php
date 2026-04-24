@@ -358,7 +358,7 @@ class ResultEntryManager extends Component
         if ($withHeader) {
             $header = \App\Models\Configuration::getFor('pdf_header_image');
             if (!$header) {
-                session()->flash('error', 'Please upload your Letterhead (Header) in Settings before printing with header.');
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
                 return;
             }
         }

@@ -111,7 +111,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5 text-muted">No agents found.</td>
+                                    <td colspan="9" class="text-center py-5 text-muted bg-light/30">No agents found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
