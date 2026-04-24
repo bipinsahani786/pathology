@@ -50,7 +50,7 @@ class PatientProfile extends Component
         ]);
 
         Auth::user()->update([
-            'password' => Hash::make($this->password)
+            'password' => $this->password
         ]);
 
         $this->password = '';
