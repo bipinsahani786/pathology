@@ -146,7 +146,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5 bg-light/30">
                                         <div class="text-muted"><i class="feather-user-x fs-1 d-block mb-2"></i> No labs found in the network.</div>
                                     </td>
                                 </tr>

@@ -96,7 +96,8 @@ Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, '
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', Login::class)->name('login');
-
+    Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
+    Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
 // Route::get('/register-lab', RegisterCompany::class)->name('register.lab');
 });
 

@@ -42,12 +42,14 @@ class ReportPdfController extends Controller
     {
         // ── R2 Offload Check ────────────────────────────────────────────────
         // If this is a standard full report request, try to serve from R2
+        /*
         if ($request->get('header', '1') === '1' && !$request->has('tests')) {
             $report = TestReport::where('invoice_id', $invoiceId)->first();
             if ($report && $report->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($report->pdf_path)) {
                 return redirect(\Illuminate\Support\Facades\Storage::disk('r2')->url($report->pdf_path));
             }
         }
+        */
 
         ini_set('max_execution_time', 3000);
         ini_set('memory_limit', '512M');
@@ -88,10 +90,13 @@ class ReportPdfController extends Controller
         $companyId = $report->invoice->company_id;
         $showHeader = $request->get('header', '1') === '1';
 
+        $headerImage = Configuration::getFor('pdf_header_image', null, $companyId);
+        $footerImage = Configuration::getFor('pdf_footer_image', null, $companyId);
+
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
-            'pdf_header_image'       => storage_base64(Configuration::getFor('pdf_header_image', null, $companyId)),
-            'pdf_footer_image'       => storage_base64(Configuration::getFor('pdf_footer_image', null, $companyId)),
+            'pdf_header_image'       => storage_base64($headerImage),
+            'pdf_footer_image'       => storage_base64($footerImage),
             'report_signature_mode'  => Configuration::getFor('report_signature_mode', null, $companyId) ?: 'global_bottom',
 
             'global_sig_1_name'      => Configuration::getFor('authorized_signatory_name', null, $companyId) ?: 'Authorized Signatory',
@@ -107,12 +112,12 @@ class ReportPdfController extends Controller
             'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
             'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => $showHeader ? (Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310) : 30,
-            'pdf_margin_bottom'      => $showHeader ? (Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255) : 30,
+            'pdf_margin_top'         => ($showHeader && $headerImage) ? (Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310) : 30,
+            'pdf_margin_bottom'      => ($settings['pdf_show_footer'] ?? true && $footerImage) ? (Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255) : 30,
             'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
             'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
-            'pdf_header_image'       => $showHeader ? storage_base64(Configuration::getFor('pdf_header_image', null, $companyId)) : null,
-            'pdf_footer_image'       => $showHeader ? storage_base64(Configuration::getFor('pdf_footer_image', null, $companyId)) : null,
+            'pdf_header_image'       => ($showHeader && $headerImage) ? storage_base64($headerImage) : null,
+            'pdf_footer_image'       => ($settings['pdf_show_footer'] ?? true && $footerImage) ? storage_base64($footerImage) : null,
 
             // Visibility
             'pdf_show_header'        => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
