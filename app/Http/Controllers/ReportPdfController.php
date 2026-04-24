@@ -76,6 +76,7 @@ class ReportPdfController extends Controller
             }
             
             // 3. Branch Isolation: If enabled, staff can only see their branch's reports
+            $companyId = $user->company_id;
             $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
             $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
             

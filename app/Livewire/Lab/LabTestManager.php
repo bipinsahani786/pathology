@@ -85,6 +85,7 @@ class LabTestManager extends Component
 
     public function render()
     {
+        $companyId = auth()->user()->company_id;
         $labTestService = new LabTestService();
         $tests = $labTestService->getPaginatedTests($this->searchTerm, $this->filterCategory, 12);
         $globalTests = $labTestService->searchGlobalTests($this->globalSearch, $this->globalLimit);
