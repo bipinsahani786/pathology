@@ -56,7 +56,22 @@ services:
       - redis-data:/data
     networks:
       - pathology-network
-
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pathology_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - app
+      - dbpostgres
+      - redis
+    command: ["php", "artisan", "schedule:work"]
+    networks:
+      - pathology-network
 networks:
   pathology-network:
     driver: bridge
