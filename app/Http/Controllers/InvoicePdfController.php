@@ -57,9 +57,25 @@ class InvoicePdfController extends Controller
             ->findOrFail($id);
 
         if (!$isPublic) {
-            $companyId = auth()->user()->company_id;
-            if ($invoice->company_id !== $companyId) {
-                abort(403);
+            $user = auth()->user();
+            
+            // 1. Company Isolation
+            if ($invoice->company_id !== $user->company_id) {
+                abort(403, 'Unauthorized company access.');
+            }
+
+            // 2. Patient Isolation: Patients can only see their own invoices
+            if ($user->hasRole('patient') && $invoice->patient_id !== $user->id) {
+                abort(403, 'You are not authorized to view this invoice.');
+            }
+
+            // 3. Branch Isolation: If enabled, staff can only see their branch's invoices
+            $companyId = $user->company_id;
+            $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
+            $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
+
+            if ($restrictBranch && !$isGlobalAdmin && $invoice->branch_id !== $user->branch_id) {
+                abort(403, 'You do not have access to invoices from this branch.');
             }
         } else {
             $companyId = $invoice->company_id;

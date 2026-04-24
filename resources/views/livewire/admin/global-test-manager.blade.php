@@ -100,7 +100,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark fs-14">₹{{ number_format($test->suggested_price ?? 0, 2) }}</div>
+                                        <div class="fw-bold text-dark fs-14">₹{{ number_format($test->mrp ?? 0, 2) }}</div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">
