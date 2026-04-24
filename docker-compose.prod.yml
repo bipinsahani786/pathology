@@ -59,12 +59,10 @@ services:
   scheduler:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
     container_name: pathology_scheduler
     restart: unless-stopped
     working_dir: /var/www
-    volumes:
-      - ./:/var/www
     depends_on:
       - app
       - dbpostgres
