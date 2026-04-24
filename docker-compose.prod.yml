@@ -22,7 +22,7 @@ services:
     container_name: pathology_web_prod
     restart: always
     ports:
-      - "80:80"
+      - "90:80"
       - "443:443" # For SSL if you configure it later
     volumes:
       - app-public:/var/www/public
