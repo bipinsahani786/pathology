@@ -19,11 +19,15 @@ class Configuration extends Model
         $companyId = $companyId ?: (auth()->user()->company_id ?? null);
         if (!$companyId) return $default;
 
-        $config = static::where('company_id', $companyId)
-            ->where('config_key', $key)
-            ->first();
+        $cacheKey = "config_{$companyId}_{$key}";
 
-        return $config ? $config->config_value : $default;
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($companyId, $key, $default) {
+            $config = static::where('company_id', $companyId)
+                ->where('config_key', $key)
+                ->first();
+
+            return $config ? $config->config_value : $default;
+        });
     }
 
     /**
@@ -37,5 +41,7 @@ class Configuration extends Model
             ['company_id' => $companyId, 'config_key' => $key],
             ['config_value' => $value]
         );
+
+        \Illuminate\Support\Facades\Cache::forget("config_{$companyId}_{$key}");
     }
 }

@@ -141,6 +141,35 @@ class Dashboard extends Component
                 ->orderByDesc('total_income')
                 ->take(5)->get();
 
+            $topCCs = Invoice::where('company_id', $companyId)
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->whereBetween('invoice_date', [$start, $end])
+                ->with('collectionCenter')
+                ->select('collection_center_id', DB::raw('SUM(total_amount) as total_income'), DB::raw('COUNT(*) as total_bills'))
+                ->groupBy('collection_center_id')
+                ->orderByDesc('total_income')
+                ->take(5)->get();
+
+            $topDoctors = Invoice::where('company_id', $companyId)
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->whereBetween('invoice_date', [$start, $end])
+                ->whereNotNull('referred_by_doctor_id')
+                ->with(['doctor' => fn($q) => $q->select('id', 'name')])
+                ->select('referred_by_doctor_id', DB::raw('SUM(total_amount) as total_income'))
+                ->groupBy('referred_by_doctor_id')
+                ->orderByDesc('total_income')
+                ->take(5)->get();
+
+            $topAgents = Invoice::where('company_id', $companyId)
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->whereBetween('invoice_date', [$start, $end])
+                ->whereNotNull('referred_by_agent_id')
+                ->with(['agent' => fn($q) => $q->select('id', 'name')])
+                ->select('referred_by_agent_id', DB::raw('SUM(total_amount) as total_income'))
+                ->groupBy('referred_by_agent_id')
+                ->orderByDesc('total_income')
+                ->take(5)->get();
+
             // 5. Chart Data
             $chartRawData = Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
@@ -153,39 +182,35 @@ class Dashboard extends Component
                 )
                 ->groupBy('date')->orderBy('date')->get();
 
-            return compact('stats', 'ops', 'financials', 'topPackages', 'topTests', 'chartRawData');
+            $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
+                ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
+                ->join('departments', 'lab_tests.department_id', '=', 'departments.id')
+                ->select('departments.name as dept_name', DB::raw('COUNT(*) as test_count'))
+                ->groupBy('dept_name')
+                ->orderByDesc('test_count')
+                ->get();
+
+            $paymentData = Payment::where('payments.company_id', $companyId)
+                ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
+                ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
+                ->whereBetween('payments.created_at', [$start, $end])
+                ->join('payment_modes', 'payments.payment_mode_id', '=', 'payment_modes.id')
+                ->select('payment_modes.name as mode_name', DB::raw('SUM(payments.amount) as total_collected'))
+                ->groupBy('mode_name')
+                ->orderByDesc('total_collected')
+                ->get();
+
+            $channelData = Invoice::where('invoices.company_id', $companyId)
+                ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
+                ->whereBetween('invoices.invoice_date', [$start, $end])
+                ->select(DB::raw("COALESCE(collection_type, 'Direct') as channel"), DB::raw('COUNT(*) as count'))
+                ->groupBy('channel')
+                ->get();
+
+            return compact('stats', 'ops', 'financials', 'topPackages', 'topTests', 'topCCs', 'topDoctors', 'topAgents', 'chartRawData', 'deptData', 'paymentData', 'channelData');
         });
 
         // Other non-cached or lightweight data
-        $topCCs = Invoice::where('company_id', $companyId)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('invoice_date', [$start, $end])
-            ->with('collectionCenter')
-            ->select('collection_center_id', DB::raw('SUM(total_amount) as total_income'), DB::raw('COUNT(*) as total_bills'))
-            ->groupBy('collection_center_id')
-            ->orderByDesc('total_income')
-            ->take(5)->get();
-
-        $topDoctors = Invoice::where('company_id', $companyId)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('invoice_date', [$start, $end])
-            ->whereNotNull('referred_by_doctor_id')
-            ->with(['doctor' => fn($q) => $q->select('id', 'name')])
-            ->select('referred_by_doctor_id', DB::raw('SUM(total_amount) as total_income'))
-            ->groupBy('referred_by_doctor_id')
-            ->orderByDesc('total_income')
-            ->take(5)->get();
-
-        $topAgents = Invoice::where('company_id', $companyId)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereBetween('invoice_date', [$start, $end])
-            ->whereNotNull('referred_by_agent_id')
-            ->with(['agent' => fn($q) => $q->select('id', 'name')])
-            ->select('referred_by_agent_id', DB::raw('SUM(total_amount) as total_income'))
-            ->groupBy('referred_by_agent_id')
-            ->orderByDesc('total_income')
-            ->take(5)->get();
-
         $staffActivity = [
             'active_admins' => User::where('company_id', $companyId)
                 ->whereHas('roles', fn($q) => $q->where('name', 'like', '%admin%'))
@@ -197,31 +222,9 @@ class Dashboard extends Component
 
         // 6. CHART DATA
         $chartRawData = $data['chartRawData'];
-        
-        $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
-            ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
-            ->join('departments', 'lab_tests.department_id', '=', 'departments.id')
-            ->select('departments.name as dept_name', DB::raw('COUNT(*) as test_count'))
-            ->groupBy('dept_name')
-            ->orderByDesc('test_count')
-            ->get();
-
-        $paymentData = Payment::where('payments.company_id', $companyId)
-            ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
-            ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
-            ->whereBetween('payments.created_at', [$start, $end])
-            ->join('payment_modes', 'payments.payment_mode_id', '=', 'payment_modes.id')
-            ->select('payment_modes.name as mode_name', DB::raw('SUM(payments.amount) as total_collected'))
-            ->groupBy('mode_name')
-            ->orderByDesc('total_collected')
-            ->get();
-
-        $channelData = Invoice::where('invoices.company_id', $companyId)
-            ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
-            ->whereBetween('invoices.invoice_date', [$start, $end])
-            ->select(DB::raw("COALESCE(collection_type, 'Direct') as channel"), DB::raw('COUNT(*) as count'))
-            ->groupBy('channel')
-            ->get();
+        $deptData = $data['deptData'];
+        $paymentData = $data['paymentData'];
+        $channelData = $data['channelData'];
 
         return view('livewire.lab.dashboard', [
             'daysLeft' => $daysLeft,
@@ -230,9 +233,9 @@ class Dashboard extends Component
             'financials' => $data['financials'],
             'topPackages' => $data['topPackages'],
             'topTests' => $data['topTests'],
-            'topCCs' => $topCCs,
-            'topDoctors' => $topDoctors,
-            'topAgents' => $topAgents,
+            'topCCs' => $data['topCCs'],
+            'topDoctors' => $data['topDoctors'],
+            'topAgents' => $data['topAgents'],
             'staffActivity' => $staffActivity,
             // Chart 1
             'chartLabels' => $chartRawData->pluck('date')->map(fn($d) => Carbon::parse($d)->format('d M'))->toArray(),

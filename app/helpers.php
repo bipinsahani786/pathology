@@ -56,16 +56,19 @@ if (!function_exists('storage_base64')) {
     {
         if (!$path) return null;
 
-        try {
-            if (Storage::exists($path)) {
-                $content = Storage::get($path);
-                $mime = Storage::mimeType($path);
-                return 'data:' . $mime . ';base64,' . base64_encode($content);
-            }
-        } catch (\Exception $e) {
-            // Ignore
-        }
+        $cacheKey = "base64_" . md5($path);
 
-        return null;
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function() use ($path) {
+            try {
+                if (Storage::exists($path)) {
+                    $content = Storage::get($path);
+                    $mime = Storage::mimeType($path);
+                    return 'data:' . $mime . ';base64,' . base64_encode($content);
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+            return null;
+        });
     }
 }

@@ -32,14 +32,27 @@ class InvoicePdfController extends Controller
         if (!$id || !is_numeric($id)) {
             abort(404, 'Invalid Bill Link');
         }
+
+        $invoice = Invoice::find($id);
+        if ($invoice && $invoice->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($invoice->pdf_path)) {
+            $url = \Illuminate\Support\Facades\Storage::disk('r2')->url($invoice->pdf_path);
+            return redirect($url);
+        }
+
         return $this->generateInvoice($id, true, true, true);
     }
 
-    /**
-     * Core logic for Invoice PDF generation
-     */
     private function generateInvoice($id, $showHeader = true, $showFooter = true, $isPublic = false)
     {
+        // ── R2 Offload Check ────────────────────────────────────────────────
+        // If this is a standard full invoice request, try to serve from R2
+        if ($showHeader && $showFooter) {
+            $invoice = Invoice::find($id);
+            if ($invoice && $invoice->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($invoice->pdf_path)) {
+                return redirect(\Illuminate\Support\Facades\Storage::disk('r2')->url($invoice->pdf_path));
+            }
+        }
+
         $invoice = Invoice::with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator', 'company'])
             ->findOrFail($id);
 

@@ -27,14 +27,28 @@ class ReportPdfController extends Controller
      */
     public function streamPublicLink($id)
     {
+        $report = TestReport::where('invoice_id', $id)->first();
+        if ($report && $report->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($report->pdf_path)) {
+            // Get public URL from R2
+            $url = \Illuminate\Support\Facades\Storage::disk('r2')->url($report->pdf_path);
+            return redirect($url);
+        }
+
+        // If not pre-generated, generate now (and optionally save)
         return $this->generateReport(new Request(['header' => '1']), $id, 'new', true);
     }
 
-    /**
-     * Common method for report generation
-     */
     private function generateReport(Request $request, $invoiceId, $template, $isPublic = false)
     {
+        // ── R2 Offload Check ────────────────────────────────────────────────
+        // If this is a standard full report request, try to serve from R2
+        if ($request->get('header', '1') === '1' && !$request->has('tests')) {
+            $report = TestReport::where('invoice_id', $invoiceId)->first();
+            if ($report && $report->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($report->pdf_path)) {
+                return redirect(\Illuminate\Support\Facades\Storage::disk('r2')->url($report->pdf_path));
+            }
+        }
+
         ini_set('max_execution_time', 3000);
         ini_set('memory_limit', '512M');
 

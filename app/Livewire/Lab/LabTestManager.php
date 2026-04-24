@@ -89,11 +89,13 @@ class LabTestManager extends Component
         $tests = $labTestService->getPaginatedTests($this->searchTerm, $this->filterCategory, 12);
         $globalTests = $labTestService->searchGlobalTests($this->globalSearch, $this->globalLimit);
         
-        $departments = Department::forCompany(auth()->user()->company_id)
-            ->where('is_active', true)
-            ->orderBy('is_system', 'desc')
-            ->orderBy('name')
-            ->get();
+        $departments = \Illuminate\Support\Facades\Cache::remember("departments_{$companyId}", 3600, function() use ($companyId) {
+            return Department::forCompany($companyId)
+                ->where('is_active', true)
+                ->orderBy('is_system', 'desc')
+                ->orderBy('name')
+                ->get();
+        });
 
         $importedGlobalTestIds = \App\Models\LabTest::where('company_id', auth()->user()->company_id)
             ->whereNotNull('global_test_id')

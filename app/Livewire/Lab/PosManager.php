@@ -868,6 +868,15 @@ class PosManager extends Component
             $commissionService->applyCommissions($invoice);
 
             DB::commit();
+
+            // Pre-generate Invoice PDF for R2 offloading
+            try {
+                $pdfService = new \App\Services\PdfStorageService();
+                $pdfService->storeInvoicePdf($invoice);
+            } catch (\Exception $e) {
+                Log::error("Failed to pre-generate Invoice PDF: " . $e->getMessage());
+            }
+
             session()->flash('message', '✅ Bill Generated! Invoice: ' . $invoiceNumber);
 
             $this->cart = [];

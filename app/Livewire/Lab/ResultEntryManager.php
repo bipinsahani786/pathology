@@ -319,6 +319,15 @@ class ResultEntryManager extends Component
         if ($status === 'Approved') {
             $this->invoice->update(['sample_status' => 'Ready']);
             session()->flash('success', 'Report Approved Successfully and ready for printing.');
+
+            // Pre-generate PDF for R2 offloading
+            try {
+                $pdfService = new \App\Services\PdfStorageService();
+                $pdfService->storeReportPdf($this->testReport);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to pre-generate PDF: " . $e->getMessage());
+            }
+
             return redirect()->route('lab.reports');
         } else {
             session()->flash('success', 'Draft Saved Successfully.');

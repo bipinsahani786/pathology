@@ -786,6 +786,15 @@ class PosEditManager extends Component
             $commissionService->applyCommissions($invoice);
 
             DB::commit();
+
+            // Re-generate Invoice PDF for R2 offloading
+            try {
+                $pdfService = new \App\Services\PdfStorageService();
+                $pdfService->storeInvoicePdf($invoice);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to re-generate Invoice PDF: " . $e->getMessage());
+            }
+
             session()->flash('message', '✅ Invoice updated successfully!');
             return redirect()->route('lab.pos.summary', $invoice->id);
         } catch (\Exception $e) {
