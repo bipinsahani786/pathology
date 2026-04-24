@@ -181,8 +181,8 @@
                                                         @endcan
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print All Tests</li>
-                                                        <li><a class="dropdown-item fs-12 text-primary" href="{{ route('lab.reports.print', [$invoice->id, 'new']) }}?header=1" target="_blank"><i class="feather-file-text me-2"></i> With Header</a></li>
-                                                        <li><a class="dropdown-item fs-12 text-secondary" href="{{ route('lab.reports.print', [$invoice->id, 'new']) }}?header=0" target="_blank"><i class="feather-file me-2"></i> Without Header</a></li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-primary" wire:click="printReport({{ $invoice->id }}, 1)"><i class="feather-file-text me-2"></i> With Header</button></li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-secondary" wire:click="printReport({{ $invoice->id }}, 0)"><i class="feather-file me-2"></i> Without Header</button></li>
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print Selected Tests</li>
                                                         <li><button type="button" class="dropdown-item fs-12 text-success fw-bold" wire:click="printSelected({{ $invoice->id }}, 1)"><i class="feather-check-square me-2"></i> With Header</button></li>

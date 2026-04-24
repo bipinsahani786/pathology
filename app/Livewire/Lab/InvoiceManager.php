@@ -223,4 +223,19 @@ class InvoiceManager extends Component
             session()->flash('error', 'Critical Error: ' . $th->getMessage());
         }
     }
+
+    public function printInvoice($id, $withHeader)
+    {
+        if ($withHeader) {
+            $header = \App\Models\Configuration::getFor('pdf_header_image');
+            if (!$header) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+                return;
+            }
+        }
+        
+        $route = $withHeader ? 'lab.invoice.pdf' : 'lab.invoice.pdf.plain';
+        $url = route($route, $id);
+        $this->dispatch('open-new-tab', ['url' => $url]);
+    }
 }

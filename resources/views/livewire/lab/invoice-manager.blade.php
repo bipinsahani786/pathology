@@ -313,18 +313,13 @@
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                     <li>
-                                                        <a class="dropdown-item fs-11"
-                                                            href="{{ route('lab.invoice.pdf', $inv->id) }}" target="_blank">
-                                                            <i class="feather-file-text me-2 text-primary"></i>📄 PDF (With
-                                                            Header)
+                                                        <a class="dropdown-item fs-11" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 1)">
+                                                            <i class="feather-file-text me-2 text-primary"></i>📄 PDF (With Header)
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item fs-11"
-                                                            href="{{ route('lab.invoice.pdf.plain', $inv->id) }}"
-                                                            target="_blank">
-                                                            <i class="feather-minimize me-2 text-warning"></i>📋 PDF
-                                                            (Without Header)
+                                                        <a class="dropdown-item fs-11" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 0)">
+                                                            <i class="feather-minimize me-2 text-warning"></i>📋 PDF (Without Header)
                                                             <div class="fs-9 text-muted ms-4">For letterpad printing</div>
                                                         </a>
                                                     </li>

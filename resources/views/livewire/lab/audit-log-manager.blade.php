@@ -83,11 +83,15 @@
                                                 <div class="text-muted" style="font-size: 11px; max-width: 300px;">
                                                     @foreach($log->new_values ?? [] as $key => $val)
                                                         @if(!is_array($val))
+                                                            @php 
+                                                                $oldVal = $log->old_values[$key] ?? ''; 
+                                                                $newVal = $val;
+                                                            @endphp
                                                             <div class="mb-1 text-truncate">
                                                                 <strong>{{ str_replace('_', ' ', $key) }}:</strong> 
-                                                                <span class="text-danger text-decoration-line-through">{{ is_string($log->old_values[$key] ?? '') ? Str::limit($log->old_values[$key], 20) : 'N/A' }}</span> 
+                                                                <span class="text-danger text-decoration-line-through">{{ is_scalar($oldVal) ? Str::limit((string)$oldVal, 20) : 'N/A' }}</span> 
                                                                 <i class="feather-arrow-right mx-1"></i> 
-                                                                <span class="text-success">{{ is_string($val) ? Str::limit($val, 20) : 'N/A' }}</span>
+                                                                <span class="text-success">{{ is_scalar($newVal) ? Str::limit((string)$newVal, 20) : 'N/A' }}</span>
                                                             </div>
                                                         @endif
                                                     @endforeach

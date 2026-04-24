@@ -8,13 +8,8 @@
 
     @php
         // ── Resolve image paths ──
-        $headerImgSrc = $settings['pdf_header_image']
-            ? $settings['pdf_header_image']
-            : public_path('assets/images/pdf-header.jpeg');
-
-        $footerImgSrc = $settings['pdf_footer_image']
-            ? $settings['pdf_footer_image']
-            : public_path('assets/images/pdf-footer.jpeg');
+        $headerImgSrc = $settings['pdf_header_image'] ?? null;
+        $footerImgSrc = $settings['pdf_footer_image'] ?? null;
 
         $sigImgSrc = $settings['global_sig_1_path']
             ? $settings['global_sig_1_path']

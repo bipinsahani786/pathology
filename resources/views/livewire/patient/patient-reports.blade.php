@@ -108,7 +108,7 @@
                                 </a>
                                 
                                 @if(strtolower($report->status) === 'approved')
-                                    <a href="{{ route('portal.report.download', $report->id) }}" target="_blank" 
+                                    <a href="{{ route('portal.report.download', $report->invoice_id) }}" target="_blank" 
                                        class="btn btn-primary fw-900 fs-11 px-4 py-2 rounded-pill shadow-sm border-0">
                                         <i class="feather-download me-2"></i>GET REPORT
                                     </a>
