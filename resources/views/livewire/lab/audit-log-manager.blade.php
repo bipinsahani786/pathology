@@ -87,11 +87,11 @@
                                                                 $oldVal = $log->old_values[$key] ?? ''; 
                                                                 $newVal = $val;
                                                             @endphp
-                                                            <div class="mb-1 text-truncate">
+                                                            <div class="mb-1" style="word-break: break-all; white-space: normal;">
                                                                 <strong>{{ str_replace('_', ' ', $key) }}:</strong> 
-                                                                <span class="text-danger text-decoration-line-through">{{ is_scalar($oldVal) ? Str::limit((string)$oldVal, 20) : 'N/A' }}</span> 
+                                                                <span class="text-danger text-decoration-line-through small">{{ is_scalar($oldVal) ? (string)$oldVal : 'N/A' }}</span> 
                                                                 <i class="feather-arrow-right mx-1"></i> 
-                                                                <span class="text-success">{{ is_scalar($newVal) ? Str::limit((string)$newVal, 20) : 'N/A' }}</span>
+                                                                <span class="text-success small fw-bold">{{ is_scalar($newVal) ? (string)$newVal : 'N/A' }}</span>
                                                             </div>
                                                         @endif
                                                     @endforeach
