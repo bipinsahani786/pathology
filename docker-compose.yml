@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # 1. PHP Application Container
@@ -31,7 +31,7 @@ services:
       - pathology-network
 
   # 3. PostgreSQL Database Container
-  db:
+  dbpostgres:
     image: postgres:15-alpine
     container_name: pathology_db
     restart: unless-stopped
@@ -45,7 +45,7 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - pathology-network
-# 4. Redis Cache Container
+  # 4. Redis Cache Container
   redis:
     image: redis:7-alpine
     container_name: pathology_redis
@@ -57,7 +57,7 @@ services:
     networks:
       - pathology-network
 
-# 5. Adminer Web Database Manager
+  # 5. Adminer Web Database Manager
   adminer:
     image: adminer
     container_name: pathology_adminer
@@ -65,7 +65,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      - dbpostgres
     networks:
       - pathology-network
 networks:
