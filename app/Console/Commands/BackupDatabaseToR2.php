@@ -33,10 +33,12 @@ class BackupDatabaseToR2 extends Command
         
         $this->info("Starting database backup: {$filename}");
 
+        // Set password in environment for pg_dump to avoid Linux/Windows syntax issues
+        putenv('PGPASSWORD=' . config('database.connections.pgsql.password'));
+
         // PostgreSQL dump command
         $command = sprintf(
-            'PGPASSWORD="%s" pg_dump -h %s -U %s %s > %s',
-            config('database.connections.pgsql.password'),
+            'pg_dump -h %s -U %s %s > %s',
             config('database.connections.pgsql.host'),
             config('database.connections.pgsql.username'),
             config('database.connections.pgsql.database'),

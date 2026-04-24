@@ -22,13 +22,11 @@
             <div class="header-search-wrapper d-none d-md-flex">
                 <div class="search-form-wrapper">
                     <form action="javascript:void(0);" class="search-form">
-                        <div class="input-group search-form-group border rounded px-2" style="background: rgba(0,0,0,0.02);">
-                            <span class="input-group-text border-0 ps-2 bg-transparent">
-                                <i class="feather-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-0 shadow-none bg-transparent fs-13" 
+                        <div class="position-relative" style="width: 220px;">
+                            <i class="feather-search text-muted position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); z-index: 5; font-size: 14px;"></i>
+                            <input type="text" class="form-control border shadow-none fs-13" 
                                 placeholder="Search Navigation (Dash, POS, etc...)" 
-                                style="width: 300px; cursor: pointer;"
+                                style="padding-left: 35px; height: 38px; cursor: pointer; background: rgba(0,0,0,0.02); border-radius: 8px !important;"
                                 data-bs-toggle="modal" data-bs-target="#searchModal" readonly>
                         </div>
                     </form>
@@ -38,7 +36,7 @@
         </div>
 
         <div class="header-right ms-auto">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-1 gap-md-2 gap-lg-3">
                 {{-- Branch Switcher --}}
                 @if(!auth()->user()->hasRole('super_admin'))
                     <livewire:lab.branch-switcher />
@@ -53,19 +51,19 @@
                 @endphp
 
                 @if($company && auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']))
-                    <div class="d-none d-lg-flex align-items-center me-3 border rounded-3 p-1 bg-white shadow-sm border-light">
-                        <div class="avatar-text avatar-md bg-soft-primary text-primary rounded-3 me-2">
-                            <i class="feather-zap fs-6"></i>
+                    <div class="d-none d-xl-flex align-items-center me-2 border rounded-3 p-1 bg-white shadow-sm border-light overflow-hidden">
+                        <div class="avatar-text avatar-md bg-soft-primary text-primary rounded-3 me-2 flex-shrink-0" style="width: 32px; height: 32px; line-height: 32px;">
+                            <i class="feather-zap fs-12"></i>
                         </div>
-                        <div class="me-3">
-                            <span class="fs-10 fw-bold text-uppercase text-muted ls-1 d-block mb-0">Current Plan</span>
-                            <span class="fs-12 fw-bolder text-dark">{{ $company->plan->name ?? 'Enterprise Pro' }}</span>
+                        <div class="me-3 flex-shrink-0">
+                            <span class="fs-9 fw-bold text-uppercase text-muted ls-1 d-block mb-0" style="font-size: 8px !important;">Current Plan</span>
+                            <span class="fs-11 fw-bolder text-dark">{{ $company->plan->name ?? 'Professional' }}</span>
                         </div>
-                        <div class="border-start ps-3 py-1 me-2 text-end">
-                            <span class="fs-10 fw-bold text-uppercase {{ $isExpiringSoon ? 'text-danger pulse-once' : 'text-success' }} ls-1 d-block mb-0">
+                        <div class="border-start ps-3 py-1 me-1 text-end flex-shrink-0">
+                            <span class="fs-9 fw-bold text-uppercase {{ $isExpiringSoon ? 'text-danger pulse-once' : 'text-success' }} ls-1 d-block mb-0" style="font-size: 8px !important;">
                                 {{ $daysLeftInt > 0 ? $daysLeftInt . ' Days Left' : 'Expired' }}
                             </span>
-                            <span class="fs-12 fw-medium text-muted">Active Trial</span>
+                            <span class="fs-11 fw-medium text-muted" style="font-size: 10px !important;">Active Trial</span>
                         </div>
                     </div>
                 @endif

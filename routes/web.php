@@ -122,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/departments', \App\Livewire\Admin\DepartmentManager::class)->name('departments');
         Route::get('/plans', PlanManager::class)->name('plans');
         Route::get('/labs', \App\Livewire\Admin\LabManager::class)->name('labs');
+        Route::get('/sales-agents', \App\Livewire\Admin\SalesAgentManager::class)->name('sales-agents');
 
         // CMS Management
         Route::get('/site-settings', \App\Livewire\Admin\SiteSettingsManager::class)->name('site-settings');
