@@ -127,14 +127,14 @@ class Dashboard extends Component
                 ->first();
 
             // 4. Rankings
-            $topPackages = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
+            $topPackages = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
                 ->where('is_package', true)
                 ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
                 ->groupBy('lab_test_id', 'test_name')
                 ->orderByDesc('total_income')
                 ->take(5)->get();
 
-            $topTests = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
+            $topTests = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
                 ->where('is_package', false)
                 ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
                 ->groupBy('lab_test_id', 'test_name')
@@ -143,6 +143,7 @@ class Dashboard extends Component
 
             $topCCs = Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->with('collectionCenter')
                 ->select('collection_center_id', DB::raw('SUM(total_amount) as total_income'), DB::raw('COUNT(*) as total_bills'))
@@ -152,6 +153,7 @@ class Dashboard extends Component
 
             $topDoctors = Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->whereNotNull('referred_by_doctor_id')
                 ->with(['doctor' => fn($q) => $q->select('id', 'name')])
@@ -162,6 +164,7 @@ class Dashboard extends Component
 
             $topAgents = Invoice::where('company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->whereNotNull('referred_by_agent_id')
                 ->with(['agent' => fn($q) => $q->select('id', 'name')])
@@ -182,7 +185,7 @@ class Dashboard extends Component
                 )
                 ->groupBy('date')->orderBy('date')->get();
 
-            $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
+            $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->where('invoices.status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
                 ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
                 ->join('departments', 'lab_tests.department_id', '=', 'departments.id')
                 ->select('departments.name as dept_name', DB::raw('COUNT(*) as test_count'))
@@ -202,6 +205,7 @@ class Dashboard extends Component
 
             $channelData = Invoice::where('invoices.company_id', $companyId)
                 ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
+                ->where('invoices.status', '!=', 'Cancelled')
                 ->whereBetween('invoices.invoice_date', [$start, $end])
                 ->select(DB::raw("COALESCE(collection_type, 'Direct') as channel"), DB::raw('COUNT(*) as count'))
                 ->groupBy('channel')

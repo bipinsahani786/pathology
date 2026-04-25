@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Membership;
 use App\Models\Voucher;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
 
 class MarketingManager extends Component
 {
@@ -88,13 +89,17 @@ class MarketingManager extends Component
         );
 
         session()->flash('message', 'Membership saved successfully.');
+        Cache::forget("memberships_" . auth()->user()->company_id);
         $this->isMembershipModalOpen = false;
     }
 
     public function deleteMembership($id)
     {
         $this->authorize('delete marketing');
-        Membership::findOrFail($id)->delete();
+        $m = Membership::findOrFail($id);
+        $companyId = $m->company_id;
+        $m->delete();
+        Cache::forget("memberships_" . $companyId);
         session()->flash('message', 'Membership deleted.');
     }
 
@@ -103,6 +108,7 @@ class MarketingManager extends Component
         $this->authorize('edit marketing');
         $m = Membership::findOrFail($id);
         $m->update(['is_active' => !$m->is_active]);
+        Cache::forget("memberships_" . $m->company_id);
     }
 
     public function resetMembershipFields()
