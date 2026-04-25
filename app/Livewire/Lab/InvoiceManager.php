@@ -167,7 +167,7 @@ class InvoiceManager extends Component
         $invoices = $query->paginate($this->perPage);
 
         // Stats calculations with strict scoping
-        $statsBase = Invoice::where('company_id', $companyId);
+        $statsBase = Invoice::where('company_id', $companyId)->where('status', '!=', 'Cancelled');
         if ($myBranchId) $statsBase->where('branch_id', $myBranchId);
         if ($user->collection_center_id) $statsBase->where('collection_center_id', $user->collection_center_id);
 

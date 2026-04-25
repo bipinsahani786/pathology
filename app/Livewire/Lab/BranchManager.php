@@ -5,6 +5,7 @@ namespace App\Livewire\Lab;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Branch;
+use Illuminate\Support\Facades\Cache;
 
 class BranchManager extends Component
 {
@@ -192,6 +193,8 @@ class BranchManager extends Component
 
                 session()->flash('message', 'Branch and Admin account created successfully.');
             }
+            Cache::forget("branches_" . auth()->user()->company_id);
+            Cache::forget("centers_" . auth()->user()->company_id . "_all");
         });
 
         $this->closeModal();
@@ -205,7 +208,8 @@ class BranchManager extends Component
         $this->authorize('edit branches');
         $branch = Branch::findOrFail($id);
         $branch->update(['is_active' => !$branch->is_active]);
-        
+        Cache::forget("branches_" . auth()->user()->company_id);
+        Cache::forget("centers_" . auth()->user()->company_id . "_all");
         session()->flash('message', 'Branch status updated successfully.');
     }
 
@@ -219,8 +223,10 @@ class BranchManager extends Component
         
         // Also delete the branch admin accounts? Yes, cascade should handle it or manually delete
         \App\Models\User::where('branch_id', $branch->id)->delete();
+        $companyId = $branch->company_id;
         $branch->delete();
-        
+        Cache::forget("branches_" . $companyId);
+        Cache::forget("centers_" . $companyId . "_all");
         session()->flash('message', 'Branch and its accounts deleted successfully.');
     }
 

@@ -77,6 +77,7 @@ class PartnerDashboard extends Component
         $this->stats['this_month_earnings'] = $rangeInvoices->sum('doctor_commission_amount');
             
         $this->stats['last_month_earnings'] = Invoice::where('referred_by_doctor_id', $userId)
+            ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
             ->whereYear('invoice_date', now()->subMonth()->year)
             ->sum('doctor_commission_amount');
@@ -97,6 +98,7 @@ class PartnerDashboard extends Component
         $this->stats['this_month_earnings'] = $rangeInvoices->sum('agent_commission_amount');
             
         $this->stats['last_month_earnings'] = Invoice::where('referred_by_agent_id', $userId)
+            ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
             ->whereYear('invoice_date', now()->subMonth()->year)
             ->sum('agent_commission_amount');
@@ -126,20 +128,24 @@ class PartnerDashboard extends Component
         $this->stats['this_month_profit'] = $rangeInvoices->sum('cc_profit_amount');
             
         $this->stats['last_month_profit'] = Invoice::where('collection_center_id', $ccId)
+            ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
             ->whereYear('invoice_date', now()->subMonth()->year)
             ->sum('cc_profit_amount');
 
         $this->stats['samples_collected'] = Invoice::where('collection_center_id', $ccId)
+            ->where('status', '!=', 'Cancelled')
             ->where('sample_status', 'Collected')
             ->whereDate('sample_collected_at', today())
             ->count();
 
         $this->stats['reports_ready'] = Invoice::where('collection_center_id', $ccId)
+            ->where('status', '!=', 'Cancelled')
             ->where('sample_status', 'Ready')
             ->count();
 
         $this->stats['pending_collection'] = Invoice::where('collection_center_id', $ccId)
+            ->where('status', '!=', 'Cancelled')
             ->where('sample_status', 'Pending')
             ->count();
     }
@@ -174,11 +180,11 @@ class PartnerDashboard extends Component
         $recentInvoices = [];
 
         if ($this->role === 'Doctor') {
-            $recentInvoices = Invoice::where('referred_by_doctor_id', $user->id)->latest()->take(10)->get();
+            $recentInvoices = Invoice::where('referred_by_doctor_id', $user->id)->where('status', '!=', 'Cancelled')->latest()->take(10)->get();
         } elseif ($this->role === 'Agent') {
-            $recentInvoices = Invoice::where('referred_by_agent_id', $user->id)->latest()->take(10)->get();
+            $recentInvoices = Invoice::where('referred_by_agent_id', $user->id)->where('status', '!=', 'Cancelled')->latest()->take(10)->get();
         } elseif ($this->role === 'Collection Center') {
-            $recentInvoices = Invoice::where('collection_center_id', $user->collection_center_id)->latest()->take(10)->get();
+            $recentInvoices = Invoice::where('collection_center_id', $user->collection_center_id)->where('status', '!=', 'Cancelled')->latest()->take(10)->get();
         }
 
         $recentSettlements = Settlement::where('user_id', $user->id)->latest()->take(5)->get();
