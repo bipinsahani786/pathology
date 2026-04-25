@@ -85,6 +85,23 @@ class ReportPdfController extends Controller
             if ($restrictBranch && !$isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
                 abort(403, 'You do not have access to reports from this branch.');
             }
+
+            // 4. Partner Isolation: Doctors/Agents/CCs only see their referrals
+            if (!$isGlobalAdmin && !$user->hasRole('patient')) {
+                $isDoctor = $user->hasRole('doctor') || $user->doctorProfile;
+                $isAgent  = $user->hasRole('agent') || $user->agentProfile;
+                $isCC     = $user->hasRole('collection_center') || $user->collection_center_id;
+
+                if ($isDoctor && $report->invoice->referred_by_doctor_id !== $user->id) {
+                    abort(403, 'Unauthorized referral access.');
+                }
+                if ($isAgent && $report->invoice->referred_by_agent_id !== $user->id) {
+                    abort(403, 'Unauthorized agent referral access.');
+                }
+                if ($isCC && $report->invoice->collection_center_id !== $user->collection_center_id) {
+                    abort(403, 'Unauthorized collection center access.');
+                }
+            }
         }
 
         $companyId = $report->invoice->company_id;
