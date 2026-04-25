@@ -563,53 +563,73 @@
 
 
 
-                    Livewire.on('open-new-tab', function(data) {
-                        var url = Array.isArray(data) ? data[0].url : data.url;
-                        if (url) window.open(url, '_blank');
-                    });
+                    // Listeners start here
+                    window.pathologyListenersAdded = true;
 
                     Livewire.on('notify', function(data) {
                         var info = Array.isArray(data) ? data[0] : data;
                         
-                        // Create a simple toast if no library is present
                         const toast = document.createElement('div');
-                        toast.className = `fixed top-5 right-5 z-[9999] p-4 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-[-20px] opacity-0 flex items-center gap-3`;
-                        toast.style.backgroundColor = info.type === 'error' ? '#fee2e2' : '#dcfce7';
-                        toast.style.borderColor = info.type === 'error' ? '#fecaca' : '#bbf7d0';
-                        toast.style.color = info.type === 'error' ? '#991b1b' : '#166534';
                         toast.style.position = 'fixed';
-                        toast.style.top = '20px';
-                        toast.style.right = '20px';
-                        toast.style.minWidth = '300px';
+                        toast.style.top = '30px';
+                        toast.style.right = '30px';
+                        toast.style.zIndex = '10000';
+                        toast.style.minWidth = '350px';
+                        toast.style.padding = '16px 20px';
+                        toast.style.borderRadius = '16px';
+                        toast.style.backgroundColor = '#ffffff';
+                        toast.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+                        toast.style.border = `1px solid ${info.type === 'error' ? '#fee2e2' : '#dcfce7'}`;
+                        toast.style.display = 'flex';
+                        toast.style.alignItems = 'center';
+                        toast.style.gap = '15px';
+                        toast.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                        toast.style.transform = 'translateX(100px)';
+                        toast.style.opacity = '0';
+                        
+                        const accentColor = info.type === 'error' ? '#ef4444' : '#10b981';
                         
                         toast.innerHTML = `
-                            <div style="background: ${info.type === 'error' ? '#ef4444' : '#22c55e'}; color: white; padding: 4px; rounded-full: 9999px; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;">
-                                <i class="feather-${info.type === 'error' ? 'alert-circle' : 'check'}"></i>
+                            <div style="background: ${accentColor}; color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                <i class="feather-${info.type === 'error' ? 'alert-octagon' : 'check-circle'}" style="font-size: 20px;"></i>
                             </div>
                             <div style="flex: 1;">
-                                <h4 style="margin: 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${info.type === 'error' ? 'Error' : 'Success'}</h4>
-                                <p style="margin: 0; font-size: 13px; font-weight: 500; opacity: 0.9;">${info.message}</p>
+                                <div style="color: #111827; font-weight: 700; font-size: 15px; margin-bottom: 2px;">${info.type === 'error' ? 'Attention Required' : 'Action Successful'}</div>
+                                <div style="color: #6b7280; font-size: 13px; font-weight: 500;">${info.message}</div>
                             </div>
+                            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px;">
+                                <i class="feather-x"></i>
+                            </button>
                         `;
                         
                         document.body.appendChild(toast);
                         
-                        // Animate in
-                        setTimeout(() => {
-                            toast.style.opacity = '1';
-                            toast.style.transform = 'translateY(0)';
-                        }, 10);
+                        // Force reflow
+                        toast.offsetHeight;
                         
-                        // Remove after 5 seconds
+                        // Animate in
+                        toast.style.transform = 'translateX(0)';
+                        toast.style.opacity = '1';
+                        
+                        // Auto-remove
                         setTimeout(() => {
-                            toast.style.opacity = '0';
-                            toast.style.transform = 'translateY(-20px)';
-                            setTimeout(() => toast.remove(), 300);
+                            if (toast.parentElement) {
+                                toast.style.transform = 'translateX(100px)';
+                                toast.style.opacity = '0';
+                                setTimeout(() => toast.remove(), 500);
+                            }
                         }, 5000);
                     });
 
                     Livewire.on('print-window', function() {
                         window.print();
+                    });
+
+                    Livewire.on('open-new-tab', (event) => {
+                        const data = Array.isArray(event) ? event[0] : event;
+                        if (data && data.url) {
+                            window.open(data.url, '_blank');
+                        }
                     });
 
                     window.pathologyListenersAdded = true;

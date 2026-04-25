@@ -93,7 +93,7 @@ class PartnerSettlementManager extends Component
         }
 
         // Stats calculation
-        $invoices = Invoice::where('status', '!=', 'Cancelled');
+        $invoices = Invoice::where('status', '!=', 'Cancelled')->where('payment_status', 'Paid');
         $roles = $user->roles->pluck('name')->toArray();
         $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
         $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_doctor'));
@@ -107,10 +107,15 @@ class PartnerSettlementManager extends Component
             $invoices->where('referred_by_agent_id', $user->id);
         }
 
-        $totalDuesBill = $invoices->sum('total_amount');
         if ($isCC) {
-             // For CC, dues = total billing minus their profit
-            $totalDuesBill = $invoices->sum('total_amount') - $invoices->sum('cc_profit_amount');
+            // For CC, dues = total billing minus their profit (i.e. the B2B cost they owe the lab)
+            $totalDuesBill = $invoices->sum('total_b2b_amount');
+        } elseif ($isDoctor) {
+            $totalDuesBill = $invoices->sum('doctor_commission_amount');
+        } elseif ($isAgent) {
+            $totalDuesBill = $invoices->sum('agent_commission_amount');
+        } else {
+            $totalDuesBill = $invoices->sum('total_amount');
         }
 
         $paidApproved = Settlement::where('user_id', $user->id)->where('status', 'Approved')->sum('amount');

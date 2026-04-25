@@ -357,14 +357,39 @@
                                 </div>
                             </div>
 
-                            <div class="p-3 rounded-3 mt-4" style="background:rgba(59,113,202,0.05);">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <div class="fw-bold fs-12 text-dark"><i class="feather-shield text-primary me-2"></i>Restrict Billing below B2B Price</div>
-                                        <div class="fs-11 text-muted mt-1">If enabled, Collection Centers cannot generate bills if the patient amount is less than the B2B cost.</div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" wire:model.live="restrict_billing_below_b2b" style="width:3em;height:1.5em;">
+                            <div class="row g-3 mt-1">
+                                <div class="col-12">
+                                    <div class="p-3 rounded-3 border bg-light">
+                                        <h6 class="fw-bold fs-12 mb-3 text-dark"><i class="feather-pie-chart text-primary me-2"></i>Commission & Financials</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold fs-11">Doctor Commission Basis</label>
+                                                <select class="form-select" wire:model.live="commission_basis_doctor">
+                                                    <option value="gross">Gross Revenue (% of Total Bill)</option>
+                                                    <option value="profit">Net Profit (% of Bill minus B2B)</option>
+                                                </select>
+                                                <div class="fs-10 text-muted mt-1">Determine how the percentage is applied for doctors.</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold fs-11">Agent Commission Basis</label>
+                                                <select class="form-select" wire:model.live="commission_basis_agent">
+                                                    <option value="gross">Gross Revenue (% of Total Bill)</option>
+                                                    <option value="profit">Net Profit (% of Bill minus B2B)</option>
+                                                </select>
+                                                <div class="fs-10 text-muted mt-1">Determine how the percentage is applied for agents.</div>
+                                            </div>
+                                            <div class="col-12 mt-3">
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:rgba(59,113,202,0.05);">
+                                                    <div>
+                                                        <div class="fw-bold fs-12 text-dark"><i class="feather-shield text-primary me-2"></i>Restrict Billing below B2B Price</div>
+                                                        <div class="fs-11 text-muted mt-1">Prevents bill generation if Net Payable is less than total B2B cost.</div>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" wire:model.live="restrict_billing_below_b2b" style="width:2.5em;height:1.25em;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

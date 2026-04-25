@@ -85,6 +85,23 @@ class ReportPdfController extends Controller
             if ($restrictBranch && !$isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
                 abort(403, 'You do not have access to reports from this branch.');
             }
+
+            // 4. Partner Isolation: Doctors/Agents/CCs only see their referrals
+            if (!$isGlobalAdmin && !$user->hasRole('patient')) {
+                $isDoctor = $user->hasRole('doctor') || $user->doctorProfile;
+                $isAgent  = $user->hasRole('agent') || $user->agentProfile;
+                $isCC     = $user->hasRole('collection_center') || $user->collection_center_id;
+
+                if ($isDoctor && $report->invoice->referred_by_doctor_id !== $user->id) {
+                    abort(403, 'Unauthorized referral access.');
+                }
+                if ($isAgent && $report->invoice->referred_by_agent_id !== $user->id) {
+                    abort(403, 'Unauthorized agent referral access.');
+                }
+                if ($isCC && $report->invoice->collection_center_id !== $user->collection_center_id) {
+                    abort(403, 'Unauthorized collection center access.');
+                }
+            }
         }
 
         $companyId = $report->invoice->company_id;
@@ -112,12 +129,15 @@ class ReportPdfController extends Controller
             'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
             'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => ($showHeader && $headerImage) ? (Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310) : 30,
-            'pdf_margin_bottom'      => ($settings['pdf_show_footer'] ?? true && $footerImage) ? (Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255) : 30,
+            
+            // ALWAYS reserve space for physical letterhead (1 inch = ~96px minimum, but user wants settings-driven)
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 250,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 180,
+            
             'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
-            'pdf_header_image'       => ($showHeader && $headerImage) ? storage_base64($headerImage) : null,
-            'pdf_footer_image'       => ($settings['pdf_show_footer'] ?? true && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 160,
+            'pdf_header_image'       => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
+            'pdf_footer_image'       => (Configuration::getFor('pdf_show_footer', '1', $companyId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
 
             // Visibility
             'pdf_show_header'        => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
@@ -159,7 +179,9 @@ class ReportPdfController extends Controller
         })->map(function ($deptGroup) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
-                'tests'      => $deptGroup->groupBy('invoice_item_id')->map(function ($testGroup) {
+                'tests'      => $deptGroup->groupBy(function($r) {
+                    return $r->invoice_item_id . '_' . $r->lab_test_id;
+                })->map(function ($testGroup) {
                     return [
                         'name'    => $testGroup->first()->labTest->name,
                         'labTest' => $testGroup->first()->labTest,

@@ -19,6 +19,19 @@
                 <h6 class="card-title mb-0"><i class="feather-flask me-2 text-primary"></i>Test Results & Reports</h6>
             </div>
             <div class="card-body">
+                @if(session()->has('success'))
+                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="feather-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if(session()->has('error'))
+                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3">
+                        <i class="feather-alert-octagon me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
                 
                 {{-- Filters --}}
                 <div class="row g-3 mb-4">
@@ -168,8 +181,8 @@
                                                     </a>
                                                 @endcan
                                             @else
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown">
+                                                <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
+                                                    <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="feather-printer me-1"></i> Print / Edit
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
@@ -192,8 +205,8 @@
                                             @endif
 
                                             {{-- WhatsApp Share --}}
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" @if(!$invoice->patient->phone) disabled title="Phone missing" @endif>
+                                            <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
+                                                <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" @if(!$invoice->patient->phone) disabled title="Phone missing" @endif>
                                                     <i class="bi bi-whatsapp"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1">

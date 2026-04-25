@@ -52,19 +52,37 @@
             top: 0;
             left: 0;
             right: 0;
-            height: {{ (int)$headerHeight + 20 }}px;
-            overflow: visible;
+            height: {{ $marginTop }};
+            overflow: hidden;
+        }
+
+        .header-logo-container {
+            width: 100%;
+            height: {{ $headerHeight }};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
         }
 
         .header-banner {
-            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
             display: block;
+            margin: 0 auto;
         }
 
         /* ── PATIENT INFO BOX ── */
         .patient-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             border: 1px solid #1a1a1a !important;
-            margin: 4px 25px 0;
+            margin: 0 25px 0;
             padding: 8px 10px;
             font-size: 10.5px;
             display: block;
@@ -462,8 +480,11 @@
 
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
-        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header"
-            style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom: 12px; display: block;">
+        <div class="header-logo-container">
+            @if($headerImgSrc && $showHeader)
+                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header">
+            @endif
+        </div>
 
         {{-- Patient Info Box — always visible --}}
         <div class="patient-box" style="margin-top: 0; clear: both;">
@@ -595,9 +616,9 @@
                 $results = $testData['results'];
             @endphp
 
-            {{-- Page break between tests (not before the first) --}}
+            {{-- Page break before each test --}}
             @if($testIndex > 0)
-                <div class="page-break"></div>
+                <div style="page-break-after: always;"></div>
             @endif
 
             {{-- ── Department & Test Title ── --}}

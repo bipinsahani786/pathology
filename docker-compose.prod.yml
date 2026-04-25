@@ -67,7 +67,7 @@ services:
       - app
       - dbpostgres
       - redis
-    command: ["php", "artisan", "schedule:work"]
+    command: [ "php", "artisan", "schedule:work" ]
     networks:
       - pathology-network
 networks:

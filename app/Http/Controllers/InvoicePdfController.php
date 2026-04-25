@@ -97,8 +97,8 @@ class InvoicePdfController extends Controller
         $pdfSettings = [
             'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            'pdf_margin_top'         => ($showHeader && $headerImage) ? (Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310) : 30,
-            'pdf_margin_bottom'      => ($showFooter && $footerImage) ? (Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255) : 30,
+            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
+            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 255,
             'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
             'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
             'pdf_header_image'       => ($showHeader && $headerImage) ? storage_base64($headerImage) : null,

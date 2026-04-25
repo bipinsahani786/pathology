@@ -31,6 +31,7 @@
             background: #fff;
             line-height: 1.45;
             margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px;
+            padding-top: 10px; /* Extra safety gap */
         }
 
         /* ══════════════════════════════════════════════
@@ -124,7 +125,7 @@
         .bill-title-container {
             text-align: center;
             width: 100%;
-            margin: 15px 0 20px;
+            margin: 40px 0 30px; /* Significant top margin to move it below the fixed header info */
         }
 
         .bill-title {
@@ -146,7 +147,7 @@
 
         .items-table th {
             text-align: left;
-            padding: 8px 5px;
+            padding: 12px 5px; /* Increased padding to prevent line overlap */
             border-top: 1.5px solid #1a1a1a;
             border-bottom: 1.5px solid #1a1a1a;
             font-weight: 700;
@@ -218,8 +219,11 @@
 
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
-        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header"
-            style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom: 12px; display: block;">
+        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px;">
+            @if($showHeader && $headerImgSrc)
+                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="width: 100%;">
+            @endif
+        </div>
 
         {{-- Patient Info Box (Fixed in Header - Stays at top of every page) --}}
         <div class="patient-box">
@@ -263,9 +267,13 @@
     </header>
 
     {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
-    @if($showFooter && $footerImgSrc)
+    @if($showFooter)
         <footer>
-            <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
+            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden;">
+                @if($footerImgSrc)
+                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer" style="width: 100%;">
+                @endif
+            </div>
         </footer>
     @endif
 
