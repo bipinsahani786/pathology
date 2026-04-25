@@ -491,7 +491,11 @@ class PosEditManager extends Component
     // ==========================================
     public function addPaymentRow()
     {
-        $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => 0, 'transaction_id' => ''];
+        // Auto-fill the remaining due if possible
+        $currentCollected = collect($this->payments)->sum(fn($p) => (float)($p['amount'] ?? 0));
+        $remaining = max(0, $this->net_payable - $currentCollected);
+
+        $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => $remaining > 0 ? $remaining : 0, 'transaction_id' => ''];
     }
     public function removePaymentRow($index)
     {
@@ -617,8 +621,18 @@ class PosEditManager extends Component
         $this->authorize('edit settings');
         if (empty($this->new_payment_mode_name))
             return;
-        PaymentMode::create(['company_id' => auth()->user()->company_id, 'name' => $this->new_payment_mode_name, 'is_active' => true]);
-        $this->paymentModesList = PaymentMode::where('company_id', auth()->user()->company_id)->where('is_active', true)->get();
+        
+        $companyId = auth()->user()->company_id;
+        PaymentMode::create([
+            'company_id' => $companyId, 
+            'name' => $this->new_payment_mode_name, 
+            'is_active' => true
+        ]);
+        
+        // Clear cache
+        \Illuminate\Support\Facades\Cache::forget("payment_modes_{$companyId}");
+        
+        $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
         $this->new_payment_mode_name = '';
         $this->isPaymentModeModalOpen = false;
     }
@@ -640,6 +654,25 @@ class PosEditManager extends Component
 
         if ($this->overpaymentError) {
             session()->flash('error', 'Total payment cannot exceed Net Payable amount.');
+            return;
+        }
+
+        // Validate Payments: If an amount is entered, a mode MUST be selected
+        $hasPayment = false;
+        foreach ($this->payments as $index => $pay) {
+            $amt = (float)($pay['amount'] ?? 0);
+            if ($amt > 0) {
+                $hasPayment = true;
+                if (empty($pay['mode_id'])) {
+                    session()->flash('error', "Please select a Payment Mode for Payment row #" . ($index + 1));
+                    return;
+                }
+            }
+        }
+
+        // If the bill is marked as fully paid but no payment mode was selected
+        if ($this->due_amount <= 0 && !$hasPayment && $this->net_payable > 0) {
+            session()->flash('error', "Please add at least one payment method for a fully paid bill.");
             return;
         }
 
