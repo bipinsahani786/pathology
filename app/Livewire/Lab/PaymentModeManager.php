@@ -67,10 +67,10 @@ class PaymentModeManager extends Component
             'name' => 'required|string|max:255',
         ]);
 
-        // FIX: Explicitly separate Create and Update to prevent PostgreSQL 'null id' error
+        $companyId = auth()->user()->company_id;
+
         if ($this->mode_id) {
             $this->authorize('edit payment_modes');
-            // Update existing record
             PaymentMode::where('id', $this->mode_id)->update([
                 'name' => $this->name,
                 'is_active' => $this->is_active,
@@ -78,37 +78,36 @@ class PaymentModeManager extends Component
             session()->flash('message', 'Payment Mode updated successfully.');
         } else {
             $this->authorize('create payment_modes');
-            // Create new record
             PaymentMode::create([
-                'company_id' => auth()->user()->company_id, // Link to current lab
+                'company_id' => $companyId,
                 'name' => $this->name,
                 'is_active' => $this->is_active,
             ]);
             session()->flash('message', 'Payment Mode created successfully.');
         }
 
+        \Illuminate\Support\Facades\Cache::forget("payment_modes_{$companyId}");
         $this->closeModal();
     }
 
-    /**
-     * Quick toggle for active/inactive status directly from the table
-     */
     public function toggleStatus($id)
     {
         $this->authorize('edit payment_modes');
         $mode = PaymentMode::findOrFail($id);
         $mode->update(['is_active' => !$mode->is_active]);
         
+        \Illuminate\Support\Facades\Cache::forget("payment_modes_" . auth()->user()->company_id);
         session()->flash('message', 'Status updated successfully.');
     }
 
-    /**
-     * Delete a payment mode
-     */
     public function delete($id)
     {
         $this->authorize('delete payment_modes');
-        PaymentMode::findOrFail($id)->delete();
+        $mode = PaymentMode::findOrFail($id);
+        $companyId = $mode->company_id;
+        $mode->delete();
+
+        \Illuminate\Support\Facades\Cache::forget("payment_modes_{$companyId}");
         session()->flash('message', 'Payment Mode deleted successfully.');
     }
 

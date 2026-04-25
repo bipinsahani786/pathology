@@ -48,6 +48,8 @@ class LabManager extends Component
         'adminName' => 'required|string|max:255',
         'adminEmail' => 'required|email|unique:users,email',
         'adminPassword' => 'required|min:6',
+        'salesAgentId' => 'nullable|integer',
+        'referredBy' => 'nullable|string|max:255',
     ];
 
     public function render()

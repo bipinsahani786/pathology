@@ -639,15 +639,25 @@
 
                         @foreach ($payments as $index => $payment)
                             <div class="d-flex gap-2 mb-2 align-items-center">
-                                <select class="form-select form-select-sm fw-medium" wire:model.live="payments.{{ $index }}.mode_id" style="width:40%;">
-                                    <option value="">Mode</option>
-                                    @foreach ($paymentModes as $mode)
-                                        <option value="{{ $mode->id }}">{{ $mode->name }}</option>
-                                    @endforeach
-                                </select>
-                                <input type="number" class="form-control form-control-sm fw-bold text-end" wire:model.live.debounce.500ms="payments.{{ $index }}.amount" placeholder="₹ Amount">
+                                <div style="width:40%;">
+                                    <select class="form-select form-select-sm fw-medium @error('payments.'.$index.'.mode_id') is-invalid @enderror" wire:model.live="payments.{{ $index }}.mode_id">
+                                        <option value="">Mode</option>
+                                        @foreach ($paymentModes as $mode)
+                                            <option value="{{ $mode->id }}">{{ $mode->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('payments.'.$index.'.mode_id')
+                                        <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="number" class="form-control form-control-sm fw-bold text-end @error('payments.'.$index.'.amount') is-invalid @enderror" wire:model.live.debounce.500ms="payments.{{ $index }}.amount" placeholder="₹ Amount">
+                                    @error('payments.'.$index.'.amount')
+                                        <div class="invalid-feedback fs-10 fw-bold">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 @if (count($payments) > 1)
-                                    <button wire:click="removePaymentRow({{ $index }})" class="btn btn-sm text-danger p-0"><i class="feather-trash-2 fs-14"></i></button>
+                                    <button wire:click="removePaymentRow({{ $index }})" class="btn btn-sm text-danger p-0 ms-1"><i class="feather-trash-2 fs-14"></i></button>
                                 @endif
                             </div>
                         @endforeach

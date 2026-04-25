@@ -139,6 +139,18 @@
                             <span class="nxl-mtext">Global Audit Logs</span>
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.system-logs') ? 'active' : '' }}">
+                        <a href="{{ route('admin.system-logs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-terminal"></i></span>
+                            <span class="nxl-mtext">System Log Monitor</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.maintenance') ? 'active' : '' }}">
+                        <a href="{{ route('admin.maintenance') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-zap"></i></span>
+                            <span class="nxl-mtext">System Maintenance</span>
+                        </a>
+                    </li>
                 @endrole
 
 

@@ -130,6 +130,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/landing-content', \App\Livewire\Admin\LandingContentManager::class)->name('landing-content');
         Route::get('/enquiries', \App\Livewire\Admin\EnquiryManager::class)->name('enquiries');
         Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
+        Route::get('/system-logs', \App\Livewire\Admin\LogViewer::class)->name('system-logs');
+        Route::get('/maintenance', \App\Livewire\Admin\MaintenanceManager::class)->name('maintenance');
     });
 
 
