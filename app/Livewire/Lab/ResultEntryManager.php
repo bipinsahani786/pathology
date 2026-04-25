@@ -69,55 +69,64 @@ class ResultEntryManager extends Component
         $existingResultsMap = [];
         if ($this->testReport && $this->testReport->results) {
             foreach ($this->testReport->results as $r) {
-                // Try matching by invoice_item_id first (new way), then fallback to lab_test_id (old way)
-                if ($r->invoice_item_id) {
-                    $key = $r->invoice_item_id . '_' . md5($r->parameter_name);
-                } else {
-                    $key = $r->lab_test_id . '_' . md5($r->parameter_name);
-                }
+                // Key format: invoice_item_id _ lab_test_id _ param_name_md5
+                $key = ($r->invoice_item_id ?? '0') . '_' . $r->lab_test_id . '_' . md5($r->parameter_name);
                 $existingResultsMap[$key] = $r;
             }
         }
 
         foreach ($this->invoice->items as $item) {
             $this->testComments[$item->id] = $item->report_comments ?? '';
-            if ($item->labTest && $item->labTest->parameters) {
-                foreach ($item->labTest->parameters as $param) {
-                    $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
-                    $key = $item->id . '_' . md5($paramName); // Use invoice_item_id for unique mapping
-                    
-                    // NEW: Smart Range Matching
-                    $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
-                    $refText = $matchedRange['display_range'] ?? $matchedRange['normal_value'] ?? '';
-                    
-                    // Fallback for old data structure if needed
-                    if (empty($refText)) {
-                        if ($gender === 'female') $refText = $param['female_range'] ?? $param['general_range'] ?? '';
-                        else $refText = $param['male_range'] ?? $param['general_range'] ?? '';
-                    }
+            
+            // Handle Packages vs Single Tests
+            $testsToProcess = [];
+            if ($item->labTest) {
+                if ($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                    $testsToProcess = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
+                } else {
+                    $testsToProcess = collect([$item->labTest]);
+                }
+            }
 
-                    $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
-                    $this->highlights[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->is_highlighted : false;
-                    $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low'])) 
-                        ? substr($existingResultsMap[$key]->status, 0, 1) 
-                        : '';
-                    
-                    $this->parametersList[$key] = [
-                        'key' => $key,
-                        'lab_test_id' => $item->labTest->id,
-                        'invoice_item_id' => $item->id,
-                        'name' => $paramName,
-                        'short_code' => $param['short_code'] ?? '',
-                        'unit' => is_array($param) ? ($param['unit'] ?? '') : '',
-                        'input_type' => $param['input_type'] ?? 'numeric',
-                        'options' => $param['options'] ?? [],
-                        'formula' => $param['formula'] ?? '',
-                        'method' => $param['method'] ?? '',
-                        'ref_range' => $refText,
-                        'matched_range_details' => $matchedRange, // Keep for evaluation
-                        'department' => $item->labTest->department,
-                        'test_name' => $item->labTest->name,
-                    ];
+            foreach ($testsToProcess as $test) {
+                if ($test->parameters) {
+                    foreach ($test->parameters as $param) {
+                        $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
+                        $key = $item->id . '_' . $test->id . '_' . md5($paramName);
+                        
+                        // NEW: Smart Range Matching
+                        $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
+                        $refText = $matchedRange['display_range'] ?? $matchedRange['normal_value'] ?? '';
+                        
+                        // Fallback for old data structure if needed
+                        if (empty($refText)) {
+                            if ($gender === 'female') $refText = $param['female_range'] ?? $param['general_range'] ?? '';
+                            else $refText = $param['male_range'] ?? $param['general_range'] ?? '';
+                        }
+
+                        $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
+                        $this->highlights[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->is_highlighted : false;
+                        $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low'])) 
+                            ? substr($existingResultsMap[$key]->status, 0, 1) 
+                            : '';
+                        
+                        $this->parametersList[$key] = [
+                            'key' => $key,
+                            'lab_test_id' => $test->id,
+                            'invoice_item_id' => $item->id,
+                            'name' => $paramName,
+                            'short_code' => $param['short_code'] ?? '',
+                            'unit' => is_array($param) ? ($param['unit'] ?? '') : '',
+                            'input_type' => $param['input_type'] ?? 'numeric',
+                            'options' => $param['options'] ?? [],
+                            'formula' => $param['formula'] ?? '',
+                            'method' => $param['method'] ?? '',
+                            'ref_range' => $refText,
+                            'matched_range_details' => $matchedRange,
+                            'department' => $test->department,
+                            'test_name' => $test->name,
+                        ];
+                    }
                 }
             }
         }
@@ -261,6 +270,27 @@ class ResultEntryManager extends Component
     public function saveReport($status = 'Draft')
     {
         $this->authorize('edit reports');
+
+        // Validation: Block approval if any results are missing
+        if ($status === 'Approved') {
+            $missingParams = [];
+            foreach ($this->parametersList as $key => $details) {
+                $val = $this->results[$key] ?? '';
+                if (trim((string)$val) === '') {
+                    $missingParams[] = $details['name'] . " (" . $details['test_name'] . ")";
+                }
+            }
+
+            if (!empty($missingParams)) {
+                $msg = "Cannot approve report. The following results are missing: " . implode(', ', array_slice($missingParams, 0, 3));
+                if (count($missingParams) > 3) $msg .= " and " . (count($missingParams) - 3) . " more.";
+                
+                $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
+                session()->flash('error', $msg);
+                return;
+            }
+        }
+
         if (!$this->testReport) {
             $this->testReport = TestReport::create([
                 'company_id' => $this->invoice->company_id,
@@ -295,6 +325,7 @@ class ResultEntryManager extends Component
                 [
                     'test_report_id' => $this->testReport->id,
                     'invoice_item_id' => $details['invoice_item_id'],
+                    'lab_test_id' => $details['lab_test_id'],
                     'parameter_name' => $details['name'],
                 ],
                 [
@@ -350,20 +381,13 @@ class ResultEntryManager extends Component
     public function printSelected($withHeader = 1)
     {
         if (empty($this->selectedTests)) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'Please select at least one test to print.']);
             session()->flash('error', 'Please select at least one test to print.');
             return;
         }
 
-        // Check if header/footer exists if trying to print with header
-        if ($withHeader) {
-            $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (!$header) {
-                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
-                return;
-            }
-        }
-
-        $testIds = implode(',', $this->selectedTests);
+        // Printing proceeds regardless of image presence to allow for physical letterhead space
+        $testIds = is_array($this->selectedTests) ? implode(',', $this->selectedTests) : $this->selectedTests;
         $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
              . '?tests=' . $testIds
              . '&header=' . ($withHeader ? '1' : '0');
@@ -373,9 +397,11 @@ class ResultEntryManager extends Component
 
     public function render()
     {
-        // Group parameters by Department and then by Invoice Item ID to keep separate tests distinct
+        // Group parameters by Department -> Invoice Item (Bill Line) -> Lab Test (Actual Test Name)
         $groupedParams = collect($this->parametersList)->groupBy('department')->map(function ($items) {
-            return collect($items)->groupBy('invoice_item_id');
+            return collect($items)->groupBy('invoice_item_id')->map(function ($testGroup) {
+                return collect($testGroup)->groupBy('lab_test_id');
+            });
         });
 
         return view('livewire.lab.result-entry-manager', [

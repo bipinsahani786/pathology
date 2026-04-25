@@ -107,10 +107,15 @@ class PartnerSettlementManager extends Component
             $invoices->where('referred_by_agent_id', $user->id);
         }
 
-        $totalDuesBill = $invoices->sum('total_amount');
         if ($isCC) {
-             // For CC, dues = total billing minus their profit
-            $totalDuesBill = $invoices->sum('total_amount') - $invoices->sum('cc_profit_amount');
+            // For CC, dues = total billing minus their profit (i.e. the B2B cost they owe the lab)
+            $totalDuesBill = $invoices->sum('total_b2b_amount');
+        } elseif ($isDoctor) {
+            $totalDuesBill = $invoices->sum('doctor_commission_amount');
+        } elseif ($isAgent) {
+            $totalDuesBill = $invoices->sum('agent_commission_amount');
+        } else {
+            $totalDuesBill = $invoices->sum('total_amount');
         }
 
         $paidApproved = Settlement::where('user_id', $user->id)->where('status', 'Approved')->sum('amount');

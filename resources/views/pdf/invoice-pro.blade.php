@@ -42,7 +42,7 @@ if (!function_exists('getIndianCurrency')) {
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: {{ $fontFamily }}; font-size: {{ $fontSize }}; color: #000; margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px; line-height: 1.4; position: relative; }
+        body { font-family: {{ $fontFamily }}; font-size: {{ $fontSize }}; color: #000; margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px; line-height: 1.4; position: relative; padding-top: 10px; }
 
         /* Watermark */
         .watermark { position: absolute; top: 35%; left: 50%; width: 450px; margin-left: -225px; opacity: 0.06; z-index: -100; text-align: center; }
@@ -68,11 +68,11 @@ if (!function_exists('getIndianCurrency')) {
         .footer-banner { position: absolute; bottom: 0; width: 100%; }
 
         /* Main Content */
-        .bill-title-container { text-align: center; margin: 15px 0 20px; }
+        .bill-title-container { text-align: center; margin: 40px 0 30px; }
         .bill-title { font-weight: 900; font-size: 15px; color: #000; border-bottom: 2.5px solid #000; display: inline-block; padding: 0 10px 4px; text-transform: uppercase; letter-spacing: 2px; }
 
         .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1.5px solid #1e293b; }
-        .items-table th { background: #f3f4f6; color: #000; padding: 10px; font-size: 11px; text-align: left; text-transform: uppercase; border: 1px solid #1e293b; }
+        .items-table th { background: #f3f4f6; color: #000; padding: 12px 10px; font-size: 11px; text-align: left; text-transform: uppercase; border: 1px solid #1e293b; }
         .items-table td { padding: 10px; border: 1px solid #e5e7eb; font-size: 11px; }
         
         /* Amount in Words Area */
@@ -102,7 +102,11 @@ if (!function_exists('getIndianCurrency')) {
     @endif
 
     <header>
-        <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="{{ $showHeader ? '' : 'visibility: hidden;' }} margin-bottom:12px;">
+        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px;">
+            @if($showHeader && $headerImgSrc)
+                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="width: 100%;">
+            @endif
+        </div>
         <div class="patient-box">
             <table class="patient-table">
                 <tr>
@@ -137,8 +141,14 @@ if (!function_exists('getIndianCurrency')) {
         </div>
     </header>
 
-    @if($showFooter && $footerImgSrc)
-        <footer> <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer"> </footer>
+    @if($showFooter)
+        <footer>
+            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden;">
+                @if($footerImgSrc)
+                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer" style="width: 100%;">
+                @endif
+            </div>
+        </footer>
     @endif
 
     <div class="bill-title-container">

@@ -13,7 +13,7 @@ class LabTestService
      */
     public function getPaginatedTests($searchTerm = null, $filterCategory = null, $perPage = 10)
     {
-        $query = LabTest::with('dept');
+        $query = LabTest::where('is_package', false)->with('dept');
 
         if (!empty($searchTerm)) {
             $query = $query->where(function ($q) use ($searchTerm) {

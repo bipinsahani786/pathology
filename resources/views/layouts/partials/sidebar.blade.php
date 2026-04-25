@@ -1,7 +1,17 @@
 <nav class="nxl-navigation">
     <div class="navbar-wrapper">
         <div class="m-header">
-            <a href="{{ url('/') }}" wire:navigate class="b-brand">
+            @php
+                $dashboardRoute = route('lab.dashboard'); // Default
+                if (auth()->user()->hasRole('super_admin')) {
+                    $dashboardRoute = route('admin.dashboard');
+                } elseif (auth()->user()->patientProfile) {
+                    $dashboardRoute = route('portal.dashboard');
+                } elseif (auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center'])) {
+                    $dashboardRoute = route('partner.dashboard');
+                }
+            @endphp
+            <a href="{{ $dashboardRoute }}" wire:navigate class="b-brand">
                 @php
                     $logoPath = null;
                     $faviconPath = null;
