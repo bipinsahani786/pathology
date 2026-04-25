@@ -159,7 +159,7 @@ class LabManager extends Component
                 'phone' => $this->labPhone,
                 'address' => $this->labAddress,
                 'plan_id' => $this->planId,
-                'sales_agent_id' => $this->salesAgentId,
+                'sales_agent_id' => $this->salesAgentId ?: null,
                 'referred_by' => $this->referredBy,
                 'status' => 'active',
                 'trial_ends_at' => now()->addDays($plan->duration_in_days ?? 30),
@@ -214,7 +214,7 @@ class LabManager extends Component
                 'phone' => $this->labPhone,
                 'address' => $this->labAddress,
                 'plan_id' => $this->planId,
-                'sales_agent_id' => $this->salesAgentId,
+                'sales_agent_id' => $this->salesAgentId ?: null,
                 'referred_by' => $this->referredBy,
             ]);
 
