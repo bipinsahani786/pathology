@@ -76,8 +76,11 @@ class ResultEntryManager extends Component
         }
 
         foreach ($this->invoice->items as $item) {
-            $this->testComments[$item->id] = $item->report_comments ?? '';
-            
+            // Determine if report_comments is JSON (new granular format) or plain text (legacy)
+            $rawComments = $item->report_comments ?? '';
+            $decodedComments = json_decode($rawComments, true);
+            $isJson = (json_last_error() === JSON_ERROR_NONE && is_array($decodedComments));
+
             // Handle Packages vs Single Tests
             $testsToProcess = [];
             if ($item->labTest) {
@@ -89,6 +92,15 @@ class ResultEntryManager extends Component
             }
 
             foreach ($testsToProcess as $test) {
+                // Load specific comment for this test in this invoice item
+                $commentKey = $item->id . '_' . $test->id;
+                if ($isJson) {
+                    $this->testComments[$commentKey] = $decodedComments[$test->id] ?? '';
+                } else {
+                    // Legacy fallback: show the same comment for all tests in the item if it's not JSON
+                    $this->testComments[$commentKey] = $rawComments;
+                }
+
                 if ($test->parameters) {
                     foreach ($test->parameters as $param) {
                         $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
@@ -340,10 +352,28 @@ class ResultEntryManager extends Component
             );
         }
 
-        // Save Test Level Comments
+        // Save Test Level Comments (Granular for packages)
         foreach ($this->invoice->items as $item) {
-            if (isset($this->testComments[$item->id])) {
-                $item->update(['report_comments' => $this->testComments[$item->id]]);
+            $itemComments = [];
+            $hasGranular = false;
+            
+            // Collect all comments belonging to this item
+            foreach ($this->testComments as $key => $comment) {
+                if (str_starts_with($key, $item->id . '_')) {
+                    $testId = substr($key, strlen($item->id . '_'));
+                    $itemComments[$testId] = $comment;
+                    $hasGranular = true;
+                }
+            }
+            
+            if ($hasGranular) {
+                // If it's a single test (not package) AND only one comment exists, store as plain text for backward compatibility
+                if (!$item->labTest->is_package && count($itemComments) === 1) {
+                    $item->update(['report_comments' => reset($itemComments)]);
+                } else {
+                    // Store as JSON for packages or multiple entries
+                    $item->update(['report_comments' => json_encode($itemComments)]);
+                }
             }
         }
 
