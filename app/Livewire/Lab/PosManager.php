@@ -736,25 +736,45 @@ class PosManager extends Component
                 // 'never' — no filter, continuous count
             }
             $nextId = $counterQuery->count() + 1;
+            $invoiceNumber = '';
+            $barcode = '';
 
-            $counter = str_pad($nextId, $counterDigits, '0', STR_PAD_LEFT);
-            $parts = array_filter([$prefix, $datePart, $counter]);
-            $invoiceNumber = implode($separator, $parts);
+            // Loop until we find a unique invoice number and barcode for this company
+            $maxAttempts = 100; // Safety valve
+            $attempts = 0;
 
-            // Barcode generation based on settings
-            $bcPrefix = Configuration::getFor('barcode_prefix', 'LAB');
-            $bcDateFormat = Configuration::getFor('barcode_date_format', 'ymd');
-            $bcCounterDigits = (int) Configuration::getFor('barcode_counter_digits', 6);
+            do {
+                $counter = str_pad($nextId, $counterDigits, '0', STR_PAD_LEFT);
+                $parts = array_filter([$prefix, $datePart, $counter]);
+                $invoiceNumber = implode($separator, $parts);
 
-            $bcDateMap = [
-                'ym' => date('ym'),
-                'ymd' => date('ymd'),
-                'Ymd' => date('Ymd'),
-                'Y' => date('Y'),
-                'none' => '',
-            ];
-            $bcDatePart = $bcDateMap[$bcDateFormat] ?? date('ymd');
-            $barcode = $bcPrefix . $bcDatePart . str_pad($nextId, $bcCounterDigits, '0', STR_PAD_LEFT);
+                // Barcode generation settings
+                $bcPrefix = Configuration::getFor('barcode_prefix', 'LAB');
+                $bcDateFormat = Configuration::getFor('barcode_date_format', 'ymd');
+                $bcCounterDigits = (int) Configuration::getFor('barcode_counter_digits', 6);
+
+                $bcDateMap = [
+                    'ym' => date('ym'),
+                    'ymd' => date('ymd'),
+                    'Ymd' => date('Ymd'),
+                    'Y' => date('Y'),
+                    'none' => '',
+                ];
+                $bcDatePart = $bcDateMap[$bcDateFormat] ?? date('ymd');
+                $barcode = $bcPrefix . $bcDatePart . str_pad($nextId, $bcCounterDigits, '0', STR_PAD_LEFT);
+
+                $exists = Invoice::where('company_id', $companyId)
+                    ->where(function ($q) use ($invoiceNumber, $barcode) {
+                        $q->where('invoice_number', $invoiceNumber)
+                            ->orWhere('barcode', $barcode);
+                    })
+                    ->exists();
+
+                if ($exists) {
+                    $nextId++;
+                    $attempts++;
+                }
+            } while ($exists && $attempts < $maxAttempts);
 
             // ── Commission Calculation ──
             $docCommission = 0;
