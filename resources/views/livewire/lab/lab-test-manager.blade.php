@@ -74,6 +74,7 @@
                                 <th class="ps-4" style="width: 120px;">Code</th>
                                 <th>Test Information</th>
                                 <th>Category</th>
+                                <th style="width: 140px;">Parameters</th>
                                 <th style="width: 150px;">Pricing (₹)</th>
                                 <th style="width: 120px;">Status</th>
                                 <th class="text-end pe-4" style="width: 120px;">Actions</th>
@@ -93,8 +94,32 @@
                                         <span class="badge bg-soft-info text-info px-3 fw-medium">{{ $test->dept?->name ?? 'N/A' }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark fs-14">₹{{ number_format($test->mrp ?? 0, 2) }}</div>
-                                        <div class="text-muted fs-11">B2B: ₹{{ number_format($test->b2b_price ?? 0, 2) }}</div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar-text bg-soft-success text-success rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 11px;">{{ is_array($test->parameters) ? count($test->parameters) : 0 }}</span>
+                                            <span class="fs-12 fw-bold text-dark">Params</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="price-input-wrapper mb-1">
+                                            <div class="d-flex align-items-center pricing-row mrp-row px-2 py-1 rounded-3">
+                                                <span class="currency-symbol text-primary fw-bold me-1">₹</span>
+                                                <input type="number" step="0.01" 
+                                                    value="{{ $test->mrp }}" 
+                                                    wire:blur="updateMrp({{ $test->id }}, $event.target.value)"
+                                                    class="inline-price-input fw-bold text-dark fs-14 border-0 bg-transparent w-100 shadow-none" 
+                                                    title="Edit MRP">
+                                            </div>
+                                        </div>
+                                        <div class="price-input-wrapper">
+                                            <div class="d-flex align-items-center pricing-row b2b-row px-2 py-1 rounded-3 bg-soft-light">
+                                                <span class="label-text text-muted fw-medium me-1" style="font-size: 10px; width: 25px;">B2B</span>
+                                                <input type="number" step="0.01" 
+                                                    value="{{ $test->b2b_price }}" 
+                                                    wire:blur="updateB2BPrice({{ $test->id }}, $event.target.value)"
+                                                    class="inline-price-input text-muted fs-11 border-0 bg-transparent w-100 shadow-none" 
+                                                    title="Edit B2B Price">
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="form-check form-switch m-0">
@@ -123,7 +148,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <div class="p-5 text-center">
                                             <i class="feather-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
                                             <h6 class="text-muted fw-bold">No tests found in your catalog.</h6>
@@ -148,11 +173,21 @@
         <div class="modal fade show d-block" tabindex="-1" role="dialog" style="z-index: 1050;">
             <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                    <div class="modal-header bg-light border-bottom p-3 px-4">
-                        <h5 class="modal-title fw-bold text-dark">
+                    <div class="modal-header bg-light border-bottom p-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="modal-title fw-bold text-dark mb-0">
                             <i class="feather-download-cloud text-primary me-2"></i>Import from Global Master
                         </h5>
-                        <button type="button" wire:click="closeModal" class="btn-close shadow-none" aria-label="Close"></button>
+                        <div class="d-flex align-items-center gap-2">
+                            @if(count($selectedGlobalTests) > 0)
+                                <button wire:click="bulkImport" class="btn btn-primary btn-sm px-3 fw-bold shadow-sm rounded-pill animate__animated animate__pulse animate__infinite">
+                                    <i class="feather-download me-1"></i> Bulk Import ({{ count($selectedGlobalTests) }})
+                                </button>
+                                <button wire:click="resetGlobalSelection" class="btn btn-soft-danger btn-sm px-3 fw-bold rounded-pill">
+                                    Clear
+                                </button>
+                            @endif
+                            <button type="button" wire:click="closeModal" class="btn-close shadow-none ms-2" aria-label="Close"></button>
+                        </div>
                     </div>
 
                     <div class="modal-body p-4 bg-white">
@@ -167,11 +202,22 @@
 
                         <div class="row g-3">
                             @foreach($globalTests as $gt)
-                                @php $isImported = in_array($gt->id, $importedGlobalTestIds); @endphp
+                                @php 
+                                    $isImported = in_array($gt->id, $importedGlobalTestIds); 
+                                    $isSelected = in_array($gt->id, $selectedGlobalTests);
+                                @endphp
                                 <div class="col-md-6" wire:key="global-{{ $gt->id }}">
-                                    <div class="card border rounded-3 p-3 shadow-none h-100 hover-border-primary transition-all {{ $isImported ? 'bg-light border-success-subtle' : '' }}">
+                                    <div class="card border rounded-3 p-3 shadow-none h-100 hover-border-primary transition-all {{ $isImported ? 'bg-light border-success-subtle' : '' }} {{ $isSelected ? 'border-primary bg-soft-primary' : '' }}">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <span class="badge bg-soft-primary text-primary fs-10 px-2">{{ $gt->test_code }}</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                @if(!$isImported)
+                                                    <div class="form-check m-0">
+                                                        <input class="form-check-input shadow-none" type="checkbox" 
+                                                            wire:model.live="selectedGlobalTests" value="{{ $gt->id }}">
+                                                    </div>
+                                                @endif
+                                                <span class="badge bg-soft-primary text-primary fs-10 px-2">{{ $gt->test_code }}</span>
+                                            </div>
                                             
                                             @if($isImported)
                                                 <div class="text-end">
@@ -191,8 +237,11 @@
                                         <h6 class="fw-bold text-dark mb-1">{{ $gt->name }}</h6>
                                         <p class="text-muted fs-11 mb-2">{{ $gt->dept?->name ?? 'N/A' }}</p>
                                         <div class="d-flex align-items-center gap-3">
-                                            <span class="fs-11 text-muted"><i class="feather-list me-1"></i>{{ is_array($gt->default_parameters) ? count($gt->default_parameters) : 0 }} Params</span>
-                                            <span class="fs-11 text-muted"><i class="feather-tag me-1"></i>₹{{ number_format($gt->mrp ?? 0, 2) }} (Sugg.)</span>
+                                            <div class="d-flex align-items-center">
+                                                <span class="avatar-text bg-soft-success text-success rounded-circle me-2 fw-bold d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 11px;">{{ is_array($gt->default_parameters) ? count($gt->default_parameters) : 0 }}</span>
+                                                <span class="fs-11 fw-bold text-dark">Params</span>
+                                            </div>
+                                            <span class="fs-11 text-muted"><i class="feather-tag me-1 text-primary"></i>₹{{ number_format($gt->mrp ?? 0, 2) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -218,6 +267,37 @@
         .fs-10 { font-size: 10px; }
         .fs-11 { font-size: 11px; }
         .fs-14 { font-size: 14px; }
+
+        /* Inline Pricing Styles */
+        .pricing-row {
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            max-width: 120px;
+        }
+        .pricing-row:hover {
+            background-color: #f8f9fa !important;
+            border-color: #e9ecef;
+        }
+        .pricing-row:focus-within {
+            background-color: #fff !important;
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 3px rgba(59, 113, 202, 0.1);
+        }
+        .inline-price-input {
+            outline: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        .inline-price-input::-webkit-outer-spin-button,
+        .inline-price-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .inline-price-input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .currency-symbol { font-size: 12px; }
+        .bg-soft-light { background-color: rgba(0,0,0,0.02); }
     </style>
 
     @include('components.test-documentation-modal')

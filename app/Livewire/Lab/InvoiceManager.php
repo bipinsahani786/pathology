@@ -133,7 +133,11 @@ class InvoiceManager extends Component
 
         // Invoice Status (Active/Cancelled)
         if ($this->filterInvoiceStatus) {
-            $query->where('status', $this->filterInvoiceStatus);
+            if ($this->filterInvoiceStatus === 'Active') {
+                $query->where('status', '!=', 'Cancelled');
+            } else {
+                $query->where('status', $this->filterInvoiceStatus);
+            }
         }
 
         // Sample Status
