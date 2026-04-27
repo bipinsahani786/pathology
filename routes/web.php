@@ -132,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
         Route::get('/system-logs', \App\Livewire\Admin\LogViewer::class)->name('system-logs');
         Route::get('/maintenance', \App\Livewire\Admin\MaintenanceManager::class)->name('maintenance');
+        Route::get('/support', \App\Livewire\Admin\SupportManager::class)->name('support');
     });
 
 
@@ -234,6 +235,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/purchase', \App\Livewire\Lab\Inventory\PurchaseManager::class)->name('purchase');
                 Route::get('/issuance', \App\Livewire\Lab\Inventory\IssuanceManager::class)->name('issuance');
             });
+
+            // Support Tickets
+            Route::get('/support', \App\Livewire\Lab\SupportManager::class)->name('support');
         });
 
     // ----------------------------------------------------
@@ -251,6 +255,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/referrers/doctors', DoctorManager::class)->name('doctors');
             Route::get('/referrers/agents', AgentManager::class)->name('agents');
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+            
+            // Support Tickets
+            Route::get('/support', \App\Livewire\Partner\SupportManager::class)->name('support');
         });
 
 

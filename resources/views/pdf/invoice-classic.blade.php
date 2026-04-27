@@ -44,10 +44,12 @@
             right: 0;
             height: {{ (int)$headerHeight + 20 }}px;
             overflow: visible;
+            width: 100%;
         }
 
         .header-banner {
-            width: 100%;
+            width: 100% !important;
+            min-width: 100% !important;
             display: block;
         }
 
@@ -112,13 +114,16 @@
             left: 0;
             right: 0;
             height: {{ $footerHeight }};
+            width: 100%;
         }
 
         .footer-banner {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 100%;
+            width: 100% !important;
+            min-width: 100% !important;
+            display: block;
         }
 
         /* ── MAIN CONTENT ── */
@@ -219,9 +224,9 @@
 
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
-        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px;">
+        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px; padding: 0;">
             @if($showHeader && $headerImgSrc)
-                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="width: 100%;">
+                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header">
             @endif
         </div>
 
@@ -269,9 +274,9 @@
     {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
     @if($showFooter)
         <footer>
-            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden;">
+            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden; padding: 0;">
                 @if($footerImgSrc)
-                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer" style="width: 100%;">
+                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
                 @endif
             </div>
         </footer>

@@ -72,3 +72,19 @@ if (!function_exists('storage_base64')) {
         });
     }
 }
+
+if (!function_exists('generate_qr_base64')) {
+    /**
+     * Generate a QR Code as Base64 PNG.
+     */
+    function generate_qr_base64(string $data): string
+    {
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputType' => \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,
+            'quality'    => 90,
+            'scale'      => 5,
+        ]);
+
+        return (new \chillerlan\QRCode\QRCode($options))->render($data);
+    }
+}

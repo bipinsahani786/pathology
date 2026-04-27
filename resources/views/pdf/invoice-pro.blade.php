@@ -49,8 +49,8 @@ if (!function_exists('getIndianCurrency')) {
         .watermark img { width: 100%; filter: grayscale(100%); }
 
         /* Fixed Header */
-        header { position: fixed; top: 0; left: 0; right: 0; height: {{ (int)$headerHeight + 20 }}px; overflow: visible; }
-        .header-banner { width: 100%; display: block; }
+        header { position: fixed; top: 0; left: 0; right: 0; height: {{ (int)$headerHeight + 20 }}px; overflow: visible; width: 100%; }
+        .header-banner { width: 100% !important; min-width: 100% !important; display: block; }
         
         /* Patient Info (Standardized Grid) */
         .patient-box { border: 1.5px solid #1e293b !important; margin: 4px 25px 0; padding: 10px; border-radius: 2px; background: #fff; }
@@ -64,8 +64,8 @@ if (!function_exists('getIndianCurrency')) {
         .barcode-img { max-width: 90px; height: 22px; margin-top: 5px; }
 
         /* Fixed Footer */
-        footer { position: fixed; bottom: 0; left: 0; right: 0; height: {{ $footerHeight }}; }
-        .footer-banner { position: absolute; bottom: 0; width: 100%; }
+        footer { position: fixed; bottom: 0; left: 0; right: 0; height: {{ $footerHeight }}; width: 100%; }
+        .footer-banner { position: absolute; bottom: 0; width: 100% !important; min-width: 100% !important; display: block; }
 
         /* Main Content */
         .bill-title-container { text-align: center; margin: 40px 0 30px; }
@@ -102,9 +102,9 @@ if (!function_exists('getIndianCurrency')) {
     @endif
 
     <header>
-        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px;">
+        <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px; padding: 0;">
             @if($showHeader && $headerImgSrc)
-                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header" style="width: 100%;">
+                <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header">
             @endif
         </div>
         <div class="patient-box">
@@ -143,9 +143,9 @@ if (!function_exists('getIndianCurrency')) {
 
     @if($showFooter)
         <footer>
-            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden;">
+            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden; padding: 0;">
                 @if($footerImgSrc)
-                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer" style="width: 100%;">
+                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
                 @endif
             </div>
         </footer>

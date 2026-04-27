@@ -58,8 +58,8 @@
         }
 
         /* Custom Header/Footer Images */
-        .custom-header-img { width: 100%; max-height: 100px; object-fit: contain; }
-        .custom-footer-img { width: 100%; max-height: 60px; object-fit: contain; }
+        .custom-header-img { width: 100% !important; min-width: 100% !important; display: block; }
+        .custom-footer-img { width: 100% !important; min-width: 100% !important; display: block; }
 
         /* Patient Demographics Box */
         .patient-box {
