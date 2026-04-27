@@ -121,7 +121,7 @@
                                 </div>
                                 <div>
                                     <div class="fs-4 fw-bold text-dark mb-0">₹{{ number_format($stats['lab_dues'], 2) }}</div>
-                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Total Lab Dues</h3>
+                                    <h3 class="fs-13 fw-semibold text-muted text-uppercase ls-1 mb-0">Total Lab Business</h3>
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-top border-light d-flex justify-content-between align-items-center">
@@ -140,7 +140,7 @@
                                     <i class="feather-alert-octagon fs-4"></i>
                                 </div>
                                 <div>
-                                    <h3 class="fs-13 fw-bold text-muted text-uppercase ls-1 mb-1">Unsettled Dues</h3>
+                                    <h3 class="fs-13 fw-bold text-muted text-uppercase ls-1 mb-1">Outstanding Balance</h3>
                                     <div class="fs-3 fw-bolder text-dark mb-0">₹{{ number_format($stats['pending_balance'], 2) }}</div>
                                 </div>
                             </div>
