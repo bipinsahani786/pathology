@@ -94,12 +94,10 @@ Route::get('/v/{hash}', [\App\Http\Controllers\PublicReportController::class, 'd
 Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, 'streamPublic'])->name('public.bill.download');
 
 
-Route::middleware(['guest'])->group(function () {
-    Route::get('/login', Login::class)->name('login');
-    Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
-    Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
-    // Route::get('/register-lab', RegisterCompany::class)->name('register.lab');
-});
+// Auth Routes (Guest access is handled inside components to prevent role conflicts)
+Route::get('/login', Login::class)->name('login');
+Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
+Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
 
 
 // ==========================================
@@ -132,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
         Route::get('/system-logs', \App\Livewire\Admin\LogViewer::class)->name('system-logs');
         Route::get('/maintenance', \App\Livewire\Admin\MaintenanceManager::class)->name('maintenance');
+        Route::get('/support', \App\Livewire\Admin\SupportManager::class)->name('support');
     });
 
 
@@ -234,6 +233,9 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/purchase', \App\Livewire\Lab\Inventory\PurchaseManager::class)->name('purchase');
                 Route::get('/issuance', \App\Livewire\Lab\Inventory\IssuanceManager::class)->name('issuance');
             });
+
+            // Support Tickets
+            Route::get('/support', \App\Livewire\Lab\SupportManager::class)->name('support');
         });
 
     // ----------------------------------------------------
@@ -251,6 +253,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/referrers/doctors', DoctorManager::class)->name('doctors');
             Route::get('/referrers/agents', AgentManager::class)->name('agents');
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+            
+            // Support Tickets
+            Route::get('/support', \App\Livewire\Partner\SupportManager::class)->name('support');
         });
 
 

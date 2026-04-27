@@ -5,129 +5,236 @@
     <title>Membership Card - {{ $patient->name }}</title>
     <style>
         @page { margin: 0; }
-        body { margin: 0; padding: 0; font-family: 'Helvetica', 'Arial', sans-serif; background-color: #f8fafc; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Helvetica', 'Arial', sans-serif; 
+            background: #ffffff;
+        }
         
         .card {
             width: 86mm;
             height: 54mm;
-            background: #ffffff;
+            background: #1e293b; /* Dark theme for premium feel */
             position: relative;
             overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            color: #ffffff;
+        }
+
+        /* Abstract Background Pattern */
+        .card::before {
+            content: "";
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60mm;
+            height: 60mm;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 50%;
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            bottom: -10%;
+            left: -5%;
+            width: 40mm;
+            height: 40mm;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(30, 78, 216, 0) 100%);
+            border-radius: 50%;
         }
 
         .header {
-            height: 18mm;
-            background: linear-gradient(135deg, #2563eb 0%, #1e4ed8 100%);
-            color: white;
-            padding: 2mm 4mm;
-            display: flex;
-            align-items: center;
+            padding: 4mm 5mm;
+            display: table;
+            width: 100%;
+            box-sizing: border-box;
+            border-bottom: 0.2mm solid rgba(255,255,255,0.1);
         }
 
-        .lab-logo { width: 10mm; height: 10mm; background: white; border-radius: 4px; display: inline-block; vertical-align: middle; }
-        .lab-name { display: inline-block; margin-left: 2mm; vertical-align: middle; font-size: 11px; font-weight: bold; width: 65mm; line-height: 1.2; }
+        .lab-info {
+            display: table-cell;
+            vertical-align: middle;
+        }
 
-        .content { padding: 3mm 4mm; position: relative; }
-        
-        .patient-photo {
-            width: 16mm;
-            height: 20mm;
-            background: #e2e8f0;
-            border-radius: 4px;
-            float: right;
-            border: 1px solid #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
+        .lab-logo {
+            width: 10mm;
+            height: 10mm;
+            background: #ffffff;
+            border-radius: 6px;
+            display: inline-block;
+            vertical-align: middle;
+            padding: 1mm;
+            box-sizing: border-box;
+        }
+
+        .lab-name {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 3mm;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .content {
+            padding: 4mm 5mm;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Chip Icon simulation */
+        .chip {
+            width: 8mm;
+            height: 6mm;
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            border-radius: 2px;
+            margin-bottom: 3mm;
+            position: relative;
+        }
+        .chip::after {
+            content: "";
+            position: absolute;
+            top: 1mm; left: 1mm; right: 1mm; bottom: 1mm;
+            border: 0.1mm solid rgba(0,0,0,0.2);
+        }
+
+        .patient-details {
+            float: left;
+            width: 55mm;
+        }
+
+        .field {
+            margin-bottom: 2mm;
+        }
+
+        .label {
+            font-size: 6px;
             color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.5mm;
         }
 
-        .field { margin-bottom: 2mm; }
-        .label { font-size: 7px; color: #64748b; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
-        .value { font-size: 11px; font-weight: bold; color: #1e293b; text-transform: uppercase; }
+        .value {
+            font-size: 11px;
+            font-weight: bold;
+            color: #ffffff;
+            letter-spacing: 0.2px;
+        }
+
+        .id-number {
+            font-family: 'Courier', monospace;
+            font-size: 13px;
+            color: #fbbf24; /* Gold accent */
+            letter-spacing: 1px;
+        }
+
+        .qr-section {
+            float: right;
+            width: 18mm;
+            text-align: right;
+        }
+
+        .qr-code {
+            width: 16mm;
+            height: 16mm;
+            background: #ffffff;
+            padding: 1mm;
+            border-radius: 4px;
+            display: inline-block;
+        }
 
         .footer {
             position: absolute;
             bottom: 0;
             width: 100%;
-            height: 8mm;
-            background: #1e293b;
-            color: white;
-            padding: 0 4mm;
-            display: table;
+            padding: 3mm 5mm;
+            box-sizing: border-box;
+            background: rgba(0,0,0,0.2);
+            font-size: 7px;
+            color: #94a3b8;
         }
-        .footer-cell { display: table-cell; vertical-align: middle; font-size: 7px; }
 
-        .membership-badge {
+        .plan-badge {
             position: absolute;
-            top: 20mm;
-            right: 4mm;
-            background: #fef3c7;
-            color: #d97706;
-            padding: 1mm 2mm;
-            border-radius: 4px;
-            font-size: 8px;
-            font-weight: 800;
+            top: 4mm;
+            right: 5mm;
+            background: rgba(255,255,255,0.1);
+            border: 0.2mm solid rgba(255,255,255,0.2);
+            padding: 1mm 2.5mm;
+            border-radius: 100px;
+            font-size: 7px;
+            font-weight: bold;
+            color: #fbbf24;
             text-transform: uppercase;
-            border: 1px solid #fcd34d;
         }
 
-        .validity { font-size: 8px; color: #2563eb; font-weight: bold; }
-        
-        .clearfix::after { content: ""; display: table; clear: both; }
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="header">
-            @if($company->logo)
-                <img src="{{ storage_base64($company->logo) }}" style="max-height:10mm; max-width:10mm;">
-            @else
-                <div class="lab-logo"></div>
-            @endif
-            <div class="lab-name text-uppercase">{{ $company->name }}</div>
+            <div class="lab-info">
+                @if($company->logo)
+                    <div class="lab-logo">
+                        <img src="{{ storage_base64($company->logo) }}" style="width:100%; height:100%; object-fit: contain;">
+                    </div>
+                @endif
+                <div class="lab-name">{{ $company->name }}</div>
+            </div>
+        </div>
+
+        <div class="plan-badge">
+            {{ $plan->name }}
         </div>
 
         <div class="content clearfix">
-            <div class="patient-photo">
-                @if($patient->patientProfile && $patient->patientProfile->photo)
-                    <img src="{{ storage_base64($patient->patientProfile->photo) }}" style="width:100%; height:100%; object-fit: cover;">
-                @else
-                    PHOTO
-                @endif
-            </div>
+            <div class="chip"></div>
+            
+            <div class="patient-details">
+                <div class="field">
+                    <div class="label">Member Name</div>
+                    <div class="value text-uppercase">{{ $patient->name }}</div>
+                </div>
+                
+                <div class="field">
+                    <div class="label">Card Number</div>
+                    <div class="id-number">{{ $patient->patientProfile->patient_id_string ?? 'P-' . str_pad($patient->id, 6, '0', STR_PAD_LEFT) }}</div>
+                </div>
 
-            <div class="field">
-                <div class="label">Patient Name</div>
-                <div class="value">{{ $patient->name }}</div>
-            </div>
-
-            <div class="field">
-                <div class="label">Patient ID</div>
-                <div class="value" style="color: #2563eb;">{{ $patient->patientProfile->patient_id_string ?? 'PAT-' . $patient->id }}</div>
-            </div>
-
-            <div class="field">
-                <div class="label">Plan Validity</div>
-                <div class="validity">
-                    {{ $membership->valid_from->format('d/m/Y') }} — {{ $membership->valid_until->format('d/m/Y') }}
+                <div class="field" style="margin-top: 3mm;">
+                    <div class="label">Valid Thru</div>
+                    <div class="value" style="font-size: 9px;">{{ $membership->valid_until->format('m/Y') }}</div>
                 </div>
             </div>
-            
-            <div class="membership-badge">
-                {{ $plan->name }} MEMBER
+
+            <div class="qr-section">
+                <div class="qr-code">
+                    @php
+                        $qrData = route('portal.login', ['id' => $patient->id]); // Placeholder link
+                        $qrBase64 = generate_qr_base64($qrData);
+                    @endphp
+                    <img src="{{ $qrBase64 }}" style="width:100%; height:100%;">
+                </div>
+                <div style="font-size: 5px; color: #94a3b8; margin-top: 1mm;">SCAN TO VERIFY</div>
             </div>
         </div>
 
-        <div class="footer">
-            <div class="footer-cell" style="text-align: left;">
-                ✉ {{ $company->email ?? 'info@lab.com' }}
+        <div class="footer clearfix">
+            <div style="float: left;">
+                PH: {{ $company->phone ?? 'Support' }}
             </div>
-            <div class="footer-cell" style="text-align: right;">
-                📞 {{ $company->phone ?? 'Contact' }}
+            <div style="float: right;">
+                HEALTHPATH NETWORK
             </div>
         </div>
     </div>

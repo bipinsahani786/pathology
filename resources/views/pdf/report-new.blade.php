@@ -59,20 +59,16 @@
         .header-logo-container {
             width: 100%;
             height: {{ $headerHeight }};
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
             overflow: hidden;
             text-align: center;
+            padding: 0;
         }
 
         .header-banner {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
+            width: 100% !important;
+            min-width: 100% !important;
             display: block;
-            margin: 0 auto;
         }
 
         /* ── PATIENT INFO BOX ── */
@@ -197,7 +193,9 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 100%;
+            width: 100% !important;
+            min-width: 100% !important;
+            display: block;
         }
 
         /* ── Multi-Signature Row ── */
