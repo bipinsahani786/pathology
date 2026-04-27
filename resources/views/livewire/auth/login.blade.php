@@ -95,6 +95,26 @@
                 <h1 class="text-4xl font-bold text-zinc-900 dark:text-white tracking-tight mb-4">Welcome Back</h1>
                 <p class="text-zinc-500 font-medium">Please enter your credentials to access the laboratory dashboard.
                 </p>
+
+                @if(Auth::check())
+                    <div class="mt-6 p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold">
+                                {{ substr(Auth::user()->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Active Session</p>
+                                <p class="text-sm font-bold text-zinc-900 dark:text-white">{{ Auth::user()->name }}</p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="text-xs font-bold text-red-600 hover:text-red-700 uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
+                                Logout First
+                            </button>
+                        </form>
+                    </div>
+                @endif
             </div>
 
             <form wire:submit.prevent="login" class="space-y-6">

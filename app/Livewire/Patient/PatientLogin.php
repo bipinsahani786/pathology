@@ -18,6 +18,18 @@ class PatientLogin extends Component
         'mobile' => 'required|min:10',
     ];
 
+    public function mount()
+    {
+        // If already logged in as a patient, redirect to portal dashboard
+        // If logged in as staff, stay here so they can log in as a patient (test account)
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $user = \Illuminate\Support\Facades\Auth::user();
+            if ($user->patientProfile) {
+                return redirect()->route('portal.dashboard');
+            }
+        }
+    }
+
     public function login()
     {
         $this->validate();

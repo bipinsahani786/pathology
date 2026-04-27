@@ -94,12 +94,10 @@ Route::get('/v/{hash}', [\App\Http\Controllers\PublicReportController::class, 'd
 Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, 'streamPublic'])->name('public.bill.download');
 
 
-Route::middleware(['guest'])->group(function () {
-    Route::get('/login', Login::class)->name('login');
-    Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
-    Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
-    // Route::get('/register-lab', RegisterCompany::class)->name('register.lab');
-});
+// Auth Routes (Guest access is handled inside components to prevent role conflicts)
+Route::get('/login', Login::class)->name('login');
+Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
+Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
 
 
 // ==========================================
