@@ -38,7 +38,8 @@ class RoleSeeder extends Seeder
             'wallets',
             'inventory',
             'equipment',
-            'audit_logs'
+            'audit_logs',
+            'support_tickets'
         ];
         $actions = ['view', 'create', 'edit', 'delete'];
 
@@ -72,7 +73,10 @@ class RoleSeeder extends Seeder
         $superAdmin->syncPermissions([
             'manage global_tests',
             'manage plans',
-            'manage subscriptions'
+            'manage subscriptions',
+            'view support_tickets',
+            'edit support_tickets',
+            'delete support_tickets',
         ]);
 
         // Lab Admin (Tenant Owner)
@@ -125,7 +129,9 @@ class RoleSeeder extends Seeder
             'create pos',
             'view marketing',
             'create marketing',
-            'view inventory'
+            'view inventory',
+            'view support_tickets',
+            'create support_tickets'
         ]);
 
         // Customer (Patient)
@@ -139,14 +145,18 @@ class RoleSeeder extends Seeder
         $doctor = Role::firstOrCreate(['name' => 'doctor']);
         $doctor->syncPermissions([
             // 'view reports',
-            'download reports'
+            'download reports',
+            'view support_tickets',
+            'create support_tickets'
         ]);
 
         // Agent (Referral Partner)
         $agent = Role::firstOrCreate(['name' => 'agent']);
         $agent->syncPermissions([
             // 'view reports',
-            'download reports'
+            'download reports',
+            'view support_tickets',
+            'create support_tickets'
         ]);
 
         $this->command->info('Roles and Permissions synced successfully!');

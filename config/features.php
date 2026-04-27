@@ -19,4 +19,7 @@ return [
 
     // Inventory Management Module
     'inventory' => env('FEATURE_INVENTORY', true),
+
+    // Support Ticket System
+    'support_tickets' => env('FEATURE_SUPPORT', true),
 ];

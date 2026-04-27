@@ -151,12 +151,14 @@
                             <span class="nxl-mtext">System Maintenance</span>
                         </a>
                     </li>
+                    @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('admin.support') ? 'active' : '' }}">
                         <a href="{{ route('admin.support') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-help-circle"></i></span>
                             <span class="nxl-mtext">System Support</span>
                         </a>
                     </li>
+                    @endif
                 @endrole
 
 
@@ -331,12 +333,14 @@
                             <span class="nxl-mtext">My Profile</span>
                         </a>
                     </li>
+                    @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('lab.support') ? 'active' : '' }}">
                         <a href="{{ route('lab.support') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-help-circle"></i></span>
                             <span class="nxl-mtext">Help & Support</span>
                         </a>
                     </li>
+                    @endif
                     <li class="nxl-item">
                         <form method="POST" action="{{ route('logout') }}" id="logout-form-lab" class="d-none">
                             @csrf
@@ -558,12 +562,14 @@
                             <span class="nxl-mtext">My Profile</span>
                         </a>
                     </li>
+                    @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('partner.support') ? 'active' : '' }}">
                         <a href="{{ route('partner.support') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-help-circle"></i></span>
                             <span class="nxl-mtext">Help & Support</span>
                         </a>
                     </li>
+                    @endif
                     <li class="nxl-item">
                         <form method="POST" action="{{ route('logout') }}" id="logout-form-sidebar" class="d-none">
                             @csrf
