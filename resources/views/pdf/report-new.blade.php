@@ -203,7 +203,7 @@
         /* ── Multi-Signature Row ── */
         .sig-container {
             position: absolute;
-            bottom: 175px; /* Shifted UP by ~1cm (35-40px) from 140px */
+            bottom: 185px; /* Positioned just above the footer banner */
             left: 0;
             width: 100%;
         }
@@ -272,6 +272,10 @@
             font-size: 10px;
         }
 
+        .result-table tr {
+            page-break-inside: avoid;
+        }
+
         .result-table thead th {
             border-top: 1.5px solid #333;
             border-bottom: 1.5px solid #333;
@@ -334,10 +338,11 @@
            INTERPRETATION & REMARKS BLOCKS
            ══════════════════════════════════════════════ */
         .interp-block {
-            margin: 6px 0 10px;
-            padding: 4px 6px;
+            margin: 15px 0 10px;
+            padding: 4px 0;
             font-size: 10px;
             line-height: 1.5;
+            page-break-inside: avoid;
         }
 
         .interp-label {
@@ -345,6 +350,11 @@
             font-size: 10px;
             margin-bottom: 3px;
             color: #1a1a1a;
+        }
+
+        .interp-content {
+            margin-left: 0;
+            padding-left: 0;
         }
 
         /* Render HTML interpretation tables cleanly */
@@ -368,6 +378,10 @@
             border: 1px solid #bbb;
             padding: 3px 6px;
             font-size: 10px;
+        }
+
+        .interp-content table tr {
+            page-break-inside: avoid;
         }
 
         .interp-content table tr:nth-child(even) {
@@ -396,11 +410,12 @@
 
         /* Remarks block (from result entry) */
         .remarks-block {
-            margin: 10px 0;
-            padding: 5px 0;
+            margin: 20px 0 10px;
+            padding: 10px 0;
             font-size: 10px;
             line-height: 1.5;
             border-top: 1px dashed #ccc;
+            page-break-inside: avoid;
         }
 
         .remarks-block table {
@@ -420,6 +435,12 @@
         .remarks-block table td {
             border: 1px solid #bbb;
             padding: 3px 6px;
+        }
+
+        .doctor-comments {
+            margin: 25px 0 10px;
+            padding: 10px 0;
+            border-top: 1.5px solid #eee;
         }
 
         /* ══════════════════════════════════════════════
@@ -760,20 +781,12 @@
                 </div>
             @endif
 
-            {{-- ── Result Entry Remarks (from InvoiceItem — stored as HTML) ── --}}
-            @php
-                $testInvoiceItem = null;
-                if ($results->first()->invoice_item_id) {
-                    $testInvoiceItem = $invoice->items->where('id', $results->first()->invoice_item_id)->first();
-                } else {
-                    $testInvoiceItem = $invoice->items->where('lab_test_id', $results->first()->lab_test_id)->first();
-                }
-            @endphp
-            @if($testInvoiceItem && $testInvoiceItem->report_comments)
+            {{-- ── Result Entry Remarks (Granular per test) ── --}}
+            @if(!empty($testData['remark']))
                 <div class="remarks-block">
                     <div class="interp-label">Remarks:</div>
                     <div class="interp-content">
-                        {!! $testInvoiceItem->report_comments !!}
+                        {!! $testData['remark'] !!}
                     </div>
                 </div>
             @endif

@@ -326,12 +326,18 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($tests as $testName => $results)
+                @foreach($tests as $testKey => $testData)
+                    @php
+                        $testName = $testData['name'];
+                        $results = $testData['results'];
+                        $labTest = $testData['labTest'];
+                        $remark = $testData['remark'] ?? '';
+                    @endphp
                     <tr>
                         <td colspan="4" class="test-title">
                             {{ $testName }}
-                            @if($results->first()->labTest->method)
-                                <span style="font-size: 10px; font-weight: normal; margin-left: 10px; color: #666;">(Method: {{ $results->first()->labTest->method }})</span>
+                            @if($labTest->method)
+                                <span style="font-size: 10px; font-weight: normal; margin-left: 10px; color: #666;">(Method: {{ $labTest->method }})</span>
                             @endif
                         </td>
                     </tr>
@@ -359,37 +365,29 @@
                             <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
                         </tr>
                     @endforeach
-                    @if($results->first()->labTest->description)
+                    @if($labTest->description)
                         <tr>
                             <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: #555;">
                                 <strong>Note:</strong> <br>
-                                {!! nl2br(e($results->first()->labTest->description)) !!}
+                                {!! nl2br(e($labTest->description)) !!}
                             </td>
                         </tr>
                     @endif
-                    @if($results->first()->labTest->interpretation)
+                    @if($labTest->interpretation)
                         <tr>
                             <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333;">
                                 <strong>Interpretation:</strong> <br>
-                                {!! $results->first()->labTest->interpretation !!}
+                                {!! $labTest->interpretation !!}
                             </td>
                         </tr>
                     @endif
 
-                    <!-- Display Test Form specific remarks -->
-                    @php
-                        $testInvoiceItem = null;
-                        if($results->first()->invoice_item_id) {
-                            $testInvoiceItem = $invoice->items->where('id', $results->first()->invoice_item_id)->first();
-                        } else {
-                            $testInvoiceItem = $invoice->items->where('lab_test_id', $results->first()->lab_test_id)->first();
-                        }
-                    @endphp
-                    @if($testInvoiceItem && $testInvoiceItem->report_comments)
+                    <!-- Display Test specific remarks (Granular) -->
+                    @if(!empty($remark))
                         <tr>
                             <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333; background: #fafafa; border: 1px dotted #ccc;">
                                 <strong>Feedback / Remarks:</strong> <br>
-                                {!! $testInvoiceItem->report_comments !!}
+                                {!! $remark !!}
                             </td>
                         </tr>
                     @endif

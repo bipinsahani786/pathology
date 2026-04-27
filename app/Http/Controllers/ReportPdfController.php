@@ -66,7 +66,7 @@ class ReportPdfController extends Controller
         // Auth & Isolation check for non-public access
         if (!$isPublic) {
             $user = auth()->user();
-            
+
             // 1. Company Isolation
             if ($report->invoice->company_id !== $user->company_id) {
                 abort(403, 'Unauthorized company access.');
@@ -76,12 +76,12 @@ class ReportPdfController extends Controller
             if ($user->hasRole('patient') && $report->invoice->patient_id !== $user->id) {
                 abort(403, 'You are not authorized to view this report.');
             }
-            
+
             // 3. Branch Isolation: If enabled, staff can only see their branch's reports
             $companyId = $user->company_id;
             $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
             $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
-            
+
             if ($restrictBranch && !$isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
                 abort(403, 'You do not have access to reports from this branch.');
             }
@@ -89,8 +89,8 @@ class ReportPdfController extends Controller
             // 4. Partner Isolation: Doctors/Agents/CCs only see their referrals
             if (!$isGlobalAdmin && !$user->hasRole('patient')) {
                 $isDoctor = $user->hasRole('doctor') || $user->doctorProfile;
-                $isAgent  = $user->hasRole('agent') || $user->agentProfile;
-                $isCC     = $user->hasRole('collection_center') || $user->collection_center_id;
+                $isAgent = $user->hasRole('agent') || $user->agentProfile;
+                $isCC = $user->hasRole('collection_center') || $user->collection_center_id;
 
                 if ($isDoctor && $report->invoice->referred_by_doctor_id !== $user->id) {
                     abort(403, 'Unauthorized referral access.');
@@ -112,53 +112,53 @@ class ReportPdfController extends Controller
 
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
-            'pdf_header_image'       => storage_base64($headerImage),
-            'pdf_footer_image'       => storage_base64($footerImage),
-            'report_signature_mode'  => Configuration::getFor('report_signature_mode', null, $companyId) ?: 'global_bottom',
+            'pdf_header_image' => storage_base64($headerImage),
+            'pdf_footer_image' => storage_base64($footerImage),
+            'report_signature_mode' => Configuration::getFor('report_signature_mode', null, $companyId) ?: 'global_bottom',
 
-            'global_sig_1_name'      => Configuration::getFor('authorized_signatory_name', null, $companyId) ?: 'Authorized Signatory',
-            'global_sig_1_desig'     => Configuration::getFor('authorized_signatory_designation', null, $companyId) ?: '',
-            'global_sig_1_path'      => storage_base64(Configuration::getFor('signature_image', null, $companyId)),
+            'global_sig_1_name' => Configuration::getFor('authorized_signatory_name', null, $companyId) ?: 'Authorized Signatory',
+            'global_sig_1_desig' => Configuration::getFor('authorized_signatory_designation', null, $companyId) ?: '',
+            'global_sig_1_path' => storage_base64(Configuration::getFor('signature_image', null, $companyId)),
 
-            'global_sig_2_name'      => Configuration::getFor('global_sig_2_name', '', $companyId) ?: '',
-            'global_sig_2_desig'     => Configuration::getFor('global_sig_2_desig', '', $companyId) ?: '',
-            'global_sig_2_path'      => storage_base64(Configuration::getFor('global_sig_2_path', null, $companyId)),
+            'global_sig_2_name' => Configuration::getFor('global_sig_2_name', '', $companyId) ?: '',
+            'global_sig_2_desig' => Configuration::getFor('global_sig_2_desig', '', $companyId) ?: '',
+            'global_sig_2_path' => storage_base64(Configuration::getFor('global_sig_2_path', null, $companyId)),
 
-            'global_sig_3_name'      => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
-            'global_sig_3_desig'     => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
-            'global_sig_3_path'      => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
-            'pdf_font_size'          => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
-            'pdf_font_family'        => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            
+            'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
+            'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
+            'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
+            'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
+            'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
+
             // ALWAYS reserve space for physical letterhead (1 inch = ~96px minimum, but user wants settings-driven)
-            'pdf_margin_top'         => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 250,
-            'pdf_margin_bottom'      => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 180,
-            
-            'pdf_header_height'      => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
-            'pdf_footer_height'      => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 160,
-            'pdf_header_image'       => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
-            'pdf_footer_image'       => (Configuration::getFor('pdf_show_footer', '1', $companyId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 320,
+            'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 280,
+
+            'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
+            'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
+            'pdf_header_image' => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
+            'pdf_footer_image' => (Configuration::getFor('pdf_show_footer', '1', $companyId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
 
             // Visibility
-            'pdf_show_header'        => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
-            'pdf_show_footer'        => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
+            'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
+            'pdf_show_footer' => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)
-        $showHeaderSetting = (bool)($settings['pdf_show_header'] ?? true);
-        $showFooterSetting = (bool)($settings['pdf_show_footer'] ?? true);
-        
+        $showHeaderSetting = (bool) ($settings['pdf_show_header'] ?? true);
+        $showFooterSetting = (bool) ($settings['pdf_show_footer'] ?? true);
+
         $showHeader = $showHeaderSetting && ($request->get('header', '1') === '1');
         $showFooter = $showFooterSetting;
 
         // ── QR Code Generation ──────────────────────────────────────────────
         $publicUrl = route('public.report.download', ['hash' => base64_encode($report->invoice_id)]);
         $options = new QROptions([
-            'version'         => 5,
+            'version' => 5,
             'outputInterface' => QRGdImagePNG::class,
-            'eccLevel'        => EccLevel::L,
-            'scale'           => 4,
-            'imageTransparent'=> false,
+            'eccLevel' => EccLevel::L,
+            'scale' => 4,
+            'imageTransparent' => false,
         ]);
         $qrCodeUri = (new QRCode($options))->render($publicUrl);
 
@@ -176,16 +176,39 @@ class ReportPdfController extends Controller
 
         $groupedResults = $results->groupBy(function ($result) {
             return $result->labTest->department_id ?? 0;
-        })->map(function ($deptGroup) {
+        })->map(function ($deptGroup) use ($report) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
-                'tests'      => $deptGroup->groupBy(function($r) {
+                'tests' => $deptGroup->groupBy(function ($r) {
                     return $r->invoice_item_id . '_' . $r->lab_test_id;
-                })->map(function ($testGroup) {
+                })->map(function ($testGroup) use ($report) {
+                    $first = $testGroup->first();
+                    $itemId = $first->invoice_item_id;
+                    $testId = $first->lab_test_id;
+
+                    // Find the invoice item to get comments
+                    $item = $report->invoice->items->where('id', $itemId)->first();
+                    $remark = '';
+                    if ($item) {
+                        $raw = $item->report_comments;
+                        $decoded = json_decode($raw, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            // New granular format (JSON keyed by test_id)
+                            $remark = $decoded[$testId] ?? '';
+                        } else {
+                            // Legacy format (String). 
+                            // If it's a package, we don't know which test it belongs to, 
+                            // but usually it was intended for the whole item, so we show it for all 
+                            // or maybe just the last one? Showing for all is safer for not losing data.
+                            $remark = $raw;
+                        }
+                    }
+
                     return [
-                        'name'    => $testGroup->first()->labTest->name,
-                        'labTest' => $testGroup->first()->labTest,
+                        'name' => $first->labTest->name,
+                        'labTest' => $first->labTest,
                         'results' => $testGroup,
+                        'remark' => $remark,
                     ];
                 }),
             ];
@@ -197,21 +220,21 @@ class ReportPdfController extends Controller
         }
 
         $pdf = Pdf::loadView($viewName, [
-            'report'         => $report,
-            'invoice'        => $report->invoice,
-            'patient'        => $report->invoice->patient,
-            'profile'        => $report->invoice->patient->patientProfile,
+            'report' => $report,
+            'invoice' => $report->invoice,
+            'patient' => $report->invoice->patient,
+            'profile' => $report->invoice->patient->patientProfile,
             'groupedResults' => $groupedResults,
-            'settings'       => $settings,
-            'company'        => $report->invoice->company,
-            'showHeader'     => $showHeader,
-            'showFooter'     => $showFooter,
-            'qrCodeUri'      => $qrCodeUri,
-            'barcodeUri'     => $barcodeUri,
+            'settings' => $settings,
+            'company' => $report->invoice->company,
+            'showHeader' => $showHeader,
+            'showFooter' => $showFooter,
+            'qrCodeUri' => $qrCodeUri,
+            'barcodeUri' => $barcodeUri,
         ])->setPaper('A4', 'portrait');
 
         $filename = 'Report_' . str_replace(' ', '_', $report->invoice->patient->name)
-                  . '_' . $report->invoice->invoice_number . '.pdf';
+            . '_' . $report->invoice->invoice_number . '.pdf';
 
         return $pdf->stream($filename);
     }

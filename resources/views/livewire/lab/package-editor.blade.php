@@ -52,19 +52,19 @@
                                         <div class="list-group list-group-flush">
                                             @forelse($searchResultTests as $srt)
                                                 @if(!isset($selectedTests[$srt->id]))
-                                                    <button type="button" wire:click="addTestToPackage({{ $srt->id }}, '{{ addslashes($srt->name) }}', '{{ addslashes($srt->department) }}', {{ $srt->mrp ?? 0 }})" 
-                                                        class="list-group-item list-group-item-action py-3 px-4 border-bottom d-flex justify-content-between align-items-center hover-bg-light transition-all">
+                                                    <div wire:click="addTestToPackage({{ $srt->id }}, '{{ addslashes($srt->name) }}', '{{ addslashes($srt->department) }}', {{ $srt->mrp ?? 0 }})" 
+                                                        class="list-group-item list-group-item-action py-3 px-4 border-bottom d-flex justify-content-between align-items-center hover-bg-light transition-all cursor-pointer">
                                                         <div class="text-start">
                                                             <span class="fw-bold text-dark d-block fs-13">{{ $srt->name }}</span>
                                                             <span class="fs-10 text-muted text-uppercase fw-bold opacity-75">{{ $srt->department }}</span>
                                                         </div>
-                                                        <div class="d-flex align-items-center gap-2">
+                                                        <div class="d-flex align-items-center gap-3">
                                                             <span class="badge bg-soft-primary text-primary fs-11 rounded-pill px-2">₹{{ number_format($srt->mrp, 0) }}</span>
-                                                            <button type="button" class="btn btn-icon btn-soft-primary btn-xs rounded-circle">
-                                                                <i class="feather-plus"></i>
-                                                            </button>
+                                                            <div class="avatar-text avatar-xs bg-soft-primary text-primary rounded-circle">
+                                                                <i class="feather-plus fs-12"></i>
+                                                            </div>
                                                         </div>
-                                                    </button>
+                                                    </div>
                                                 @endif
                                             @empty
                                                 <div class="p-4 text-center text-muted fs-12 bg-soft-light">
@@ -217,5 +217,6 @@
         .border-dashed { border-style: dashed !important; border-width: 2px !important; }
         .hover-bg-light:hover { background-color: #f8fafc !important; }
         .transition-all { transition: all 0.2s ease-in-out; }
+        .cursor-pointer { cursor: pointer; }
     </style>
 </div>
