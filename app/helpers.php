@@ -80,9 +80,9 @@ if (!function_exists('generate_qr_base64')) {
     function generate_qr_base64(string $data): string
     {
         $options = new \chillerlan\QRCode\QROptions([
-            'outputType' => \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,
-            'quality'    => 90,
-            'scale'      => 5,
+            'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+            'quality'         => 90,
+            'scale'           => 5,
         ]);
 
         return (new \chillerlan\QRCode\QRCode($options))->render($data);
