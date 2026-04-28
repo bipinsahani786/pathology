@@ -297,6 +297,14 @@
                         </a>
                     </li>
                     @endcan
+                    @if(config('features.support_tickets', true))
+                    <li class="nxl-item {{ request()->routeIs('lab.support') ? 'active' : '' }}">
+                        <a href="{{ route('lab.support') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-life-buoy"></i></span>
+                            <span class="nxl-mtext">Help & Support</span>
+                        </a>
+                    </li>
+                    @endif
                     <li class="nxl-item">
                         <form method="POST" action="{{ route('logout') }}" id="logout-form-common" class="d-none">@csrf</form>
                         <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-common').submit();" class="nxl-link">
@@ -315,6 +323,14 @@
                             <span class="nxl-mtext">Dashboard</span>
                         </a>
                     </li>
+                    @if(config('features.support_tickets', true))
+                    <li class="nxl-item {{ request()->routeIs('partner.support') ? 'active' : '' }}">
+                        <a href="{{ route('partner.support') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-life-buoy"></i></span>
+                            <span class="nxl-mtext">Support</span>
+                        </a>
+                    </li>
+                    @endif
                     <li class="nxl-item">
                         <form method="POST" action="{{ route('logout') }}" id="logout-form-partner" class="d-none">@csrf</form>
                         <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-partner').submit();" class="nxl-link">
@@ -333,6 +349,14 @@
                             <span class="nxl-mtext">Overview</span>
                         </a>
                     </li>
+                    @if(config('features.support_tickets', true))
+                    <li class="nxl-item {{ request()->routeIs('portal.support') ? 'active' : '' }}">
+                        <a href="{{ route('portal.support') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-life-buoy"></i></span>
+                            <span class="nxl-mtext">Support</span>
+                        </a>
+                    </li>
+                    @endif
                     <li class="nxl-item">
                         <form method="POST" action="{{ route('logout') }}" id="logout-form-patient" class="d-none">@csrf</form>
                         <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form-patient').submit();" class="nxl-link">

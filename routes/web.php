@@ -292,6 +292,11 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
         // Dedicated Patient Invoice Download
         Route::get('/invoice/{id}/print', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.download');
+
+        // Support Tickets
+        if (config('features.support_tickets', true)) {
+            Route::get('/support', \App\Livewire\Patient\SupportManager::class)->name('support');
+        }
     });
 });
 
