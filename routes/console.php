@@ -9,4 +9,5 @@ Artisan::command('inspire', function () {
 
 // Schedule Database Backup to R2 - Daily at Midnight
 use Illuminate\Support\Facades\Schedule;
-Schedule::command('db:backup-to-r2')->daily()->at('00:00');
+Schedule::command('db:backup-to-r2')->dailyAt('00:00')->timezone('Asia/Kolkata');
+// Schedule::command('db:backup-to-r2')->everyMinute()->timezone('Asia/Kolkata');
