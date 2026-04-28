@@ -87,6 +87,18 @@
                             <span class="nxl-mtext">Labs</span>
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.sales-agents') ? 'active' : '' }}">
+                        <a href="{{ route('admin.sales-agents') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">Sales Agents</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.plans') ? 'active' : '' }}">
+                        <a href="{{ route('admin.plans') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-package"></i></span>
+                            <span class="nxl-mtext">Subscription Plans</span>
+                        </a>
+                    </li>
 
                     <li class="nxl-item nxl-caption"><label>Website CMS</label></li>
                     <li class="nxl-item {{ request()->routeIs('admin.site-settings') ? 'active' : '' }}">
@@ -95,6 +107,46 @@
                             <span class="nxl-mtext">Site Settings</span>
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.landing-content') ? 'active' : '' }}">
+                        <a href="{{ route('admin.landing-content') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-layout"></i></span>
+                            <span class="nxl-mtext">Landing Content</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.enquiries') ? 'active' : '' }}">
+                        <a href="{{ route('admin.enquiries') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-mail"></i></span>
+                            <span class="nxl-mtext">Enquiries</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item nxl-caption"><label>System & Settings</label></li>
+                    <li class="nxl-item {{ request()->routeIs('admin.audit-logs') ? 'active' : '' }}">
+                        <a href="{{ route('admin.audit-logs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
+                            <span class="nxl-mtext">Audit Logs</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.system-logs') ? 'active' : '' }}">
+                        <a href="{{ route('admin.system-logs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-server"></i></span>
+                            <span class="nxl-mtext">System Logs</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('admin.maintenance') ? 'active' : '' }}">
+                        <a href="{{ route('admin.maintenance') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-tool"></i></span>
+                            <span class="nxl-mtext">Maintenance</span>
+                        </a>
+                    </li>
+                    @if(config('features.support_tickets', true))
+                    <li class="nxl-item {{ request()->routeIs('admin.support') ? 'active' : '' }}">
+                        <a href="{{ route('admin.support') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-life-buoy"></i></span>
+                            <span class="nxl-mtext">Support Tickets</span>
+                        </a>
+                    </li>
+                    @endif
                 @endrole
 
                 {{-- LAB ADMIN / STAFF / BRANCH ADMIN (Consolidated) --}}
