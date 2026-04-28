@@ -97,6 +97,6 @@ class SupportManager extends Component
 
         return view('livewire.admin.support-manager', [
             'tickets' => $tickets
-        ])->layout('layouts.admin', ['title' => 'System Support Tickets']);
+        ])->layout('layouts.app', ['title' => 'System Support Tickets']);
     }
 }
