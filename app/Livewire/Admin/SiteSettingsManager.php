@@ -18,6 +18,7 @@ class SiteSettingsManager extends Component
     public ?string $primary_color = '';
     public $site_logo;
     public $site_logo_dark;
+    public $site_logo_sm;
     public $site_favicon;
 
     // Home
@@ -62,7 +63,7 @@ class SiteSettingsManager extends Component
     protected function loadSettings()
     {
         $fields = [
-            'site_name', 'site_tagline', 'primary_color', 'site_logo', 'site_logo_dark', 'site_favicon',
+            'site_name', 'site_tagline', 'primary_color', 'site_logo', 'site_logo_dark', 'site_logo_sm', 'site_favicon',
             'hero_title', 'hero_subtitle', 'hero_cta_text', 'hero_cta_url',
             'about_title', 'about_description', 'about_stat_labs', 'about_stat_labs_label',
             'about_stat_uptime', 'about_stat_uptime_label', 'about_stat_reports', 'about_stat_reports_label',
@@ -96,7 +97,7 @@ class SiteSettingsManager extends Component
         }
 
         // Handle file uploads
-        $fileFields = ['site_logo', 'site_logo_dark', 'site_favicon', 'hero_image', 'about_image'];
+        $fileFields = ['site_logo', 'site_logo_dark', 'site_logo_sm', 'site_favicon', 'hero_image', 'about_image'];
         foreach ($fileFields as $field) {
             if ($this->$field && !is_string($this->$field)) {
                 $path = $this->$field->store('site');
