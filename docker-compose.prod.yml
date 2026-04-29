@@ -60,16 +60,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    image: pathology-app-prod
     container_name: pathology_scheduler
-    restart: always
-    environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
-    env_file:
-      - .env
-    volumes:
-      - storage-data:/var/www/storage
+    restart: unless-stopped
+    working_dir: /var/www
     depends_on:
       - app
       - dbpostgres
