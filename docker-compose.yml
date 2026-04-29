@@ -75,6 +75,8 @@ services:
     container_name: pathology_scheduler
     restart: unless-stopped
     working_dir: /var/www
+    env_file:
+      - .env
     volumes:
       - ./:/var/www
     depends_on:
