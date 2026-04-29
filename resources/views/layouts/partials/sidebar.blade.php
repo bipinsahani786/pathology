@@ -249,6 +249,12 @@
                             <span class="nxl-mtext">Settlements</span>
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
+                        <a href="{{ route('lab.marketing') }}" class="nxl-link" wire:navigate>
+                            <span class="nxl-micon"><i class="feather-award"></i></span>
+                            <span class="nxl-mtext">Marketing & Vouchers</span>
+                        </a>
+                    </li>
 
                     @if(auth()->user()->can('view inventory') && config('features.inventory', true))
                     <li class="nxl-item nxl-caption"><label>Inventory</label></li>
@@ -304,6 +310,12 @@
                             <span class="nxl-mtext">Lab Settings</span>
                         </a>
                     </li>
+                    <li class="nxl-item {{ request()->routeIs('lab.payment.modes') ? 'active' : '' }}">
+                        <a href="{{ route('lab.payment.modes') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-credit-card"></i></span>
+                            <span class="nxl-mtext">Payment Modes</span>
+                        </a>
+                    </li>
                     @endcan
                     @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('lab.support') ? 'active' : '' }}">
@@ -331,6 +343,43 @@
                             <span class="nxl-mtext">Dashboard</span>
                         </a>
                     </li>
+                    
+                    @if(auth()->user()->hasRole('collection_center'))
+                    <li class="nxl-item {{ request()->routeIs('lab.pos') ? 'active' : '' }}">
+                        <a href="{{ route('lab.pos') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-plus-circle"></i></span>
+                            <span class="nxl-mtext">New Bill (POS)</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    <li class="nxl-item {{ request()->routeIs('partner.invoices') ? 'active' : '' }}">
+                        <a href="{{ route('partner.invoices') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-file-text"></i></span>
+                            <span class="nxl-mtext">Invoices</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item {{ request()->routeIs('partner.patients') ? 'active' : '' }}">
+                        <a href="{{ route('partner.patients') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-users"></i></span>
+                            <span class="nxl-mtext">Patients</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item {{ request()->routeIs('partner.settlements') ? 'active' : '' }}">
+                        <a href="{{ route('partner.settlements') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
+                            <span class="nxl-mtext">Settlements</span>
+                        </a>
+                    </li>
+
+                    <li class="nxl-item {{ request()->routeIs('partner.profile') ? 'active' : '' }}">
+                        <a href="{{ route('partner.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
+                        </a>
+                    </li>
                     @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('partner.support') ? 'active' : '' }}">
                         <a href="{{ route('partner.support') }}" wire:navigate class="nxl-link">
@@ -355,6 +404,24 @@
                         <a href="{{ route('portal.dashboard') }}" wire:navigate class="nxl-link">
                             <span class="nxl-micon"><i class="feather-airplay"></i></span>
                             <span class="nxl-mtext">Overview</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.reports') ? 'active' : '' }}">
+                        <a href="{{ route('portal.reports') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-file-text"></i></span>
+                            <span class="nxl-mtext">My Reports</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.membership') ? 'active' : '' }}">
+                        <a href="{{ route('portal.membership') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-award"></i></span>
+                            <span class="nxl-mtext">Membership</span>
+                        </a>
+                    </li>
+                    <li class="nxl-item {{ request()->routeIs('portal.profile') ? 'active' : '' }}">
+                        <a href="{{ route('portal.profile') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-user"></i></span>
+                            <span class="nxl-mtext">My Profile</span>
                         </a>
                     </li>
                     @if(config('features.support_tickets', true))

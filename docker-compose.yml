@@ -81,7 +81,7 @@ services:
       - ./:/var/www
     depends_on:
       - app
-      - dbpostgres
+      - db
       - redis
     command: [ "php", "artisan", "schedule:work" ]
     networks:
