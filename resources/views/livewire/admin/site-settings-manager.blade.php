@@ -43,10 +43,18 @@
                                     <input type="color" wire:model="primary_color" class="form-control form-control-color" style="height: 45px; width: 100%;">
                                 </div>
                                 <div class="col-md-4">
+                                    <label class="form-label fw-bold">Site Favicon</label>
+                                    <input type="file" wire:model="site_favicon" class="form-control" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Logo (Collapsed / Small)</label>
+                                    <input type="file" wire:model="site_logo_sm" class="form-control" accept="image/*">
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold">Logo (Light)</label>
                                     <input type="file" wire:model="site_logo" class="form-control" accept="image/*">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold">Logo (Dark)</label>
                                     <input type="file" wire:model="site_logo_dark" class="form-control" accept="image/*">
                                 </div>

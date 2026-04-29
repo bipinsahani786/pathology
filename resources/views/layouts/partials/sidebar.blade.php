@@ -42,6 +42,14 @@
                             $faviconPath = asset('assets/images/icon.webp');
                         }
                     }
+
+                    $logoSmPath = $faviconPath;
+                    if (!auth()->user()->company) {
+                        $siteLogoSm = \App\Models\SiteSetting::get('site_logo_sm');
+                        if ($siteLogoSm) {
+                            $logoSmPath = secure_storage_url($siteLogoSm);
+                        }
+                    }
                 @endphp
 
                 @if($logoPath)
@@ -50,7 +58,7 @@
                     <img src="{{ asset('assets/images/icon.webp') }}" alt="Logo" height="50px" class="logo logo-lg" />
                 @endif
 
-                <img src="{{ $faviconPath }}" alt="Logo" class="logo logo-sm" />
+                <img src="{{ $logoSmPath }}" alt="Logo" class="logo logo-sm" />
             </a>
         </div>
         <div class="navbar-content">
