@@ -38,9 +38,9 @@ echo "5. Ensuring correct permissions for storage and bootstrap/cache..."
 docker compose -f docker-compose.prod.yml exec -T -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 docker compose -f docker-compose.prod.yml exec -T -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-echo "6. Restarting queue workers (if any)..."
-# Uncomment if you are using Laravel queues
-# docker-compose -f docker-compose.prod.yml exec -T app php artisan queue:restart
+echo "6. Restarting background workers (scheduler & queue)..."
+docker compose -f docker-compose.prod.yml restart scheduler
+# docker compose -f docker-compose.prod.yml exec -T app php artisan queue:restart
 
 echo "======================================"
 echo "Deployment completed successfully!"
