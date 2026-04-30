@@ -314,7 +314,7 @@ class SettingsManager extends Component
         $this->authorize('edit settings');
 
         // SaaS Plan Enforcement
-        $hasCustomInvoice = auth()->user()->company->plan->features['custom_invoice'] ?? false;
+        $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (!$hasCustomInvoice && $this->bill_template !== 'classic') {
             session()->flash('error', 'Plan Restriction: Your current plan only supports the Classic invoice template. Upgrade to a premium plan to use Modern or Professional templates.');
             $this->bill_template = 'classic';
@@ -337,7 +337,7 @@ class SettingsManager extends Component
         ]);
 
         // SaaS Plan Enforcement for Custom Branding
-        $hasCustomInvoice = auth()->user()->company->plan->features['custom_invoice'] ?? false;
+        $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (!$hasCustomInvoice) {
             if (is_object($this->new_header_image) || is_object($this->new_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
@@ -365,6 +365,7 @@ class SettingsManager extends Component
             $this->new_signature_image = null;
         }
 
+        Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0');
         Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0');
         Configuration::setFor('pdf_header_image', $this->pdf_header_image);
         Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);

@@ -89,6 +89,24 @@ class ReportManager extends Component
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 
+    public function printCompleted($invoiceId, $withHeader = 1)
+    {
+        $invoice = Invoice::with('items')->find($invoiceId);
+        $completedItemIds = $invoice->items->where('status', 'Completed')->pluck('id')->toArray();
+
+        if (empty($completedItemIds)) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'No completed tests found to print.']);
+            return;
+        }
+
+        $testIds = implode(',', $completedItemIds);
+        $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
+             . '?tests=' . $testIds
+             . '&header=' . ($withHeader ? '1' : '0');
+        
+        $this->dispatch('open-new-tab', ['url' => $url]);
+    }
+
     public function render()
     {
         $user = auth()->user();

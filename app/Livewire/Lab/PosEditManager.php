@@ -35,7 +35,7 @@ class PosEditManager extends Component
     public $voucher_discount_amt = 0;
 
     public $manual_discount_type = 'flat';
-    public $manual_discount_input = 0;
+    public $manual_discount_input;
     public $manual_discount_amt = 0;
 
     public $total_discount = 0;
@@ -495,7 +495,7 @@ class PosEditManager extends Component
         $currentCollected = collect($this->payments)->sum(fn($p) => (float)($p['amount'] ?? 0));
         $remaining = max(0, $this->net_payable - $currentCollected);
 
-        $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => $remaining > 0 ? $remaining : 0, 'transaction_id' => ''];
+        $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => $remaining > 0 ? $remaining : null, 'transaction_id' => ''];
     }
     public function removePaymentRow($index)
     {

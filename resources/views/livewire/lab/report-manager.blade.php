@@ -99,7 +99,7 @@
                 </div>
 
                 {{-- Reports Table --}}
-                <div class="table-responsive">
+                <div class="table-responsive" style="overflow: visible !important;">
                     <table class="table table-hover table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
@@ -169,37 +169,56 @@
                                     </td>
                                      <td class="text-end">
                                         <div class="d-flex justify-content-end gap-1">
-                                            @if(!$invoice->testReport || $invoice->testReport->status !== 'Approved')
-                                                @can('edit reports')
-                                                    <a href="{{ route('lab.reports.entry', $invoice->id) }}" class="btn btn-sm btn-primary py-1 px-2" title="Enter Results">
-                                                        <i class="feather-edit fs-12"></i>
-                                                    </a>
-                                                @endcan
-                                                @can('edit invoices')
-                                                    <a href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate class="btn btn-sm btn-outline-warning py-1 px-2" title="Modify Invoice">
-                                                        <i class="feather-edit-3 fs-12"></i>
-                                                    </a>
-                                                @endcan
+                                             @if(!$invoice->testReport || $invoice->testReport->status !== 'Approved')
+                                                <div class="d-flex gap-1">
+                                                    @can('edit reports')
+                                                        <a href="{{ route('lab.reports.entry', $invoice->id) }}" class="btn btn-sm btn-primary py-1 px-2" title="Enter Results">
+                                                            <i class="feather-edit fs-12"></i>
+                                                        </a>
+                                                    @endcan
+                                                    
+                                                     @if($invoice->testReport && $invoice->testReport->status === 'Draft')
+                                                        <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
+                                                            <button class="btn btn-sm btn-info dropdown-toggle fs-11 py-1 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                                                <i class="feather-printer"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1" style="min-width: 240px; width: max-content !important;">
+                                                                <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3 py-2">Draft Options</li>
+                                                                <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="printCompleted({{ $invoice->id }}, 1)"><i class="feather-file-text me-2 text-primary"></i> Print All Completed</button></li>
+                                                                <li><hr class="dropdown-divider my-1"></li>
+                                                                <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print Selected</li>
+                                                                <li><button type="button" class="dropdown-item fs-12 text-success py-2 text-nowrap" wire:click="printSelected({{ $invoice->id }}, 1)"><i class="feather-check-square me-2"></i> With Header</button></li>
+                                                                <li><button type="button" class="dropdown-item fs-12 text-dark py-2 text-nowrap" wire:click="printSelected({{ $invoice->id }}, 0)"><i class="feather-check-square me-2"></i> Without Header</button></li>
+                                                            </ul>
+                                                        </div>
+                                                    @endif
+
+                                                    @can('edit invoices')
+                                                        <a href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate class="btn btn-sm btn-outline-warning py-1 px-2" title="Modify Invoice">
+                                                            <i class="feather-edit-3 fs-12"></i>
+                                                        </a>
+                                                    @endcan
+                                                </div>
                                             @else
                                                 <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
                                                     <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="feather-printer me-1"></i> Print / Edit
                                                     </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1" style="min-width: 240px; width: max-content !important;">
                                                         @can('edit reports')
-                                                            <li><a class="dropdown-item fs-12" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
+                                                            <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
                                                         @endcan
                                                         @can('edit invoices')
-                                                            <li><a class="dropdown-item fs-12" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
+                                                            <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
                                                         @endcan
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print All Tests</li>
-                                                        <li><button type="button" class="dropdown-item fs-12 text-primary" wire:click="printReport({{ $invoice->id }}, 1)"><i class="feather-file-text me-2"></i> With Header</button></li>
-                                                        <li><button type="button" class="dropdown-item fs-12 text-secondary" wire:click="printReport({{ $invoice->id }}, 0)"><i class="feather-file me-2"></i> Without Header</button></li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3">Print Selected Tests</li>
-                                                        <li><button type="button" class="dropdown-item fs-12 text-success fw-bold" wire:click="printSelected({{ $invoice->id }}, 1)"><i class="feather-check-square me-2"></i> With Header</button></li>
-                                                        <li><button type="button" class="dropdown-item fs-12 text-dark" wire:click="printSelected({{ $invoice->id }}, 0)"><i class="feather-check-square me-2"></i> Without Header</button></li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3 py-2">Print All Tests</li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-primary py-2 text-nowrap" wire:click="printReport({{ $invoice->id }}, 1)"><i class="feather-file-text me-2"></i> With Header</button></li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-secondary py-2 text-nowrap" wire:click="printReport({{ $invoice->id }}, 0)"><i class="feather-file me-2"></i> Without Header</button></li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3 py-2">Print Selected Tests</li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-success py-2 text-nowrap" wire:click="printSelected({{ $invoice->id }}, 1)"><i class="feather-check-square me-2"></i> With Header</button></li>
+                                                        <li><button type="button" class="dropdown-item fs-12 text-dark py-2 text-nowrap" wire:click="printSelected({{ $invoice->id }}, 0)"><i class="feather-check-square me-2"></i> Without Header</button></li>
                                                     </ul>
                                                 </div>
                                             @endif
