@@ -283,20 +283,12 @@ class ResultEntryManager extends Component
     {
         $this->authorize('edit reports');
 
-        // Validation: Block approval if any results are missing
+        // Validation: Block approval if any results are missing or tests are not marked completed
         if ($status === 'Approved') {
-            $missingParams = [];
-            foreach ($this->parametersList as $key => $details) {
-                $val = $this->results[$key] ?? '';
-                if (trim((string)$val) === '') {
-                    $missingParams[] = $details['name'] . " (" . $details['test_name'] . ")";
-                }
-            }
-
-            if (!empty($missingParams)) {
-                $msg = "Cannot approve report. The following results are missing: " . implode(', ', array_slice($missingParams, 0, 3));
-                if (count($missingParams) > 3) $msg .= " and " . (count($missingParams) - 3) . " more.";
-                
+            $incompleteTests = $this->invoice->items->where('status', '!=', 'Completed');
+            
+            if ($incompleteTests->count() > 0) {
+                $msg = "Cannot approve report. All tests must be marked as 'Completed' first. (" . $incompleteTests->pluck('test_name')->implode(', ') . " are still pending)";
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
                 return;
