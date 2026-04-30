@@ -673,14 +673,14 @@
 
                             // Determine flag
                             $flag = null;
-                            if ($r->is_highlighted && $r->status) {
-                                $rawFlag = strtoupper(trim($r->status));
+                            if ($r->is_highlighted) {
+                                $rawFlag = strtoupper(trim($r->status ?? ''));
                                 if (in_array($rawFlag, ['H', 'HIGH'])) {
                                     $flag = 'H';
                                 } elseif (in_array($rawFlag, ['L', 'LOW'])) {
                                     $flag = 'L';
                                 } else {
-                                    $flag = '*';
+                                    $flag = '*'; // Default abnormal flag when status is missing
                                 }
                             }
                             $isAbnormal = $r->is_highlighted;

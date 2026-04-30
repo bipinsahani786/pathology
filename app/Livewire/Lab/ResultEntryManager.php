@@ -14,10 +14,10 @@ class ResultEntryManager extends Component
     public $invoice;
     public $testReport;
     public $comments;
-    
+
     public $results = [];
     public $highlights = [];
-    public $flags = []; 
+    public $flags = [];
     public $parametersList = [];
     public $selectedTests = []; // For selective printing from here
     public $testComments = []; // Comments per invoice item (test)
@@ -28,10 +28,10 @@ class ResultEntryManager extends Component
         $this->invoice = Invoice::where('company_id', auth()->user()->company_id)
             ->with(['patient.patientProfile', 'items.labTest', 'testReport.results'])
             ->findOrFail($id);
-        
+
         $this->testReport = $this->invoice->testReport;
         $this->comments = $this->testReport ? $this->testReport->comments : '';
-        
+
         $this->initializeResultsData();
     }
 
@@ -40,10 +40,12 @@ class ResultEntryManager extends Component
         $patient = $this->invoice->patient;
         $profile = $patient->patientProfile;
         $gender = strtolower($profile->gender ?? 'male');
-        
+
         // Calculate/retrieve age for precise matching
-        $ageDays = 0; $ageMonths = 0; $ageYears = 0;
-        
+        $ageDays = 0;
+        $ageMonths = 0;
+        $ageYears = 0;
+
         if ($profile && $profile->dob) {
             $dob = $profile->dob;
             $ageDays = now()->diffInDays($dob);
@@ -51,7 +53,7 @@ class ResultEntryManager extends Component
             $ageYears = now()->diffInYears($dob);
         } else {
             // Fallback to manual age fields
-            $ageYears = (int)($profile->age ?? 0);
+            $ageYears = (int) ($profile->age ?? 0);
             $type = $profile->age_type ?? 'Years';
             if ($type === 'Months') {
                 $ageMonths = $ageYears; // age field holds months
@@ -59,7 +61,8 @@ class ResultEntryManager extends Component
                 $ageYears = 0;
             } elseif ($type === 'Days') {
                 $ageDays = $ageYears; // age field holds days
-                $ageMonths = 0; $ageYears = 0;
+                $ageMonths = 0;
+                $ageYears = 0;
             } else {
                 $ageMonths = $ageYears * 12;
                 $ageDays = $ageYears * 365;
@@ -105,23 +108,25 @@ class ResultEntryManager extends Component
                     foreach ($test->parameters as $param) {
                         $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
                         $key = $item->id . '_' . $test->id . '_' . md5($paramName);
-                        
+
                         // NEW: Smart Range Matching
                         $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
                         $refText = $matchedRange['display_range'] ?? $matchedRange['normal_value'] ?? '';
-                        
+
                         // Fallback for old data structure if needed
                         if (empty($refText)) {
-                            if ($gender === 'female') $refText = $param['female_range'] ?? $param['general_range'] ?? '';
-                            else $refText = $param['male_range'] ?? $param['general_range'] ?? '';
+                            if ($gender === 'female')
+                                $refText = $param['female_range'] ?? $param['general_range'] ?? '';
+                            else
+                                $refText = $param['male_range'] ?? $param['general_range'] ?? '';
                         }
 
                         $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
                         $this->highlights[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->is_highlighted : false;
-                        $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low'])) 
-                            ? substr($existingResultsMap[$key]->status, 0, 1) 
+                        $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low']))
+                            ? substr($existingResultsMap[$key]->status, 0, 1)
                             : '';
-                        
+
                         $this->parametersList[$key] = [
                             'key' => $key,
                             'lab_test_id' => $test->id,
@@ -146,16 +151,18 @@ class ResultEntryManager extends Component
 
     private function findMatchingRange($param, $patientGender, $days, $months, $years)
     {
-        if (!isset($param['ranges']) || !is_array($param['ranges'])) return null;
+        if (!isset($param['ranges']) || !is_array($param['ranges']))
+            return null;
 
         // 1. Try exact match (Gender + Age)
         foreach ($param['ranges'] as $range) {
             $rGender = strtolower($range['gender'] ?? 'both');
-            if ($rGender !== 'both' && $rGender !== $patientGender) continue;
+            if ($rGender !== 'both' && $rGender !== $patientGender)
+                continue;
 
             $unit = $range['age_unit'] ?? 'Years';
             $val = ($unit === 'Days') ? $days : (($unit === 'Months') ? $months : $years);
-            
+
             if ($val >= ($range['age_min'] ?? 0) && $val <= ($range['age_max'] ?? 150)) {
                 return $range;
             }
@@ -164,12 +171,14 @@ class ResultEntryManager extends Component
         // 2. Fallback 1: Try matching Gender only (widening age range)
         foreach ($param['ranges'] as $range) {
             $rGender = strtolower($range['gender'] ?? 'both');
-            if ($rGender === $patientGender) return $range;
+            if ($rGender === $patientGender)
+                return $range;
         }
 
         // 3. Fallback 2: Try matching 'Both' gender
         foreach ($param['ranges'] as $range) {
-            if (strtolower($range['gender'] ?? '') === 'both') return $range;
+            if (strtolower($range['gender'] ?? '') === 'both')
+                return $range;
         }
 
         // 4. Fallback 3: Return the first range available if any
@@ -198,7 +207,7 @@ class ResultEntryManager extends Component
             $localCodeMap = [];
             foreach ($params as $k => $p) {
                 if (!empty($p['short_code'])) {
-                    $localCodeMap[strtoupper($p['short_code'])] = (float)($this->results[$k] ?: 0);
+                    $localCodeMap[strtoupper($p['short_code'])] = (float) ($this->results[$k] ?: 0);
                 }
             }
 
@@ -206,16 +215,16 @@ class ResultEntryManager extends Component
             foreach ($params as $k => $p) {
                 if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
                     $formula = strtoupper($p['formula']);
-                    
+
                     // Clean up formula for ExpressionLanguage by removing braces {CODE} -> CODE
                     $formula = preg_replace('/\{([A-Z0-9_]+)\}/', '$1', $formula);
-                    
+
                     try {
                         // Ensure formula is not empty
                         if (!empty(trim($formula))) {
                             // The expression language handles Division by Zero internally (throws exception)
                             $result = $expressionLanguage->evaluate($formula, $localCodeMap);
-                            
+
                             if ($result !== false && is_numeric($result)) {
                                 // Prevent saving INF or NAN
                                 if (!is_infinite($result) && !is_nan($result)) {
@@ -224,7 +233,7 @@ class ResultEntryManager extends Component
                             }
                         }
                     } catch (\Throwable $e) {
-                         Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
+                        Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
                     }
                 }
             }
@@ -238,7 +247,7 @@ class ResultEntryManager extends Component
                 $this->flags[$key] = '';
                 continue;
             }
-            
+
             if (!isset($this->parametersList[$key])) {
                 continue;
             }
@@ -251,12 +260,17 @@ class ResultEntryManager extends Component
             $flag = '';
 
             if ($inputType === 'numeric' || $inputType === 'calculated') {
-                $numVal = (float)$val;
-                if ($range && is_numeric($range['min_val'] ?? null) && is_numeric($range['max_val'] ?? null)) {
-                    if ($numVal < (float)$range['min_val']) {
-                        $isAbnormal = true; $flag = 'L';
-                    } elseif ($numVal > (float)$range['max_val']) {
-                        $isAbnormal = true; $flag = 'H';
+                $numVal = (float) $val;
+                $min = $range['min_val'] ?? null;
+                $max = $range['max_val'] ?? null;
+
+                if ($range && (is_numeric($min) || is_numeric($max))) {
+                    if (is_numeric($min) && $numVal < (float) $min) {
+                        $isAbnormal = true;
+                        $flag = 'L';
+                    } elseif (is_numeric($max) && $numVal > (float) $max) {
+                        $isAbnormal = true;
+                        $flag = 'H';
                     }
                 }
             } elseif ($inputType === 'text' || $inputType === 'selection') {
@@ -286,7 +300,7 @@ class ResultEntryManager extends Component
         // Validation: Block approval if any results are missing or tests are not marked completed
         if ($status === 'Approved') {
             $incompleteTests = $this->invoice->items->where('status', '!=', 'Completed');
-            
+
             if ($incompleteTests->count() > 0) {
                 $msg = "Cannot approve report. All tests must be marked as 'Completed' first. (" . $incompleteTests->pluck('test_name')->implode(', ') . " are still pending)";
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
@@ -322,8 +336,10 @@ class ResultEntryManager extends Component
             // Determine textual status based on flags
             $flag = $this->flags[$key] ?? '';
             $stat = 'Normal';
-            if ($flag === 'H') $stat = 'High';
-            if ($flag === 'L') $stat = 'Low';
+            if ($flag === 'H')
+                $stat = 'High';
+            if ($flag === 'L')
+                $stat = 'Low';
 
             ReportResult::updateOrCreate(
                 [
@@ -348,7 +364,7 @@ class ResultEntryManager extends Component
         foreach ($this->invoice->items as $item) {
             $itemComments = [];
             $hasGranular = false;
-            
+
             // Collect all comments belonging to this item
             foreach ($this->testComments as $key => $comment) {
                 if (str_starts_with($key, $item->id . '_')) {
@@ -357,7 +373,7 @@ class ResultEntryManager extends Component
                     $hasGranular = true;
                 }
             }
-            
+
             if ($hasGranular) {
                 // If it's a single test (not package) AND only one comment exists, store as plain text for backward compatibility
                 if (!$item->labTest->is_package && count($itemComments) === 1) {
@@ -393,10 +409,10 @@ class ResultEntryManager extends Component
         $item = \App\Models\InvoiceItem::findOrFail($itemId);
         $newStatus = $item->status === 'Completed' ? 'Pending' : 'Completed';
         $item->update(['status' => $newStatus]);
-        
+
         // Refresh invoice to get updated status
         $this->invoice->load('items');
-        
+
         session()->flash('success', "Test status updated to {$newStatus}.");
     }
 
@@ -411,9 +427,9 @@ class ResultEntryManager extends Component
         // Printing proceeds regardless of image presence to allow for physical letterhead space
         $testIds = is_array($this->selectedTests) ? implode(',', $this->selectedTests) : $this->selectedTests;
         $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
-             . '?tests=' . $testIds
-             . '&header=' . ($withHeader ? '1' : '0');
-        
+            . '?tests=' . $testIds
+            . '&header=' . ($withHeader ? '1' : '0');
+
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 
