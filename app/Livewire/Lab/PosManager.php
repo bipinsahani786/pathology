@@ -61,7 +61,7 @@ class PosManager extends Component
     public $overpaymentError = false;
     public $paymentModesList = [];
     public $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
-    public $new_name, $new_phone, $new_age, $new_gender = 'Male';
+    public $new_name, $new_phone, $new_age, $new_age_type = 'Years', $new_gender = 'Male';
     public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
     public $new_agent_name, $new_agent_phone, $new_agent_agency, $new_agent_commission = 0;
     public $isMembershipModalOpen = false, $selectedMembershipId = null;
@@ -511,6 +511,7 @@ class PosManager extends Component
             'new_name' => 'required|string|max:255',
             'new_phone' => 'nullable|numeric|digits:10|unique:users,phone',
             'new_age' => 'required|numeric|min:1|max:150',
+            'new_age_type' => 'required|in:Years,Months,Days',
         ]);
 
         DB::beginTransaction();
@@ -552,6 +553,7 @@ class PosManager extends Component
                 'user_id' => $user->id,
                 'patient_id_string' => $patientIdString,
                 'age' => $this->new_age,
+                'age_type' => $this->new_age_type,
                 'gender' => $this->new_gender,
             ]);
             $user->assignRole('patient');
@@ -560,6 +562,7 @@ class PosManager extends Component
             $this->isPatientModalOpen = false;
             $this->modalError = '';
             $this->reset(['new_name', 'new_phone', 'new_age']);
+            $this->new_age_type = 'Years';
             $this->new_gender = 'Male';
         } catch (\Exception $e) {
             DB::rollBack();

@@ -52,7 +52,7 @@ class PosEditManager extends Component
     public $activeSearchField = null; // null, 'patient', 'doctor', 'agent', 'test'
     public $overpaymentError = false;
     public $paymentModesList = [], $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
-    public $new_name, $new_phone, $new_age, $new_gender = 'Male';
+    public $new_name, $new_phone, $new_age, $new_age_type = 'Years', $new_gender = 'Male';
     public $new_doc_name, $new_doc_phone, $new_doc_commission = 0;
     public $new_agent_name, $new_agent_phone, $new_agent_agency, $new_agent_commission = 0;
     public $isMembershipModalOpen = false, $selectedMembershipId = null;
@@ -511,7 +511,12 @@ class PosEditManager extends Component
     {
         $this->authorize('create patients');
         $this->modalError = '';
-        $this->validate(['new_name' => 'required|string|max:255', 'new_phone' => 'nullable|numeric|digits:10|unique:users,phone', 'new_age' => 'required|numeric|min:0']);
+        $this->validate([
+            'new_name' => 'required|string|max:255',
+            'new_phone' => 'nullable|numeric|digits:10|unique:users,phone',
+            'new_age' => 'required|numeric|min:1|max:150',
+            'new_age_type' => 'required|in:Years,Months,Days',
+        ]);
 
         DB::beginTransaction();
         try {
@@ -544,13 +549,15 @@ class PosEditManager extends Component
                 'user_id' => $user->id,
                 'patient_id_string' => $patientIdString,
                 'age' => $this->new_age,
+                'age_type' => $this->new_age_type,
                 'gender' => $this->new_gender,
             ]);
             $user->assignRole('patient');
             DB::commit();
             $this->selectPatient($user->id);
-            $this->isPatientModalOpen = false;
             $this->reset(['new_name', 'new_phone', 'new_age']);
+            $this->new_age_type = 'Years';
+            $this->isPatientModalOpen = false;
         } catch (\Exception $e) {
             DB::rollBack();
             $this->modalError = $e->getMessage();

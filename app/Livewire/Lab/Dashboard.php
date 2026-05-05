@@ -98,16 +98,19 @@ class Dashboard extends Component
             $ops = [
                 'pending_tests' => Invoice::where('company_id', $companyId)
                     ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                    ->whereIn('sample_status', ['Pending', 'Collected', 'Processing'])
+                    ->where('status', '!=', 'Cancelled')
+                    ->whereNotIn('sample_status', ['Ready'])
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),
                 'completed_tests' => Invoice::where('company_id', $companyId)
                     ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->where('status', '!=', 'Cancelled')
                     ->where('sample_status', 'Ready')
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),
                 'home_visits' => Invoice::where('company_id', $companyId)
                     ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->where('status', '!=', 'Cancelled')
                     ->where('collection_type', 'Home Collection')
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),

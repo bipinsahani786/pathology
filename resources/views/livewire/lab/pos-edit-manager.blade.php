@@ -822,9 +822,17 @@
                                     wire:model="new_name" placeholder="Full Name"></div>
                             <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile</label><input type="text"
                                     class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
-                            <div class="col-6"><label class="form-label fw-semibold fs-11">Age <span
-                                        class="text-danger">*</span></label><input type="number" class="form-control"
-                                    wire:model="new_age" placeholder="Years"></div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" wire:model="new_age" placeholder="Age">
+                                    <select class="form-select bg-light" wire:model="new_age_type" style="max-width: 90px;">
+                                        <option value="Years">Yrs</option>
+                                        <option value="Months">Mos</option>
+                                        <option value="Days">Dys</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-6"><label class="form-label fw-semibold fs-11">Gender</label><select
                                     class="form-select" wire:model="new_gender">
                                     <option value="Male">Male</option>
