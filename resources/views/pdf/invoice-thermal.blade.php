@@ -166,6 +166,8 @@
             class="val">{{ $invoice->invoice_date->format('d/m/Y h:i A') }}</span></div>
     <div class="info-row"><span class="lbl">Patient:</span><span
             class="val">{{ strtoupper($invoice->patient->name) }}</span></div>
+    <div class="info-row"><span class="lbl">Age/Gender:</span><span
+            class="val">{{ $invoice->patient->patientProfile->age ?? '-' }}{{ $invoice->patient->patientProfile->age_type == 'Years' ? 'Y' : ($invoice->patient->patientProfile->age_type == 'Months' ? 'M' : 'D') }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</span></div>
     <div class="info-row"><span class="lbl">Patient ID:</span><span
             class="val">{{ $invoice->patient->patientProfile->patient_id_string ?? 'N/A' }}</span></div>
     @if($invoice->doctor)

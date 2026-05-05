@@ -530,7 +530,7 @@
                 </tr>
                 <tr>
                     <td class="lbl">Age/Gender</td>
-                    <td class="val">: {{ $profile->age ?? '--' }} {{ $profile->age_type ?? 'Y' }} /
+                    <td class="val">: {{ $profile->age ?? '--' }} {{ $profile->age_type == 'Years' ? 'Y' : ($profile->age_type == 'Months' ? 'M' : 'D') }} /
                         {{ $profile->gender ?? '--' }}</td>
                     <td class="lbl">Collection Date</td>
                     <td class="val">:

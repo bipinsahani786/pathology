@@ -373,9 +373,9 @@
             </div>
             <div class="vr d-none d-lg-block"></div>
             <div class="glass-item">
-                <div class="icon-box m-0 bg-soft-success text-success"><i class="feather-dollar-sign"></i></div>
+                <div class="icon-box m-0 {{ ($financials->profit ?? 0) < 0 ? 'bg-soft-danger text-danger' : 'bg-soft-success text-success' }}"><i class="feather-dollar-sign"></i></div>
                 <div>
-                    <div class="glass-val">₹{{ number_format($financials->profit ?? 0, 0) }}</div>
+                    <div class="glass-val {{ ($financials->profit ?? 0) < 0 ? 'text-danger' : '' }}">₹{{ number_format($financials->profit ?? 0, 0) }}</div>
                     <div class="glass-lbl">Est. Profit</div>
                 </div>
             </div>

@@ -104,6 +104,7 @@ class PatientManager extends Component
                 Rule::unique('users', 'email')->ignore($this->user_id),
             ],
             'age' => 'required|numeric|min:1|max:150',
+            'age_type' => 'required|in:Years,Months,Days',
             'gender' => 'required|in:Male,Female,Other',
             'blood_group' => 'nullable|string|max:5',
         ]);
