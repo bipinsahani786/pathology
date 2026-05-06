@@ -20,33 +20,41 @@
         <div class="card mb-4 border-primary border-top border-3">
             <div class="card-body">
                 <div class="row align-items-center">
-                    <div class="col-md-6 border-end">
+                    <div class="col-md-4 border-end">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-text avatar-lg rounded-circle" style="background:rgba(59,113,202,0.1);">
                                 <i class="feather-user text-primary fs-3"></i>
                             </div>
-                            <div class="col-md-3">
+                            <div>
                                 <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Patient Info</div>
                                 <div class="fw-bold fs-13">{{ $invoice->patient->name }} <span class="badge bg-soft-info text-info ms-1">{{ $invoice->patient->formatted_id }}</span></div>
                                 <div class="fs-11 text-muted">{{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}</div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4 border-end">
                         <div class="row text-center mt-3 mt-md-0">
                             <div class="col-6 border-end">
                                 <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Invoice / PID</div>
                                 <div class="fw-bold fs-14 text-dark">{{ $invoice->invoice_number }}</div>
                             </div>
                             <div class="col-6">
-                                <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Date</div>
+                                <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Invoice Date</div>
                                 <div class="fw-bold fs-14 text-dark">{{ $invoice->created_at->format('d M Y') }}</div>
                             </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="fs-11 text-muted text-uppercase fw-bold mb-1"><i class="feather-calendar me-1"></i>Report Date & Time (for PDF)</div>
+                        <div class="d-flex gap-2">
+                            <input type="date" class="form-control form-control-sm" wire:model="report_date">
+                            <input type="time" class="form-control form-control-sm" wire:model="report_time" style="max-width: 120px;">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         @if(session()->has('success'))
             <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">

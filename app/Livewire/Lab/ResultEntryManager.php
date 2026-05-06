@@ -21,6 +21,8 @@ class ResultEntryManager extends Component
     public $parametersList = [];
     public $selectedTests = []; // For selective printing from here
     public $testComments = []; // Comments per invoice item (test)
+    public $report_date; // Custom report date for PDF
+    public $report_time; // Custom report time for PDF
 
     public function mount($id)
     {
@@ -31,6 +33,18 @@ class ResultEntryManager extends Component
 
         $this->testReport = $this->invoice->testReport;
         $this->comments = $this->testReport ? $this->testReport->comments : '';
+
+        // Initialize report date/time
+        if ($this->testReport && $this->testReport->report_date) {
+            $this->report_date = $this->testReport->report_date->format('Y-m-d');
+            $this->report_time = $this->testReport->report_date->format('H:i');
+        } elseif ($this->testReport && $this->testReport->approved_at) {
+            $this->report_date = $this->testReport->approved_at->format('Y-m-d');
+            $this->report_time = $this->testReport->approved_at->format('H:i');
+        } else {
+            $this->report_date = now()->format('Y-m-d');
+            $this->report_time = now()->format('H:i');
+        }
 
         $this->initializeResultsData();
     }
@@ -299,10 +313,29 @@ class ResultEntryManager extends Component
 
         // Validation: Block approval if any results are missing or tests are not marked completed
         if ($status === 'Approved') {
-            $incompleteTests = $this->invoice->items->where('status', '!=', 'Completed');
+            $items = $this->invoice->items;
+            // Only check items that are actually tests (have lab_test_id)
+            $tests = $items->filter(fn($i) => !empty($i->lab_test_id));
+            $incompleteTests = $tests->filter(fn($i) => $i->status !== 'Completed');
 
             if ($incompleteTests->count() > 0) {
                 $msg = "Cannot approve report. All tests must be marked as 'Completed' first. (" . $incompleteTests->pluck('test_name')->implode(', ') . " are still pending)";
+                $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
+                session()->flash('error', $msg);
+                return;
+            }
+
+            // Check if ANY results have been entered at all
+            $hasAnyResult = false;
+            foreach ($this->results as $val) {
+                if ($val !== '' && $val !== null) {
+                    $hasAnyResult = true;
+                    break;
+                }
+            }
+
+            if (!$hasAnyResult && $tests->count() > 0) {
+                $msg = "Cannot approve report. No results have been entered for any test.";
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
                 return;
@@ -318,6 +351,9 @@ class ResultEntryManager extends Component
                 'comments' => $this->comments,
                 'approved_by' => $status === 'Approved' ? auth()->id() : null,
                 'approved_at' => $status === 'Approved' ? now() : null,
+                'report_date' => ($this->report_date && $this->report_time)
+                    ? $this->report_date . ' ' . $this->report_time
+                    : ($status === 'Approved' ? now() : null),
             ]);
         } else {
             $this->testReport->update([
@@ -325,10 +361,18 @@ class ResultEntryManager extends Component
                 'comments' => $this->comments,
                 'approved_by' => $status === 'Approved' ? auth()->id() : $this->testReport->approved_by,
                 'approved_at' => $status === 'Approved' ? now() : $this->testReport->approved_at,
+                'report_date' => ($this->report_date && $this->report_time)
+                    ? $this->report_date . ' ' . $this->report_time
+                    : $this->testReport->report_date,
             ]);
         }
 
         // Save Results
+        if ($this->testReport) {
+            // Delete existing results for this report to prevent duplicates/ghost data from modified tests
+            ReportResult::where('test_report_id', $this->testReport->id)->delete();
+        }
+
         foreach ($this->parametersList as $key => $details) {
             $val = $this->results[$key] ?? '';
             $highlight = $this->highlights[$key] ?? false;
@@ -387,7 +431,9 @@ class ResultEntryManager extends Component
 
         if ($status === 'Approved') {
             $this->invoice->update(['sample_status' => 'Ready']);
-            session()->flash('success', 'Report Approved Successfully and ready for printing.');
+            $msg = 'Report Approved Successfully and ready for printing.';
+            session()->flash('success', $msg);
+            $this->dispatch('notify', ['type' => 'success', 'message' => $msg]);
 
             // Pre-generate PDF for R2 offloading
             try {
@@ -399,7 +445,9 @@ class ResultEntryManager extends Component
 
             return redirect()->route('lab.reports');
         } else {
-            session()->flash('success', 'Draft Saved Successfully.');
+            $msg = 'Draft Saved Successfully.';
+            session()->flash('success', $msg);
+            $this->dispatch('notify', ['type' => 'success', 'message' => $msg]);
         }
     }
 
@@ -413,7 +461,9 @@ class ResultEntryManager extends Component
         // Refresh invoice to get updated status
         $this->invoice->load('items');
 
-        session()->flash('success', "Test status updated to {$newStatus}.");
+        $msg = "Test status updated to {$newStatus}.";
+        session()->flash('success', $msg);
+        $this->dispatch('notify', ['type' => 'success', 'message' => $msg]);
     }
 
     public function printSelected($withHeader = 1)

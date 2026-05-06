@@ -311,7 +311,7 @@ class PosManager extends Component
             $this->selectedMembershipId = null;
             $this->modalError = '';
             $this->calculateTotals();
-            session()->flash('message', '🎉 ' . $membership->name . ' activated! ' . $membership->discount_percentage . '% discount applied.');
+            session()->flash('success', '🎉 ' . $membership->name . ' activated! ' . $membership->discount_percentage . '% discount applied.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Membership Purchase Error: " . $e->getMessage());
@@ -361,7 +361,7 @@ class PosManager extends Component
             $this->isPaymentModeModalOpen = false;
             $this->new_payment_mode_name = '';
             $this->modalError = '';
-            session()->flash('message', 'Payment mode added!');
+            session()->flash('success', 'Payment mode added!');
         } catch (\Exception $e) {
             Log::error("Payment Mode Error: " . $e->getMessage());
             $this->modalError = 'Error adding payment mode.';
@@ -928,7 +928,8 @@ class PosManager extends Component
                 Log::error("Failed to pre-generate Invoice PDF: " . $e->getMessage());
             }
 
-            session()->flash('message', '✅ Bill Generated! Invoice: ' . $invoiceNumber);
+            session()->flash('success', '✅ Bill Generated! Invoice: ' . $invoiceNumber);
+            Dashboard::flushCache();
 
             $this->cart = [];
             $this->selectedPatient = null;

@@ -542,7 +542,7 @@
                     <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF' }}</td>
                     <td class="lbl">Report Date</td>
                     <td class="val">:
-                        {{ $report->approved_at ? $report->approved_at->format('d/m/Y h:i A') : now()->format('d/m/Y h:i A') }}
+                        {{ ($report->report_date ?? $report->approved_at ?? now())->format('d/m/Y h:i A') }}
                     </td>
                 </tr>
                 <tr>

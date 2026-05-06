@@ -179,7 +179,7 @@
         {{-- ═══════ Invoice Table ═══════ --}}
         <div class="card">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="overflow: visible !important;">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="bg-light">
                             <tr class="fs-11 fw-bold text-uppercase text-muted">
@@ -311,29 +311,27 @@
                                                     type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                     <i class="feather-printer fs-12"></i>
                                                 </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
                                                     <li>
-                                                        <a class="dropdown-item fs-11" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 1)">
-                                                            <i class="feather-file-text me-2 text-primary"></i>📄 PDF (With Header)
+                                                        <a class="dropdown-item fs-12 py-1 text-nowrap" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 1)">
+                                                            <i class="feather-file-text me-2 text-primary"></i> With Header
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item fs-11" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 0)">
-                                                            <i class="feather-minimize me-2 text-warning"></i>📋 PDF (Without Header)
-                                                            <div class="fs-9 text-muted ms-4">For letterpad printing</div>
+                                                        <a class="dropdown-item fs-12 py-1 text-nowrap" href="javascript:void(0)" wire:click="printInvoice({{ $inv->id }}, 0)">
+                                                            <i class="feather-file me-2 text-warning"></i> Without Header
                                                         </a>
                                                     </li>
+                                                    <li><hr class="dropdown-divider my-1"></li>
                                                     <li>
-                                                        <hr class="dropdown-divider">
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item fs-11 fw-bold text-primary"
+                                                        <a class="dropdown-item fs-12 py-1 fw-bold text-primary text-nowrap"
                                                             href="{{ route('lab.invoice.barcode.stickers', $inv->id) }}"
                                                             target="_blank">
-                                                            <i class="feather-maximize me-2"></i>🏷️ Barcode Stickers
+                                                            <i class="feather-maximize me-2"></i> Barcode Stickers
                                                         </a>
                                                     </li>
                                                 </ul>
+
                                             </div>
                                             @if($inv->status !== 'Cancelled' && !in_array($inv->sample_status, ['Processing', 'Ready']))
                                                 @can('delete invoices')

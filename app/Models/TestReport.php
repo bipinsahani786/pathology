@@ -18,10 +18,12 @@ class TestReport extends Model
         'comments',
         'approved_by',
         'approved_at',
+        'report_date',
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
+        'report_date' => 'datetime',
     ];
 
     public function invoice()

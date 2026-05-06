@@ -33,5 +33,8 @@ class DatabaseSeeder extends Seeder
 
         // 3. Demo Lab Data (Company, Tests, Patients, Invoices, etc.)
         $this->call(DemoSeeder::class);
+
+        // 4. Custom Tests for Vaishnavi Pathology
+        $this->call(VaishnaviTestSeeder::class);
     }
 }
