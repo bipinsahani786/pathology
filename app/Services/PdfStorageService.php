@@ -24,6 +24,7 @@ class PdfStorageService
             $template = Configuration::getFor('report_template', 'new', $report->invoice->company_id);
         }
         $report->load([
+            'invoice.company', // Critical for logo/watermark
             'invoice.patient.patientProfile',
             'invoice.collectionCenter',
             'invoice.doctor',
@@ -101,7 +102,7 @@ class PdfStorageService
      */
     public function storeInvoicePdf(Invoice $invoice, $template = null)
     {
-        $invoice->load(['patient.patientProfile', 'collectionCenter', 'doctor', 'items.labTest']);
+        $invoice->load(['company', 'patient.patientProfile', 'collectionCenter', 'doctor', 'items.labTest']);
         $companyId = $invoice->company_id;
         $settings = $this->getSettings($companyId);
 
