@@ -13,19 +13,29 @@ class PublicReportController extends Controller
      */
     public function download($hash)
     {
-        // For simplicity and matching the QR link generated, 
-        // we'll assume the hash is just the base64 encoded invoice_id 
-        // or we can search by invoice_number if it's unique enough.
+        // Try to decode as base64 first (expected format: base64 encoded invoice_id)
+        $invoiceId = base64_decode($hash, true);
         
-        $invoiceId = base64_decode($hash);
+        $report = null;
+
+        if ($invoiceId && is_numeric($invoiceId)) {
+            // Priority 1: Globally unique Invoice ID
+            $report = TestReport::with('invoice.company')
+                ->where('invoice_id', $invoiceId)
+                ->latest()
+                ->first();
+        } 
         
-        if (!$invoiceId || !is_numeric($invoiceId)) {
-            // Try to find by invoice_number if decode fails
-            $report = TestReport::whereHas('invoice', function($q) use ($hash) {
-                $q->where('invoice_number', $hash);
-            })->first();
-        } else {
-            $report = TestReport::where('invoice_id', $invoiceId)->first();
+        if (!$report) {
+            // Priority 2: Search by Invoice Number (Fallback for legacy or manual links)
+            // Note: This could collide across companies, so we take the latest one 
+            // or we could ideally require a company prefix/slug in the future.
+            $report = TestReport::with('invoice.company')
+                ->whereHas('invoice', function($q) use ($hash) {
+                    $q->where('invoice_number', $hash);
+                })
+                ->latest()
+                ->first();
         }
 
         if (!$report) {
@@ -33,14 +43,7 @@ class PublicReportController extends Controller
         }
 
         // Forward to the main ReportPdfController download method
-        // We bypass auth since this is a public verification/download link
         $controller = app(ReportPdfController::class);
-        
-        // We need to spoof the request or just call the method directly with a flag
-        // However, the download method checks auth()->user()->company_id.
-        // We should modify ReportPdfController to allow public access for this method
-        // or handle the PDF generation here.
-        
         return $controller->streamPublicLink($report->invoice_id);
     }
 }
