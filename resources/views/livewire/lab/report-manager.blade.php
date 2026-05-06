@@ -14,7 +14,7 @@
 
     {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
-        <div class="card mb-4" style="overflow: visible !important;">
+        <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="card-title mb-0"><i class="feather-flask me-2 text-primary"></i>Test Results & Reports</h6>
             </div>
@@ -99,17 +99,17 @@
                 </div>
 
                 {{-- Reports Table --}}
-                <div class="table-responsive" style="overflow: visible !important;">
-                    <table class="table table-hover table-bordered align-middle">
+                <div class="table-responsive shadow-sm rounded-3">
+                    <table class="table table-hover table-bordered align-middle mb-0" style="min-width: 1250px;">
                         <thead class="table-light">
                             <tr>
                                 <th style="width:140px;">Invoice & Br.</th>
-                                <th>Patient Info</th>
-                                <th>Doctor / Agent</th>
-                                <th>Center</th>
-                                <th>Test List</th>
-                                <th>Status</th>
-                                <th class="text-end">Action</th>
+                                <th style="width:180px;">Patient Info</th>
+                                <th style="width:150px;">Doctor / Agent</th>
+                                <th style="width:140px;">Center</th>
+                                <th style="width:250px;">Test List</th>
+                                <th style="width:110px;">Status</th>
+                                <th class="text-end" style="width:150px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -121,7 +121,7 @@
                                         <div class="fs-10 text-muted">{{ $invoice->created_at->format('d/m/y h:i A') }}</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold fs-13">{{ $invoice->patient->name }}</div>
+                                        <div class="fw-bold fs-14">{{ $invoice->patient->name }}</div>
                                         <div class="badge bg-soft-info text-info fs-10 fw-bold px-2 py-1 mb-1">{{ $invoice->patient->formatted_id }}</div>
                                         <div class="fs-10 text-muted">
                                             {{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}
@@ -150,7 +150,7 @@
                                                             wire:model.live="selectedTests" 
                                                             value="{{ $item->id }}"
                                                             {{ !$isComplete ? 'disabled' : '' }}>
-                                                        <span class="badge {{ $isComplete ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} border fs-9 fw-normal" title="{{ $isComplete ? 'Result Entered' : 'Pending' }}">
+                                                        <span class="badge {{ $isComplete ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger' }} border fs-9 fw-normal" title="{{ $item->labTest->name }} ({{ $isComplete ? 'Result Entered' : 'Pending' }})">
                                                             {{ $item->labTest->name }}
                                                         </span>
                                                     </div>
@@ -200,7 +200,7 @@
                                                     @endcan
                                                 </div>
                                             @else
-                                                <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
+                                                <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
                                                     <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="feather-printer me-1"></i> Print / Edit
                                                     </button>
@@ -224,7 +224,7 @@
                                             @endif
 
                                             {{-- WhatsApp Share --}}
-                                            <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
+                                            <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
                                                 @if($invoice->patient->phone)
                                                     <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="bi bi-whatsapp"></i>
