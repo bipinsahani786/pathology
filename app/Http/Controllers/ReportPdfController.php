@@ -149,6 +149,7 @@ class ReportPdfController extends Controller
             // Visibility
             'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
             'pdf_show_footer' => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
+            'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId) !== '0',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)

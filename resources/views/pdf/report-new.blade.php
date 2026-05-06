@@ -558,59 +558,61 @@
     {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
     <footer>
         <div class="sig-container">
-            {{-- ── Signature Section ── --}}
-            @php $sigMode = $settings['report_signature_mode'] ?? 'global_bottom'; @endphp
-            @if($sigMode === 'per_department')
-                {{-- Global footer sigs hidden, shown per department in body --}}
-            @elseif(($sigMode === 'global_bottom' || $sigMode === '') && empty($settings['global_sig_2_name']) && empty($settings['global_sig_3_name']))
-                <table class="sig-table">
-                    <tr>
-                        <td class="sig-checked">CHECKED BY</td>
-                        <td class="sig-doctor">
-                            @if($sigImgSrc)
-                                <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+            @if($settings['pdf_show_signatures'] ?? true)
+                {{-- ── Signature Section ── --}}
+                @php $sigMode = $settings['report_signature_mode'] ?? 'global_bottom'; @endphp
+                @if($sigMode === 'per_department')
+                    {{-- Global footer sigs hidden, shown per department in body --}}
+                @elseif(($sigMode === 'global_bottom' || $sigMode === '') && empty($settings['global_sig_2_name']) && empty($settings['global_sig_3_name']))
+                    <table class="sig-table">
+                        <tr>
+                            <td class="sig-checked">CHECKED BY</td>
+                            <td class="sig-doctor">
+                                @if($sigImgSrc)
+                                    <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                                @endif
+                                <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
+                                @if($settings['global_sig_1_desig'])
+                                    <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
+                                @endif
+                            </td>
+                        </tr>
+                    </table>
+                @else
+                    {{-- Multi Signatory Layout --}}
+                    <table class="multi-sig-table">
+                        <tr>
+                            <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
+                                CHECKED BY
+                            </td>
+                            @if($settings['global_sig_2_name'])
+                                <td>
+                                    @if($settings['global_sig_2_path'])
+                                        <img class="sign-img" src="{{ $settings['global_sig_2_path'] }}"><br>
+                                    @endif
+                                    <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
+                                    <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
+                                </td>
                             @endif
-                            <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
-                            @if($settings['global_sig_1_desig'])
+                            <td>
+                                @if($sigImgSrc)
+                                    <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                                @endif
+                                <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
                                 <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
-                            @endif
-                        </td>
-                    </tr>
-                </table>
-            @else
-                {{-- Multi Signatory Layout --}}
-                <table class="multi-sig-table">
-                    <tr>
-                        <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
-                            CHECKED BY
-                        </td>
-                        @if($settings['global_sig_2_name'])
-                            <td>
-                                @if($settings['global_sig_2_path'])
-                                    <img class="sign-img" src="{{ $settings['global_sig_2_path'] }}"><br>
-                                @endif
-                                <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
-                                <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
                             </td>
-                        @endif
-                        <td>
-                            @if($sigImgSrc)
-                                <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                            @if($settings['global_sig_3_path'])
+                                <td>
+                                    @if($settings['global_sig_3_path'])
+                                        <img class="sign-img" src="{{ $settings['global_sig_3_path'] }}"><br>
+                                    @endif
+                                    <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
+                                    <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>
+                                </td>
                             @endif
-                            <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
-                            <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
-                        </td>
-                        @if($settings['global_sig_3_path'])
-                            <td>
-                                @if($settings['global_sig_3_path'])
-                                    <img class="sign-img" src="{{ $settings['global_sig_3_path'] }}"><br>
-                                @endif
-                                <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
-                                <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>
-                            </td>
-                        @endif
-                    </tr>
-                </table>
+                        </tr>
+                    </table>
+                @endif
             @endif
         </div>
 
