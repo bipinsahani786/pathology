@@ -61,6 +61,39 @@ class Dashboard extends Component
         $this->updateFilter();
     }
 
+    /**
+     * Flush dashboard cache for a company so data reflects instantly.
+     * Call this from POS, Invoice cancel, Payment, etc.
+     */
+    public static function flushCache($companyId = null)
+    {
+        $companyId = $companyId ?? auth()->user()->company_id;
+        // Clear all dashboard cache keys for this company using pattern
+        $cachePrefix = "dashboard_stats_{$companyId}_";
+        // Since we can't wildcard-delete with all cache drivers, 
+        // we flush the most common keys (current month, today, etc.)
+        $branches = ['', 'all'];
+        $userBranchId = auth()->check() ? auth()->user()->branch_id : null;
+        if ($userBranchId) $branches[] = $userBranchId;
+        $activeBranch = session('active_branch_id', 'all');
+        if ($activeBranch && $activeBranch !== 'all') $branches[] = $activeBranch;
+
+        $dateRanges = [
+            [Carbon::today()->toDateString(), Carbon::today()->toDateString()],
+            [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()],
+            [Carbon::now()->startOfWeek()->toDateString(), Carbon::now()->endOfWeek()->toDateString()],
+            [Carbon::now()->subDays(30)->toDateString(), Carbon::now()->toDateString()],
+            [Carbon::yesterday()->toDateString(), Carbon::yesterday()->toDateString()],
+        ];
+
+        foreach ($branches as $b) {
+            foreach ($dateRanges as [$from, $to]) {
+                $key = "dashboard_stats_{$companyId}_{$b}_" . Carbon::parse($from)->format('Ymd') . "_" . Carbon::parse($to)->format('Ymd');
+                \Illuminate\Support\Facades\Cache::forget($key);
+            }
+        }
+    }
+
     public function render()
     {
         $companyId = auth()->user()->company_id;
@@ -84,7 +117,7 @@ class Dashboard extends Component
         // Cache Key based on filters
         $cacheKey = "dashboard_stats_{$companyId}_{$branchId}_" . $start->format('Ymd') . "_" . $end->format('Ymd');
 
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function() use ($companyId, $branchId, $start, $end) {
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($companyId, $branchId, $start, $end) {
             // 1. Master Counts
             $stats = [
                 'total_tests' => LabTest::where('company_id', $companyId)->where('is_package', false)->count(),

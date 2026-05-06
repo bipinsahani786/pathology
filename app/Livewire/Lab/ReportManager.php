@@ -245,4 +245,9 @@ class ReportManager extends Component
         $url = route('lab.reports.print', [$invoiceId, 'new']) . '?header=' . ($withHeader ? '1' : '0');
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
+
+    public function notifyMissingPhone()
+    {
+        $this->dispatch('notify', ['type' => 'error', 'message' => 'WhatsApp cannot be shared because the patient phone number is missing.']);
+    }
 }

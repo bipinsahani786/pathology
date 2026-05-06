@@ -89,16 +89,16 @@ class InvoiceManager extends Component
         $user = auth()->user();
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        
+
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
-        
+        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) ||
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+
         $myBranchId = null;
         if ($isGlobalAdmin) {
-             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
         } else {
-             $myBranchId = $user->branch_id;
+            $myBranchId = $user->branch_id;
         }
 
         // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
@@ -172,8 +172,10 @@ class InvoiceManager extends Component
 
         // Stats calculations with strict scoping
         $statsBase = Invoice::where('company_id', $companyId)->where('status', '!=', 'Cancelled');
-        if ($myBranchId) $statsBase->where('branch_id', $myBranchId);
-        if ($user->collection_center_id) $statsBase->where('collection_center_id', $user->collection_center_id);
+        if ($myBranchId)
+            $statsBase->where('branch_id', $myBranchId);
+        if ($user->collection_center_id)
+            $statsBase->where('collection_center_id', $user->collection_center_id);
 
         $stats = [
             'total' => (clone $statsBase)->count(),
@@ -217,9 +219,10 @@ class InvoiceManager extends Component
             $this->authorize('delete invoices');
             $invoice = Invoice::findOrFail($invoiceId);
             $result = $invoice->cancel();
-            
+
             if ($result['status']) {
                 session()->flash('message', $result['message']);
+                \App\Livewire\Lab\Dashboard::flushCache();
             } else {
                 session()->flash('error', $result['message']);
             }
@@ -237,7 +240,7 @@ class InvoiceManager extends Component
                 return;
             }
         }
-        
+
         $route = $withHeader ? 'lab.invoice.pdf' : 'lab.invoice.pdf.plain';
         $url = route($route, $id);
         $this->dispatch('open-new-tab', ['url' => $url]);

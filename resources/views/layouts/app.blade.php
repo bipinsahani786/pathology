@@ -590,6 +590,14 @@
 
                     // Listeners start here
                     window.pathologyListenersAdded = true;
+                    
+                    // Session Flash to Toast converter
+                    @if(session()->has('success') || session()->has('message'))
+                        Livewire.dispatch('notify', { type: 'success', message: @js(session('success') ?? session('message')) });
+                    @endif
+                    @if(session()->has('error'))
+                        Livewire.dispatch('notify', { type: 'error', message: @js(session('error')) });
+                    @endif
 
                     Livewire.on('notify', function (data) {
                         var info = Array.isArray(data) ? data[0] : data;

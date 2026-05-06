@@ -178,7 +178,7 @@
                                                     @endcan
                                                     
                                                      @if($invoice->testReport && $invoice->testReport->status === 'Draft')
-                                                        <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
+                                                        <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
                                                             <button class="btn btn-sm btn-info dropdown-toggle fs-11 py-1 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                                 <i class="feather-printer"></i>
                                                             </button>
@@ -200,7 +200,7 @@
                                                     @endcan
                                                 </div>
                                             @else
-                                                <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
+                                                <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
                                                     <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="feather-printer me-1"></i> Print / Edit
                                                     </button>
@@ -224,18 +224,24 @@
                                             @endif
 
                                             {{-- WhatsApp Share --}}
-                                            <div class="dropdown {{ $loop->remaining < 2 ? 'dropup' : '' }}">
-                                                <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" @if(!$invoice->patient->phone) disabled title="Phone missing" @endif>
-                                                    <i class="bi bi-whatsapp"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1">
-                                                    <li><a class="dropdown-item fs-11 rounded-2 py-2" href="{{ $invoice->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i> Share Invoice</a></li>
-                                                    @if($invoice->testReport && $invoice->testReport->status === 'Approved')
-                                                        <li><a class="dropdown-item fs-11 rounded-2 py-2" href="{{ $invoice->getWhatsappLink('report') }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i> Share Report</a></li>
-                                                    @else
-                                                        <li><a class="dropdown-item fs-11 rounded-2 py-2 disabled text-muted" href="javascript:void(0)"><i class="feather-clock me-2"></i> Report Pending</a></li>
-                                                    @endif
-                                                </ul>
+                                            <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
+                                                @if($invoice->patient->phone)
+                                                    <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1">
+                                                        <li><a class="dropdown-item fs-11 rounded-2 py-2" href="{{ $invoice->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i> Share Invoice</a></li>
+                                                        @if($invoice->testReport && $invoice->testReport->status === 'Approved')
+                                                            <li><a class="dropdown-item fs-11 rounded-2 py-2" href="{{ $invoice->getWhatsappLink('report') }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i> Share Report</a></li>
+                                                        @else
+                                                            <li><a class="dropdown-item fs-11 rounded-2 py-2 disabled text-muted" href="javascript:void(0)"><i class="feather-clock me-2"></i> Report Pending</a></li>
+                                                        @endif
+                                                    </ul>
+                                                @else
+                                                    <button class="btn btn-sm btn-outline-secondary fs-11 px-2" type="button" wire:click="notifyMissingPhone" title="Phone number missing">
+                                                        <i class="bi bi-whatsapp text-muted"></i>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
