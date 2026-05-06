@@ -179,21 +179,21 @@
         {{-- ═══════ Invoice Table ═══════ --}}
         <div class="card">
             <div class="card-body p-0">
-                <div class="table-responsive" style="overflow: visible !important;">
-                    <table class="table table-hover mb-0 align-middle">
+                <div class="table-responsive shadow-sm">
+                    <table class="table table-hover mb-0 align-middle" style="min-width: 1250px;">
                         <thead class="bg-light">
                             <tr class="fs-11 fw-bold text-uppercase text-muted">
                                 <th class="ps-3" style="width:50px;">#</th>
-                                <th>Invoice #</th>
-                                <th>Patient</th>
+                                <th style="width:140px;">Invoice #</th>
+                                <th style="width:180px;">Patient</th>
                                 <th>Tests</th>
-                                <th class="text-end">Amount</th>
-                                <th class="text-end">Paid</th>
-                                <th class="text-end">Due</th>
-                                <th class="text-center">Status</th>
-                                <th>Date</th>
-                                <th class="text-center">Sample Status</th>
-                                <th class="text-center" style="width:120px;">Actions</th>
+                                <th class="text-end" style="width:100px;">Amount</th>
+                                <th class="text-end" style="width:100px;">Paid</th>
+                                <th class="text-end" style="width:100px;">Due</th>
+                                <th class="text-center" style="width:110px;">Status</th>
+                                <th style="width:110px;">Date</th>
+                                <th class="text-center" style="width:130px;">Sample Status</th>
+                                <th class="text-center" style="width:160px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -244,7 +244,7 @@
                                         <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="dropdown">
+                                        <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
                                             @php
                                                 $sampleStatusColors = [
                                                     'Pending' => 'bg-soft-secondary text-secondary',
@@ -257,7 +257,7 @@
                                                 $c = $sampleStatusColors[$inv->sample_status] ?? 'bg-soft-secondary text-secondary';
                                             @endphp
                                             <button class="btn btn-sm dropdown-toggle py-0 px-2 fw-bold fs-10 {{ $c }}"
-                                                type="button" data-bs-toggle="dropdown" @cannot('edit invoices') disabled @endcannot>
+                                                type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" @cannot('edit invoices') disabled @endcannot>
                                                 {{ $inv->sample_status ?? 'Pending' }}
                                             </button>
                                             @can('edit invoices')
@@ -296,7 +296,7 @@
                                                 </a>
                                             @endcan
                                                 <button class="btn btn-sm btn-outline-success dropdown-toggle px-2"
-                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
+                                                    type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
                                                     <i class="bi bi-whatsapp fs-12"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
@@ -306,9 +306,9 @@
                                                     @endif
                                                 </ul>
                                             </div>
-                                            <div class="dropdown">
+                                            <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
                                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2"
-                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
                                                     <i class="feather-printer fs-12"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
