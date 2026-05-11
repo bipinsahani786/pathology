@@ -109,23 +109,42 @@
                                 <table class="table table-sm align-middle mb-0">
                                     <thead class="bg-light">
                                         <tr class="fs-10 text-uppercase text-muted fw-bold">
-                                            <th class="ps-3 py-3" style="min-width: 180px;">Param Name</th>
-                                            <th style="min-width: 70px;">Code</th>
-                                            <th style="min-width: 120px;">Method</th>
-                                            <th style="min-width: 100px;">Input</th>
+                                            <th class="ps-3 py-3" style="width: 40px;"></th>
+                                            <th style="min-width: 180px;">Param Name</th>
+                                            <th style="width: 80px;">Code</th>
+                                            <th style="min-width: 140px;">Method</th>
+                                            <th style="min-width: 120px;">Input</th>
                                             <th style="min-width: 250px;">Reference & Units</th>
                                             <th class="text-end pe-3" style="width: 50px;"></th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="parameters-list" 
+                                        x-data="{
+                                            init() {
+                                                new Sortable(this.$el, {
+                                                    handle: '.drag-handle',
+                                                    animation: 150,
+                                                    onEnd: (evt) => {
+                                                        let order = Array.from(this.$el.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
+                                                        @this.reorderParameters(order);
+                                                    }
+                                                });
+                                            }
+                                        }">
                                         @foreach($parameters as $index => $param)
-                                            <tr wire:key="param-d-{{ $index }}" class="border-bottom border-white">
+                                            <tr wire:key="param-d-{{ $index }}" data-id="{{ $index }}" class="border-bottom border-white">
                                                 <td class="ps-3 py-2">
+                                                    <div class="drag-handle text-muted cursor-move" style="cursor: grab;">
+                                                        <i class="feather-grid fs-6"></i>
+                                                    </div>
+                                                </td>
+                                                <td class="py-2">
                                                     <input type="text" class="form-control form-control-sm @error('parameters.' . $index . '.name') is-invalid @enderror" 
                                                         wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
                                                 </td>
                                                 <td>
-                                                    <input type="text" class="form-control form-control-sm text-center fw-bold text-primary" 
+                                                    <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
+                                                        style="border: 1px solid #0d6efd; color: #0d6efd; min-width: 60px;"
                                                         wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
                                                 </td>
                                                 <td>
@@ -162,13 +181,27 @@
                             </div>
 
                             {{-- Mobile Card Layout (visible only on small screens) --}}
-                            <div class="d-lg-none">
+                            <div class="d-lg-none" id="parameters-list-mobile"
+                                x-data="{
+                                    init() {
+                                        new Sortable(this.$el, {
+                                            handle: '.drag-handle-mobile',
+                                            animation: 150,
+                                            onEnd: (evt) => {
+                                                let order = Array.from(this.$el.querySelectorAll('.card')).map(card => card.getAttribute('data-id'));
+                                                @this.reorderParameters(order);
+                                            }
+                                        });
+                                    }
+                                }">
                                 @foreach($parameters as $index => $param)
-                                    <div wire:key="param-m-{{ $index }}" class="card border shadow-sm rounded-3 mb-2">
+                                    <div wire:key="param-m-{{ $index }}" data-id="{{ $index }}" class="card border shadow-sm rounded-3 mb-2">
                                         <div class="card-body p-3">
                                             {{-- Row 1: Name + Delete --}}
                                             <div class="d-flex align-items-center gap-2 mb-2">
-                                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold fs-10 px-2">{{ $index + 1 }}</span>
+                                                <div class="drag-handle-mobile text-muted pe-1" style="cursor: grab;">
+                                                    <i class="feather-grid fs-6"></i>
+                                                </div>
                                                 <input type="text" class="form-control form-control-sm flex-grow-1 @error('parameters.' . $index . '.name') is-invalid @enderror" 
                                                     wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
                                                 <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0 flex-shrink-0">
@@ -179,7 +212,8 @@
                                             <div class="row g-2 mb-2">
                                                 <div class="col-4">
                                                     <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Code</label>
-                                                    <input type="text" class="form-control form-control-sm text-center fw-bold text-primary" 
+                                                    <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
+                                                        style="border: 1px solid #0d6efd; color: #0d6efd;"
                                                         wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
                                                 </div>
                                                 <div class="col-8">
@@ -400,6 +434,8 @@
             </div>
         </div>
     @endif
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <style>
         .btn-xs { padding: 0.125rem 0.25rem; font-size: 0.75rem; }

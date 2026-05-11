@@ -128,6 +128,37 @@ class LabTestEditor extends Component
         $this->parameters = array_values($this->parameters);
     }
 
+    public function moveParameterUp($index)
+    {
+        if ($index > 0) {
+            $prevIndex = $index - 1;
+            $temp = $this->parameters[$prevIndex];
+            $this->parameters[$prevIndex] = $this->parameters[$index];
+            $this->parameters[$index] = $temp;
+        }
+    }
+
+    public function moveParameterDown($index)
+    {
+        if ($index < count($this->parameters) - 1) {
+            $nextIndex = $index + 1;
+            $temp = $this->parameters[$nextIndex];
+            $this->parameters[$nextIndex] = $this->parameters[$index];
+            $this->parameters[$index] = $temp;
+        }
+    }
+
+    public function reorderParameters($orderedIds)
+    {
+        $newParameters = [];
+        foreach ($orderedIds as $index) {
+            if (isset($this->parameters[$index])) {
+                $newParameters[] = $this->parameters[$index];
+            }
+        }
+        $this->parameters = $newParameters;
+    }
+
     public function save()
     {
         $labTestService = new LabTestService();
