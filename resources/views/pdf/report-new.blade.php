@@ -487,14 +487,16 @@
 <body>
 
     {{-- ══════════════════ WATERMARK ══════════════════ --}}
-    @if(isset($company->logo) && $company->logo)
-        <div class="watermark">
-            <img src="{{ storage_base64($company->logo) }}">
-        </div>
-    @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
-        <div class="watermark">
-            <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
-        </div>
+    @if($settings['pdf_show_watermark'] ?? true)
+        @if(isset($company->logo) && $company->logo)
+            <div class="watermark">
+                <img src="{{ storage_base64($company->logo) }}">
+            </div>
+        @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
+            <div class="watermark">
+                <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
+            </div>
+        @endif
     @endif
 
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
@@ -647,7 +649,7 @@
             <div class="test-title" style="margin-bottom: 12px; font-size: 11.5px;">{{ strtoupper($testName) }}</div>
 
             {{-- ── Method (from LabTest master) ── --}}
-            @if($labTest->method)
+            @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
                 <div class="method-line">Method: {{ $labTest->method }}</div>
             @endif
 
@@ -699,7 +701,7 @@
                             <tr class="{{ $hasSubHeaders ? 'param-indent' : '' }}">
                                 <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
                                     {{ strtoupper($r->parameter_name) }}
-                                    @if($r->method)
+                                    @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
                                         <div style="font-size: 8px; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
                                             (Method: {{ $r->method }})
                                         </div>
@@ -755,7 +757,7 @@
             </table>
 
             {{-- ── Method (per-result level, if different from test master) ── --}}
-            @if($results->first()->method && $results->first()->method !== $labTest->method)
+            @if(($settings['pdf_show_test_method'] ?? true) && $results->first()->method && $results->first()->method !== $labTest->method)
                 <p style="font-size:9px; color:#555; font-style:italic; margin-bottom:5px;">
                     <strong>Method:</strong> {{ $results->first()->method }}
                 </p>
