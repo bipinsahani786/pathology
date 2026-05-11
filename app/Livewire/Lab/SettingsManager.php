@@ -66,6 +66,8 @@ class SettingsManager extends Component
     public $pdf_show_header = true;
     public $pdf_show_footer = true;
     public $pdf_show_signatures = true; // New Toggle
+    public $pdf_show_test_method = true;
+    public $pdf_show_watermark = true;
     public $pdf_header_image;       // stored path
     public $pdf_footer_image;       // stored path
     public $new_header_image;       // upload
@@ -145,6 +147,8 @@ class SettingsManager extends Component
         $this->pdf_show_header = Configuration::getFor('pdf_show_header', '1') === '1';
         $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1') === '1';
         $this->pdf_show_signatures = Configuration::getFor('pdf_show_signatures', '1') === '1';
+        $this->pdf_show_test_method = Configuration::getFor('pdf_show_test_method', '1') === '1';
+        $this->pdf_show_watermark = Configuration::getFor('pdf_show_watermark', '1') === '1';
         $this->pdf_header_image = Configuration::getFor('pdf_header_image', null);
         $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null);
 
@@ -370,6 +374,8 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0');
         Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0');
         Configuration::setFor('pdf_show_signatures', $this->pdf_show_signatures ? '1' : '0');
+        Configuration::setFor('pdf_show_test_method', $this->pdf_show_test_method ? '1' : '0');
+        Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0');
         Configuration::setFor('pdf_header_image', $this->pdf_header_image);
         Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);
         

@@ -546,13 +546,31 @@
                                         <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_footer" style="width:3em;height:1.5em;">
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
                                     <div>
                                         <strong class="fs-12">Show Signatures & Checked By</strong>
                                         <div class="fs-10 text-muted">Doctor signatures and "Checked By" text in footer</div>
                                     </div>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_signatures" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <strong class="fs-12">Show Test Method</strong>
+                                        <div class="fs-10 text-muted">Show/hide method name under tests and parameters</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_test_method" style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <strong class="fs-12">Show Report Watermark</strong>
+                                        <div class="fs-10 text-muted">Show/hide background logo watermark on reports</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_watermark" style="width:3em;height:1.5em;">
                                     </div>
                                 </div>
                             </div>

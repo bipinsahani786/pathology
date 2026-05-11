@@ -240,14 +240,16 @@
 </head>
 <body>
     {{-- Watermark --}}
-    @if(isset($company->logo) && $company->logo)
-        <div class="watermark">
-            <img src="{{ storage_base64($company->logo) }}">
-        </div>
-    @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
-        <div class="watermark">
-            <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
-        </div>
+    @if($settings['pdf_show_watermark'] ?? true)
+        @if(isset($company->logo) && $company->logo)
+            <div class="watermark">
+                <img src="{{ storage_base64($company->logo) }}">
+            </div>
+        @elseif(file_exists(public_path('assets/images/healthcare-logo.png')))
+            <div class="watermark">
+                <img src="{{ public_path('assets/images/healthcare-logo.png') }}">
+            </div>
+        @endif
     @endif
 
     {{-- HEADER --}}
@@ -336,7 +338,7 @@
                     <tr>
                         <td colspan="4" class="test-title">
                             {{ $testName }}
-                            @if($labTest->method)
+                            @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
                                 <span style="font-size: 10px; font-weight: normal; margin-left: 10px; color: #666;">(Method: {{ $labTest->method }})</span>
                             @endif
                         </td>
@@ -345,7 +347,7 @@
                         <tr>
                             <td style="padding-left: 15px;">
                                 <div>{{ $r->parameter_name }}</div>
-                                @if($r->method)
+                                @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
                                     <div style="font-size: 8px; color: #777; font-style: italic;">Method: {{ $r->method }}</div>
                                 @endif
                             </td>
