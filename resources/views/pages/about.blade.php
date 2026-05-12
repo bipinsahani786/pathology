@@ -8,6 +8,16 @@
     $statUptimeLabel = \App\Models\SiteSetting::get('about_stat_uptime_label', 'Uptime SLA');
     $statReports = \App\Models\SiteSetting::get('about_stat_reports', '1M+');
     $statReportsLabel = \App\Models\SiteSetting::get('about_stat_reports_label', 'Reports Monthly');
+
+    $storyTitle = \App\Models\SiteSetting::get('about_story_title', 'Our Story');
+    $storyDesc = \App\Models\SiteSetting::get('about_story_desc', 'We\'re building the nervous system for the next generation of diagnostic medicine, making healthcare faster, safer, and smarter.');
+    $heritageSubtitle = \App\Models\SiteSetting::get('about_heritage_subtitle', 'Heritage');
+    $heritageTitle = \App\Models\SiteSetting::get('about_heritage_title', 'Built by Experts, for Professionals.');
+    $valuesSubtitle = \App\Models\SiteSetting::get('about_values_subtitle', 'Our Values');
+    $valuesTitle = \App\Models\SiteSetting::get('about_values_title', 'Our Core Pillars');
+    $roadmapTitle = \App\Models\SiteSetting::get('about_roadmap_title', 'The Road to 2026');
+    $ctaTitle = \App\Models\SiteSetting::get('about_cta_title', 'Ready to Modernize?');
+    $ctaDesc = \App\Models\SiteSetting::get('about_cta_desc', 'Join the growing network of modern diagnostic labs experiencing zero downtime and automated workflows.');
 @endphp
 
 <x-landing-layout>
@@ -23,7 +33,7 @@
             
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center reveal">
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-zinc-200 shadow-sm text-brand-600 text-xs font-bold uppercase tracking-widest mb-8">
-                    <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span> Our Story
+                    <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span> {{ $storyTitle }}
                 </span>
                 
                 <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 text-zinc-900 leading-[1.1]">
@@ -31,7 +41,7 @@
                 </h1>
                 
                 <p class="text-xl text-zinc-600 max-w-2xl mx-auto leading-relaxed font-medium">
-                    We're building the nervous system for the next generation of diagnostic medicine, making healthcare faster, safer, and smarter.
+                    {{ $storyDesc }}
                 </p>
             </div>
         </section>
@@ -67,9 +77,9 @@
                 </div>
 
                 <div class="lg:col-span-7 reveal-right lg:pl-8">
-                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-4 block">Heritage</span>
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-4 block">{{ $heritageSubtitle }}</span>
                     <h3 class="font-display text-4xl md:text-5xl font-extrabold mb-8 tracking-tight text-zinc-900">
-                        Built by <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Experts</span>,<br>for Professionals.
+                        {!! str_replace('Experts', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Experts</span>', e($heritageTitle)) !!}
                     </h3>
                     <p class="text-lg text-zinc-600 mb-12 leading-relaxed font-medium">
                         {{ $aboutDesc }}
@@ -94,8 +104,8 @@
         <section class="py-24 bg-zinc-50/50 border-y border-zinc-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 reveal">
-                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 block">Our Values</span>
-                    <h3 class="font-display text-4xl font-extrabold text-zinc-900">Our Core <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Pillars</span></h3>
+                    <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 block">{{ $valuesSubtitle }}</span>
+                    <h3 class="font-display text-4xl font-extrabold text-zinc-900">{!! str_replace('Pillars', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Pillars</span>', e($valuesTitle)) !!}</h3>
                 </div>
                 
                 <div class="grid md:grid-cols-3 gap-8">
@@ -121,27 +131,32 @@
             
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center mb-20 reveal">
-                    <h3 class="font-display text-4xl font-extrabold text-white">The Road to <span class="text-brand-400">2026</span></h3>
+                    <h3 class="font-display text-4xl font-extrabold text-white">{!! str_replace('2026', '<span class="text-brand-400">2026</span>', e($roadmapTitle)) !!}</h3>
                 </div>
                 
                 <div class="relative">
                     <div class="hidden md:block absolute top-6 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-zinc-800 via-brand-500/50 to-zinc-800 z-0"></div>
                     
                     <div class="grid md:grid-cols-4 gap-12 text-center relative z-10">
-                        @foreach([
-                            ['date' => 'Mar 2024', 'title' => 'Platform Launch', 'desc' => 'Core LIS engine goes live'],
-                            ['date' => 'Aug 2024', 'title' => '100 Lab Milestone', 'desc' => '100 diagnostic centers onboarded'],
-                            ['date' => 'Feb 2025', 'title' => 'Partner Portal', 'desc' => 'Doctor & Agent referral system'],
-                            ['date' => 'Current', 'title' => 'Scale Unbound', 'desc' => 'Multi-branch, multi-city expansion'],
-                        ] as $i => $milestone)
-                            <div class="reveal delay-{{ $i + 1 }} group">
-                                <div class="w-12 h-12 mx-auto bg-zinc-900 border-4 border-zinc-950 rounded-full flex items-center justify-center mb-6 relative group-hover:scale-110 transition-transform duration-300">
-                                    <div class="w-3 h-3 rounded-full bg-brand-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                        @php
+                            $milestones = [
+                                ['date' => \App\Models\SiteSetting::get('about_milestone_date_1', 'Mar 2024'), 'title' => \App\Models\SiteSetting::get('about_milestone_title_1', 'Platform Launch'), 'desc' => \App\Models\SiteSetting::get('about_milestone_desc_1', 'Core LIS engine goes live')],
+                                ['date' => \App\Models\SiteSetting::get('about_milestone_date_2', 'Aug 2024'), 'title' => \App\Models\SiteSetting::get('about_milestone_title_2', '100 Lab Milestone'), 'desc' => \App\Models\SiteSetting::get('about_milestone_desc_2', '100 diagnostic centers onboarded')],
+                                ['date' => \App\Models\SiteSetting::get('about_milestone_date_3', 'Feb 2025'), 'title' => \App\Models\SiteSetting::get('about_milestone_title_3', 'Partner Portal'), 'desc' => \App\Models\SiteSetting::get('about_milestone_desc_3', 'Doctor & Agent referral system')],
+                                ['date' => \App\Models\SiteSetting::get('about_milestone_date_4', 'Current'), 'title' => \App\Models\SiteSetting::get('about_milestone_title_4', 'Scale Unbound'), 'desc' => \App\Models\SiteSetting::get('about_milestone_desc_4', 'Multi-branch, multi-city expansion')],
+                            ];
+                        @endphp
+                        @foreach($milestones as $i => $milestone)
+                            @if(!empty($milestone['title']))
+                                <div class="reveal delay-{{ $i + 1 }} group">
+                                    <div class="w-12 h-12 mx-auto bg-zinc-900 border-4 border-zinc-950 rounded-full flex items-center justify-center mb-6 relative group-hover:scale-110 transition-transform duration-300">
+                                        <div class="w-3 h-3 rounded-full bg-brand-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-brand-400 uppercase tracking-widest block mb-2">{{ $milestone['date'] }}</span>
+                                    <p class="font-bold text-lg text-white mb-2">{{ $milestone['title'] }}</p>
+                                    <p class="text-sm text-zinc-400 font-medium">{{ $milestone['desc'] }}</p>
                                 </div>
-                                <span class="text-[11px] font-bold text-brand-400 uppercase tracking-widest block mb-2">{{ $milestone['date'] }}</span>
-                                <p class="font-bold text-lg text-white mb-2">{{ $milestone['title'] }}</p>
-                                <p class="text-sm text-zinc-400 font-medium">{{ $milestone['desc'] }}</p>
-                            </div>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -153,9 +168,9 @@
             
             <div class="max-w-3xl mx-auto px-4 text-center relative z-10 reveal">
                 <h2 class="font-display text-5xl md:text-6xl font-extrabold mb-8 tracking-tight text-zinc-900">
-                    Ready to <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Modernize?</span>
+                    {!! str_replace('Modernize?', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Modernize?</span>', e($ctaTitle)) !!}
                 </h2>
-                <p class="text-zinc-600 mb-12 text-xl font-medium">Join the growing network of modern diagnostic labs experiencing zero downtime and automated workflows.</p>
+                <p class="text-zinc-600 mb-12 text-xl font-medium">{{ $ctaDesc }}</p>
                 
                 <a href="{{ route('enquiry') }}" class="inline-flex justify-center items-center gap-2 px-10 py-5 bg-zinc-900 hover:bg-brand-600 text-white rounded-full font-bold text-lg shadow-xl shadow-zinc-900/10 hover:shadow-brand-500/25 transition-all duration-300 transform hover:-translate-y-1">
                     Request a Demo <i class="feather-arrow-right"></i>

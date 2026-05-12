@@ -6,10 +6,21 @@ use Livewire\Component;
 use App\Models\LandingFeature;
 use App\Models\LandingTestimonial;
 use App\Models\LandingFaq;
+use App\Models\LandingPlan;
 
 class LandingContentManager extends Component
 {
     public string $activeTab = 'features';
+
+    // Plan form
+    public ?int $editingPlanId = null;
+    public string $planName = '';
+    public string $planPriceText = '';
+    public string $planBadge = '';
+    public string $planFeaturesText = ''; // Newline separated
+    public string $planCtaText = '';
+    public string $planCtaLink = '';
+    public bool $showPlanModal = false;
 
     // Feature form
     public ?int $editingFeatureId = null;
@@ -219,12 +230,86 @@ class LandingContentManager extends Component
         $this->faqCategory = 'general';
     }
 
+    // ── PLANS ──
+    public function createPlan()
+    {
+        $this->resetPlanForm();
+        $this->showPlanModal = true;
+    }
+
+    public function editPlan($id)
+    {
+        $plan = LandingPlan::findOrFail($id);
+        $this->editingPlanId = $plan->id;
+        $this->planName = $plan->name;
+        $this->planPriceText = $plan->price_text ?? '';
+        $this->planBadge = $plan->badge ?? '';
+        $this->planFeaturesText = is_array($plan->features) ? implode("\n", $plan->features) : '';
+        $this->planCtaText = $plan->cta_text ?? '';
+        $this->planCtaLink = $plan->cta_link ?? '';
+        $this->showPlanModal = true;
+    }
+
+    public function savePlan()
+    {
+        $this->validate([
+            'planName' => 'required|min:2',
+            'planPriceText' => 'required',
+        ]);
+
+        $featuresArray = array_filter(array_map('trim', explode("\n", $this->planFeaturesText)));
+
+        $data = [
+            'name' => $this->planName,
+            'price_text' => $this->planPriceText,
+            'badge' => $this->planBadge,
+            'features' => $featuresArray,
+            'cta_text' => $this->planCtaText,
+            'cta_link' => $this->planCtaLink,
+        ];
+
+        if ($this->editingPlanId) {
+            LandingPlan::find($this->editingPlanId)->update($data);
+        } else {
+            $data['sort_order'] = LandingPlan::max('sort_order') + 1;
+            LandingPlan::create($data);
+        }
+
+        $this->showPlanModal = false;
+        $this->resetPlanForm();
+        session()->flash('success', 'Plan saved!');
+    }
+
+    public function togglePlan($id)
+    {
+        $plan = LandingPlan::findOrFail($id);
+        $plan->update(['is_active' => !$plan->is_active]);
+    }
+
+    public function deletePlan($id)
+    {
+        LandingPlan::destroy($id);
+        session()->flash('success', 'Plan deleted!');
+    }
+
+    protected function resetPlanForm()
+    {
+        $this->editingPlanId = null;
+        $this->planName = '';
+        $this->planPriceText = '';
+        $this->planBadge = '';
+        $this->planFeaturesText = '';
+        $this->planCtaText = '';
+        $this->planCtaLink = '';
+    }
+
     public function render()
     {
         return view('livewire.admin.landing-content-manager', [
             'features' => LandingFeature::orderBy('sort_order')->get(),
             'testimonials' => LandingTestimonial::orderBy('sort_order')->get(),
             'faqs' => LandingFaq::orderBy('sort_order')->get(),
+            'plans' => LandingPlan::orderBy('sort_order')->get(),
         ])->layout('layouts.app');
     }
 }

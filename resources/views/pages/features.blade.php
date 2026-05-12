@@ -29,12 +29,11 @@
                 </span>
                 
                 <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 text-zinc-900 leading-[1.1]">
-                    Engineered for <br class="hidden md:block" />
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">Diagnostic Precision</span>
+                    {!! str_replace('Diagnostic Precision', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">Diagnostic Precision</span>', e(\App\Models\SiteSetting::get('features_hero_title', 'Engineered for Diagnostic Precision'))) !!}
                 </h1>
                 
                 <p class="text-xl text-zinc-600 max-w-2xl mx-auto leading-relaxed font-medium mb-10">
-                    The most comprehensive suite of laboratory intelligence tools, designed to automate your workflow from sample collection to final report.
+                    {{ \App\Models\SiteSetting::get('features_hero_desc', 'The most comprehensive suite of laboratory intelligence tools, designed to automate your workflow from sample collection to final report.') }}
                 </p>
 
                 <div class="w-full max-w-5xl mx-auto rounded-[2rem] border border-zinc-200 shadow-2xl overflow-hidden bg-white p-2">

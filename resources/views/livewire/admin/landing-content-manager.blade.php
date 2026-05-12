@@ -17,6 +17,7 @@
                 <li class="nav-item"><a class="nav-link {{ $activeTab === 'features' ? 'active' : '' }}" href="#" wire:click.prevent="$set('activeTab', 'features')">Features ({{ $features->count() }})</a></li>
                 <li class="nav-item"><a class="nav-link {{ $activeTab === 'testimonials' ? 'active' : '' }}" href="#" wire:click.prevent="$set('activeTab', 'testimonials')">Testimonials ({{ $testimonials->count() }})</a></li>
                 <li class="nav-item"><a class="nav-link {{ $activeTab === 'faqs' ? 'active' : '' }}" href="#" wire:click.prevent="$set('activeTab', 'faqs')">FAQs ({{ $faqs->count() }})</a></li>
+                <li class="nav-item"><a class="nav-link {{ $activeTab === 'plans' ? 'active' : '' }}" href="#" wire:click.prevent="$set('activeTab', 'plans')">Plans ({{ $plans->count() }})</a></li>
             </ul>
 
             <!-- FEATURES TAB -->
@@ -158,6 +159,59 @@
                                     <div class="mb-3"><label class="form-label fw-bold">Category</label><select wire:model="faqCategory" class="form-select"><option value="general">General</option><option value="pricing">Pricing</option><option value="technical">Technical</option></select></div>
                                 </div>
                                 <div class="modal-footer"><button wire:click="saveFaq" class="btn btn-primary"><i class="feather-save me-1"></i> Save</button></div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endif
+
+            <!-- PLANS TAB -->
+            @if($activeTab === 'plans')
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Landing Plans</h5>
+                        <button wire:click="createPlan" class="btn btn-sm btn-primary"><i class="feather-plus me-1"></i> Add Plan</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>#</th><th>Plan Details</th><th>Price</th><th>Badge</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                @foreach($plans as $plan)
+                                    <tr>
+                                        <td>{{ $plan->sort_order }}</td>
+                                        <td><strong>{{ $plan->name }}</strong><br><small class="text-muted">{{ count($plan->features ?? []) }} features</small></td>
+                                        <td>{{ $plan->price_text }}</td>
+                                        <td><span class="badge bg-soft-primary text-primary">{{ $plan->badge }}</span></td>
+                                        <td><span class="badge {{ $plan->is_active ? 'bg-soft-success text-success' : 'bg-soft-secondary text-secondary' }}">{{ $plan->is_active ? 'Active' : 'Hidden' }}</span></td>
+                                        <td>
+                                            <button wire:click="editPlan({{ $plan->id }})" class="btn btn-sm btn-outline-primary"><i class="feather-edit-2"></i></button>
+                                            <button wire:click="deletePlan({{ $plan->id }})" wire:confirm="Delete?" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2"></i></button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @if($showPlanModal)
+                    <div class="modal show d-block" style="background: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header"><h5 class="modal-title">{{ $editingPlanId ? 'Edit' : 'Add' }} Plan</h5><button type="button" class="btn-close" wire:click="$set('showPlanModal', false)"></button></div>
+                                <div class="modal-body">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label fw-bold">Plan Name</label><input type="text" wire:model="planName" class="form-control">@error('planName')<small class="text-danger">{{ $message }}</small>@enderror</div>
+                                        <div class="col-md-6"><label class="form-label fw-bold">Price Text</label><input type="text" wire:model="planPriceText" class="form-control" placeholder="e.g. ₹999/month">@error('planPriceText')<small class="text-danger">{{ $message }}</small>@enderror</div>
+                                    </div>
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-4"><label class="form-label fw-bold">Badge Text</label><input type="text" wire:model="planBadge" class="form-control" placeholder="e.g. Most Popular"></div>
+                                        <div class="col-md-4"><label class="form-label fw-bold">CTA Text</label><input type="text" wire:model="planCtaText" class="form-control" placeholder="e.g. Start Free Trial"></div>
+                                        <div class="col-md-4"><label class="form-label fw-bold">CTA Link</label><input type="text" wire:model="planCtaLink" class="form-control" placeholder="e.g. /register"></div>
+                                    </div>
+                                    <div class="mb-3"><label class="form-label fw-bold">Features (One per line)</label><textarea wire:model="planFeaturesText" class="form-control" rows="5" placeholder="Feature 1&#10;Feature 2&#10;Feature 3"></textarea></div>
+                                </div>
+                                <div class="modal-footer"><button wire:click="savePlan" class="btn btn-primary"><i class="feather-save me-1"></i> Save</button></div>
                             </div>
                         </div>
                     </div>
