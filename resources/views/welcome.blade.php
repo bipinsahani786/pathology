@@ -1,12 +1,29 @@
 @php
-    $heroTitle = \App\Models\SiteSetting::get('hero_title', 'Intelligence for Modern Laboratories');
-    $heroSubtitle = \App\Models\SiteSetting::get('hero_subtitle', 'Streamline your diagnostic workflow from collection to automated reporting with our secure cloud ecosystem.');
-    $heroCta = \App\Models\SiteSetting::get('hero_cta_text', 'Start Free Trial');
+    $heroTitle = \App\Models\SiteSetting::get('hero_title', 'Modern Laboratories Run on SWS');
+    $heroSubtitle = \App\Models\SiteSetting::get('hero_subtitle', 'The all-in-one cloud LIS platform. Connect analyzers, manage partners, and automate reporting with zero paper friction.');
+    $heroCta = \App\Models\SiteSetting::get('hero_cta_text', 'Book a Demo');
     $heroImage = \App\Models\SiteSetting::get('hero_image');
+
+    $homeStatsTitle = \App\Models\SiteSetting::get('home_stats_title', 'Powering 500+ Diagnostic Centers');
+    $homeStatsLogos = array_map('trim', explode(',', \App\Models\SiteSetting::get('home_stats_logos', 'METROLAB, QUANTUM DIAG, COREPATH, APEXVUE, LIFEBLOOM')));
+    $homeFrictionTitle = \App\Models\SiteSetting::get('home_friction_title', 'Tired of Paper Friction?');
+    $homeFrictionDesc = \App\Models\SiteSetting::get('home_friction_desc', 'Legacy systems and manual entry lead to lost samples, delayed reports, and frustrated partners.');
+    $homeFeaturesTitle = \App\Models\SiteSetting::get('home_features_title', 'Everything your lab needs.');
+    $homeFeaturesDesc = \App\Models\SiteSetting::get('home_features_desc', 'A comprehensive LIS platform to run your diagnostic business.');
+    $homeStepsTitle = \App\Models\SiteSetting::get('home_steps_title', 'Four Steps to Automation');
+    $homeStepsList = array_map('trim', explode(',', \App\Models\SiteSetting::get('home_steps_list', 'Register Patient, Process Sample, Verify Results, Auto-Deliver WhatsApp')));
+    $homeConnectTitle = \App\Models\SiteSetting::get('home_connect_title', 'Seamlessly Connects With');
+    $homeConnectList = array_map('trim', explode(',', \App\Models\SiteSetting::get('home_connect_list', 'WhatsApp API, Razorpay, Stripe, Sysmex Analyzers, Erba Analyzers, AWS Cloud')));
+    $homeTestimonialTitle = \App\Models\SiteSetting::get('home_testimonial_title', 'Trusted by Professionals');
+    $homePricingTitle = \App\Models\SiteSetting::get('home_pricing_title', 'Transparent Pricing');
+    $homePricingDesc = \App\Models\SiteSetting::get('home_pricing_desc', 'Simple plans designed to scale with your laboratory\'s growth.');
+
     $features = \App\Models\LandingFeature::active()->get();
     $testimonials = \App\Models\LandingTestimonial::active()->get();
     $faqs = \App\Models\LandingFaq::active()->take(5)->get();
-    $plans = \App\Models\Plan::landing()->get();
+    $plans = \App\Models\LandingPlan::active()->orderBy('sort_order')->get();
+    $contactEmail = \App\Models\SiteSetting::get('contact_email', 'support@zytrixon.com');
+    $contactPhone = \App\Models\SiteSetting::get('contact_phone', '+91 98765 43210');
 @endphp
 
 <x-landing-layout>
@@ -63,10 +80,12 @@
 
         <section class="py-10 border-b border-zinc-100 bg-zinc-50">
             <div class="max-w-7xl mx-auto px-4 text-center">
-                <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-6">Powering 500+ Diagnostic Centers</p>
+                <p class="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-6">{{ $homeStatsTitle }}</p>
                 <div class="flex flex-wrap justify-center gap-x-12 gap-y-6 opacity-60 grayscale">
-                    @foreach(['METROLAB', 'QUANTUM DIAG', 'COREPATH', 'APEXVUE', 'LIFEBLOOM'] as $logo)
-                        <span class="text-xl font-black font-display text-zinc-900 tracking-tight">{{ $logo }}</span>
+                    @foreach($homeStatsLogos as $logo)
+                        @if(!empty($logo))
+                            <span class="text-xl font-black font-display text-zinc-900 tracking-tight">{{ $logo }}</span>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -75,16 +94,21 @@
         <section class="py-20 border-b border-zinc-100 relative overflow-hidden">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    @foreach([
-                        ['val' => '10M+', 'label' => 'Reports Generated'],
-                        ['val' => '99.9%', 'label' => 'System Uptime'],
-                        ['val' => '500+', 'label' => 'Active Labs'],
-                        ['val' => '0', 'label' => 'Data Breaches'],
-                    ] as $stat)
-                        <div class="text-center reveal">
-                            <div class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-2 font-display">{{ $stat['val'] }}</div>
-                            <div class="text-sm text-zinc-500 uppercase tracking-wider">{{ $stat['label'] }}</div>
-                        </div>
+                    @php
+                        $heroStats = [
+                            ['val' => \App\Models\SiteSetting::get('home_hero_stat_1_val', '10M+'), 'label' => \App\Models\SiteSetting::get('home_hero_stat_1_label', 'Reports Generated')],
+                            ['val' => \App\Models\SiteSetting::get('home_hero_stat_2_val', '99.9%'), 'label' => \App\Models\SiteSetting::get('home_hero_stat_2_label', 'System Uptime')],
+                            ['val' => \App\Models\SiteSetting::get('home_hero_stat_3_val', '500+'), 'label' => \App\Models\SiteSetting::get('home_hero_stat_3_label', 'Active Labs')],
+                            ['val' => \App\Models\SiteSetting::get('home_hero_stat_4_val', '0'), 'label' => \App\Models\SiteSetting::get('home_hero_stat_4_label', 'Data Breaches')],
+                        ];
+                    @endphp
+                    @foreach($heroStats as $stat)
+                        @if(!empty($stat['val']))
+                            <div class="text-center reveal">
+                                <div class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-2 font-display">{{ $stat['val'] }}</div>
+                                <div class="text-sm text-zinc-500 uppercase tracking-wider">{{ $stat['label'] }}</div>
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -95,20 +119,25 @@
                 <div class="bg-zinc-50 rounded-[2.5rem] p-10 md:p-16 border border-zinc-100 relative overflow-hidden">
                     <div class="grid lg:grid-cols-2 gap-16 items-center relative z-10">
                         <div>
-                            <h2 class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-6 font-display">Tired of <span class="text-zinc-400 line-through">Paper Friction?</span></h2>
-                            <p class="text-lg text-zinc-600 mb-8">Legacy systems and manual entry lead to lost samples, delayed reports, and frustrated partners.</p>
+                            <h2 class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-6 font-display">{!! str_replace('Paper Friction?', '<span class="text-zinc-400 line-through">Paper Friction?</span>', e($homeFrictionTitle)) !!}</h2>
+                            <p class="text-lg text-zinc-600 mb-8">{{ $homeFrictionDesc }}</p>
                         </div>
                         <div class="space-y-4">
-                            @foreach([
-                                ['old' => 'Manual Data Entry', 'new' => 'Auto-synced Machine Results'],
-                                ['old' => 'Delayed B2B Settlements', 'new' => 'Real-time Partner Payouts'],
-                                ['old' => 'No Patient Tracking', 'new' => 'Automated WhatsApp Tracking'],
-                            ] as $item)
-                                <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
-                                    <div class="flex-1 text-sm text-zinc-500 line-through">{{ $item['old'] }}</div>
-                                    <i class="feather-arrow-right text-zinc-400"></i>
-                                    <div class="flex-1 text-sm text-emerald-600 font-semibold">{{ $item['new'] }}</div>
-                                </div>
+                            @php
+                                $frictionItems = [
+                                    ['old' => \App\Models\SiteSetting::get('home_friction_old_1', 'Manual Data Entry'), 'new' => \App\Models\SiteSetting::get('home_friction_new_1', 'Auto-synced Machine Results')],
+                                    ['old' => \App\Models\SiteSetting::get('home_friction_old_2', 'Delayed B2B Settlements'), 'new' => \App\Models\SiteSetting::get('home_friction_new_2', 'Real-time Partner Payouts')],
+                                    ['old' => \App\Models\SiteSetting::get('home_friction_old_3', 'No Patient Tracking'), 'new' => \App\Models\SiteSetting::get('home_friction_new_3', 'Automated WhatsApp Tracking')],
+                                ];
+                            @endphp
+                            @foreach($frictionItems as $item)
+                                @if(!empty($item['old']))
+                                    <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+                                        <div class="flex-1 text-sm text-zinc-500 line-through">{{ $item['old'] }}</div>
+                                        <i class="feather-arrow-right text-zinc-400"></i>
+                                        <div class="flex-1 text-sm text-emerald-600 font-semibold">{{ $item['new'] }}</div>
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -120,8 +149,8 @@
             <div class="max-w-7xl mx-auto px-4">
                 <div class="text-center max-w-3xl mx-auto mb-16 reveal">
                     <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 block">Operating System</span>
-                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 tracking-tight mb-4">Everything your lab needs.</h2>
-                    <p class="text-lg text-zinc-600">A comprehensive LIS platform to run your diagnostic business.</p>
+                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 tracking-tight mb-4">{{ $homeFeaturesTitle }}</h2>
+                    <p class="text-lg text-zinc-600">{{ $homeFeaturesDesc }}</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-fr">
                     @foreach($features->take(6) as $i => $feature)
@@ -172,13 +201,15 @@
 
         <section class="py-24 border-b border-zinc-100 bg-zinc-50">
             <div class="max-w-7xl mx-auto px-4 text-center">
-                <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-16">Four Steps to Automation</h2>
+                <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-16">{{ $homeStepsTitle }}</h2>
                 <div class="grid md:grid-cols-4 gap-8">
-                    @foreach(['Register Patient', 'Process Sample', 'Verify Results', 'Auto-Deliver WhatsApp'] as $i => $step)
-                        <div class="relative z-10 bg-white p-8 rounded-2xl border border-zinc-100 text-center shadow-sm">
-                            <div class="w-12 h-12 mx-auto bg-brand-50 text-brand-600 rounded-full flex items-center justify-center font-bold text-xl mb-4 border border-brand-100">{{ $i + 1 }}</div>
-                            <h5 class="font-bold text-zinc-900">{{ $step }}</h5>
-                        </div>
+                    @foreach($homeStepsList as $i => $step)
+                        @if(!empty($step))
+                            <div class="relative z-10 bg-white p-8 rounded-2xl border border-zinc-100 text-center shadow-sm">
+                                <div class="w-12 h-12 mx-auto bg-brand-50 text-brand-600 rounded-full flex items-center justify-center font-bold text-xl mb-4 border border-brand-100">{{ $i + 1 }}</div>
+                                <h5 class="font-bold text-zinc-900">{{ $step }}</h5>
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -186,10 +217,12 @@
 
         <section class="py-20 border-b border-zinc-100">
             <div class="max-w-7xl mx-auto px-4 text-center">
-                <h2 class="text-2xl font-bold text-zinc-900 mb-8 font-display">Seamlessly Connects With</h2>
+                <h2 class="text-2xl font-bold text-zinc-900 mb-8 font-display">{{ $homeConnectTitle }}</h2>
                 <div class="flex flex-wrap justify-center gap-4">
-                    @foreach(['WhatsApp API', 'Razorpay', 'Stripe', 'Sysmex Analyzers', 'Erba Analyzers', 'AWS Cloud'] as $tech)
-                        <div class="px-6 py-3 bg-white rounded-full border border-zinc-200 text-sm font-semibold text-zinc-600 shadow-sm">{{ $tech }}</div>
+                    @foreach($homeConnectList as $tech)
+                        @if(!empty($tech))
+                            <div class="px-6 py-3 bg-white rounded-full border border-zinc-200 text-sm font-semibold text-zinc-600 shadow-sm">{{ $tech }}</div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -220,7 +253,7 @@
         @if($testimonials->count())
         <section class="py-24 border-b border-zinc-100">
             <div class="max-w-7xl mx-auto px-4">
-                <h2 class="text-center font-display text-4xl font-extrabold text-zinc-900 mb-16">Trusted by Professionals</h2>
+                <h2 class="text-center font-display text-4xl font-extrabold text-zinc-900 mb-16">{{ $homeTestimonialTitle }}</h2>
                 <div class="grid md:grid-cols-3 gap-6">
                     @foreach($testimonials->take(3) as $testimonial)
                         <div class="bg-white p-8 rounded-3xl border border-zinc-100 shadow-sm flex flex-col hover:border-brand-200 transition-colors">
@@ -245,17 +278,17 @@
         <section class="py-24 border-b border-zinc-100 bg-zinc-50" id="pricing">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="text-center mb-16 max-w-2xl mx-auto">
-                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-4">Transparent Pricing</h2>
-                    <p class="text-lg text-zinc-600">Simple plans designed to scale with your laboratory's growth.</p>
+                    <h2 class="font-display text-4xl font-extrabold text-zinc-900 mb-4">{{ $homePricingTitle }}</h2>
+                    <p class="text-lg text-zinc-600">{{ $homePricingDesc }}</p>
                 </div>
                 <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
                     @foreach($plans as $plan)
-                        @php $isPopular = $plan->landing_badge !== null; @endphp
+                        @php $isPopular = !empty($plan->badge); @endphp
                         <div class="bg-white border {{ $isPopular ? 'border-brand-500 shadow-2xl shadow-brand-500/10' : 'border-zinc-200 shadow-sm' }} rounded-3xl p-8 flex flex-col relative overflow-hidden transition-all hover:-translate-y-1">
                             @if($isPopular)
                                 <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-500 to-indigo-500"></div>
                                 <div class="absolute top-6 right-6 bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1 rounded-full border border-brand-100">
-                                    {{ $plan->landing_badge }}
+                                    {{ $plan->badge }}
                                 </div>
                             @endif
 
@@ -263,15 +296,14 @@
                                 <h5 class="text-sm font-bold uppercase tracking-widest mb-4 {{ $isPopular ? 'text-brand-700' : 'text-zinc-500' }}">{{ $plan->name }}</h5>
                                 <div class="flex items-baseline gap-1">
                                     <span class="text-5xl font-display font-extrabold text-zinc-900">
-                                        @if($plan->price == 0) Free @else ₹{{ number_format($plan->price) }} @endif
+                                        {{ $plan->price_text }}
                                     </span>
-                                    @if($plan->price > 0)<span class="text-sm font-medium text-zinc-500">/month</span>@endif
                                 </div>
                             </div>
 
-                            @if($plan->landing_features)
+                            @if($plan->features)
                                 <ul class="space-y-4 mb-8 flex-1">
-                                    @foreach($plan->landing_features as $feat)
+                                    @foreach($plan->features as $feat)
                                         <li class="flex items-start gap-3 text-sm text-zinc-700 font-medium">
                                             <div class="mt-0.5 w-5 h-5 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0 border border-brand-100">
                                                 <i class="feather-check text-[10px]"></i>
@@ -282,8 +314,8 @@
                                 </ul>
                             @endif
 
-                            <a href="#contact" class="block w-full py-4 text-center rounded-xl font-semibold text-sm transition-all duration-300 {{ $isPopular ? 'bg-zinc-900 text-white shadow-lg hover:bg-black' : 'bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100' }}">
-                                {{ $plan->landing_cta_text ?? 'Contact Us' }}
+                            <a href="{{ $plan->cta_link ?? '#contact' }}" class="block w-full py-4 text-center rounded-xl font-semibold text-sm transition-all duration-300 {{ $isPopular ? 'bg-zinc-900 text-white shadow-lg hover:bg-black' : 'bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100' }}">
+                                {{ $plan->cta_text ?? 'Contact Us' }}
                             </a>
                         </div>
                     @endforeach
@@ -328,14 +360,14 @@
                                     <div class="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center text-brand-600 border border-zinc-200"><i class="feather-mail"></i></div>
                                     <div>
                                         <p class="text-sm font-bold text-zinc-900">Email Us</p>
-                                        <p class="text-sm text-zinc-500">support@zytrixon.com</p>
+                                        <p class="text-sm text-zinc-500">{{ $contactEmail }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <div class="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center text-brand-600 border border-zinc-200"><i class="feather-phone"></i></div>
                                     <div>
                                         <p class="text-sm font-bold text-zinc-900">Call Us</p>
-                                        <p class="text-sm text-zinc-500">+91 98765 43210</p>
+                                        <p class="text-sm text-zinc-500">{{ $contactPhone }}</p>
                                     </div>
                                 </div>
                             </div>
