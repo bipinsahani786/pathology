@@ -128,8 +128,20 @@ class SiteSettingsManager extends Component
     public ?string $social_instagram = '';
 
     // SEO
-    public ?string $meta_title = '';
-    public ?string $meta_description = '';
+    public array $seoSettings = [];
+    public array $seoImages = []; // Temporarily hold uploaded images
+    public array $pages = [
+        'home' => 'Home Page',
+        'about' => 'About Us',
+        'features' => 'Features',
+        'how-it-works' => 'How It Works',
+        'pricing' => 'Pricing',
+        'contact' => 'Contact Us',
+        'enquiry' => 'Enquiry',
+        'faq' => 'FAQ',
+        'terms' => 'Terms of Service',
+        'privacy' => 'Privacy Policy'
+    ];
 
     public function mount()
     {
@@ -161,11 +173,21 @@ class SiteSettingsManager extends Component
             'pricing_hero_subtitle', 'pricing_hero_title', 'pricing_hero_desc', 'pricing_faq_title', 'pricing_cta_title', 'pricing_cta_desc',
             'contact_email', 'contact_phone', 'contact_address', 'contact_whatsapp',
             'social_twitter', 'social_facebook', 'social_linkedin', 'social_instagram',
-            'meta_title', 'meta_description',
         ];
 
         foreach ($fields as $field) {
             $this->$field = SiteSetting::get($field, '') ?? '';
+        }
+
+        // Load SEO Settings
+        foreach ($this->pages as $pageKey => $pageName) {
+            $this->seoSettings[$pageKey] = [
+                'title' => SiteSetting::get("seo_{$pageKey}_title", ''),
+                'description' => SiteSetting::get("seo_{$pageKey}_description", ''),
+                'keywords' => SiteSetting::get("seo_{$pageKey}_keywords", ''),
+                'canonical' => SiteSetting::get("seo_{$pageKey}_canonical", ''),
+                'og_image' => SiteSetting::get("seo_{$pageKey}_og_image", ''),
+            ];
         }
     }
 
@@ -197,7 +219,6 @@ class SiteSettingsManager extends Component
             'pricing_hero_subtitle' => 'pricing', 'pricing_hero_title' => 'pricing', 'pricing_hero_desc' => 'pricing', 'pricing_faq_title' => 'pricing', 'pricing_cta_title' => 'pricing', 'pricing_cta_desc' => 'pricing',
             'contact_email' => 'contact', 'contact_phone' => 'contact', 'contact_address' => 'contact', 'contact_whatsapp' => 'contact',
             'social_twitter' => 'social', 'social_facebook' => 'social', 'social_linkedin' => 'social', 'social_instagram' => 'social',
-            'meta_title' => 'seo', 'meta_description' => 'seo',
         ];
 
         foreach ($textFields as $key => $group) {
@@ -212,6 +233,26 @@ class SiteSettingsManager extends Component
                 SiteSetting::set($field, $path, $this->getGroupForField($field));
                 $this->$field = null;
             }
+        }
+
+        // Save SEO Settings
+        foreach ($this->seoSettings as $pageKey => $seoData) {
+            SiteSetting::set("seo_{$pageKey}_title", $seoData['title'] ?? '', 'seo');
+            SiteSetting::set("seo_{$pageKey}_description", $seoData['description'] ?? '', 'seo');
+            SiteSetting::set("seo_{$pageKey}_keywords", $seoData['keywords'] ?? '', 'seo');
+            SiteSetting::set("seo_{$pageKey}_canonical", $seoData['canonical'] ?? '', 'seo');
+        }
+
+        // Save SEO Images
+        if (!empty($this->seoImages)) {
+            foreach ($this->seoImages as $pageKey => $image) {
+                if ($image && !is_string($image)) {
+                    $path = $image->store('site');
+                    SiteSetting::set("seo_{$pageKey}_og_image", $path, 'seo');
+                    $this->seoSettings[$pageKey]['og_image'] = $path; // Update local array to reflect new image immediately
+                }
+            }
+            $this->seoImages = [];
         }
 
         session()->flash('success', 'Settings saved successfully!');
