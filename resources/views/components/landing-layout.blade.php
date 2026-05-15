@@ -4,13 +4,53 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? \App\Models\SiteSetting::get('meta_title', 'SWS Pathology - Advanced Diagnostic Solutions') }}
-    </title>
-    <meta name="description"
-        content="{{ \App\Models\SiteSetting::get('meta_description', 'Leading pathology management platform') }}">
     @php
+        $routeName = request()->route()?->getName() ?? 'home';
+        
+        // Map current route to page key, fallback to 'home'
+        $pageKeys = ['home', 'about', 'features', 'how-it-works', 'pricing', 'contact', 'enquiry', 'faq', 'terms', 'privacy'];
+        $pageKey = in_array($routeName, $pageKeys) ? $routeName : 'home';
+
+        // Global Fallbacks (from 'home')
+        $globalTitle = \App\Models\SiteSetting::get('seo_home_title', 'SWS Pathology - Advanced Diagnostic Solutions');
+        $globalDesc = \App\Models\SiteSetting::get('seo_home_description', 'Leading pathology management platform');
+        $globalKeywords = \App\Models\SiteSetting::get('seo_home_keywords', 'pathology, lab management, software');
+        $globalImage = \App\Models\SiteSetting::get('seo_home_og_image', \App\Models\SiteSetting::get('site_logo'));
+
+        // Specific Page SEO
+        $pageTitle = \App\Models\SiteSetting::get("seo_{$pageKey}_title") ?: $globalTitle;
+        $pageDesc = \App\Models\SiteSetting::get("seo_{$pageKey}_description") ?: $globalDesc;
+        $pageKeywords = \App\Models\SiteSetting::get("seo_{$pageKey}_keywords") ?: $globalKeywords;
+        $pageCanonical = \App\Models\SiteSetting::get("seo_{$pageKey}_canonical") ?: url()->current();
+        
+        $rawOgImage = \App\Models\SiteSetting::get("seo_{$pageKey}_og_image") ?: $globalImage;
+        $ogImage = $rawOgImage ? secure_storage_url($rawOgImage) : asset('assets/images/icon.webp');
+        
         $siteFavicon = \App\Models\SiteSetting::get('site_favicon');
+        $brandColor = \App\Models\SiteSetting::get('primary_color', '#0284c7');
+        $siteName = \App\Models\SiteSetting::get('site_name', 'SWS Pathology');
     @endphp
+
+    <title>{{ $pageTitle }}</title>
+    <meta name="description" content="{{ $pageDesc }}">
+    <meta name="keywords" content="{{ $pageKeywords }}">
+    <link rel="canonical" href="{{ $pageCanonical }}">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="{{ $pageTitle }}">
+    <meta property="og:description" content="{{ $pageDesc }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="{{ $pageTitle }}">
+    <meta name="twitter:description" content="{{ $pageDesc }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
+
     <link rel="shortcut icon" type="image/x-icon" href="{{ $siteFavicon ? secure_storage_url($siteFavicon) : asset('assets/images/icon.webp') }}" />
 
     <!-- Fonts: Outfit for display, Inter for body -->
@@ -26,10 +66,7 @@
     <!-- Tailwind Play CDN -->
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
-    @php
-        $brandColor = \App\Models\SiteSetting::get('primary_color', '#0284c7');
-        $siteName = \App\Models\SiteSetting::get('site_name', 'SWS Pathology');
-    @endphp
+    <!-- Settings fetched above -->
 
     <style type="text/tailwindcss">
         @theme {

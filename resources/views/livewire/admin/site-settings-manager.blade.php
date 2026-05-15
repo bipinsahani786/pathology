@@ -232,9 +232,50 @@
 
                         <!-- SEO -->
                         @if($activeTab === 'seo')
-                            <div class="row g-3">
-                                <div class="col-12"><label class="form-label fw-bold">Meta Title</label><input type="text" wire:model="meta_title" class="form-control"></div>
-                                <div class="col-12"><label class="form-label fw-bold">Meta Description</label><textarea wire:model="meta_description" class="form-control" rows="3"></textarea></div>
+                            <div class="accordion" id="seoAccordion">
+                                <div class="alert alert-info py-2 fs-12 mb-3">
+                                    <i class="feather-info me-1"></i> Leave a field blank to use the default/global SEO values for that page. The <strong>Home Page</strong> values act as the global fallback if others are empty.
+                                </div>
+                                @foreach($pages as $pageKey => $pageName)
+                                    <div class="accordion-item mb-2 border rounded">
+                                        <h2 class="accordion-header" id="heading-{{ $pageKey }}">
+                                            <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $pageKey }}" aria-expanded="false" aria-controls="collapse-{{ $pageKey }}">
+                                                <i class="feather-layout me-2 text-primary"></i> {{ $pageName }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-{{ $pageKey }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ $pageKey }}" data-bs-parent="#seoAccordion">
+                                            <div class="accordion-body bg-light">
+                                                <div class="row g-3">
+                                                    <div class="col-md-12">
+                                                        <label class="form-label fw-bold">Meta Title</label>
+                                                        <input type="text" wire:model="seoSettings.{{ $pageKey }}.title" class="form-control" placeholder="SEO Title for {{ $pageName }}">
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <label class="form-label fw-bold">Meta Description</label>
+                                                        <textarea wire:model="seoSettings.{{ $pageKey }}.description" class="form-control" rows="2" placeholder="Brief description for search engines"></textarea>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <label class="form-label fw-bold">Keywords</label>
+                                                        <input type="text" wire:model="seoSettings.{{ $pageKey }}.keywords" class="form-control" placeholder="e.g., pathology, lab, blood test (comma separated)">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">Canonical URL (Optional)</label>
+                                                        <input type="url" wire:model="seoSettings.{{ $pageKey }}.canonical" class="form-control" placeholder="Override canonical URL (leave empty for auto)">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold">Social Share Image (OG Image)</label>
+                                                        @if(!empty($seoSettings[$pageKey]['og_image']))
+                                                            <div class="mb-2">
+                                                                <img src="{{ secure_storage_url($seoSettings[$pageKey]['og_image']) }}" alt="OG Image" class="img-thumbnail" style="max-height: 60px;">
+                                                            </div>
+                                                        @endif
+                                                        <input type="file" wire:model="seoImages.{{ $pageKey }}" class="form-control" accept="image/*">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         @endif
                     </div>

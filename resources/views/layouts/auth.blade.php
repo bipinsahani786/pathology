@@ -10,6 +10,9 @@
     @endphp
     <link rel="shortcut icon" type="image/x-icon" href="{{ $siteFavicon ? secure_storage_url($siteFavicon) : asset('assets/images/icon.webp') }}" />
 
+    <!-- Icons -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('assets/vendors/css/vendors.min.css') }}" />
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

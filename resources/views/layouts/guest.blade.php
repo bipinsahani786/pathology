@@ -2,9 +2,10 @@
 @php
     $themeCookie = $_COOKIE['nxl_theme'] ?? '';
     $isDark = str_contains($themeCookie, 'dark');
-    $skinClass = $isDark ? 'app-skin-dark' : '';
+    $skinClass = $isDark ? 'app-skin-dark dark' : '';
 @endphp
 <html lang="en" class="{{ $skinClass }}">
+
 
 <head>
     <meta charset="utf-8" />
@@ -21,9 +22,9 @@
                 var skinToggle = localStorage.getItem('app-skin-dark') || '';
                 var isDark = skinCustomizer === 'app-skin-dark' || skinToggle === 'app-skin-dark';
                 if (isDark) {
-                    document.documentElement.classList.add('app-skin-dark');
+                    document.documentElement.classList.add('app-skin-dark', 'dark');
                 } else {
-                    document.documentElement.classList.remove('app-skin-dark');
+                    document.documentElement.classList.remove('app-skin-dark', 'dark');
                 }
                 document.cookie = "nxl_theme=" + (isDark ? 'dark' : 'light') + "; path=/; max-age=31536000; SameSite=Lax";
             } catch (e) { }
