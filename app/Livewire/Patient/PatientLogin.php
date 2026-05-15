@@ -75,6 +75,6 @@ class PatientLogin extends Component
     public function render()
     {
         return view('livewire.patient.patient-login')
-            ->layout('layouts.guest');
+            ->layout('layouts.auth');
     }
 }
