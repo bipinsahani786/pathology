@@ -83,7 +83,10 @@
                             <div class="card-header py-2">
                                 <h6 class="card-title fs-12 mb-0"><i class="feather-user text-primary me-1"></i>Patient <span class="text-danger">*</span></h6>
                                 @if($selectedPatient)
-                                    <button wire:click="clearPatient" class="btn btn-sm text-danger p-0 ms-auto" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    <div class="ms-auto d-flex gap-1">
+                                        <button wire:click="openEditPatientModal" class="btn btn-sm text-primary p-0" title="Edit Patient"><i class="feather-edit fs-14"></i></button>
+                                        <button wire:click="clearPatient" class="btn btn-sm text-danger p-0" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body py-2">
@@ -165,7 +168,10 @@
                             <div class="card-header py-2">
                                 <h6 class="card-title fs-12 mb-0"><i class="feather-activity text-success me-1"></i>Referring Doctor</h6>
                                 @if($selectedDoctor)
-                                    <button wire:click="clearDoctor" class="btn btn-sm text-danger p-0 ms-auto" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    <div class="ms-auto d-flex gap-1">
+                                        <button wire:click="openEditDoctorModal" class="btn btn-sm text-primary p-0" title="Edit Doctor"><i class="feather-edit fs-14"></i></button>
+                                        <button wire:click="clearDoctor" class="btn btn-sm text-danger p-0" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body py-2">
@@ -235,7 +241,10 @@
                             <div class="card-header py-2">
                                 <h6 class="card-title fs-12 mb-0"><i class="feather-briefcase text-warning me-1"></i>Agent / Franchise</h6>
                                 @if($selectedAgent)
-                                    <button wire:click="clearAgent" class="btn btn-sm text-danger p-0 ms-auto" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    <div class="ms-auto d-flex gap-1">
+                                        <button wire:click="openEditAgentModal" class="btn btn-sm text-primary p-0" title="Edit Agent"><i class="feather-edit fs-14"></i></button>
+                                        <button wire:click="clearAgent" class="btn btn-sm text-danger p-0" title="Remove"><i class="feather-x-circle fs-14"></i></button>
+                                    </div>
                                 @endif
                             </div>
                             <div class="card-body py-2">
@@ -697,7 +706,7 @@
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-user-plus text-primary me-2"></i>Quick Register Patient</h5><button wire:click="$set('isPatientModalOpen', false)" class="btn-close"></button></div>
+                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-user-{{ $editingPatientId ? 'edit' : 'plus' }} text-primary me-2"></i>{{ $editingPatientId ? 'Edit' : 'Quick Register' }} Patient</h5><button wire:click="$set('isPatientModalOpen', false); $set('editingPatientId', null)" class="btn-close"></button></div>
                     <div class="modal-body">
                         @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
                         @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
@@ -719,8 +728,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button wire:click="$set('isPatientModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="quickAddPatient" class="btn btn-primary fw-bold"><span wire:loading.remove wire:target="quickAddPatient"><i class="feather-save me-1"></i>Save & Select</span><span wire:loading wire:target="quickAddPatient"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span></button>
+                        <button wire:click="$set('isPatientModalOpen', false); $set('editingPatientId', null)" class="btn btn-light">Cancel</button>
+                        <button wire:click="quickAddPatient" class="btn btn-primary fw-bold"><span wire:loading.remove wire:target="quickAddPatient"><i class="feather-save me-1"></i>{{ $editingPatientId ? 'Update Details' : 'Save & Select' }}</span><span wire:loading wire:target="quickAddPatient"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span></button>
                     </div>
                 </div>
             </div>
@@ -734,8 +743,8 @@
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
                     <div class="modal-header">
-                        <h5 class="modal-title fs-14"><i class="feather-briefcase text-warning me-2"></i>Quick Add Agent</h5>
-                        <button wire:click="$set('isAgentModalOpen', false)" class="btn-close"></button>
+                        <h5 class="modal-title fs-14"><i class="feather-briefcase text-warning me-2"></i>{{ $editingAgentId ? 'Edit' : 'Quick Add' }} Agent</h5>
+                        <button wire:click="$set('isAgentModalOpen', false); $set('editingAgentId', null)" class="btn-close"></button>
                     </div>
                     <div class="modal-body">
                         @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
@@ -760,8 +769,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button wire:click="$set('isAgentModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="quickAddAgent" class="btn btn-warning fw-bold text-dark"><i class="feather-save me-1"></i>Save & Select</button>
+                        <button wire:click="$set('isAgentModalOpen', false); $set('editingAgentId', null)" class="btn btn-light">Cancel</button>
+                        <button wire:click="quickAddAgent" class="btn btn-warning fw-bold text-dark"><i class="feather-save me-1"></i>{{ $editingAgentId ? 'Update Agent' : 'Save & Select' }}</button>
                     </div>
                 </div>
             </div>
@@ -774,7 +783,7 @@
         <div class="modal fade show d-block" tabindex="-1" style="z-index:1055;">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-activity text-success me-2"></i>Quick Add Doctor</h5><button wire:click="$set('isDoctorModalOpen', false)" class="btn-close"></button></div>
+                    <div class="modal-header"><h5 class="modal-title fs-14"><i class="feather-activity text-success me-2"></i>{{ $editingDoctorId ? 'Edit' : 'Quick Add' }} Doctor</h5><button wire:click="$set('isDoctorModalOpen', false); $set('editingDoctorId', null)" class="btn-close"></button></div>
                     <div class="modal-body">
                         @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
                         @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
@@ -785,8 +794,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button wire:click="$set('isDoctorModalOpen', false)" class="btn btn-light">Cancel</button>
-                        <button wire:click="quickAddDoctor" class="btn btn-success fw-bold"><i class="feather-save me-1"></i>Save & Select</button>
+                        <button wire:click="$set('isDoctorModalOpen', false); $set('editingDoctorId', null)" class="btn btn-light">Cancel</button>
+                        <button wire:click="quickAddDoctor" class="btn btn-success fw-bold"><i class="feather-save me-1"></i>{{ $editingDoctorId ? 'Update Doctor' : 'Save & Select' }}</button>
                     </div>
                 </div>
             </div>

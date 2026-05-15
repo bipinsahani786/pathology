@@ -49,6 +49,7 @@ class PosEditManager extends Component
     // MODALS & QUICK ADD
     // ==========================================
     public $isPatientModalOpen = false, $isDoctorModalOpen = false, $isAgentModalOpen = false;
+    public $editingPatientId = null, $editingDoctorId = null, $editingAgentId = null;
     public $activeSearchField = null; // null, 'patient', 'doctor', 'agent', 'test'
     public $overpaymentError = false;
     public $paymentModesList = [], $cachedCenters = [], $cachedBranches = [], $cachedMemberships = [];
@@ -507,13 +508,27 @@ class PosEditManager extends Component
     // ==========================================
     // QUICK ADD MODALS
     // ==========================================
+    public function openEditPatientModal()
+    {
+        if (!$this->selectedPatient) return;
+        $this->editingPatientId = $this->selectedPatient['id'];
+        $this->new_name = $this->selectedPatient['name'];
+        $this->new_phone = $this->selectedPatient['phone'];
+        if ($this->patientProfileData) {
+            $this->new_age = $this->patientProfileData['age'];
+            $this->new_age_type = $this->patientProfileData['age_type'] ?? 'Years';
+            $this->new_gender = $this->patientProfileData['gender'] ?? 'Male';
+        }
+        $this->isPatientModalOpen = true;
+    }
+
     public function quickAddPatient()
     {
-        $this->authorize('create patients');
+        $this->authorize($this->editingPatientId ? 'edit patients' : 'create patients');
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
-            'new_phone' => 'nullable|numeric|digits:10|unique:users,phone',
+            'new_phone' => 'nullable|numeric|digits:10|unique:users,phone,' . ($this->editingPatientId ?? 'NULL'),
             'new_age' => 'required|numeric|min:1|max:150',
             'new_age_type' => 'required|in:Years,Months,Days',
         ]);
@@ -521,105 +536,209 @@ class PosEditManager extends Component
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
-            $user = User::create([
-                'name' => $this->new_name,
-                'phone' => $this->new_phone ?: 'P' . time(),
-                'email' => null,
-                'password' => '12345678',
-                'is_active' => true,
-                'company_id' => $companyId,
-                'branch_id' => $this->branch_id,
-            ]);
-            // Generate a unique Patient ID from settings
-            $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
-            $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
             
-            $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
-            $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
-            
-            $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
-            
-            while(PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
-                $nextPId++;
-                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
-            }
+            if ($this->editingPatientId) {
+                $user = User::findOrFail($this->editingPatientId);
+                $user->update([
+                    'name' => $this->new_name,
+                    'phone' => $this->new_phone,
+                ]);
 
-            PatientProfile::create([
-                'company_id' => $companyId,
-                'user_id' => $user->id,
-                'patient_id_string' => $patientIdString,
-                'age' => $this->new_age,
-                'age_type' => $this->new_age_type,
-                'gender' => $this->new_gender,
-            ]);
-            $user->assignRole('patient');
+                $profile = PatientProfile::where('user_id', $user->id)->first();
+                if ($profile) {
+                    $profile->update([
+                        'age' => $this->new_age,
+                        'age_type' => $this->new_age_type,
+                        'gender' => $this->new_gender,
+                    ]);
+                }
+            } else {
+                $user = User::create([
+                    'name' => $this->new_name,
+                    'phone' => $this->new_phone ?: 'P' . time(),
+                    'email' => null,
+                    'password' => '12345678',
+                    'is_active' => true,
+                    'company_id' => $companyId,
+                    'branch_id' => $this->branch_id,
+                ]);
+                // Generate a unique Patient ID from settings
+                $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
+                $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
+                
+                $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
+                $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
+                
+                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                
+                while(PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+                    $nextPId++;
+                    $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                }
+
+                PatientProfile::create([
+                    'company_id' => $companyId,
+                    'user_id' => $user->id,
+                    'patient_id_string' => $patientIdString,
+                    'age' => $this->new_age,
+                    'age_type' => $this->new_age_type,
+                    'gender' => $this->new_gender,
+                ]);
+                $user->assignRole('patient');
+            }
             DB::commit();
             $this->selectPatient($user->id);
+            $this->isPatientModalOpen = false;
+            $this->editingPatientId = null;
+            $this->modalError = '';
             $this->reset(['new_name', 'new_phone', 'new_age']);
             $this->new_age_type = 'Years';
-            $this->isPatientModalOpen = false;
+            $this->new_gender = 'Male';
+            session()->flash('message', $this->editingPatientId ? 'Patient updated!' : 'Patient registered!');
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->modalError = $e->getMessage();
+            Log::error("Quick Add/Edit Patient: " . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
+    }
+
+    public function openEditDoctorModal()
+    {
+        if (!$this->selectedDoctor) return;
+        $this->editingDoctorId = $this->selectedDoctor['id'];
+        // Remove "Dr. " prefix if exists for the input field
+        $name = $this->selectedDoctor['name'];
+        if (str_starts_with(strtolower($name), 'dr. ')) {
+            $name = substr($name, 4);
+        } elseif (str_starts_with(strtolower($name), 'dr ')) {
+            $name = substr($name, 3);
+        }
+        $this->new_doc_name = $name;
+        $this->new_doc_phone = $this->selectedDoctor['phone'];
+        if ($this->doctorProfileData) {
+            $this->new_doc_commission = $this->doctorProfileData['commission_percentage'];
+        }
+        $this->isDoctorModalOpen = true;
     }
 
     public function quickAddDoctor()
     {
-        $this->authorize('create doctors');
+        $this->authorize($this->editingDoctorId ? 'edit doctors' : 'create doctors');
         $this->modalError = '';
-        $this->validate(['new_doc_name' => 'required|string|max:255']);
+        $this->validate([
+            'new_doc_name' => 'required|string|max:255',
+            'new_doc_phone' => 'nullable|numeric|digits:10|unique:users,phone,' . ($this->editingDoctorId ?? 'NULL'),
+        ]);
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
             $finalName = str_starts_with(strtolower($this->new_doc_name), 'dr') ? $this->new_doc_name : 'Dr. ' . $this->new_doc_name;
-            $user = User::create([
-                'name' => $finalName,
-                'phone' => $this->new_doc_phone ?: 'D' . time(),
-                'email' => null,
-                'password' => '12345678',
-                'is_active' => true,
-                'company_id' => $companyId,
-                'branch_id' => $this->branch_id,
-            ]);
-            DoctorProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'commission_percentage' => $this->new_doc_commission ?: 0]);
-            $user->assignRole('doctor');
+            
+            if ($this->editingDoctorId) {
+                $user = User::findOrFail($this->editingDoctorId);
+                $user->update([
+                    'name' => $finalName,
+                    'phone' => $this->new_doc_phone,
+                ]);
+
+                $profile = DoctorProfile::where('user_id', $user->id)->first();
+                if ($profile) {
+                    $profile->update([
+                        'commission_percentage' => $this->new_doc_commission ?: 0,
+                    ]);
+                }
+            } else {
+                $user = User::create([
+                    'name' => $finalName,
+                    'phone' => $this->new_doc_phone ?: 'D' . time(),
+                    'email' => null,
+                    'password' => '12345678',
+                    'is_active' => true,
+                    'company_id' => $companyId,
+                    'branch_id' => $this->branch_id,
+                ]);
+                DoctorProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'commission_percentage' => $this->new_doc_commission ?: 0]);
+                $user->assignRole('doctor');
+            }
             DB::commit();
             $this->selectDoctor($user->id);
             $this->isDoctorModalOpen = false;
+            $this->editingDoctorId = null;
+            $this->modalError = '';
             $this->reset(['new_doc_name', 'new_doc_phone', 'new_doc_commission']);
+            session()->flash('message', $this->editingDoctorId ? 'Doctor updated!' : 'Doctor added!');
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->modalError = $e->getMessage();
+            Log::error("Quick Add/Edit Doctor: " . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
+    }
+
+    public function openEditAgentModal()
+    {
+        if (!$this->selectedAgent) return;
+        $this->editingAgentId = $this->selectedAgent['id'];
+        $this->new_agent_name = $this->selectedAgent['name'];
+        $this->new_agent_phone = $this->selectedAgent['phone'];
+        if ($this->agentProfileData) {
+            $this->new_agent_agency = $this->agentProfileData['agency_name'];
+            $this->new_agent_commission = $this->agentProfileData['commission_percentage'];
+        }
+        $this->isAgentModalOpen = true;
     }
 
     public function quickAddAgent()
     {
-        $this->authorize('create agents');
+        $this->authorize($this->editingAgentId ? 'edit agents' : 'create agents');
         $this->modalError = '';
-        $this->validate(['new_agent_name' => 'required|string|max:255']);
+        $this->validate([
+            'new_agent_name' => 'required|string|max:255',
+            'new_agent_phone' => 'nullable|numeric|digits:10|unique:users,phone,' . ($this->editingAgentId ?? 'NULL'),
+        ]);
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
-            $user = User::create([
-                'name' => $this->new_agent_name,
-                'phone' => $this->new_agent_phone ?: 'A' . time(),
-                'email' => null,
-                'password' => '12345678',
-                'is_active' => true,
-                'company_id' => $companyId,
-                'branch_id' => $this->branch_id,
-            ]);
-            AgentProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'agency_name' => $this->new_agent_agency, 'commission_percentage' => $this->new_agent_commission ?: 0]);
-            $user->assignRole('agent');
+            
+            if ($this->editingAgentId) {
+                $user = User::findOrFail($this->editingAgentId);
+                $user->update([
+                    'name' => $this->new_agent_name,
+                    'phone' => $this->new_agent_phone,
+                ]);
+
+                $profile = AgentProfile::where('user_id', $user->id)->first();
+                if ($profile) {
+                    $profile->update([
+                        'agency_name' => $this->new_agent_agency,
+                        'commission_percentage' => $this->new_agent_commission ?: 0,
+                    ]);
+                }
+            } else {
+                $user = User::create([
+                    'name' => $this->new_agent_name,
+                    'phone' => $this->new_agent_phone ?: 'A' . time(),
+                    'email' => null,
+                    'password' => '12345678',
+                    'is_active' => true,
+                    'company_id' => $companyId,
+                    'branch_id' => $this->branch_id,
+                ]);
+                AgentProfile::create(['company_id' => $companyId, 'user_id' => $user->id, 'agency_name' => $this->new_agent_agency, 'commission_percentage' => $this->new_agent_commission ?: 0]);
+                $user->assignRole('agent');
+            }
             DB::commit();
             $this->selectAgent($user->id);
             $this->isAgentModalOpen = false;
+            $this->editingAgentId = null;
+            $this->modalError = '';
             $this->reset(['new_agent_name', 'new_agent_phone', 'new_agent_agency', 'new_agent_commission']);
+            session()->flash('message', $this->editingAgentId ? 'Agent updated!' : 'Agent added!');
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->modalError = $e->getMessage();
+            Log::error("Quick Add/Edit Agent: " . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
 
