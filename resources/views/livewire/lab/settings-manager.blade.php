@@ -40,7 +40,7 @@
             </li>
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'pdf')" class="nav-link {{ $activeTab === 'pdf' ? 'active' : '' }}">
-                    <i class="feather-printer me-1"></i> PDF Header / Footer
+                    <i class="feather-printer me-1"></i> Report PDF Settings
                 </button>
             </li>
             <li class="nav-item">
@@ -403,6 +403,119 @@
                                 </div>
                             </div>
 
+                            {{-- Invoice Print & Layout Settings --}}
+                            <div class="row g-3 mt-1">
+                                <div class="col-12">
+                                    <div class="p-3 rounded-3 border bg-light">
+                                        <h6 class="fw-bold fs-12 mb-3 text-dark"><i class="feather-printer text-primary me-2"></i>Invoice Print & Layout Settings</h6>
+                                        <div class="fs-11 text-muted mb-3">
+                                            Configure how your invoices look when printed. These settings only apply to invoices, keeping them separate from your test reports.
+                                        </div>
+
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white h-100">
+                                                    <div>
+                                                        <strong class="fs-12">Show Header</strong>
+                                                        <div class="fs-10 text-muted">Print header image on invoices</div>
+                                                    </div>
+                                                    <div class="form-check form-switch mb-0">
+                                                        <input class="form-check-input" type="checkbox" wire:model.live="invoice_show_header" style="width:2.5em;height:1.25em;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white h-100">
+                                                    <div>
+                                                        <strong class="fs-12">Show Footer</strong>
+                                                        <div class="fs-10 text-muted">Print footer image on invoices</div>
+                                                    </div>
+                                                    <div class="form-check form-switch mb-0">
+                                                        <input class="form-check-input" type="checkbox" wire:model.live="invoice_show_footer" style="width:2.5em;height:1.25em;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-4">
+                                            {{-- Custom Header Image --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold fs-11">📄 Custom Invoice Header Image</label>
+                                                @if($invoice_header_image)
+                                                    <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
+                                                        <img src="{{ secure_storage_url($invoice_header_image) }}" alt="Header" style="max-height:60px;max-width:100%;object-fit:contain;">
+                                                        <div class="mt-1">
+                                                            <button wire:click="removeInvoiceHeaderImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if($new_invoice_header_image)
+                                                    <div class="mb-2 text-center">
+                                                        <img src="{{ $new_invoice_header_image->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:60px;">
+                                                        <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New header selected</div>
+                                                    </div>
+                                                @endif
+                                                <input type="file" wire:model="new_invoice_header_image" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+
+                                            {{-- Custom Footer Image --}}
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold fs-11">📋 Custom Invoice Footer Image</label>
+                                                @if($invoice_footer_image)
+                                                    <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
+                                                        <img src="{{ secure_storage_url($invoice_footer_image) }}" alt="Footer" style="max-height:50px;max-width:100%;object-fit:contain;">
+                                                        <div class="mt-1">
+                                                            <button wire:click="removeInvoiceFooterImage" class="btn btn-sm btn-outline-danger"><i class="feather-trash-2 me-1"></i>Remove</button>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if($new_invoice_footer_image)
+                                                    <div class="mb-2 text-center">
+                                                        <img src="{{ $new_invoice_footer_image->temporaryUrl() }}" alt="Preview" class="rounded border" style="max-height:50px;">
+                                                        <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New footer selected</div>
+                                                    </div>
+                                                @endif
+                                                <input type="file" wire:model="new_invoice_footer_image" accept="image/*" class="form-control form-control-sm">
+                                            </div>
+                                        </div>
+
+                                        <hr class="my-4">
+                                        <h6 class="fw-bold fs-11 mb-3 text-dark"><i class="feather-maximize me-2"></i>Blank Space Settings (For Pre-printed Letterheads)</h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold fs-11">Top Margin</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" wire:model.live.debounce.500ms="invoice_margin_top">
+                                                    <span class="input-group-text">px</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold fs-11">Bottom Margin</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" wire:model.live.debounce.500ms="invoice_margin_bottom">
+                                                    <span class="input-group-text">px</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold fs-11">Header Space</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" wire:model.live.debounce.500ms="invoice_header_height">
+                                                    <span class="input-group-text">px</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-semibold fs-11">Footer Space</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" wire:model.live.debounce.500ms="invoice_footer_height">
+                                                    <span class="input-group-text">px</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
                             @can('edit settings')
                             <hr class="my-3">
                             <div class="text-end">
@@ -519,7 +632,7 @@
         @endif
 
         {{-- ═══════════════════════════════════════════════════════ --}}
-        {{-- TAB 4: PDF HEADER / FOOTER --}}
+        {{-- TAB 4: REPORT PDF SETTINGS --}}
         {{-- ═══════════════════════════════════════════════════════ --}}
         @if($activeTab === 'pdf')
             <div class="row g-4">
