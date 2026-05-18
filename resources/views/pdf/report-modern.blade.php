@@ -400,23 +400,35 @@
         {{-- Per-Department Signatures --}}
         @if($settings['report_signature_mode'] == 'per_department' && $dept)
             <div class="signature-row" style="margin-top: 10px; margin-bottom: 20px;">
-                @if($dept->sig_1_path)
+                @if($dept->sig_1_name || $dept->sig_1_path)
                     <div class="signature-col">
-                        <img src="{{ public_path('storage/' . $dept->sig_1_path) }}" class="signature-img"><br>
+                        @if($dept->sig_1_path)
+                            <img src="{{ public_path('storage/' . $dept->sig_1_path) }}" class="signature-img"><br>
+                        @else
+                            <div style="height: 50px;"></div>
+                        @endif
                         <strong>{{ $dept->sig_1_name }}</strong><br>
                         {{ $dept->sig_1_desig }}
                     </div>
                 @endif
-                @if($dept->sig_2_path)
+                @if($dept->sig_2_name || $dept->sig_2_path)
                     <div class="signature-col">
-                        <img src="{{ public_path('storage/' . $dept->sig_2_path) }}" class="signature-img"><br>
+                        @if($dept->sig_2_path)
+                            <img src="{{ public_path('storage/' . $dept->sig_2_path) }}" class="signature-img"><br>
+                        @else
+                            <div style="height: 50px;"></div>
+                        @endif
                         <strong>{{ $dept->sig_2_name }}</strong><br>
                         {{ $dept->sig_2_desig }}
                     </div>
                 @endif
-                @if($dept->sig_3_path)
+                @if($dept->sig_3_name || $dept->sig_3_path)
                     <div class="signature-col">
-                        <img src="{{ public_path('storage/' . $dept->sig_3_path) }}" class="signature-img"><br>
+                        @if($dept->sig_3_path)
+                            <img src="{{ public_path('storage/' . $dept->sig_3_path) }}" class="signature-img"><br>
+                        @else
+                            <div style="height: 50px;"></div>
+                        @endif
                         <strong>{{ $dept->sig_3_name }}</strong><br>
                         {{ $dept->sig_3_desig }}
                     </div>
@@ -436,25 +448,37 @@
     {{-- SIGNATURE BLOCK (Global Bottom) --}}
     @if($settings['report_signature_mode'] == 'global_bottom')
         <div class="signature-row">
-            @if($settings['global_sig_1_path'])
+            @if($settings['global_sig_1_name'] || $settings['global_sig_1_path'])
                 <div class="signature-col">
-                    <img src="{{ $settings['global_sig_1_path'] }}" class="signature-img"><br>
+                    @if($settings['global_sig_1_path'])
+                        <img src="{{ $settings['global_sig_1_path'] }}" class="signature-img"><br>
+                    @else
+                        <div style="height: 50px;"></div>
+                    @endif
                     <strong>{{ $settings['global_sig_1_name'] }}</strong><br>
                     {{ $settings['global_sig_1_desig'] }}
                 </div>
             @endif
 
-            @if($settings['global_sig_2_path'])
+            @if($settings['global_sig_2_name'] || $settings['global_sig_2_path'])
                 <div class="signature-col">
-                    <img src="{{ $settings['global_sig_2_path'] }}" class="signature-img"><br>
+                    @if($settings['global_sig_2_path'])
+                        <img src="{{ $settings['global_sig_2_path'] }}" class="signature-img"><br>
+                    @else
+                        <div style="height: 50px;"></div>
+                    @endif
                     <strong>{{ $settings['global_sig_2_name'] }}</strong><br>
                     {{ $settings['global_sig_2_desig'] }}
                 </div>
             @endif
 
-            @if($settings['global_sig_3_path'])
+            @if($settings['global_sig_3_name'] || $settings['global_sig_3_path'])
                 <div class="signature-col">
-                    <img src="{{ $settings['global_sig_3_path'] }}" class="signature-img"><br>
+                    @if($settings['global_sig_3_path'])
+                        <img src="{{ $settings['global_sig_3_path'] }}" class="signature-img"><br>
+                    @else
+                        <div style="height: 50px;"></div>
+                    @endif
                     <strong>{{ $settings['global_sig_3_name'] }}</strong><br>
                     {{ $settings['global_sig_3_desig'] }}
                 </div>

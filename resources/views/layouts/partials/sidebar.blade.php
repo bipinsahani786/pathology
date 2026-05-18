@@ -168,18 +168,22 @@
                     </li>
 
                     <li class="nxl-item nxl-caption"><label>Sales & Operations</label></li>
+                    @if(\App\Models\Configuration::getFor('module_pos', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.pos') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.pos') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-plus-circle"></i></span>
                             <span class="nxl-mtext">New Bill (POS)</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_invoices', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.invoices') || request()->routeIs('lab.invoice.edit') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.invoices') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-file-text"></i></span>
                             <span class="nxl-mtext">All Invoices</span>
                         </a>
                     </li>
+                    @endif
                     <li class="nxl-item {{ request()->routeIs('lab.reports') || request()->routeIs('lab.reports.entry') ? 'active' : '' }}">
                         <a href="{{ route('lab.reports') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-clipboard"></i></span>
@@ -189,24 +193,31 @@
 
                     @if(auth()->user()->hasAnyRole(['lab_admin', 'staff']))
                     <li class="nxl-item nxl-caption"><label>Lab Management</label></li>
+                    @if(\App\Models\Configuration::getFor('module_departments', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.departments') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.departments') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-grid"></i></span>
                             <span class="nxl-mtext">Departments</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_tests', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.tests') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.tests') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-activity"></i></span>
                             <span class="nxl-mtext">Test Catalog</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_packages', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.packages') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.packages') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-package"></i></span>
                             <span class="nxl-mtext">Test Packages</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_branches', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.branches') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.branches') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-home"></i></span>
@@ -214,49 +225,62 @@
                         </a>
                     </li>
                     @endif
+                    @endif
 
+                    @if(\App\Models\Configuration::getFor('module_collection_centers', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.collection.centers') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.collection.centers') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-map"></i></span>
                             <span class="nxl-mtext">Collection Centers</span>
                         </a>
                     </li>
+                    @endif
 
                     <li class="nxl-item nxl-caption"><label>Relationships</label></li>
+                    @if(\App\Models\Configuration::getFor('module_patients', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.patients') ? 'active' : '' }}">
                         <a href="{{ route('lab.patients') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-user"></i></span>
                             <span class="nxl-mtext">Patients</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_doctors', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.doctors') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.doctors') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-user-check"></i></span>
                             <span class="nxl-mtext">Referring Doctors</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_agents', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.agents') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.agents') }}" wire:navigate>
                             <span class="nxl-micon"><i class="feather-briefcase"></i></span>
                             <span class="nxl-mtext">Referral Agents</span>
                         </a>
                     </li>
+                    @endif
 
                     <li class="nxl-item nxl-caption"><label>Finance & Marketing</label></li>
+                    @if(\App\Models\Configuration::getFor('module_settlements', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.settlements') ? 'active' : '' }}">
                         <a href="{{ route('lab.settlements') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
                             <span class="nxl-mtext">Settlements</span>
                         </a>
                     </li>
+                    @endif
+                    @if(\App\Models\Configuration::getFor('module_marketing', '1') === '1')
                     <li class="nxl-item {{ request()->routeIs('lab.marketing') ? 'active' : '' }}">
                         <a href="{{ route('lab.marketing') }}" class="nxl-link" wire:navigate>
                             <span class="nxl-micon"><i class="feather-award"></i></span>
                             <span class="nxl-mtext">Marketing & Vouchers</span>
                         </a>
                     </li>
+                    @endif
 
-                    @if(auth()->user()->can('view inventory') && config('features.inventory', true))
+                    @if(auth()->user()->can('view inventory') && config('features.inventory', true) && \App\Models\Configuration::getFor('module_inventory', '1') === '1')
                     <li class="nxl-item nxl-caption"><label>Inventory</label></li>
                     <li class="nxl-item {{ request()->routeIs('lab.inventory.dashboard') ? 'active' : '' }}">
                         <a class="nxl-link" href="{{ route('lab.inventory.dashboard') }}" wire:navigate>

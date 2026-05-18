@@ -107,6 +107,25 @@ class SettingsManager extends Component
     public $restrict_branch_access = true;
     public $branchControlsSaved = false;
 
+    // ==========================================
+    // MODULE VISIBILITY SETTINGS
+    // ==========================================
+    public $module_pos = true;
+    public $module_invoices = true;
+    public $module_departments = true;
+    public $module_tests = true;
+    public $module_packages = true;
+    public $module_branches = true;
+    public $module_collection_centers = true;
+    public $module_patients = true;
+    public $module_doctors = true;
+    public $module_agents = true;
+    public $module_settlements = true;
+    public $module_marketing = true;
+    public $module_inventory = true;
+
+    public $modulesSaved = false;
+
     // Report Signatory (Global 1)
     public $authorized_signatory_name;
     public $authorized_signatory_designation;
@@ -210,6 +229,21 @@ class SettingsManager extends Component
         $this->branch_share_agents = Configuration::getFor('branch_share_agents', '1') === '1';
         $this->branch_share_tests = Configuration::getFor('branch_share_tests', '1') === '1';
         $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1') === '1';
+
+        // Module Visibility
+        $this->module_pos = Configuration::getFor('module_pos', '1') === '1';
+        $this->module_invoices = Configuration::getFor('module_invoices', '1') === '1';
+        $this->module_departments = Configuration::getFor('module_departments', '1') === '1';
+        $this->module_tests = Configuration::getFor('module_tests', '1') === '1';
+        $this->module_packages = Configuration::getFor('module_packages', '1') === '1';
+        $this->module_branches = Configuration::getFor('module_branches', '1') === '1';
+        $this->module_collection_centers = Configuration::getFor('module_collection_centers', '1') === '1';
+        $this->module_patients = Configuration::getFor('module_patients', '1') === '1';
+        $this->module_doctors = Configuration::getFor('module_doctors', '1') === '1';
+        $this->module_agents = Configuration::getFor('module_agents', '1') === '1';
+        $this->module_settlements = Configuration::getFor('module_settlements', '1') === '1';
+        $this->module_marketing = Configuration::getFor('module_marketing', '1') === '1';
+        $this->module_inventory = Configuration::getFor('module_inventory', '1') === '1';
 
         // UI Scaling
         $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100);
@@ -558,6 +592,30 @@ class SettingsManager extends Component
         }
 
         $this->signaturesSaved = true;
+    }
+
+    // ==========================================
+    // SAVE MODULE VISIBILITY
+    // ==========================================
+    public function saveModules()
+    {
+        $this->authorize('edit settings');
+
+        Configuration::setFor('module_pos', $this->module_pos ? '1' : '0');
+        Configuration::setFor('module_invoices', $this->module_invoices ? '1' : '0');
+        Configuration::setFor('module_departments', $this->module_departments ? '1' : '0');
+        Configuration::setFor('module_tests', $this->module_tests ? '1' : '0');
+        Configuration::setFor('module_packages', $this->module_packages ? '1' : '0');
+        Configuration::setFor('module_branches', $this->module_branches ? '1' : '0');
+        Configuration::setFor('module_collection_centers', $this->module_collection_centers ? '1' : '0');
+        Configuration::setFor('module_patients', $this->module_patients ? '1' : '0');
+        Configuration::setFor('module_doctors', $this->module_doctors ? '1' : '0');
+        Configuration::setFor('module_agents', $this->module_agents ? '1' : '0');
+        Configuration::setFor('module_settlements', $this->module_settlements ? '1' : '0');
+        Configuration::setFor('module_marketing', $this->module_marketing ? '1' : '0');
+        Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0');
+
+        $this->modulesSaved = true;
     }
 
     // ==========================================

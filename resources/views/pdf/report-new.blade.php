@@ -572,6 +572,8 @@
                             <td class="sig-doctor">
                                 @if($sigImgSrc)
                                     <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                                @else
+                                    <div style="height: 50px;"></div>
                                 @endif
                                 <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
                                 @if($settings['global_sig_1_desig'])
@@ -591,6 +593,8 @@
                                 <td>
                                     @if($settings['global_sig_2_path'])
                                         <img class="sign-img" src="{{ $settings['global_sig_2_path'] }}"><br>
+                                    @else
+                                        <div style="height: 50px;"></div>
                                     @endif
                                     <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
                                     <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
@@ -599,6 +603,8 @@
                             <td>
                                 @if($sigImgSrc)
                                     <img class="sign-img" src="{{ $sigImgSrc }}"><br>
+                                @else
+                                    <div style="height: 50px;"></div>
                                 @endif
                                 <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
                                 <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
@@ -607,6 +613,8 @@
                                 <td>
                                     @if($settings['global_sig_3_path'])
                                         <img class="sign-img" src="{{ $settings['global_sig_3_path'] }}"><br>
+                                    @else
+                                        <div style="height: 50px;"></div>
                                     @endif
                                     <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
                                     <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>

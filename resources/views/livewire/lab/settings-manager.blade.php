@@ -24,6 +24,11 @@
                 </button>
             </li>
             <li class="nav-item">
+                <button wire:click="$set('activeTab', 'modules')" class="nav-link {{ $activeTab === 'modules' ? 'active' : '' }}">
+                    <i class="feather-grid me-1"></i> Module Visibility
+                </button>
+            </li>
+            <li class="nav-item">
                 <button wire:click="$set('activeTab', 'profile')" class="nav-link {{ $activeTab === 'profile' ? 'active' : '' }}">
                     <i class="feather-home me-1"></i> Lab Profile
                 </button>
@@ -179,6 +184,69 @@
                     </div>
                 </div>
             </div>
+        @endif
+
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        {{-- TAB: MODULE VISIBILITY --}}
+        {{-- ═══════════════════════════════════════════════════════ --}}
+        @if($activeTab === 'modules')
+            <form wire:submit.prevent="saveModules">
+                <div class="card mb-4 border-top border-3 border-primary">
+                    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0"><i class="feather-eye me-2"></i>Sidebar Module Visibility</h6>
+                        @if($modulesSaved)
+                            <span class="badge bg-soft-success text-success fs-12"><i class="feather-check-circle me-1"></i>Saved</span>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-soft-primary fs-12 py-2 mb-4">
+                            <i class="feather-info me-2"></i> Use these toggles to hide or show modules in the left sidebar. Hiding a module removes it from the menu for all staff members in your lab.
+                        </div>
+
+                        <div class="row g-4">
+                            @php
+                                $modulesList = [
+                                    ['key' => 'module_pos', 'label' => 'New Bill (POS)', 'icon' => 'feather-plus-circle'],
+                                    ['key' => 'module_invoices', 'label' => 'All Invoices', 'icon' => 'feather-file-text'],
+                                    ['key' => 'module_departments', 'label' => 'Departments', 'icon' => 'feather-grid'],
+                                    ['key' => 'module_tests', 'label' => 'Test Catalog', 'icon' => 'feather-activity'],
+                                    ['key' => 'module_packages', 'label' => 'Test Packages', 'icon' => 'feather-package'],
+                                    ['key' => 'module_branches', 'label' => 'Branches', 'icon' => 'feather-home'],
+                                    ['key' => 'module_collection_centers', 'label' => 'Collection Centers', 'icon' => 'feather-map'],
+                                    ['key' => 'module_patients', 'label' => 'Patients', 'icon' => 'feather-user'],
+                                    ['key' => 'module_doctors', 'label' => 'Referring Doctors', 'icon' => 'feather-user-check'],
+                                    ['key' => 'module_agents', 'label' => 'Referral Agents', 'icon' => 'feather-briefcase'],
+                                    ['key' => 'module_settlements', 'label' => 'Settlements', 'icon' => 'feather-dollar-sign'],
+                                    ['key' => 'module_marketing', 'label' => 'Marketing & Vouchers', 'icon' => 'feather-award'],
+                                ];
+                                if(config('features.inventory', true)) {
+                                    $modulesList[] = ['key' => 'module_inventory', 'label' => 'Inventory System', 'icon' => 'feather-box'];
+                                }
+                            @endphp
+
+                            @foreach($modulesList as $mod)
+                            <div class="col-md-6 col-lg-4">
+                                <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light">
+                                    <div>
+                                        <div class="fw-bold fs-13"><i class="{{ $mod['icon'] }} me-2 text-muted"></i>{{ $mod['label'] }}</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="{{ $mod['key'] }}" wire:model="{{ $mod['key'] }}">
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <span wire:loading wire:target="saveModules" class="spinner-border spinner-border-sm me-2"></span>
+                            <i class="feather-save me-2" wire:loading.remove wire:target="saveModules"></i>
+                            Save Visibility Settings
+                        </button>
+                    </div>
+                </div>
+            </form>
         @endif
         @if($activeTab === 'profile')
             <div class="row g-4">
