@@ -299,7 +299,7 @@ class SettingsManager extends Component
         Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor);
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent);
 
-        $hasCustomInvoice = auth()->user()->company->hasSubscriptionFeature('custom_invoice');
+        $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (!$hasCustomInvoice) {
             if (is_object($this->new_invoice_header_image) || is_object($this->new_invoice_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
