@@ -208,7 +208,7 @@
                 
                 <div class="field">
                     <div class="label">Card Number</div>
-                    <div class="id-number">{{ $patient->patientProfile->patient_id_string ?? 'P-' . str_pad($patient->id, 6, '0', STR_PAD_LEFT) }}</div>
+                    <div class="id-number">{{ $patient->formatted_id ?? 'P-' . str_pad($patient->id, 6, '0', STR_PAD_LEFT) }}</div>
                 </div>
 
                 <div class="field" style="margin-top: 3mm;">
