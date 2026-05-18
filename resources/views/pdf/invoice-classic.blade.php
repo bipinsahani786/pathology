@@ -259,7 +259,7 @@
                     <td class="lbl">Referred By</td>
                     <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF / DIRECT' }}</td>
                     <td class="lbl">Patient ID</td>
-                    <td class="val">: {{ $invoice->patient->patientProfile->patient_id_string ?? 'N/A' }}</td>
+                    <td class="val">: {{ $invoice->patient->formatted_id ?? 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td class="lbl">Contact No</td>
