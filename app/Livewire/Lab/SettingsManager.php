@@ -37,6 +37,7 @@ class SettingsManager extends Component
     public $restrict_billing_below_b2b = false;
     public $commission_basis_doctor = 'gross';
     public $commission_basis_agent = 'gross';
+    public $restrict_unpaid_reports = false;
     public $invoiceSaved = false;
 
     // ==========================================
@@ -135,6 +136,7 @@ class SettingsManager extends Component
         $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4);
         $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
         $this->restrict_billing_below_b2b = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
+        $this->restrict_unpaid_reports = Configuration::getFor('restrict_unpaid_reports', '0') === '1';
         $this->commission_basis_doctor = Configuration::getFor('commission_basis_doctor', 'gross');
         $this->commission_basis_agent = Configuration::getFor('commission_basis_agent', 'gross');
         $this->bill_template = Configuration::getFor('bill_template', 'classic');
@@ -270,6 +272,7 @@ class SettingsManager extends Component
         Configuration::setFor('invoice_counter_digits', $this->invoice_counter_digits);
         Configuration::getFor('invoice_counter_reset', $this->invoice_counter_reset);
         Configuration::setFor('restrict_billing_below_b2b', $this->restrict_billing_below_b2b ? '1' : '0');
+        Configuration::setFor('restrict_unpaid_reports', $this->restrict_unpaid_reports ? '1' : '0');
         Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor);
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent);
 

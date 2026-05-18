@@ -23,6 +23,7 @@ class ResultEntryManager extends Component
     public $testComments = []; // Comments per invoice item (test)
     public $report_date; // Custom report date for PDF
     public $report_time; // Custom report time for PDF
+    public $manualOverrides = []; // Track calculated fields that were manually edited
 
     public function mount($id)
     {
@@ -161,6 +162,8 @@ class ResultEntryManager extends Component
                 }
             }
         }
+
+        $this->detectManualOverrides();
     }
 
     private function findMatchingRange($param, $patientGender, $days, $months, $years)
@@ -199,8 +202,62 @@ class ResultEntryManager extends Component
         return count($param['ranges']) > 0 ? $param['ranges'][0] : null;
     }
 
+    private function detectManualOverrides()
+    {
+        // Make a copy of results to test calculations
+        $tempResults = $this->results;
+        
+        $groupedParams = [];
+        foreach ($this->parametersList as $k => $p) {
+            $itemId = $p['invoice_item_id'];
+            $groupedParams[$itemId][$k] = $p;
+        }
+
+        $expressionLanguage = new ExpressionLanguage();
+
+        foreach ($groupedParams as $itemId => $params) {
+            $localCodeMap = [];
+            foreach ($params as $k => $p) {
+                if (!empty($p['short_code'])) {
+                    $localCodeMap[strtoupper($p['short_code'])] = (float) ($tempResults[$k] ?: 0);
+                }
+            }
+
+            foreach ($params as $k => $p) {
+                if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
+                    $formula = strtoupper($p['formula']);
+                    $formula = preg_replace('/\{([A-Z0-9_]+)\}/', '$1', $formula);
+
+                    try {
+                        if (!empty(trim($formula))) {
+                            $result = $expressionLanguage->evaluate($formula, $localCodeMap);
+                            if ($result !== false && is_numeric($result) && !is_infinite($result) && !is_nan($result)) {
+                                $calcValue = round($result, 2);
+                                $actualValue = isset($this->results[$k]) && $this->results[$k] !== '' ? (float) $this->results[$k] : null;
+                                
+                                // If the DB value doesn't match what the formula says it should be, it was manually overridden
+                                if ($actualValue !== null && $actualValue !== (float)$calcValue) {
+                                    $this->manualOverrides[$k] = true;
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+        }
+    }
+
     public function updatedResults($value, $key)
     {
+        $param = $this->parametersList[$key] ?? null;
+        if ($param && ($param['input_type'] ?? '') === 'calculated') {
+            if ($value === '') {
+                unset($this->manualOverrides[$key]);
+            } else {
+                $this->manualOverrides[$key] = true;
+            }
+        }
+
         $this->autoCalculateFormulas();
         $this->autoEvaluateRanges();
     }
@@ -228,6 +285,10 @@ class ResultEntryManager extends Component
             // 2. Process all calculated parameters for this test
             foreach ($params as $k => $p) {
                 if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
+                    if (!empty($this->manualOverrides[$k])) {
+                        continue; // Skip calculating if manually overridden
+                    }
+
                     $formula = strtoupper($p['formula']);
 
                     // Clean up formula for ExpressionLanguage by removing braces {CODE} -> CODE

@@ -210,9 +210,12 @@
                                                                  @endforeach
                                                              </select>
                                                          @elseif(($p['input_type'] ?? 'numeric') === 'calculated')
-                                                             <input type="text" class="form-control bg-light fw-bold text-primary border-primary border-opacity-25" 
-                                                                    wire:model="results.{{ $paramKey }}" readonly title="Auto-Calculated">
-                                                             <span class="input-group-text bg-soft-primary"><i class="feather-cpu" style="font-size: 10px;"></i></span>
+                                                             <input type="text" class="form-control {{ isset($manualOverrides[$paramKey]) ? 'border-warning fw-bold text-warning' : 'bg-light fw-bold text-primary border-primary border-opacity-25' }}" 
+                                                                    wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
+                                                                    title="Auto-Calculated. Edit to override. Clear to restore formula.">
+                                                             <span class="input-group-text {{ isset($manualOverrides[$paramKey]) ? 'bg-soft-warning' : 'bg-soft-primary' }}">
+                                                                 <i class="feather-cpu" style="font-size: 10px;"></i>
+                                                             </span>
                                                          @else
                                                              <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
                                                                     wire:model.live.debounce.500ms="results.{{ $paramKey }}" 

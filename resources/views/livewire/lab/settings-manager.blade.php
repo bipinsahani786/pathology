@@ -379,13 +379,22 @@
                                                 <div class="fs-10 text-muted mt-1">Determine how the percentage is applied for agents.</div>
                                             </div>
                                             <div class="col-12 mt-3">
-                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:rgba(59,113,202,0.05);">
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 mb-2" style="background:rgba(59,113,202,0.05);">
                                                     <div>
                                                         <div class="fw-bold fs-12 text-dark"><i class="feather-shield text-primary me-2"></i>Restrict Billing below B2B Price</div>
                                                         <div class="fs-11 text-muted mt-1">Prevents bill generation if Net Payable is less than total B2B cost.</div>
                                                     </div>
                                                     <div class="form-check form-switch">
                                                         <input class="form-check-input" type="checkbox" wire:model.live="restrict_billing_below_b2b" style="width:2.5em;height:1.25em;">
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3" style="background:rgba(220,38,38,0.05);">
+                                                    <div>
+                                                        <div class="fw-bold fs-12 text-dark"><i class="feather-lock text-danger me-2"></i>Restrict Report Download for Unpaid Invoices</div>
+                                                        <div class="fs-11 text-muted mt-1">Patients will not be able to view or download their report from the portal or WhatsApp link if the invoice payment is pending.</div>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" wire:model.live="restrict_unpaid_reports" style="width:2.5em;height:1.25em;">
                                                     </div>
                                                 </div>
                                             </div>

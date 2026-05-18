@@ -39,6 +39,13 @@ class ReportPdfController extends Controller
 
         // If not pre-generated, generate now using company's preferred template
         $companyId = $report ? $report->invoice->company_id : null;
+
+        // Restriction Check for Unpaid Reports
+        $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $companyId) === '1';
+        if ($restrict && $report && strtolower($report->invoice->payment_status) !== 'paid') {
+            return response()->view('public.restricted-report', ['invoice' => $report->invoice]);
+        }
+
         $template = Configuration::getFor('report_template', 'new', $companyId);
         
         return $this->generateReport(new Request(['header' => '1']), $id, $template, true);
@@ -80,8 +87,15 @@ class ReportPdfController extends Controller
             }
 
             // 2. Patient Isolation: Patients can only see their own reports
-            if ($user->hasRole('patient') && $report->invoice->patient_id !== $user->id) {
-                abort(403, 'You are not authorized to view this report.');
+            if ($user->hasRole('patient')) {
+                if ($report->invoice->patient_id !== $user->id) {
+                    abort(403, 'You are not authorized to view this report.');
+                }
+                
+                $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $report->invoice->company_id) === '1';
+                if ($restrict && strtolower($report->invoice->payment_status) !== 'paid') {
+                    abort(403, 'Payment Pending. Please clear your dues to view this report.');
+                }
             }
 
             // 3. Branch Isolation: If enabled, staff can only see their branch's reports
