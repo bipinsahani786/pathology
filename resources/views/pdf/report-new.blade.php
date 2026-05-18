@@ -201,7 +201,7 @@
         /* ── Multi-Signature Row ── */
         .sig-container {
             position: absolute;
-            bottom: 185px; /* Positioned just above the footer banner */
+            bottom: calc({{ $footerHeight }} + 5px); /* Dynamically positioned just above the footer banner */
             left: 0;
             width: 100%;
         }

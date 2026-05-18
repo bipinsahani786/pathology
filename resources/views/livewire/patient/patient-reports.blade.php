@@ -106,12 +106,23 @@
                                    class="btn btn-soft-primary fw-900 fs-11 px-4 py-2 rounded-pill">
                                     <i class="feather-printer me-2"></i>PRINT BILL
                                 </a>
-                                
+                                @php
+                                    $restrictUnpaid = \App\Models\Configuration::getFor('restrict_unpaid_reports', '0', $report->invoice->company_id) === '1';
+                                    $isPaid = strtolower($report->invoice->payment_status) === 'paid';
+                                    $isRestricted = $restrictUnpaid && !$isPaid;
+                                @endphp
+
                                 @if(strtolower($report->status) === 'approved')
-                                    <a href="{{ route('portal.report.download', $report->invoice_id) }}" target="_blank" 
-                                       class="btn btn-primary fw-900 fs-11 px-4 py-2 rounded-pill shadow-sm border-0">
-                                        <i class="feather-download me-2"></i>GET REPORT
-                                    </a>
+                                    @if($isRestricted)
+                                        <button class="btn btn-light fw-900 fs-11 px-4 py-2 rounded-pill shadow-sm border text-danger" disabled title="Clear pending dues to view report">
+                                            <i class="feather-lock me-2"></i>PAYMENT PENDING
+                                        </button>
+                                    @else
+                                        <a href="{{ route('portal.report.download', $report->invoice_id) }}" target="_blank" 
+                                           class="btn btn-primary fw-900 fs-11 px-4 py-2 rounded-pill shadow-sm border-0">
+                                            <i class="feather-download me-2"></i>GET REPORT
+                                        </a>
+                                    @endif
                                 @else
                                     <button class="btn btn-light fw-900 fs-11 px-4 py-2 rounded-pill border text-muted" disabled>
                                         <i class="feather-lock me-2"></i>LOCKED

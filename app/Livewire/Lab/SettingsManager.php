@@ -37,6 +37,20 @@ class SettingsManager extends Component
     public $restrict_billing_below_b2b = false;
     public $commission_basis_doctor = 'gross';
     public $commission_basis_agent = 'gross';
+    public $restrict_unpaid_reports = false;
+    
+    // Invoice Print & Layout Settings
+    public $invoice_show_header = true;
+    public $invoice_show_footer = true;
+    public $invoice_header_image;
+    public $invoice_footer_image;
+    public $new_invoice_header_image;
+    public $new_invoice_footer_image;
+    public $invoice_margin_top = 310;
+    public $invoice_margin_bottom = 255;
+    public $invoice_header_height = 200;
+    public $invoice_footer_height = 180;
+    
     public $invoiceSaved = false;
 
     // ==========================================
@@ -135,9 +149,20 @@ class SettingsManager extends Component
         $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4);
         $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
         $this->restrict_billing_below_b2b = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
+        $this->restrict_unpaid_reports = Configuration::getFor('restrict_unpaid_reports', '0') === '1';
         $this->commission_basis_doctor = Configuration::getFor('commission_basis_doctor', 'gross');
         $this->commission_basis_agent = Configuration::getFor('commission_basis_agent', 'gross');
         $this->bill_template = Configuration::getFor('bill_template', 'classic');
+
+        // Invoice Print Layout (with fallback to pdf_ report equivalents for backward compatibility)
+        $this->invoice_show_header = Configuration::getFor('invoice_show_header', Configuration::getFor('pdf_show_header', '1')) === '1';
+        $this->invoice_show_footer = Configuration::getFor('invoice_show_footer', Configuration::getFor('pdf_show_footer', '1')) === '1';
+        $this->invoice_header_image = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null));
+        $this->invoice_footer_image = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null));
+        $this->invoice_margin_top = (int) Configuration::getFor('invoice_margin_top', Configuration::getFor('pdf_margin_top', 310));
+        $this->invoice_margin_bottom = (int) Configuration::getFor('invoice_margin_bottom', Configuration::getFor('pdf_margin_bottom', 255));
+        $this->invoice_header_height = (int) Configuration::getFor('invoice_header_height', Configuration::getFor('pdf_header_height', 200));
+        $this->invoice_footer_height = (int) Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', 180));
 
         // Patient ID settings
         $this->patient_id_prefix = Configuration::getFor('patient_id_prefix', 'PAT');
@@ -270,10 +295,58 @@ class SettingsManager extends Component
         Configuration::setFor('invoice_counter_digits', $this->invoice_counter_digits);
         Configuration::getFor('invoice_counter_reset', $this->invoice_counter_reset);
         Configuration::setFor('restrict_billing_below_b2b', $this->restrict_billing_below_b2b ? '1' : '0');
+        Configuration::setFor('restrict_unpaid_reports', $this->restrict_unpaid_reports ? '1' : '0');
         Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor);
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent);
 
+        $hasCustomInvoice = auth()->user()->company->hasSubscriptionFeature('custom_invoice');
+        if (!$hasCustomInvoice) {
+            if (is_object($this->new_invoice_header_image) || is_object($this->new_invoice_footer_image)) {
+                session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
+                $this->new_invoice_header_image = null;
+                $this->new_invoice_footer_image = null;
+                return;
+            }
+        }
+
+        if (is_object($this->new_invoice_header_image) && method_exists($this->new_invoice_header_image, 'store')) {
+            $this->invoice_header_image = $this->new_invoice_header_image->store('invoice-headers');
+            $this->new_invoice_header_image = null;
+        }
+
+        if (is_object($this->new_invoice_footer_image) && method_exists($this->new_invoice_footer_image, 'store')) {
+            $this->invoice_footer_image = $this->new_invoice_footer_image->store('invoice-footers');
+            $this->new_invoice_footer_image = null;
+        }
+
+        Configuration::setFor('invoice_show_header', $this->invoice_show_header ? '1' : '0');
+        Configuration::setFor('invoice_show_footer', $this->invoice_show_footer ? '1' : '0');
+        Configuration::setFor('invoice_header_image', $this->invoice_header_image);
+        Configuration::setFor('invoice_footer_image', $this->invoice_footer_image);
+        Configuration::setFor('invoice_margin_top', $this->invoice_margin_top);
+        Configuration::setFor('invoice_margin_bottom', $this->invoice_margin_bottom);
+        Configuration::setFor('invoice_header_height', $this->invoice_header_height);
+        Configuration::setFor('invoice_footer_height', $this->invoice_footer_height);
+
         $this->invoiceSaved = true;
+    }
+
+    public function removeInvoiceHeaderImage()
+    {
+        $this->authorize('edit settings');
+        if ($this->invoice_header_image) {
+            Configuration::setFor('invoice_header_image', '');
+            $this->invoice_header_image = null;
+        }
+    }
+
+    public function removeInvoiceFooterImage()
+    {
+        $this->authorize('edit settings');
+        if ($this->invoice_footer_image) {
+            Configuration::setFor('invoice_footer_image', '');
+            $this->invoice_footer_image = null;
+        }
     }
 
     // ==========================================

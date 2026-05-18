@@ -67,11 +67,11 @@
                     </div>
 
                     <div class="reveal delay-2 hidden lg:block relative">
-                        <div class="relative w-full aspect-[4/3] bg-zinc-100 rounded-[2rem] border border-zinc-200 shadow-2xl overflow-hidden p-2">
+                        <div class="relative w-full bg-zinc-100 rounded-[2rem] border border-zinc-200 shadow-2xl p-2">
                              @if($heroImage)
-                                 <img src="{{ secure_storage_url($heroImage) }}" alt="{{ $heroTitle }} Dashboard" class="w-full h-full object-cover rounded-xl shadow-inner">
+                                 <img src="{{ secure_storage_url($heroImage) }}" alt="{{ $heroTitle }} Dashboard" class="w-full h-auto object-contain rounded-xl shadow-inner">
                              @else
-                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="SWS Pathology Dashboard Mockup" class="w-full h-full object-cover rounded-xl grayscale-[20%]">
+                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200" alt="SWS Pathology Dashboard Mockup" class="w-full aspect-[4/3] object-cover rounded-xl grayscale-[20%]">
                              @endif
                         </div>
                     </div>
