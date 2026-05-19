@@ -265,8 +265,6 @@ class DoctorManager extends Component
 
         if ($myBranchId && !$shareDoctors) {
             $query->where('branch_id', $myBranchId);
-        } elseif ($myBranchId && $restrictAccess) {
-            $query->where('branch_id', $myBranchId);
         }
 
         $doctors = $query->with('doctorProfile') 

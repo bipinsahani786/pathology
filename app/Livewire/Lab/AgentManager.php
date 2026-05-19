@@ -255,8 +255,6 @@ class AgentManager extends Component
 
         if ($myBranchId && !$shareAgents) {
             $query->where('branch_id', $myBranchId);
-        } elseif ($myBranchId && $restrictAccess) {
-            $query->where('branch_id', $myBranchId);
         }
 
         $agents = $query->with('agentProfile') 
