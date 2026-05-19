@@ -158,6 +158,23 @@
                                                                    wire:model.live="selectedTests" value="{{ $itemId }}">
                                                         @endif
                                                         <i class="feather-activity text-muted me-2"></i>{{ $testName }}
+                                                        @php
+                                                            $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
+                                                            $dlcSum = 0;
+                                                            $hasDlc = false;
+                                                            foreach($params as $p) {
+                                                                $code = strtoupper($p['short_code'] ?? '');
+                                                                if(in_array($code, $dlcCodes)) {
+                                                                    $hasDlc = true;
+                                                                    $dlcSum += (float)($results[$p['key']] ?? 0);
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        @if($hasDlc)
+                                                            <span class="ms-2 badge {{ abs($dlcSum - 100) < 0.01 ? 'bg-success' : 'bg-danger' }} fs-10" title="NEU + LYM + MONO + EOS + BASO">
+                                                                DLC Sum: {{ round($dlcSum, 2) }}%
+                                                            </span>
+                                                        @endif
                                                         @if(!($testItem->labTest->is_package ?? false))
                                                             <span class="ms-2 badge {{ $isBillItemComplete ? 'bg-success' : 'bg-warning text-dark' }} fs-9">
                                                                 {{ $isBillItemComplete ? 'Completed' : 'Pending' }}
@@ -178,6 +195,17 @@
                                                 </div>
                                             </td>
                                         </tr>
+
+                                        @if($hasDlc && abs($dlcSum - 100) > 0.01)
+                                            <tr>
+                                                <td colspan="5" class="bg-soft-danger py-2 px-3 border-bottom">
+                                                    <div class="d-flex align-items-center text-danger fs-12 fw-bold">
+                                                        <i class="feather-alert-triangle me-2 fs-14"></i>
+                                                        <span>DLC Sum Alert: Neutrophils + Lymphocytes + Monocytes + Eosinophils + Basophils is {{ round($dlcSum, 2) }}%. It must be exactly 100% before you can mark this test complete or approve the report!</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endif
 
                                         @foreach($params as $p)
                                              @php

@@ -25,6 +25,7 @@ use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Lab\ReportManager;
 use App\Livewire\Lab\ResultEntryManager;
 use App\Livewire\Lab\DepartmentManager;
+use App\Livewire\Lab\PartnerCommissionManager;
 use App\Livewire\Partner\PartnerDashboard;
 use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
@@ -187,9 +188,11 @@ Route::middleware(['auth'])->group(function () {
 
             // Doctors
             Route::get('/doctors', DoctorManager::class)->name('doctors');
+            Route::get('/doctors/{partner_id}/commissions', PartnerCommissionManager::class)->name('doctor.commissions');
 
             //Agent
             Route::get('/agents', AgentManager::class)->name('agents');
+            Route::get('/agents/{partner_id}/commissions', PartnerCommissionManager::class)->name('agent.commissions');
 
             // Settlements (Partner Commissions)
             Route::get('/settlements', SettlementManager::class)->name('settlements');

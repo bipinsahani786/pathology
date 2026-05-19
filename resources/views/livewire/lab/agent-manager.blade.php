@@ -121,6 +121,11 @@
                                                     <i class="feather-trash-2 fs-14"></i>
                                                 </button>
                                             @endcan
+                                            @can('edit agents')
+                                                <a href="{{ route('lab.agent.commissions', $agent->id) }}" wire:navigate class="btn btn-sm btn-light border text-success shadow-sm rounded align-center-btn transition-all hover-success" title="Set Test Commissions">
+                                                    <i class="feather-percent fs-14"></i>
+                                                </a>
+                                            @endcan
                                             @if(config('features.impersonation', true) && auth()->user()->hasAnyRole(['super_admin', 'lab_admin']))
                                                 <a href="{{ route('impersonate.start', $agent->id) }}" class="btn btn-sm btn-light border text-dark shadow-sm rounded align-center-btn transition-all hover-dark" title="Login As {{ $agent->name }}">
                                                     <i class="feather-user-check fs-14"></i>
@@ -277,6 +282,7 @@
         }
 
         .hover-primary:hover { background-color: #3b71ca !important; color: #fff !important; border-color: #3b71ca !important; }
+        .hover-success:hover { background-color: #198754 !important; color: #fff !important; border-color: #198754 !important; }
         .hover-danger:hover { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }
 
         .align-center-btn {

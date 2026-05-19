@@ -851,6 +851,31 @@
                             </div>
                             
                             <hr class="my-3">
+                            <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Report Layout Options</div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold fs-11">Page Break Style</label>
+                                    <select class="form-select form-select-sm" wire:model="report_page_break_style">
+                                        <option value="continuous">Continuous</option>
+                                        <option value="test_per_page">Test Per Page</option>
+                                        <option value="department_per_page">Department Per Page</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold fs-11">Repeat Dept Header (Continuous)</label>
+                                    <div class="form-check form-switch mt-1">
+                                        <input class="form-check-input" type="checkbox" wire:model="report_show_dept_header_always" style="width:2.5em;height:1.25em;">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold fs-11">Show Interpretation</label>
+                                    <div class="form-check form-switch mt-1">
+                                        <input class="form-check-input" type="checkbox" wire:model="report_show_interpretation" style="width:2.5em;height:1.25em;">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
                             <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Page Spacing (pixels)</div>
                             
                             <div class="row g-3 mb-3">
