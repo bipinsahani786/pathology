@@ -69,13 +69,11 @@
             @endcan
 
             @role('lab_admin|super_admin')
-            @if(\App\Models\Configuration::getFor('restrict_branch_access', '1') === '1')
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'branch')" class="nav-link {{ $activeTab === 'branch' ? 'active' : '' }}">
                     <i class="feather-git-merge me-1"></i> Branch Controls
                 </button>
             </li>
-            @endif
             @endrole
         </ul>
 

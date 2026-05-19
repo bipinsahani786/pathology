@@ -95,8 +95,9 @@ class PosManager extends Component
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
 
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !$user->hasRole('branch_admin');
         
         if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'branch')) && $restrictAccess) {
             $this->branch_id = $user->branch_id;
@@ -1109,8 +1110,9 @@ class PosManager extends Component
         $activeBranchId = session('active_branch_id', 'all');
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !auth()->user()->hasRole('branch_admin');
 
         $myBranchId = ($isGlobalAdmin || !$restrictAccess) 
             ? ($activeBranchId === 'all' ? null : $activeBranchId) 
