@@ -158,6 +158,18 @@
                                                     </ul>
                                                 </div>
 
+                                                <!-- View Summary -->
+                                                <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-outline-info px-2 py-1 fs-11" title="View Summary">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+
+                                                <!-- Edit Invoice (Allowed if not Cancelled or Processing/Ready) -->
+                                                @if($inv->status !== 'Cancelled' && !in_array($inv->sample_status, ['Processing', 'Ready']))
+                                                    <a href="{{ route('lab.invoice.edit', $inv->id) }}" wire:navigate class="btn btn-sm btn-outline-warning px-2 py-1 fs-11" title="Edit Invoice">
+                                                        <i class="feather-edit-2"></i>
+                                                    </a>
+                                                @endif
+
                                                 <!-- Invoice & Barcodes Print -->
                                                 <div class="dropdown">
                                                     <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2 py-1 fs-11"
