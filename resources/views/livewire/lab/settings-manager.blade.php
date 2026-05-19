@@ -17,7 +17,7 @@
 
         {{-- Tab Navigation --}}
         <ul class="nav nav-tabs mb-4" role="tablist">
-            @role('lab_admin|super_admin')
+            @can('view settings')
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'general')" class="nav-link {{ $activeTab === 'general' ? 'active' : '' }}">
                     <i class="feather-settings me-1"></i> General
@@ -58,7 +58,7 @@
                     <i class="feather-maximize me-1"></i> Barcode Settings
                 </button>
             </li>
-            @endrole
+            @endcan
 
             @can('view staff_roles')
             <li class="nav-item">
@@ -68,13 +68,13 @@
             </li>
             @endcan
 
-            @role('lab_admin|super_admin')
+            @can('view settings')
             <li class="nav-item">
                 <button wire:click="$set('activeTab', 'branch')" class="nav-link {{ $activeTab === 'branch' ? 'active' : '' }}">
                     <i class="feather-git-merge me-1"></i> Branch Controls
                 </button>
             </li>
-            @endrole
+            @endcan
         </ul>
 
         {{-- ═══════════════════════════════════════════════════════ --}}
