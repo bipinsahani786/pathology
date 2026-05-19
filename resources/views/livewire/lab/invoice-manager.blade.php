@@ -19,9 +19,9 @@
             </ul>
         </div>
         <div class="page-header-right ms-auto">
-            @can('create pos')
+            @if(auth()->user()->can('create pos') || auth()->user()->collection_center_id)
                 <a href="{{ route('lab.pos') }}" wire:navigate class="btn btn-primary"><i class="feather-plus me-1"></i>New Bill</a>
-            @endcan
+            @endif
         </div>
     </div>
 
@@ -257,10 +257,10 @@
                                                 $c = $sampleStatusColors[$inv->sample_status] ?? 'bg-soft-secondary text-secondary';
                                             @endphp
                                             <button class="btn btn-sm dropdown-toggle py-0 px-2 fw-bold fs-10 {{ $c }}"
-                                                type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" @cannot('edit invoices') disabled @endcannot>
+                                                type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" @if(!auth()->user()->can('edit invoices') && !auth()->user()->collection_center_id) disabled @endif>
                                                 {{ $inv->sample_status ?? 'Pending' }}
                                             </button>
-                                            @can('edit invoices')
+                                            @if(auth()->user()->can('edit invoices') || auth()->user()->collection_center_id)
                                                 <ul class="dropdown-menu shadow-lg border-0 fs-11 p-1">
                                                     <li class="px-2 py-1 border-bottom mb-1 bg-light rounded-top"><small class="fw-bold text-muted text-uppercase">Update Sample Status</small></li>
                                                     @foreach(['Pending', 'Collected', 'Dispatched', 'Received', 'Processing', 'Ready'] as $st)
@@ -276,12 +276,12 @@
                                                         </li>
                                                     @endforeach
                                                 </ul>
-                                            @endcan
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
-                                            @can('edit invoices')
+                                            @if(auth()->user()->can('edit invoices') || auth()->user()->collection_center_id)
                                                 <a href="{{ route('lab.invoice.edit', $inv->id) }}" wire:navigate
                                                     class="btn btn-sm btn-outline-warning px-2" title="Edit Invoice">
                                                     <i class="feather-edit-2 fs-12"></i>
@@ -294,7 +294,7 @@
                                                     class="btn btn-sm btn-outline-success px-2" title="Enter Results">
                                                     <i class="feather-edit-3 fs-12"></i>
                                                 </a>
-                                            @endcan
+                                            @endif
                                                 <button class="btn btn-sm btn-outline-success dropdown-toggle px-2"
                                                     type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
                                                     <i class="bi bi-whatsapp fs-12"></i>
@@ -334,14 +334,14 @@
 
                                             </div>
                                             @if($inv->status !== 'Cancelled' && !in_array($inv->sample_status, ['Processing', 'Ready']))
-                                                @can('delete invoices')
+                                                @if(auth()->user()->can('delete invoices') || auth()->user()->collection_center_id)
                                                     <button 
                                                         onclick="confirm('Are you sure you want to CANCEL this invoice? This action will VOID the invoice and REVERSE all credited commissions in Doctor/Agent wallets.') || event.stopImmediatePropagation()"
                                                         wire:click="cancelInvoice({{ $inv->id }})"
                                                         class="btn btn-sm btn-outline-danger px-2" title="Cancel Invoice">
                                                         <i class="feather-x-circle fs-12"></i>
                                                     </button>
-                                                @endcan
+                                                @endif
                                             @endif
                                         </div>
                                     </td>

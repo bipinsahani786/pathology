@@ -28,7 +28,9 @@ class InvoiceManager extends Component
 
     public function mount()
     {
-        $this->authorize('view invoices');
+        if (!auth()->user()->can('view invoices') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
     }
 
     // Reset pagination when filters change
@@ -203,8 +205,13 @@ class InvoiceManager extends Component
 
     public function updateSampleStatus($invoiceId, $status)
     {
-        $this->authorize('edit invoices');
+        if (!auth()->user()->can('edit invoices') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $invoice = Invoice::findOrFail($invoiceId);
+        if (auth()->user()->collection_center_id && $invoice->collection_center_id !== auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
 
         $invoice->update([
             'sample_status' => $status,
@@ -217,8 +224,13 @@ class InvoiceManager extends Component
     public function cancelInvoice($invoiceId)
     {
         try {
-            $this->authorize('delete invoices');
+            if (!auth()->user()->can('delete invoices') && !auth()->user()->collection_center_id) {
+                abort(403, 'Unauthorized.');
+            }
             $invoice = Invoice::findOrFail($invoiceId);
+            if (auth()->user()->collection_center_id && $invoice->collection_center_id !== auth()->user()->collection_center_id) {
+                abort(403, 'Unauthorized.');
+            }
             $result = $invoice->cancel();
 
             if ($result['status']) {

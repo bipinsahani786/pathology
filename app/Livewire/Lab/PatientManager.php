@@ -18,7 +18,9 @@ class PatientManager extends Component
     
     public function mount()
     {
-        $this->authorize('view patients');
+        if (!auth()->user()->can('view patients') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
     }
 
     // State variables

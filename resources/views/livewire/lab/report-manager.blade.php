@@ -193,11 +193,11 @@
                                                         </div>
                                                     @endif
 
-                                                    @can('edit invoices')
+                                                    @if(auth()->user()->can('edit invoices') || (auth()->user()->collection_center_id && $invoice->collection_center_id === auth()->user()->collection_center_id))
                                                         <a href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate class="btn btn-sm btn-outline-warning py-1 px-2" title="Modify Invoice">
                                                             <i class="feather-edit-3 fs-12"></i>
                                                         </a>
-                                                    @endcan
+                                                    @endif
                                                 </div>
                                             @else
                                                 <div class="dropdown">
@@ -208,9 +208,9 @@
                                                         @can('edit reports')
                                                             <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
                                                         @endcan
-                                                        @can('edit invoices')
+                                                        @if(auth()->user()->can('edit invoices') || (auth()->user()->collection_center_id && $invoice->collection_center_id === auth()->user()->collection_center_id))
                                                             <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
-                                                        @endcan
+                                                        @endif
                                                         <li><hr class="dropdown-divider my-1"></li>
                                                         <li class="dropdown-header fw-bold fs-10 text-uppercase text-muted px-3 py-2">Print All Tests</li>
                                                         <li><button type="button" class="dropdown-item fs-12 text-primary py-2 text-nowrap" wire:click="printReport({{ $invoice->id }}, 1)"><i class="feather-file-text me-2"></i> With Header</button></li>

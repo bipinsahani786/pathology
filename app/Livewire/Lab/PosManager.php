@@ -86,7 +86,7 @@ class PosManager extends Component
         $user = auth()->user();
 
         // Authorization: Allow specific granular permission to access POS
-        if (!$user->can('create pos')) {
+        if (!$user->can('create pos') && !$user->collection_center_id) {
             abort(403, 'Unauthorized access to POS.');
         }
 
@@ -291,7 +291,9 @@ class PosManager extends Component
     // ==========================================
     public function purchaseMembership()
     {
-        $this->authorize('create marketing');
+        if (!auth()->user()->can('create marketing') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         if (!$this->selectedPatient) {
             $this->modalError = 'Select a patient first.';
@@ -537,7 +539,9 @@ class PosManager extends Component
 
     public function quickAddPatient()
     {
-        $this->authorize($this->editingPatientId ? 'edit patients' : 'create patients');
+        if (!auth()->user()->can($this->editingPatientId ? 'edit patients' : 'create patients') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
@@ -646,7 +650,9 @@ class PosManager extends Component
 
     public function quickAddDoctor()
     {
-        $this->authorize($this->editingDoctorId ? 'edit doctors' : 'create doctors');
+        if (!auth()->user()->can($this->editingDoctorId ? 'edit doctors' : 'create doctors') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_doc_name' => 'required|string|max:255',
@@ -721,7 +727,9 @@ class PosManager extends Component
 
     public function quickAddAgent()
     {
-        $this->authorize($this->editingAgentId ? 'edit agents' : 'create agents');
+        if (!auth()->user()->can($this->editingAgentId ? 'edit agents' : 'create agents') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_agent_name' => 'required|string|max:255',
@@ -784,7 +792,9 @@ class PosManager extends Component
     // ==========================================
     public function generateBill()
     {
-        $this->authorize('create pos');
+        if (!auth()->user()->can('create pos') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         if (!$this->selectedPatient) {
             session()->flash('error', 'Select a patient.');
             return;

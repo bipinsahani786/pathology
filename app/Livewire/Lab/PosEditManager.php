@@ -69,13 +69,19 @@ class PosEditManager extends Component
 
     public function mount($id)
     {
-        $this->authorize('edit pos');
+        if (!auth()->user()->can('edit pos') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $companyId = auth()->user()->company_id;
         $this->invoiceId = $id;
 
         $invoice = Invoice::where('company_id', $companyId)
             ->with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile'])
             ->findOrFail($id);
+
+        if (auth()->user()->collection_center_id && $invoice->collection_center_id !== auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized to edit this invoice.');
+        }
 
         $this->invoice = $invoice;
 
@@ -404,7 +410,9 @@ class PosEditManager extends Component
 
     public function purchaseMembership()
     {
-        $this->authorize('create marketing');
+        if (!auth()->user()->can('create marketing') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         if (!$this->selectedMembershipId)
             return;
         $membership = Membership::find($this->selectedMembershipId);
@@ -538,7 +546,9 @@ class PosEditManager extends Component
 
     public function quickAddPatient()
     {
-        $this->authorize($this->editingPatientId ? 'edit patients' : 'create patients');
+        if (!auth()->user()->can($this->editingPatientId ? 'edit patients' : 'create patients') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
@@ -638,7 +648,9 @@ class PosEditManager extends Component
 
     public function quickAddDoctor()
     {
-        $this->authorize($this->editingDoctorId ? 'edit doctors' : 'create doctors');
+        if (!auth()->user()->can($this->editingDoctorId ? 'edit doctors' : 'create doctors') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_doc_name' => 'required|string|max:255',
@@ -706,7 +718,9 @@ class PosEditManager extends Component
 
     public function quickAddAgent()
     {
-        $this->authorize($this->editingAgentId ? 'edit agents' : 'create agents');
+        if (!auth()->user()->can($this->editingAgentId ? 'edit agents' : 'create agents') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->modalError = '';
         $this->validate([
             'new_agent_name' => 'required|string|max:255',
@@ -784,7 +798,13 @@ class PosEditManager extends Component
     // ==========================================
     public function updateBill()
     {
-        $this->authorize('edit pos');
+        if (!auth()->user()->can('edit pos') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
+        $invoice = Invoice::findOrFail($this->invoiceId);
+        if (auth()->user()->collection_center_id && $invoice->collection_center_id !== auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized to edit this invoice.');
+        }
         if (!$this->selectedPatient) {
             session()->flash('error', 'Select a patient.');
             return;
@@ -1053,8 +1073,13 @@ class PosEditManager extends Component
     public function cancelInvoice()
     {
         try {
-            $this->authorize('delete pos');
+            if (!auth()->user()->can('delete pos') && !auth()->user()->collection_center_id) {
+                abort(403, 'Unauthorized.');
+            }
             $invoice = Invoice::findOrFail($this->invoiceId);
+            if (auth()->user()->collection_center_id && $invoice->collection_center_id !== auth()->user()->collection_center_id) {
+                abort(403, 'Unauthorized to cancel this invoice.');
+            }
             $result = $invoice->cancel();
 
             if ($result['status']) {

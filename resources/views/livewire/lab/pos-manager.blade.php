@@ -127,9 +127,9 @@
                                                     onclick="this.select()"
                                                     placeholder="Phone / Name">
                                             </div>
-                                            @can('create patients')
+                                            @if(auth()->user()->can('create patients') || auth()->user()->collection_center_id)
                                                 <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary px-2" title="New Patient"><i class="feather-user-plus fs-12"></i></button>
-                                            @endcan
+                                            @endif
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($patients) && count($patients) > 0)
@@ -150,9 +150,9 @@
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <i class="feather-user-x text-muted fs-3 d-block mb-1"></i>
                                                     <div class="fw-bold text-muted fs-11">No patient found for "{{ $patientSearch }}"</div>
-                                                    @can('create patients')
+                                                    @if(auth()->user()->can('create patients') || auth()->user()->collection_center_id)
                                                         <button wire:click="$set('isPatientModalOpen', true)" @click="open = false" class="btn btn-sm btn-primary mt-2 fw-bold fs-10"><i class="feather-user-plus me-1"></i>Register New</button>
-                                                    @endcan
+                                                    @endif
                                                 </div>
                                             @endif
                                         </div>
@@ -206,9 +206,9 @@
                                                     onclick="this.select()"
                                                     placeholder="Doctor Name / Phone">
                                             </div>
-                                            @can('create doctors')
+                                            @if(auth()->user()->can('create doctors') || auth()->user()->collection_center_id)
                                                 <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success px-2" title="New Doctor"><i class="feather-plus fs-12"></i></button>
-                                            @endcan
+                                            @endif
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($doctors) && count($doctors) > 0)
@@ -223,9 +223,9 @@
                                             @elseif(!empty($doctorSearch))
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No doctor found for "{{ $doctorSearch }}"</div>
-                                                    @can('create doctors')
+                                                    @if(auth()->user()->can('create doctors') || auth()->user()->collection_center_id)
                                                         <button wire:click="$set('isDoctorModalOpen', true)" @click="open = false" class="btn btn-sm btn-success mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
-                                                    @endcan
+                                                    @endif
                                                 </div>
                                             @endif
                                         </div>
@@ -274,9 +274,9 @@
                                                 @focus="open = true"
                                                 onclick="this.select()"
                                                 placeholder="Agent Name / Phone">
-                                            @can('create agents')
+                                            @if(auth()->user()->can('create agents') || auth()->user()->collection_center_id)
                                                 <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning px-2" title="New Agent"><i class="feather-plus fs-12"></i></button>
-                                            @endcan
+                                            @endif
                                         </div>
                                         <div x-show="open" x-transition.opacity.duration.150ms style="display:none;">
                                             @if (!empty($agents) && count($agents) > 0)
@@ -291,9 +291,9 @@
                                             @elseif(!empty($agentSearch))
                                                 <div class="position-absolute shadow-lg z-3 rounded-3 search-dropdown p-3 text-center" style="top:100%;left:0;">
                                                     <div class="fw-bold text-muted fs-11"><i class="feather-user-x me-1"></i>No agent found for "{{ $agentSearch }}"</div>
-                                                    @can('create agents')
+                                                    @if(auth()->user()->can('create agents') || auth()->user()->collection_center_id)
                                                         <button wire:click="$set('isAgentModalOpen', true)" @click="open = false" class="btn btn-sm btn-warning mt-1 fw-bold fs-10"><i class="feather-plus me-1"></i>Add New</button>
-                                                    @endcan
+                                                    @endif
                                                 </div>
                                             @endif
                                         </div>
@@ -566,12 +566,11 @@
                         @elseif($selectedPatient)
                             <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 border" style="background:rgba(255,193,7,0.1);border-color:rgba(255,193,7,0.3)!important;">
                                 <span class="fw-bold fs-11" style="color:#8a6d00;"><i class="feather-award me-1 fs-10"></i>No Membership</span>
-                                @can('create marketing')
+                                @if(auth()->user()->can('create marketing') || auth()->user()->collection_center_id)
                                     <button wire:click="$set('isMembershipModalOpen', true)" class="btn btn-sm btn-warning fw-bold fs-10 px-2 py-1" style="color:#000;"><i class="feather-plus fs-10 me-1"></i>Buy</button>
-                                @endcan
-                                @cannot('create marketing')
+                                @else
                                     <span class="badge bg-soft-secondary text-secondary fs-10 px-2 py-1">Contact Admin</span>
-                                @endcannot
+                                @endif
                             </div>
                         @endif
 

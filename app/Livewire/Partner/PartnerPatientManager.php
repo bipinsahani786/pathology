@@ -6,11 +6,26 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Models\PatientProfile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class PartnerPatientManager extends Component
 {
     use WithPagination;
+
+    // Patient profile edit state variables
+    public $isModalOpen = false;
+    public $user_id = null;
+    public $name;
+    public $phone;
+    public $email;
+    public $age;
+    public $age_type = 'Years';
+    public $gender = 'Male';
+    public $blood_group;
+    public $address;
 
     public $search = '';
     public $perPage = 10;
@@ -45,7 +60,7 @@ class PartnerPatientManager extends Component
     public function render()
     {
         $user = Auth::user();
-        $query = Invoice::with(['patient', 'items.labTest', 'testReport'])
+        $query = Invoice::with(['patient.activeMembership.membership', 'items.labTest', 'testReport'])
             ->where('status', '!=', 'Cancelled');
 
         if ($this->role === 'Doctor') {
@@ -134,5 +149,87 @@ class PartnerPatientManager extends Component
         ]);
 
         session()->flash('message', 'Sample status updated to ' . $status);
+    }
+
+    public function edit($id)
+    {
+        $this->resetFields();
+        $user = User::with('patientProfile')->findOrFail($id);
+        
+        $this->user_id = $user->id;
+        $this->name = $user->name;
+        $this->phone = $user->phone;
+        $this->email = $user->email;
+        
+        if ($user->patientProfile) {
+            $this->age = $user->patientProfile->age;
+            $this->age_type = $user->patientProfile->age_type;
+            $this->gender = $user->patientProfile->gender;
+            $this->blood_group = $user->patientProfile->blood_group;
+            $this->address = $user->patientProfile->address;
+        }
+
+        $this->isModalOpen = true;
+    }
+
+    public function store()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'phone' => [
+                'nullable',
+                'numeric',
+                'digits:10',
+                Rule::unique('users', 'phone')->ignore($this->user_id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->ignore($this->user_id),
+            ],
+            'age' => 'required|numeric|min:1|max:150',
+            'age_type' => 'required|in:Years,Months,Days',
+            'gender' => 'required|in:Male,Female,Other',
+            'blood_group' => 'nullable|string|max:5',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $user = User::findOrFail($this->user_id);
+            $user->update([
+                'name' => $this->name,
+                'phone' => $this->phone,
+                'email' => $this->email,
+            ]);
+
+            PatientProfile::where('user_id', $this->user_id)->update([
+                'age' => $this->age,
+                'age_type' => $this->age_type,
+                'gender' => $this->gender,
+                'blood_group' => $this->blood_group,
+                'address' => $this->address,
+            ]);
+
+            session()->flash('message', 'Patient details updated successfully.');
+            DB::commit();
+            $this->closeModal();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error saving patient: ' . $e->getMessage());
+        }
+    }
+
+    public function resetFields()
+    {
+        $this->reset(['user_id', 'name', 'phone', 'email', 'age', 'blood_group', 'address']);
+        $this->age_type = 'Years';
+        $this->gender = 'Male';
+        $this->resetValidation();
+    }
+
+    public function closeModal()
+    {
+        $this->isModalOpen = false;
+        $this->resetFields();
     }
 }
