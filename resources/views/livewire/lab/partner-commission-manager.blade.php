@@ -34,6 +34,8 @@
                                 <thead>
                                     <tr>
                                         <th>Test/Package Name</th>
+                                        <th>Price (MRP)</th>
+                                        <th>B2B Price</th>
                                         <th>Type</th>
                                         <th>Commission Type</th>
                                         <th>Commission Value</th>
@@ -46,6 +48,12 @@
                                             <td>
                                                 <strong>{{ $test->name }}</strong><br>
                                                 <small class="text-muted">{{ $test->test_code }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-dark">₹{{ number_format($test->mrp, 2) }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">₹{{ number_format($test->b2b_price, 2) }}</span>
                                             </td>
                                             <td>
                                                 @if($test->is_package)
