@@ -23,8 +23,16 @@
         
         @if (session()->has('message'))
             <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
-                <i class="feather-check-circle fs-4 me-2"></i>
+                <i class="feather-check-circle fs-4 me-2 text-success"></i>
                 <strong>{{ session('message') }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
+                <i class="feather-alert-triangle fs-4 me-2 text-danger"></i>
+                <strong>{{ session('error') }}</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
