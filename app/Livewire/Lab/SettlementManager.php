@@ -394,6 +394,10 @@ class SettlementManager extends Component
             'partners_with_pending' => 0,
         ];
 
+        $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
+        $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
+        $shareFlag = ($this->partnerType === 'Doctor') ? $shareDoctors : $shareAgents;
+
         // Global Analytics Query - Filtered by partner presence
         $pendingBase = Invoice::where('company_id', $companyId)
             ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
@@ -401,6 +405,13 @@ class SettlementManager extends Component
             ->where('status', '!=', 'Cancelled')
             ->whereNotNull($idField) // Ensure it belongs to a partner of current type
             ->where($settledField, false);
+
+        if ($myBranchId && !$shareFlag && $this->partnerType !== 'Collection Center') {
+            $relation = ($this->partnerType === 'Doctor') ? 'doctor' : 'agent';
+            $pendingBase->whereHas($relation, function($q) use ($myBranchId) {
+                $q->where('branch_id', $myBranchId);
+            });
+        }
 
         $stats['total_pending'] = (clone $pendingBase)->sum($commField);
         
@@ -413,9 +424,14 @@ class SettlementManager extends Component
                 })
                 ->count();
         } else {
-            $stats['partners_with_pending'] = User::role(strtolower($this->partnerType))
-                ->where('company_id', $companyId)
-                ->whereHas('invoicesAs'.$this->partnerType, function($q) use ($settledField, $myBranchId) {
+            $statsQuery = User::role(strtolower($this->partnerType))
+                ->where('company_id', $companyId);
+
+            if ($myBranchId && !$shareFlag) {
+                $statsQuery->where('branch_id', $myBranchId);
+            }
+
+            $stats['partners_with_pending'] = $statsQuery->whereHas('invoicesAs'.$this->partnerType, function($q) use ($settledField, $myBranchId) {
                     $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
                         ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
                 })
@@ -452,8 +468,6 @@ class SettlementManager extends Component
                 ->where('company_id', $companyId);
 
             if ($myBranchId && !$shareFlag) {
-                $query->where('branch_id', $myBranchId);
-            } elseif ($myBranchId && $restrictAccess) {
                 $query->where('branch_id', $myBranchId);
             }
 
