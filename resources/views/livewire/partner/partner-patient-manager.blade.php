@@ -233,9 +233,20 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <!-- <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Case Summary">
-                                                    <i class="feather-eye fs-14"></i>
-                                                </a> -->
+                                            @if($inv->patient && $inv->patient->activeMembership)
+                                                <a href="{{ route('lab.membership.card.print', $inv->patient->activeMembership->id) }}" target="_blank"
+                                                    class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;" title="Print Membership Card">
+                                                    <i class="feather-credit-card fs-14"></i>
+                                                </a>
+                                            @endif
+                                            @if($inv->patient)
+                                                <button wire:click="edit({{ $inv->patient->id }})"
+                                                    class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+                                                    style="width: 32px; height: 32px;" title="Edit Patient Profile">
+                                                    <i class="feather-edit-2 fs-14"></i>
+                                                </button>
+                                            @endif
                                             @if($inv->sample_status == 'Ready')
                                                 <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank"
                                                     class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
@@ -344,6 +355,101 @@
             </div>
         </div>
     </div>
+
+    @if ($isModalOpen)
+        <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+        <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+
+                    <div class="modal-header bg-light border-bottom p-4">
+                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
+                                <i class="feather-user-plus fs-5"></i>
+                            </div>
+                            Update Patient Details
+                        </h5>
+                        <button type="button" wire:click="closeModal" class="btn-close shadow-none"></button>
+                    </div>
+
+                    <form wire:submit.prevent="store">
+                        <div class="modal-body p-4 bg-white">
+                            <div class="row g-4">
+                                <div class="col-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Basic Information</h6></div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Full Name *</label>
+                                    <input type="text" class="form-control fw-medium text-dark" wire:model="name" placeholder="e.g. Rahul Kumar">
+                                    @error('name') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Mobile Number</label>
+                                    <input type="number" class="form-control" wire:model="phone" placeholder="10-digit mobile number">
+                                    @error('phone') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="col-12 mt-4"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Demographics & Medical</h6></div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Age *</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" wire:model="age" placeholder="Age">
+                                        <select class="form-select bg-light" wire:model="age_type" style="max-width: 90px;">
+                                            <option value="Years">Yrs</option>
+                                            <option value="Months">Mos</option>
+                                            <option value="Days">Dys</option>
+                                        </select>
+                                    </div>
+                                    @error('age') <span class="text-danger fs-11 fw-bold d-block">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Gender *</label>
+                                    <select class="form-select" wire:model="gender">
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    @error('gender') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Blood Group</label>
+                                    <select class="form-select" wire:model="blood_group">
+                                        <option value="">Select...</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                    </select>
+                                    @error('blood_group') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label class="form-label fs-12 fw-bold text-muted text-uppercase">Full Address</label>
+                                    <textarea class="form-control" wire:model="address" rows="2" placeholder="Enter complete patient address..."></textarea>
+                                    @error('address') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
+                            <button type="button" wire:click="closeModal" class="btn btn-light border px-4 fw-medium shadow-sm">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm d-flex align-items-center">
+                                <div wire:loading.remove wire:target="store"><i class="feather-save me-2"></i> Save Patient</div>
+                                <div wire:loading wire:target="store"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Saving...</div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <style>
         .bg-soft-primary {

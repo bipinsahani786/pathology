@@ -11,11 +11,11 @@
             </ul>
         </div>
         <div class="page-header-right">
-            @can('create patients')
+            @if(auth()->user()->can('create patients') || auth()->user()->collection_center_id)
                 <button wire:click="create" class="btn btn-primary px-4">
                     <i class="feather-user-plus me-2"></i> Add New Patient
                 </button>
-            @endcan
+            @endif
         </div>
     </div>
 
@@ -103,11 +103,11 @@
                                                     <i class="feather-credit-card fs-14"></i>
                                                 </a>
                                             @endif
-                                            @can('edit patients')
+                                            @if(auth()->user()->can('edit patients') || auth()->user()->collection_center_id)
                                                 <button wire:click="edit({{ $patient->id }})" class="btn btn-sm btn-light border text-primary shadow-sm rounded align-center-btn transition-all hover-primary" title="Edit Profile">
                                                     <i class="feather-edit-2 fs-14"></i>
                                                 </button>
-                                            @endcan
+                                            @endif
                                             @can('delete patients')
                                                 <button wire:click="delete({{ $patient->id }})" wire:confirm="Warning: This will delete the patient and all associated data. Continue?" class="btn btn-sm btn-light border text-danger shadow-sm rounded align-center-btn transition-all hover-danger" title="Delete Patient">
                                                     <i class="feather-trash-2 fs-14"></i>
@@ -243,6 +243,7 @@
         }
 
         .hover-primary:hover { background-color: #3b71ca !important; color: #fff !important; border-color: #3b71ca !important; }
+        .hover-success:hover { background-color: #198754 !important; color: #fff !important; border-color: #198754 !important; }
         .hover-danger:hover { background-color: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }
 
         .align-center-btn {
