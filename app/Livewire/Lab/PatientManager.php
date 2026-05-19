@@ -52,7 +52,9 @@ class PatientManager extends Component
      */
     public function create()
     {
-        $this->authorize('create patients');
+        if (!auth()->user()->can('create patients') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->resetFields();
         $this->isModalOpen = true;
     }
@@ -62,7 +64,9 @@ class PatientManager extends Component
      */
     public function edit($id)
     {
-        $this->authorize('edit patients');
+        if (!auth()->user()->can('edit patients') && !auth()->user()->collection_center_id) {
+            abort(403, 'Unauthorized.');
+        }
         $this->resetFields();
         
         // Eager load the profile to avoid N+1 query issues
@@ -112,9 +116,13 @@ class PatientManager extends Component
         DB::beginTransaction();
         try {
             if ($this->user_id) {
-                $this->authorize('edit patients');
+                if (!auth()->user()->can('edit patients') && !auth()->user()->collection_center_id) {
+                    abort(403, 'Unauthorized.');
+                }
             } else {
-                $this->authorize('create patients');
+                if (!auth()->user()->can('create patients') && !auth()->user()->collection_center_id) {
+                    abort(403, 'Unauthorized.');
+                }
             }
 
             $companyId = auth()->user()->company_id;

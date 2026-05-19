@@ -142,7 +142,7 @@ class PosEditManager extends Component
             // Special case: If this is the Membership Fee line item, extract it to $this->membership_fee and do NOT add to cart!
             if (is_null($item->lab_test_id) && str_starts_with($item->test_name, 'Membership:')) {
                 $this->membership_fee = (float) $item->price;
-                continue; 
+                continue;
             }
 
             $test = LabTest::find($item->lab_test_id);
@@ -206,14 +206,23 @@ class PosEditManager extends Component
 
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !auth()->user()->hasRole('branch_admin');
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && !auth()->user()->hasRole('branch_admin');
 
-        if (!$isGlobalAdmin && $restrictAccess) {
+        if (auth()->user()->collection_center_id) {
+            $this->collection_center_id = auth()->user()->collection_center_id;
+            $cc = CollectionCenter::find($this->collection_center_id);
+            $this->branch_id = $cc->branch_id ?? $this->branch_id;
+
+            $this->cachedCenters = CollectionCenter::where('id', $this->collection_center_id)->get();
+            $this->cachedBranches = Branch::where('id', $this->branch_id)->get();
+        } elseif (!$isGlobalAdmin && $restrictAccess) {
             $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', auth()->user()->branch_id)->where('is_active', true)->get();
             $this->cachedBranches = Branch::where('id', auth()->user()->branch_id)->get();
-            $this->branch_id = auth()->user()->branch_id;
+            if (!$this->branch_id) {
+                $this->branch_id = auth()->user()->branch_id;
+            }
         } else {
             $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('is_active', true)->get();
             $this->cachedBranches = Branch::where('company_id', $companyId)->where('is_active', true)->get();
@@ -438,13 +447,13 @@ class PosEditManager extends Component
     {
         // 1. Recalculate Subtotal from MRP
         $this->subtotal = collect($this->cart)->sum(fn($item) => (float) ($item['mrp'] ?? 0));
-        
+
         // 2. Initial Running Total is the sum of current item prices
         $itemTotal = collect($this->cart)->sum(fn($item) => (float) ($item['price'] ?? 0));
-        
+
         // 3. Implicit Item Discount (e.g. if price was manually reduced per line)
         $itemDiscount = $this->subtotal - $itemTotal;
-        
+
         $running = $itemTotal;
 
         // 4. Membership Discount
@@ -481,10 +490,10 @@ class PosEditManager extends Component
 
         // 7. Net Payable
         $this->net_payable = max($running, 0) + $this->membership_fee;
-        
+
         // 8. Total Savings shown in UI (Implicit + Explicit)
         $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
-        
+
         // 9. Due calculation
         $totalCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
         $this->due_amount = max($this->net_payable - $totalCollected, 0);
@@ -497,7 +506,7 @@ class PosEditManager extends Component
     public function addPaymentRow()
     {
         // Auto-fill the remaining due if possible
-        $currentCollected = collect($this->payments)->sum(fn($p) => (float)($p['amount'] ?? 0));
+        $currentCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
         $remaining = max(0, $this->net_payable - $currentCollected);
 
         $this->payments[] = ['id' => null, 'mode_id' => '', 'amount' => $remaining > 0 ? $remaining : null, 'transaction_id' => ''];
@@ -514,7 +523,8 @@ class PosEditManager extends Component
     // ==========================================
     public function openEditPatientModal()
     {
-        if (!$this->selectedPatient) return;
+        if (!$this->selectedPatient)
+            return;
         $this->editingPatientId = $this->selectedPatient['id'];
         $this->new_name = $this->selectedPatient['name'];
         $this->new_phone = $this->selectedPatient['phone'];
@@ -540,7 +550,7 @@ class PosEditManager extends Component
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
-            
+
             if ($this->editingPatientId) {
                 $user = User::findOrFail($this->editingPatientId);
                 $user->update([
@@ -569,13 +579,13 @@ class PosEditManager extends Component
                 // Generate a unique Patient ID from settings
                 $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
                 $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
-                
+
                 $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
                 $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
-                
+
                 $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
-                
-                while(PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+
+                while (PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
                     $nextPId++;
                     $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
                 }
@@ -608,7 +618,8 @@ class PosEditManager extends Component
 
     public function openEditDoctorModal()
     {
-        if (!$this->selectedDoctor) return;
+        if (!$this->selectedDoctor)
+            return;
         $this->editingDoctorId = $this->selectedDoctor['id'];
         // Remove "Dr. " prefix if exists for the input field
         $name = $this->selectedDoctor['name'];
@@ -638,7 +649,7 @@ class PosEditManager extends Component
         try {
             $companyId = auth()->user()->company_id;
             $finalName = str_starts_with(strtolower($this->new_doc_name), 'dr') ? $this->new_doc_name : 'Dr. ' . $this->new_doc_name;
-            
+
             if ($this->editingDoctorId) {
                 $user = User::findOrFail($this->editingDoctorId);
                 $user->update([
@@ -681,7 +692,8 @@ class PosEditManager extends Component
 
     public function openEditAgentModal()
     {
-        if (!$this->selectedAgent) return;
+        if (!$this->selectedAgent)
+            return;
         $this->editingAgentId = $this->selectedAgent['id'];
         $this->new_agent_name = $this->selectedAgent['name'];
         $this->new_agent_phone = $this->selectedAgent['phone'];
@@ -704,7 +716,7 @@ class PosEditManager extends Component
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
-            
+
             if ($this->editingAgentId) {
                 $user = User::findOrFail($this->editingAgentId);
                 $user->update([
@@ -751,17 +763,17 @@ class PosEditManager extends Component
         $this->authorize('edit settings');
         if (empty($this->new_payment_mode_name))
             return;
-        
+
         $companyId = auth()->user()->company_id;
         PaymentMode::create([
-            'company_id' => $companyId, 
-            'name' => $this->new_payment_mode_name, 
+            'company_id' => $companyId,
+            'name' => $this->new_payment_mode_name,
             'is_active' => true
         ]);
-        
+
         // Clear cache
         \Illuminate\Support\Facades\Cache::forget("payment_modes_{$companyId}");
-        
+
         $this->paymentModesList = PaymentMode::where('company_id', $companyId)->where('is_active', true)->get();
         $this->new_payment_mode_name = '';
         $this->isPaymentModeModalOpen = false;
@@ -790,7 +802,7 @@ class PosEditManager extends Component
         // Validate Payments: If an amount is entered, a mode MUST be selected
         $hasPayment = false;
         foreach ($this->payments as $index => $pay) {
-            $amt = (float)($pay['amount'] ?? 0);
+            $amt = (float) ($pay['amount'] ?? 0);
             if ($amt > 0) {
                 $hasPayment = true;
                 if (empty($pay['mode_id'])) {
@@ -844,7 +856,7 @@ class PosEditManager extends Component
             if ($doctorId) {
                 $userDoc = User::with('doctorProfile')->find($doctorId);
                 $basis = Configuration::getFor('commission_basis_doctor', 'gross');
-                
+
                 $globalCommission = 0;
                 if ($userDoc && $userDoc->doctorProfile) {
                     $globalCommission = (float) $userDoc->doctorProfile->commission_percentage;
@@ -854,19 +866,19 @@ class PosEditManager extends Component
                         $globalCommission = (float) $profile->commission_percentage;
                     }
                 }
-                
+
                 $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $doctorId)->get()->keyBy('lab_test_id');
 
                 foreach ($this->cart as $item) {
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
-                    
+
                     // Apportion the net_payable across items based on cart price ratio to account for discounts fairly
-                    $itemRatio = $cartItemTotal > 0 ? ((float)$item['price'] / $cartItemTotal) : 0;
+                    $itemRatio = $cartItemTotal > 0 ? ((float) $item['price'] / $cartItemTotal) : 0;
                     $effectivePrice = $this->net_payable * $itemRatio;
-                    
+
                     $rule = $testCommissions->get($testId);
-                    
+
                     if ($rule) {
                         if ($rule->commission_type === 'fixed') {
                             $docCommission += (float) $rule->commission_value;
@@ -884,7 +896,7 @@ class PosEditManager extends Component
             if ($agentId) {
                 $userAgent = User::with('agentProfile')->find($agentId);
                 $basis = Configuration::getFor('commission_basis_agent', 'gross');
-                
+
                 $globalCommission = 0;
                 if ($userAgent && $userAgent->agentProfile) {
                     $globalCommission = (float) $userAgent->agentProfile->commission_percentage;
@@ -894,18 +906,18 @@ class PosEditManager extends Component
                         $globalCommission = (float) $profile->commission_percentage;
                     }
                 }
-                
+
                 $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $agentId)->get()->keyBy('lab_test_id');
 
                 foreach ($this->cart as $item) {
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
-                    
-                    $itemRatio = $cartItemTotal > 0 ? ((float)$item['price'] / $cartItemTotal) : 0;
+
+                    $itemRatio = $cartItemTotal > 0 ? ((float) $item['price'] / $cartItemTotal) : 0;
                     $effectivePrice = $this->net_payable * $itemRatio;
-                    
+
                     $rule = $testCommissions->get($testId);
-                    
+
                     if ($rule) {
                         if ($rule->commission_type === 'fixed') {
                             $agentCommission += (float) $rule->commission_value;
@@ -1000,10 +1012,10 @@ class PosEditManager extends Component
                     'valid_until' => now()->addDays($this->active_membership['validity_days'] ?? 365)->toDateString(),
                     'is_active' => true,
                 ]);
-                
+
                 // Also update the invoice to link to this new membership
                 $invoice->update(['patient_membership_id' => $newMembership->id]);
-                
+
                 // And insert as line item
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
@@ -1062,18 +1074,18 @@ class PosEditManager extends Component
         $activeBranchId = session('active_branch_id', 'all');
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !auth()->user()->hasRole('branch_admin');
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && !auth()->user()->hasRole('branch_admin');
 
-        $myBranchId = ($isGlobalAdmin || !$restrictAccess) 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+        $myBranchId = ($isGlobalAdmin || !$restrictAccess)
+            ? ($activeBranchId === 'all' ? null : $activeBranchId)
             : auth()->user()->branch_id;
 
         $sharePatients = \App\Models\Configuration::getFor('branch_share_patients', '1') === '1';
         $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
         $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
-        
+
         $patients = $doctors = $agents = $tests = [];
 
         // Patient suggestions
