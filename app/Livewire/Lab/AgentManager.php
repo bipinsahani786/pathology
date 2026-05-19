@@ -143,9 +143,20 @@ class AgentManager extends Component
                 $companyId = $company->id;
                 // CREATE NEW AGENT
                 
+                $activeBranchId = session('active_branch_id', 'all');
+                $roles = auth()->user()->roles->pluck('name')->toArray();
+                $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                                 collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                                 && !auth()->user()->hasRole('branch_admin');
+
+                $myBranchId = $isGlobalAdmin 
+                    ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+                    : auth()->user()->branch_id;
+
                 // 1. Create the base User record
                 $user = User::create([
                     'company_id' => $companyId,
+                    'branch_id' => $myBranchId,
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null, 
@@ -215,12 +226,40 @@ class AgentManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+        $activeBranchId = session('active_branch_id', 'all');
+        
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !auth()->user()->hasRole('branch_admin');
+
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = auth()->user()->branch_id;
+        }
+
+        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = auth()->user()->branch_id;
+        }
+        
+        $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
 
         // Fetch only users who have an AgentProfile attached to the current company
-        $agents = User::whereHas('agentProfile', function($query) use ($companyId) {
+        $query = User::whereHas('agentProfile', function($query) use ($companyId) {
                 $query->where('company_id', $companyId);
-            })
-            ->with('agentProfile') 
+            });
+
+        if ($myBranchId && !$shareAgents) {
+            $query->where('branch_id', $myBranchId);
+        } elseif ($myBranchId && $restrictAccess) {
+            $query->where('branch_id', $myBranchId);
+        }
+
+        $agents = $query->with('agentProfile') 
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')

@@ -147,11 +147,22 @@ class DoctorManager extends Component
                 $companyId = $company->id;
                 // CREATE NEW DOCTOR
                 
+                $activeBranchId = session('active_branch_id', 'all');
+                $roles = auth()->user()->roles->pluck('name')->toArray();
+                $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                                 collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                                 && !auth()->user()->hasRole('branch_admin');
+
+                $myBranchId = $isGlobalAdmin 
+                    ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+                    : auth()->user()->branch_id;
+
                 // 1. Create the base User record (Prefixing Dr. if not provided can be done here)
                 $finalName = str_starts_with(strtolower($this->name), 'dr') ? $this->name : 'Dr. ' . $this->name;
 
                 $user = User::create([
                     'company_id' => $companyId,
+                    'branch_id' => $myBranchId,
                     'name' => $finalName,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null, 
@@ -225,12 +236,40 @@ class DoctorManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+        $activeBranchId = session('active_branch_id', 'all');
+        
+        $roles = auth()->user()->roles->pluck('name')->toArray();
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !auth()->user()->hasRole('branch_admin');
+
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+             $myBranchId = auth()->user()->branch_id;
+        }
+
+        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
+        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+            $myBranchId = auth()->user()->branch_id;
+        }
+        
+        $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
 
         // Fetch only users who have a DoctorProfile attached to the current company
-        $doctors = User::whereHas('doctorProfile', function($query) use ($companyId) {
+        $query = User::whereHas('doctorProfile', function($query) use ($companyId) {
                 $query->where('company_id', $companyId);
-            })
-            ->with('doctorProfile') 
+            });
+
+        if ($myBranchId && !$shareDoctors) {
+            $query->where('branch_id', $myBranchId);
+        } elseif ($myBranchId && $restrictAccess) {
+            $query->where('branch_id', $myBranchId);
+        }
+
+        $doctors = $query->with('doctorProfile') 
             ->where(function($q) {
                 $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
                   ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')

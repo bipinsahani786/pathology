@@ -99,7 +99,7 @@ class PosManager extends Component
                          collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
                          && !$user->hasRole('branch_admin');
         
-        if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'branch')) && $restrictAccess) {
+        if (!$isGlobalAdmin && $restrictAccess) {
             $this->branch_id = $user->branch_id;
         } elseif (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'))) {
             $this->collection_center_id = $user->collection_center_id;
@@ -893,14 +893,25 @@ class PosManager extends Component
             $cartIds = collect($this->cart)->pluck('id');
             $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
             $totalB2bForComm = 0;
+            $cartItemTotal = 0;
             foreach ($this->cart as $item) {
                 $totalB2bForComm += (float) data_get($testPrices->get($item['id']), 'b2b_price', 0);
+                $cartItemTotal += (float) ($item['price'] ?? 0);
             }
 
             if ($doctorId) {
-                $profile = DoctorProfile::where('user_id', $doctorId)->first();
+                $userDoc = User::with('doctorProfile')->find($doctorId);
                 $basis = Configuration::getFor('commission_basis_doctor', 'gross');
-                $globalCommission = $profile->commission_percentage ?? 0;
+                
+                $globalCommission = 0;
+                if ($userDoc && $userDoc->doctorProfile) {
+                    $globalCommission = (float) $userDoc->doctorProfile->commission_percentage;
+                } else {
+                    $profile = DoctorProfile::withoutGlobalScopes()->where('user_id', $doctorId)->first();
+                    if ($profile) {
+                        $globalCommission = (float) $profile->commission_percentage;
+                    }
+                }
                 
                 $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $doctorId)->get()->keyBy('lab_test_id');
 
@@ -908,8 +919,8 @@ class PosManager extends Component
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
                     
-                    // Apportion the net_payable across items based on MRP ratio to account for discounts fairly
-                    $itemRatio = $this->subtotal > 0 ? ((float)$item['mrp'] / $this->subtotal) : 0;
+                    // Apportion the net_payable across items based on cart price ratio to account for discounts fairly
+                    $itemRatio = $cartItemTotal > 0 ? ((float)$item['price'] / $cartItemTotal) : 0;
                     $effectivePrice = $this->net_payable * $itemRatio;
                     
                     $rule = $testCommissions->get($testId);
@@ -928,9 +939,18 @@ class PosManager extends Component
                 }
             }
             if ($agentId) {
-                $profile = AgentProfile::where('user_id', $agentId)->first();
+                $userAgent = User::with('agentProfile')->find($agentId);
                 $basis = Configuration::getFor('commission_basis_agent', 'gross');
-                $globalCommission = $profile->commission_percentage ?? 0;
+                
+                $globalCommission = 0;
+                if ($userAgent && $userAgent->agentProfile) {
+                    $globalCommission = (float) $userAgent->agentProfile->commission_percentage;
+                } else {
+                    $profile = AgentProfile::withoutGlobalScopes()->where('user_id', $agentId)->first();
+                    if ($profile) {
+                        $globalCommission = (float) $profile->commission_percentage;
+                    }
+                }
                 
                 $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $agentId)->get()->keyBy('lab_test_id');
 
@@ -938,7 +958,7 @@ class PosManager extends Component
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
                     
-                    $itemRatio = $this->subtotal > 0 ? ((float)$item['mrp'] / $this->subtotal) : 0;
+                    $itemRatio = $cartItemTotal > 0 ? ((float)$item['price'] / $cartItemTotal) : 0;
                     $effectivePrice = $this->net_payable * $itemRatio;
                     
                     $rule = $testCommissions->get($testId);
@@ -1196,6 +1216,10 @@ class PosManager extends Component
         $branches = \Illuminate\Support\Facades\Cache::remember("branches_{$companyId}", 3600, function() use ($companyId) {
             return Branch::where('company_id', $companyId)->where('is_active', true)->get();
         });
+
+        if (!$isGlobalAdmin && $restrictAccess && $myBranchId) {
+            $branches = $branches->where('id', $myBranchId);
+        }
 
         return view('livewire.lab.pos-manager', [
             'patients' => $patients,
