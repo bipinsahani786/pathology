@@ -143,12 +143,59 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <!-- <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Details">
-                                                <i class="feather-eye fs-14"></i>
-                                            </a> -->
+                                            @if($this->role === 'Collection Center')
+                                                <!-- WhatsApp Sharing -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-success dropdown-toggle px-2 py-1 fs-11"
+                                                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                        <li><a class="dropdown-item fs-11" href="{{ $inv->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i>Share Invoice</a></li>
+                                                        @if($inv->status === 'Completed' || $inv->sample_status === 'Ready')
+                                                            <li><a class="dropdown-item fs-11" href="{{ $inv->getWhatsappLink('report') }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i>Share Report</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+
+                                                <!-- Invoice & Barcodes Print -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2 py-1 fs-11"
+                                                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                                        <i class="feather-printer"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=1">
+                                                                <i class="feather-file-text me-2 text-primary"></i> With Header
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=0">
+                                                                <i class="feather-file me-2 text-warning"></i> Without Header
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 fw-bold text-primary text-nowrap"
+                                                                href="{{ route('partner.invoice.barcode.stickers', $inv->id) }}"
+                                                                target="_blank">
+                                                                <i class="feather-maximize me-2"></i> Barcode Stickers
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            @else
+                                                <!-- Doctor & Agent Direct Bill Download -->
+                                                <a href="{{ route('public.bill.download', ['hash' => base64_encode($inv->id)]) }}" target="_blank" class="btn btn-sm btn-outline-primary px-2 py-1 fs-11" title="Download Invoice">
+                                                    <i class="feather-download"></i> Bill
+                                                </a>
+                                            @endif
+
+                                            <!-- Report Print when Ready -->
                                             @if($inv->sample_status == 'Ready')
-                                                <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Print Report">
-                                                    <i class="feather-printer fs-14"></i>
+                                                <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1 fs-11" title="Print Report">
+                                                    <i class="feather-printer"></i> Report
                                                 </a>
                                             @endif
                                         </div>

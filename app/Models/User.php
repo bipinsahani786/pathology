@@ -201,6 +201,45 @@ class User extends Authenticatable
     }
 
     /**
+     * Override Spatie hasRole to automatically handle tenant-prefixed roles (e.g. lab_2_collection_center matches collection_center).
+     */
+    public function hasRole($roles, $guard = null): bool
+    {
+        // Spatie HasRoles trait might not be initialized yet in some boot phases
+        if (!method_exists($this, 'roles') || !$this->roles) {
+            return false;
+        }
+
+        $userRoles = $this->roles->pluck('name')->toArray();
+        
+        // Flatten Spatie's nested array parameter if passed via hasAnyRole
+        if (is_array($roles)) {
+            $roleArray = \Illuminate\Support\Arr::flatten($roles);
+        } else {
+            $roleArray = [$roles];
+        }
+        
+        if ($roles instanceof \Illuminate\Support\Collection) {
+            $roleArray = $roles->pluck('name')->toArray();
+        }
+        
+        foreach ($roleArray as $role) {
+            if (is_null($role)) continue;
+            
+            $roleName = is_string($role) ? $role : ($role->name ?? null);
+            if (is_null($roleName)) continue;
+            
+            foreach ($userRoles as $userRole) {
+                if ($userRole === $roleName || str_ends_with($userRole, '_' . $roleName)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
      * Send the password reset notification.
      *
      * @param  string  $token
