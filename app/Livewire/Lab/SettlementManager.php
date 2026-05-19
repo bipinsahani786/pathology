@@ -443,9 +443,21 @@ class SettlementManager extends Component
                 ->paginate(6, ['*'], 'partnersPage');
         } else {
             $relationName = 'invoicesAs'.$this->partnerType;
-            $partners = User::role(strtolower($this->partnerType))
-                ->where('company_id', $companyId)
-                ->withSum([$relationName . ' as pending_amount' => function($q) use ($settledField, $myBranchId) {
+            $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
+            $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
+            $shareFlag = ($this->partnerType === 'Doctor') ? $shareDoctors : $shareAgents;
+            $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+
+            $query = User::role(strtolower($this->partnerType))
+                ->where('company_id', $companyId);
+
+            if ($myBranchId && !$shareFlag) {
+                $query->where('branch_id', $myBranchId);
+            } elseif ($myBranchId && $restrictAccess) {
+                $query->where('branch_id', $myBranchId);
+            }
+
+            $partners = $query->withSum([$relationName . ' as pending_amount' => function($q) use ($settledField, $myBranchId) {
                     $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
                       ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
                 }], $commField)
