@@ -178,7 +178,7 @@
                                                     @endcan
                                                     
                                                      @if($invoice->testReport && $invoice->testReport->status === 'Draft')
-                                                        <div class="dropdown {{ ($loop->remaining < 2 && !$loop->first) ? 'dropup' : '' }}">
+                                                        <div class="dropdown">
                                                             <button class="btn btn-sm btn-info dropdown-toggle fs-11 py-1 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                                 <i class="feather-printer"></i>
                                                             </button>
@@ -200,7 +200,7 @@
                                                     @endcan
                                                 </div>
                                             @else
-                                                <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
+                                                <div class="dropdown">
                                                     <button class="btn btn-sm btn-success dropdown-toggle fs-11" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="feather-printer me-1"></i> Print / Edit
                                                     </button>
@@ -224,7 +224,7 @@
                                             @endif
 
                                             {{-- WhatsApp Share --}}
-                                            <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
+                                            <div class="dropdown">
                                                 @if($invoice->patient->phone)
                                                     <button class="btn btn-sm btn-outline-success dropdown-toggle fs-11 px-2" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport">
                                                         <i class="bi bi-whatsapp"></i>

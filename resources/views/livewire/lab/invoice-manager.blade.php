@@ -244,7 +244,7 @@
                                         <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
+                                        <div class="dropdown">
                                             @php
                                                 $sampleStatusColors = [
                                                     'Pending' => 'bg-soft-secondary text-secondary',
@@ -306,7 +306,7 @@
                                                     @endif
                                                 </ul>
                                             </div>
-                                            <div class="dropdown {{ ($loop->remaining < 4 && !$loop->first) ? 'dropup' : '' }}">
+                                            <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2"
                                                     type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
                                                     <i class="feather-printer fs-12"></i>
