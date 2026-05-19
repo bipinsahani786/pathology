@@ -115,7 +115,7 @@ class AgentManager extends Component
                 ];
 
                 if ($this->password) {
-                    $updateData['password'] = $this->password;
+                    $updateData['password'] = Hash::make($this->password);
                 }
 
                 $user->update($updateData);
@@ -149,7 +149,7 @@ class AgentManager extends Component
                     'name' => $this->name,
                     'phone' => $this->phone,
                     'email' => $this->email ?: null, 
-                    'password' => $this->password ?? $this->phone ?? 'password123', 
+                    'password' => Hash::make($this->password ?? $this->phone ?? 'password123'), 
                     'is_active' => true,
                 ]);
 
