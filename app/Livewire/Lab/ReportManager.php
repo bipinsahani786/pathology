@@ -114,8 +114,9 @@ class ReportManager extends Component
         $activeBranchId = session('active_branch_id', 'all');
 
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !$user->hasRole('branch_admin');
         
         $myBranchId = null;
         if ($isGlobalAdmin) {

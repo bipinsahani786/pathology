@@ -104,8 +104,9 @@ class Dashboard extends Component
         }
         $activeBranchId = session('active_branch_id', 'all');
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'));
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
+                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && !auth()->user()->hasRole('branch_admin');
 
         $branchId = ($isGlobalAdmin)
             ? ($activeBranchId === 'all' ? null : $activeBranchId)
