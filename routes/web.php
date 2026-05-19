@@ -260,6 +260,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/referrers/doctors', DoctorManager::class)->name('doctors');
             Route::get('/referrers/agents', AgentManager::class)->name('agents');
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+            Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
+            Route::get('/invoice/{id}/print', \App\Livewire\Lab\InvoicePrint::class)->name('invoice.print');
             
             // Support Tickets
             if (config('features.support_tickets', true)) {

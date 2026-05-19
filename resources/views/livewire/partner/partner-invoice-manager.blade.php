@@ -115,18 +115,57 @@
                         </thead>
                         <tbody class="fs-13">
                             @forelse($invoices as $inv)
+                                @php
+                                    // Robust Date Parsing for both Eloquent Models and stdClass (raw DB objects)
+                                    $invDate = $inv->invoice_date;
+                                    if (is_string($invDate)) {
+                                        $invDate = \Carbon\Carbon::parse($invDate);
+                                    } elseif (!$invDate instanceof \Carbon\Carbon && !$invDate instanceof \DateTime) {
+                                        $invDate = \Carbon\Carbon::now();
+                                    }
+
+                                    // Robust Patient Name & Phone Parsing
+                                    $patientName = $inv->patient->name ?? $inv->patient_name ?? $inv->name ?? 'N/A';
+                                    $patientPhone = $inv->patient->phone ?? $inv->patient_phone ?? $inv->phone ?? null;
+
+                                    // Robust WhatsApp Sharing Links
+                                    $whatsappInvoiceLink = '';
+                                    $whatsappReportLink = '';
+                                    
+                                    if ($inv instanceof \App\Models\Invoice) {
+                                        $whatsappInvoiceLink = $inv->getWhatsappLink('invoice');
+                                        $whatsappReportLink = $inv->getWhatsappLink('report');
+                                    } else {
+                                        if ($patientPhone) {
+                                            $cleanPhone = preg_replace('/[^0-9]/', '', $patientPhone);
+                                            if (strlen($cleanPhone) == 10) {
+                                                $cleanPhone = '91' . $cleanPhone;
+                                            }
+                                            
+                                            $labName = auth()->user()->company->name ?? 'Lab';
+                                            $invoiceNo = $inv->invoice_number;
+                                            $hash = base64_encode($inv->id);
+                                            
+                                            $invoiceUrl = route('public.bill.download', ['hash' => $hash]);
+                                            $reportUrl = route('public.report.download', ['hash' => $hash]);
+                                            
+                                            $whatsappInvoiceLink = "https://wa.me/{$cleanPhone}?text=" . urlencode("Hi *{$patientName}*, your invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can download it here: {$invoiceUrl}");
+                                            $whatsappReportLink = "https://wa.me/{$cleanPhone}?text=" . urlencode("Hi *{$patientName}*, your test report for invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can view it here: {$reportUrl}");
+                                        }
+                                    }
+                                @endphp
                                 <tr class="border-bottom border-light">
                                     <td class="ps-4">
                                         <div class="fw-bold text-primary">{{ $inv->invoice_number }}</div>
                                         <div class="fs-10 text-muted">{{ $inv->barcode }}</div>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark fs-14">{{ $inv->patient->name ?? 'N/A' }}</div>
-                                        <div class="fs-11 text-muted"><i class="feather-phone me-1 fs-10"></i>{{ $inv->patient->phone ?? 'N/A' }}</div>
+                                        <div class="fw-bold text-dark fs-14">{{ $patientName }}</div>
+                                        <div class="fs-11 text-muted"><i class="feather-phone me-1 fs-10"></i>{{ $patientPhone ?? 'N/A' }}</div>
                                     </td>
                                     <td>
-                                        <div class="text-dark">{{ $inv->invoice_date->format('d M, Y') }}</div>
-                                        <div class="fs-11 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
+                                        <div class="text-dark">{{ $invDate->format('d M, Y') }}</div>
+                                        <div class="fs-11 text-muted">{{ $invDate->format('h:i A') }}</div>
                                     </td>
                                     <td class="text-end fw-bold text-dark">₹{{ number_format($inv->total_amount, 2) }}</td>
                                     <td class="text-end fw-bold text-success">₹{{ number_format($this->role === 'Collection Center' ? $inv->cc_profit_amount : ($this->role === 'Doctor' ? $inv->doctor_commission_amount : $inv->agent_commission_amount), 2) }}</td>
@@ -143,12 +182,71 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <!-- <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-light border text-primary shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="View Details">
-                                                <i class="feather-eye fs-14"></i>
-                                            </a> -->
+                                            @if($this->role === 'Collection Center')
+                                                <!-- WhatsApp Sharing -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-success dropdown-toggle px-2 py-1 fs-11"
+                                                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" @if(!$patientPhone) disabled title="Phone missing" @endif>
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                        <li><a class="dropdown-item fs-11" href="{{ $whatsappInvoiceLink }}" target="_blank"><i class="feather-file-text me-2 text-success"></i>Share Invoice</a></li>
+                                                        @if($inv->status === 'Completed' || $inv->sample_status === 'Ready')
+                                                            <li><a class="dropdown-item fs-11" href="{{ $whatsappReportLink }}" target="_blank"><i class="feather-check-circle me-2 text-success"></i>Share Report</a></li>
+                                                        @endif
+                                                    </ul>
+                                                </div>
+
+                                                <!-- View Summary -->
+                                                <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate class="btn btn-sm btn-outline-info px-2 py-1 fs-11" title="View Summary">
+                                                    <i class="feather-eye"></i>
+                                                </a>
+
+                                                <!-- Edit Invoice (Allowed if not Cancelled or Processing/Ready) -->
+                                                @if($inv->status !== 'Cancelled' && !in_array($inv->sample_status, ['Processing', 'Ready']))
+                                                    <a href="{{ route('lab.invoice.edit', $inv->id) }}" wire:navigate class="btn btn-sm btn-outline-warning px-2 py-1 fs-11" title="Edit Invoice">
+                                                        <i class="feather-edit-2"></i>
+                                                    </a>
+                                                @endif
+
+                                                <!-- Invoice & Barcodes Print -->
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2 py-1 fs-11"
+                                                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                                        <i class="feather-printer"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=1">
+                                                                <i class="feather-file-text me-2 text-primary"></i> With Header
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=0">
+                                                                <i class="feather-file me-2 text-warning"></i> Without Header
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider my-1"></li>
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 fw-bold text-primary text-nowrap"
+                                                                href="{{ route('partner.invoice.barcode.stickers', $inv->id) }}"
+                                                                target="_blank">
+                                                                <i class="feather-maximize me-2"></i> Barcode Stickers
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            @else
+                                                <!-- Doctor & Agent Direct Bill Download -->
+                                                <a href="{{ route('public.bill.download', ['hash' => base64_encode($inv->id)]) }}" target="_blank" class="btn btn-sm btn-outline-primary px-2 py-1 fs-11" title="Download Invoice">
+                                                    <i class="feather-download"></i> Bill
+                                                </a>
+                                            @endif
+
+                                            <!-- Report Print when Ready -->
                                             @if($inv->sample_status == 'Ready')
-                                                <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-light border text-success shadow-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" title="Print Report">
-                                                    <i class="feather-printer fs-14"></i>
+                                                <a href="{{ route('partner.reports.print', $inv->id) }}" target="_blank" class="btn btn-sm btn-outline-success px-2 py-1 fs-11" title="Print Report">
+                                                    <i class="feather-printer"></i> Report
                                                 </a>
                                             @endif
                                         </div>
