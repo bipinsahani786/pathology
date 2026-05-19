@@ -308,4 +308,54 @@ class LabManager extends Component
         $lab->update(['status' => $lab->status === 'active' ? 'inactive' : 'active']);
         session()->flash('success', 'Lab status updated successfully.');
     }
+
+    public function restoreLab($id)
+    {
+        $company = Company::findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($company) {
+            // 1. Recreate the default branch if missing
+            $branch = \App\Models\Branch::where('company_id', $company->id)->first();
+            if (!$branch) {
+                $branch = \App\Models\Branch::create([
+                    'company_id' => $company->id,
+                    'name' => 'Main Center',
+                    'address' => $company->address ?? 'Main Center Address',
+                    'is_active' => true,
+                ]);
+            }
+
+            // 2. Check if a lab admin exists
+            $admin = \App\Models\User::where('company_id', $company->id)
+                ->role('lab_admin')
+                ->first();
+
+            if (!$admin) {
+                // Create a new lab admin
+                $email = $company->email ?: 'admin' . $company->id . '@example.com';
+                $admin = \App\Models\User::create([
+                    'name' => $company->name . ' Admin',
+                    'email' => $email,
+                    'phone' => $company->phone ?: '9999999999',
+                    'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                    'company_id' => $company->id,
+                    'branch_id' => $branch->id,
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                ]);
+
+                // Assign Role
+                $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'lab_admin']);
+                $admin->assignRole($role);
+
+                session()->flash('success', "SUCCESS: Restored Lab Admin & Branch! Login Email: {$admin->email} | Password: password123");
+            } else {
+                // Admin exists, just make sure branch is updated
+                if (!$admin->branch_id) {
+                    $admin->update(['branch_id' => $branch->id]);
+                }
+                session()->flash('success', "Lab Admin already exists! Name: {$admin->name} | Email: {$admin->email}");
+            }
+        });
+    }
 }
