@@ -95,6 +95,10 @@ class SettingsManager extends Component
     public $pdf_header_height = 200;
     public $pdf_footer_height = 180;
 
+    public $report_page_break_style = 'continuous';
+    public $report_show_dept_header_always = true;
+    public $report_show_interpretation = true;
+
     public $pdfSaved = false;
 
     // ==========================================
@@ -203,6 +207,10 @@ class SettingsManager extends Component
         $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255);
         $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200);
         $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180);
+        
+        $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous');
+        $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1') === '1';
+        $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1') === '1';
         
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
@@ -493,6 +501,10 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom);
         Configuration::setFor('pdf_header_height', $this->pdf_header_height);
         Configuration::setFor('pdf_footer_height', $this->pdf_footer_height);
+        
+        Configuration::setFor('report_page_break_style', $this->report_page_break_style);
+        Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0');
+        Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0');
         
         Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
         Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);

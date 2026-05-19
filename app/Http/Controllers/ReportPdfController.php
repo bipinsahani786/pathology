@@ -166,6 +166,10 @@ class ReportPdfController extends Controller
             'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId) !== '0',
             'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId) !== '0',
             'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId) !== '0',
+            
+            'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
+            'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
+            'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)

@@ -310,31 +310,49 @@
 
     {{-- RESULTS Engine --}}
     
+    @php $testIndex = 0; @endphp
     @foreach($groupedResults as $deptId => $data)
         @php 
             $dept = $data['department'];
             $tests = $data['tests'];
             $deptName = $dept ? $dept->name : 'General';
+            $style = $settings['report_page_break_style'] ?? 'continuous';
+            $showDeptAlways = $settings['report_show_dept_header_always'] ?? true;
+            $isFirstInDept = $loop->first;
         @endphp
-        <div class="dept-header">{{ strtoupper($deptName) }}</div>
-        
-        <table class="results-table">
-            <thead>
-                <tr>
-                    <th style="width: 35%">Investigation</th>
-                    <th style="width: 20%">Result</th>
-                    <th style="width: 15%">Unit</th>
-                    <th style="width: 30%">Reference Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tests as $testKey => $testData)
-                    @php
-                        $testName = $testData['name'];
-                        $results = $testData['results'];
-                        $labTest = $testData['labTest'];
-                        $remark = $testData['remark'] ?? '';
-                    @endphp
+
+        @foreach($tests as $testKey => $testData)
+            @php
+                $testName = $testData['name'];
+                $results = $testData['results'];
+                $labTest = $testData['labTest'];
+                $remark = $testData['remark'] ?? '';
+                $isFirstTestInDept = $loop->first;
+            @endphp
+
+            @if($testIndex > 0)
+                @if($style === 'test_per_page')
+                    <div style="page-break-after: always;"></div>
+                @elseif($style === 'department_per_page' && $isFirstTestInDept)
+                    <div style="page-break-after: always;"></div>
+                @endif
+            @endif
+
+            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both;">
+                @if($showDeptAlways || $isFirstTestInDept)
+                    <div class="dept-header">{{ strtoupper($deptName) }}</div>
+                @endif
+            
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%">Investigation</th>
+                        <th style="width: 20%">Result</th>
+                        <th style="width: 15%">Unit</th>
+                        <th style="width: 30%">Reference Value</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <tr>
                         <td colspan="4" class="test-title">
                             {{ $testName }}
@@ -368,34 +386,34 @@
                         </tr>
                     @endforeach
                     @if($labTest->description)
-                        <tr>
+                        <tr style="page-break-inside: avoid;">
                             <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: #555;">
                                 <strong>Note:</strong> <br>
                                 {!! nl2br(e($labTest->description)) !!}
                             </td>
                         </tr>
                     @endif
-                    @if($labTest->interpretation)
-                        <tr>
+                    @if(($settings['report_show_interpretation'] ?? true) && $labTest->interpretation)
+                        <tr style="page-break-inside: avoid;">
                             <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333;">
                                 <strong>Interpretation:</strong> <br>
                                 {!! $labTest->interpretation !!}
                             </td>
                         </tr>
                     @endif
-
-                    <!-- Display Test specific remarks (Granular) -->
                     @if(!empty($remark))
-                        <tr>
+                        <tr style="page-break-inside: avoid;">
                             <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333; background: #fafafa; border: 1px dotted #ccc;">
                                 <strong>Feedback / Remarks:</strong> <br>
                                 {!! $remark !!}
                             </td>
                         </tr>
                     @endif
-                @endforeach
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+            </div>
+            @php $testIndex++; @endphp
+        @endforeach
 
         {{-- Per-Department Signatures --}}
         @if($settings['report_signature_mode'] == 'per_department' && $dept)

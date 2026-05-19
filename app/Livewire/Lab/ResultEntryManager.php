@@ -310,9 +310,43 @@ class ResultEntryManager extends Component
                     } catch (\Throwable $e) {
                         Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
                     }
-                }
             }
         }
+    }
+}
+
+    public function validateDlcSum()
+    {
+        $groupedParams = [];
+        foreach ($this->parametersList as $k => $p) {
+            $itemId = $p['invoice_item_id'] ?? null;
+            if ($itemId) {
+                $groupedParams[$itemId][$k] = $p;
+            }
+        }
+
+        $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
+
+        foreach ($groupedParams as $itemId => $params) {
+            $sum = 0;
+            $hasDlc = false;
+            $testName = '';
+            
+            foreach ($params as $k => $p) {
+                $code = strtoupper($p['short_code'] ?? '');
+                $testName = $p['test_name'] ?? 'CBC';
+                if (in_array($code, $dlcCodes)) {
+                    $hasDlc = true;
+                    $sum += (float) ($this->results[$k] ?: 0);
+                }
+            }
+
+            if ($hasDlc && abs($sum - 100) > 0.01) {
+                return "Cannot approve report. The sum of DLC parameters (Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils) in '{$testName}' is " . round($sum, 2) . "%. It must be exactly 100%.";
+            }
+        }
+
+        return true;
     }
 
     private function autoEvaluateRanges()
@@ -399,6 +433,14 @@ class ResultEntryManager extends Component
                 $msg = "Cannot approve report. No results have been entered for any test.";
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
+                return;
+            }
+
+            // DLC Validation (Hard Block)
+            $dlcValidation = $this->validateDlcSum();
+            if ($dlcValidation !== true) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => $dlcValidation]);
+                session()->flash('error', $dlcValidation);
                 return;
             }
         }
@@ -517,6 +559,30 @@ class ResultEntryManager extends Component
         $this->authorize('edit reports');
         $item = \App\Models\InvoiceItem::findOrFail($itemId);
         $newStatus = $item->status === 'Completed' ? 'Pending' : 'Completed';
+
+        if ($newStatus === 'Completed') {
+            $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
+            $sum = 0;
+            $hasDlc = false;
+            
+            foreach ($this->parametersList as $k => $p) {
+                if (($p['invoice_item_id'] ?? null) == $itemId) {
+                    $code = strtoupper($p['short_code'] ?? '');
+                    if (in_array($code, $dlcCodes)) {
+                        $hasDlc = true;
+                        $sum += (float) ($this->results[$k] ?: 0);
+                    }
+                }
+            }
+            
+            if ($hasDlc && abs($sum - 100) > 0.01) {
+                $msg = "Cannot mark test as complete. The sum of DLC parameters must be exactly 100% (Current sum: " . round($sum, 2) . "%).";
+                $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
+                session()->flash('error', $msg);
+                return;
+            }
+        }
+
         $item->update(['status' => $newStatus]);
 
         // Refresh invoice to get updated status

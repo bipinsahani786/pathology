@@ -11,20 +11,16 @@
         $headerImgSrc = $settings['pdf_header_image'] ?? null;
         $footerImgSrc = $settings['pdf_footer_image'] ?? null;
 
-        $sigImgSrc = $settings['global_sig_1_path']
-            ? $settings['global_sig_1_path']
-            : (file_exists(public_path('assets/images/signature.jpg'))
-                ? public_path('assets/images/signature.jpg')
-                : null);
+        $sigImgSrc = $settings['global_sig_1_path'] ?? null;
 
         // ── Margins from Settings ──
-        $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
+        $marginTop = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
-        
-        $fontSize     = ($settings['pdf_font_size'] ?? 13) . 'px';
-        $fontFamily   = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
+
+        $fontSize = ($settings['pdf_font_size'] ?? 13) . 'px';
+        $fontFamily = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
     @endphp
 
     <style>
@@ -36,12 +32,20 @@
         }
 
         body {
-            font-family: {{ $fontFamily }};
-            font-size: {{ $fontSize }};
+            font-family:
+                {{ $fontFamily }}
+            ;
+            font-size:
+                {{ $fontSize }}
+            ;
             color: #1a1a1a;
             background: #fff;
             line-height: 1.45;
-            margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px;
+            margin:
+                {{ $marginTop }}
+                25px
+                {{ $marginBottom }}
+                25px;
         }
 
         /* ══════════════════════════════════════════════
@@ -52,13 +56,17 @@
             top: 0;
             left: 0;
             right: 0;
-            height: {{ $marginTop }};
+            height:
+                {{ $marginTop }}
+            ;
             overflow: hidden;
         }
 
         .header-logo-container {
             width: 100%;
-            height: {{ $headerHeight }};
+            height:
+                {{ $headerHeight }}
+            ;
             display: block;
             overflow: hidden;
             text-align: center;
@@ -167,7 +175,8 @@
             vertical-align: bottom;
             padding-right: 35px;
             padding-bottom: 2px;
-            line-height: 1.2; /* Tighten line height to prevent overlap */
+            line-height: 1.2;
+            /* Tighten line height to prevent overlap */
         }
 
         .sign-img {
@@ -201,7 +210,8 @@
         /* ── Multi-Signature Row ── */
         .sig-container {
             position: absolute;
-            bottom: calc({{ $footerHeight }} + 5px); /* Dynamically positioned just above the footer banner */
+            bottom: calc({{ $footerHeight }} + 5px);
+            /* Dynamically positioned just above the footer banner */
             left: 0;
             width: 100%;
         }
@@ -293,7 +303,9 @@
         }
 
         /* Explicitly remove vertical lines */
-        .result-table, .result-table th, .result-table td {
+        .result-table,
+        .result-table th,
+        .result-table td {
             border-left: none !important;
             border-right: none !important;
         }
@@ -517,23 +529,27 @@
                     <td class="val">: {{ $invoice->invoice_number }}</td>
                     <td rowspan="4" class="qr-cell">
                         @if(isset($qrCodeUri))
-                             <img src="{{ $qrCodeUri }}" class="qr-code">
+                            <img src="{{ $qrCodeUri }}" class="qr-code">
                         @elseif(file_exists(public_path('assets/images/qr-code.png')))
-                             <img src="{{ public_path('assets/images/qr-code.png') }}" class="qr-code">
+                            <img src="{{ public_path('assets/images/qr-code.png') }}" class="qr-code">
                         @endif
 
                         @if(isset($barcodeUri))
                             <div class="barcode">
                                 <img src="{{ $barcodeUri }}" class="barcode-img">
-                                <div style="font-size: 8px; margin-top: 1px; font-weight: bold;">{{ $invoice->invoice_number }}</div>
+                                <div style="font-size: 8px; margin-top: 1px; font-weight: bold;">
+                                    {{ $invoice->invoice_number }}
+                                </div>
                             </div>
                         @endif
                     </td>
                 </tr>
                 <tr>
                     <td class="lbl">Age/Gender</td>
-                    <td class="val">: {{ $profile->age ?? '--' }} {{ $profile->age_type == 'Years' ? 'Y' : ($profile->age_type == 'Months' ? 'M' : 'D') }} /
-                        {{ $profile->gender ?? '--' }}</td>
+                    <td class="val">: {{ $profile->age ?? '--' }}
+                        {{ $profile->age_type == 'Years' ? 'Y' : ($profile->age_type == 'Months' ? 'M' : 'D') }} /
+                        {{ $profile->gender ?? '--' }}
+                    </td>
                     <td class="lbl">Collection Date</td>
                     <td class="val">:
                         {{ $invoice->sample_collected_at ? $invoice->sample_collected_at->format('d/m/Y h:i A') : $invoice->created_at->format('d/m/Y h:i A') }}
@@ -568,7 +584,7 @@
                 @elseif(($sigMode === 'global_bottom' || $sigMode === '') && empty($settings['global_sig_2_name']) && empty($settings['global_sig_3_name']))
                     <table class="sig-table">
                         <tr>
-                            <td class="sig-checked">CHECKED BY</td>
+                            <td class="sig-checked"></td>
                             <td class="sig-doctor">
                                 @if($sigImgSrc)
                                     <img class="sign-img" src="{{ $sigImgSrc }}"><br>
@@ -587,7 +603,7 @@
                     <table class="multi-sig-table">
                         <tr>
                             <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
-                                CHECKED BY
+                                <!-- CHECKED BY -->
                             </td>
                             @if($settings['global_sig_2_name'])
                                 <td>
@@ -647,186 +663,203 @@
                 $results = $testData['results'];
             @endphp
 
-            {{-- Page break before each test --}}
+            @php
+                $style = $settings['report_page_break_style'] ?? 'continuous';
+                $showDeptAlways = $settings['report_show_dept_header_always'] ?? true;
+                $isFirstInDept = $loop->first;
+            @endphp
+
+            {{-- Page break logic --}}
             @if($testIndex > 0)
-                <div style="page-break-after: always;"></div>
-            @endif
-
-            {{-- ── Department & Test Title ── --}}
-            <div class="dept-title">{{ strtoupper($deptName) }}</div>
-            <div class="test-title" style="margin-bottom: 12px; font-size: 11.5px;">{{ strtoupper($testName) }}</div>
-
-            {{-- ── Method (from LabTest master) ── --}}
-            @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
-                <div class="method-line">Method: {{ $labTest->method }}</div>
-            @endif
-
-
-
-            {{-- ── Results Table ── --}}
-            <table class="result-table">
-                <thead>
-                    <tr>
-                        <th style="width:40%">Test Description</th>
-                        <th style="width:15%">Result</th>
-                        <th style="width:8%">Flag</th>
-                        <th style="width:22%">Ref. Range</th>
-                        <th style="width:15%">Unit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php $hasSubHeaders = false; @endphp
-
-                    @foreach($results as $r)
-                        @php
-                            // Detect sub-header: no result value AND no reference range
-                            $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
-                                && (is_null($r->reference_range) || trim($r->reference_range) === '');
-
-                            // Determine flag
-                            $flag = null;
-                            if ($r->is_highlighted) {
-                                $rawFlag = strtoupper(trim($r->status ?? ''));
-                                if (in_array($rawFlag, ['H', 'HIGH'])) {
-                                    $flag = 'H';
-                                } elseif (in_array($rawFlag, ['L', 'LOW'])) {
-                                    $flag = 'L';
-                                } else {
-                                    $flag = '*'; // Default abnormal flag when status is missing
-                                }
-                            }
-                            $isAbnormal = $r->is_highlighted;
-                        @endphp
-
-                        @if($isSubHeader)
-                            {{-- ── Sub-Header Row ── --}}
-                            @php $hasSubHeaders = true; @endphp
-                            <tr class="sub-hdr">
-                                <td colspan="5">{{ strtoupper($r->parameter_name) }}</td>
-                            </tr>
-                        @else
-                            {{-- ── Parameter Row ── --}}
-                            <tr class="{{ $hasSubHeaders ? 'param-indent' : '' }}">
-                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
-                                    {{ strtoupper($r->parameter_name) }}
-                                    @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
-                                        <div style="font-size: 8px; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
-                                            (Method: {{ $r->method }})
-                                        </div>
-                                    @endif
-                                </td>
-                                <td
-                                    class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'result-bold')) : 'result-bold' }}">
-                                    {{ $r->result_value }}
-                                </td>
-                                <td class="{{ $flag ? 'flag-' . $flag : '' }}">
-                                    {{ $flag }}
-                                </td>
-                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 22%; font-size: 8.5px; line-height: 1.2; vertical-align: middle;">
-                                    @php
-                                        $displayRange = $r->reference_range;
-                                        
-                                        // Backup: If range is empty, try to show the full master range list
-                                        if (empty(trim($displayRange)) && isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
-                                            $masterParam = collect($r->labTest->parameters)->first(function($p) use ($r) {
-                                                $pName = is_array($p) ? ($p['name'] ?? '') : $p;
-                                                return $pName === $r->parameter_name;
-                                            });
-
-                                            if ($masterParam && isset($masterParam['ranges']) && is_array($masterParam['ranges'])) {
-                                                $ranges = collect($masterParam['ranges']);
-                                                
-                                                if ($ranges->count() > 1) {
-                                                    // Try to find M/F explicitly
-                                                    $maleRange = $ranges->firstWhere('gender', 'Male');
-                                                    $femaleRange = $ranges->firstWhere('gender', 'Female');
-
-                                                    if ($maleRange && $femaleRange) {
-                                                        $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
-                                                    } else {
-                                                        // Just join all unique display ranges
-                                                        $displayRange = $ranges->pluck('display_range')->unique()->filter()->implode('<br>');
-                                                    }
-                                                } else {
-                                                    $displayRange = $ranges->first()['display_range'] ?? ($ranges->first()['normal_value'] ?? '');
-                                                }
-                                            }
-                                        }
-                                    @endphp
-                                    {!! $displayRange !!}
-                                </td>
-                                <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 15%;">
-                                    {{ $r->unit }}
-                                </td>
-                            </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-            </table>
-
-            {{-- ── Method (per-result level, if different from test master) ── --}}
-            @if(($settings['pdf_show_test_method'] ?? true) && $results->first()->method && $results->first()->method !== $labTest->method)
-                <p style="font-size:9px; color:#555; font-style:italic; margin-bottom:5px;">
-                    <strong>Method:</strong> {{ $results->first()->method }}
-                </p>
-            @endif
-
-            {{-- ── Default Interpretation (from LabTest master — stored as HTML) ── --}}
-            @if($labTest->interpretation)
-                <div class="interp-block">
-                    <div class="interp-label">Interpretation:</div>
-                    <div class="interp-content">
-                        {!! $labTest->interpretation !!}
-                    </div>
-                </div>
-            @endif
-
-            {{-- ── Description / Note (from LabTest master — plain text) ── --}}
-            @if($labTest->description)
-                <div class="interp-block" style="color:#555;">
-                    <div class="interp-label" style="color:#333;">Note:</div>
-                    <div class="interp-content">
-                        {!! nl2br(e($labTest->description)) !!}
-                    </div>
-                </div>
-            @endif
-
-            {{-- ── Result Entry Remarks (Granular per test) ── --}}
-            @if(!empty($testData['remark']))
-                <div class="remarks-block">
-                    <div class="interp-label">Remarks:</div>
-                    <div class="interp-content">
-                        {!! $testData['remark'] !!}
-                    </div>
-                </div>
-            @endif
-
-            {{-- ── Per-Department Signatures (if mode is per_department) ── --}}
-            @if($settings['report_signature_mode'] === 'per_department' && $dept)
-                @if(isset($dept->sig_1_path) && $dept->sig_1_path)
-                    <table class="multi-sig-table" style="margin-top:12px;">
-                        <tr>
-                            <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
-                                CHECKED BY
-                            </td>
-                            @if(isset($dept->sig_1_path) && $dept->sig_1_path)
-                                <td>
-                                    <img style="max-height:40px;" src="{{ storage_base64($dept->sig_1_path) }}"><br>
-                                    <span class="doc-name">{{ $dept->sig_1_name ?? '' }}</span>
-                                    <span class="doc-desig">{{ $dept->sig_1_desig ?? '' }}</span>
-                                </td>
-                            @endif
-                            @if(isset($dept->sig_2_path) && $dept->sig_2_path)
-                                <td>
-                                    <img style="max-height:40px;" src="{{ storage_base64($dept->sig_2_path) }}"><br>
-                                    <span class="doc-name">{{ $dept->sig_2_name ?? '' }}</span>
-                                    <span class="doc-desig">{{ $dept->sig_2_desig ?? '' }}</span>
-                                </td>
-                            @endif
-                        </tr>
-                    </table>
+                @if($style === 'test_per_page')
+                    <div style="page-break-after: always;"></div>
+                @elseif($style === 'department_per_page' && $isFirstInDept)
+                    <div style="page-break-after: always;"></div>
                 @endif
             @endif
+
+            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both;">
+                {{-- ── Department & Test Title ── --}}
+                @if($showDeptAlways || $isFirstInDept)
+                    <div class="dept-title">{{ strtoupper($deptName) }}</div>
+                @endif
+                <div class="test-title" style="margin-bottom: 12px; font-size: 11.5px;">{{ strtoupper($testName) }}</div>
+
+                {{-- ── Method (from LabTest master) ── --}}
+                @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
+                    <div class="method-line">Method: {{ $labTest->method }}</div>
+                @endif
+
+
+
+                {{-- ── Results Table ── --}}
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40%">Test Description</th>
+                            <th style="width:15%">Result</th>
+                            <th style="width:8%">Flag</th>
+                            <th style="width:22%">Ref. Range</th>
+                            <th style="width:15%">Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php $hasSubHeaders = false; @endphp
+
+                        @foreach($results as $r)
+                            @php
+                                // Detect sub-header: no result value AND no reference range
+                                $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
+                                    && (is_null($r->reference_range) || trim($r->reference_range) === '');
+
+                                // Determine flag
+                                $flag = null;
+                                if ($r->is_highlighted) {
+                                    $rawFlag = strtoupper(trim($r->status ?? ''));
+                                    if (in_array($rawFlag, ['H', 'HIGH'])) {
+                                        $flag = 'H';
+                                    } elseif (in_array($rawFlag, ['L', 'LOW'])) {
+                                        $flag = 'L';
+                                    } else {
+                                        $flag = '*'; // Default abnormal flag when status is missing
+                                    }
+                                }
+                                $isAbnormal = $r->is_highlighted;
+                            @endphp
+
+                            @if($isSubHeader)
+                                {{-- ── Sub-Header Row ── --}}
+                                @php $hasSubHeaders = true; @endphp
+                                <tr class="sub-hdr">
+                                    <td colspan="5">{{ strtoupper($r->parameter_name) }}</td>
+                                </tr>
+                            @else
+                                {{-- ── Parameter Row ── --}}
+                                <tr class="{{ $hasSubHeaders ? 'param-indent' : '' }}">
+                                    <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
+                                        {{ strtoupper($r->parameter_name) }}
+                                        @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
+                                            <div
+                                                style="font-size: 8px; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
+                                                (Method: {{ $r->method }})
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td
+                                        class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'result-bold')) : 'result-bold' }}">
+                                        {{ $r->result_value }}
+                                    </td>
+                                    <td class="{{ $flag ? 'flag-' . $flag : '' }}">
+                                        {{ $flag }}
+                                    </td>
+                                    <td class="{{ $isAbnormal ? 'result-bold' : '' }}"
+                                        style="width: 22%; font-size: 8.5px; line-height: 1.2; vertical-align: middle;">
+                                        @php
+                                            $displayRange = $r->reference_range;
+
+                                            // Backup: If range is empty, try to show the full master range list
+                                            if (empty(trim($displayRange)) && isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
+                                                $masterParam = collect($r->labTest->parameters)->first(function ($p) use ($r) {
+                                                    $pName = is_array($p) ? ($p['name'] ?? '') : $p;
+                                                    return $pName === $r->parameter_name;
+                                                });
+
+                                                if ($masterParam && isset($masterParam['ranges']) && is_array($masterParam['ranges'])) {
+                                                    $ranges = collect($masterParam['ranges']);
+
+                                                    if ($ranges->count() > 1) {
+                                                        // Try to find M/F explicitly
+                                                        $maleRange = $ranges->firstWhere('gender', 'Male');
+                                                        $femaleRange = $ranges->firstWhere('gender', 'Female');
+
+                                                        if ($maleRange && $femaleRange) {
+                                                            $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
+                                                        } else {
+                                                            // Just join all unique display ranges
+                                                            $displayRange = $ranges->pluck('display_range')->unique()->filter()->implode('<br>');
+                                                        }
+                                                    } else {
+                                                        $displayRange = $ranges->first()['display_range'] ?? ($ranges->first()['normal_value'] ?? '');
+                                                    }
+                                                }
+                                            }
+                                        @endphp
+                                        {!! $displayRange !!}
+                                    </td>
+                                    <td class="{{ $isAbnormal ? 'result-bold' : '' }}" style="width: 15%;">
+                                        {{ $r->unit }}
+                                    </td>
+                                </tr>
+                            @endif
+                        @endforeach
+                    </tbody>
+                </table>
+
+                {{-- ── Method (per-result level, if different from test master) ── --}}
+                @if(($settings['pdf_show_test_method'] ?? true) && $results->first()->method && $results->first()->method !== $labTest->method)
+                    <p style="font-size:9px; color:#555; font-style:italic; margin-bottom:5px;">
+                        <strong>Method:</strong> {{ $results->first()->method }}
+                    </p>
+                @endif
+
+                {{-- ── Default Interpretation (from LabTest master — stored as HTML) ── --}}
+                @if(($settings['report_show_interpretation'] ?? true) && $labTest->interpretation)
+                    <div class="interp-block" style="page-break-inside: avoid;">
+                        <div class="interp-label">Interpretation:</div>
+                        <div class="interp-content">
+                            {!! $labTest->interpretation !!}
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ── Description / Note (from LabTest master — plain text) ── --}}
+                @if($labTest->description)
+                    <div class="interp-block" style="color:#555; page-break-inside: avoid;">
+                        <div class="interp-label" style="color:#333;">Note:</div>
+                        <div class="interp-content">
+                            {!! nl2br(e($labTest->description)) !!}
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ── Result Entry Remarks (Granular per test) ── --}}
+                @if(!empty($testData['remark']))
+                    <div class="remarks-block" style="page-break-inside: avoid;">
+                        <div class="interp-label">Remarks:</div>
+                        <div class="interp-content">
+                            {!! $testData['remark'] !!}
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ── Per-Department Signatures (if mode is per_department) ── --}}
+                @if($settings['report_signature_mode'] === 'per_department' && $dept)
+                    @if(isset($dept->sig_1_path) && $dept->sig_1_path)
+                        <table class="multi-sig-table" style="margin-top:12px;">
+                            <tr>
+                                <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
+
+                                </td>
+                                @if(isset($dept->sig_1_path) && $dept->sig_1_path)
+                                    <td>
+                                        <img style="max-height:40px;" src="{{ storage_base64($dept->sig_1_path) }}"><br>
+                                        <span class="doc-name">{{ $dept->sig_1_name ?? '' }}</span>
+                                        <span class="doc-desig">{{ $dept->sig_1_desig ?? '' }}</span>
+                                    </td>
+                                @endif
+                                @if(isset($dept->sig_2_path) && $dept->sig_2_path)
+                                    <td>
+                                        <img style="max-height:40px;" src="{{ storage_base64($dept->sig_2_path) }}"><br>
+                                        <span class="doc-name">{{ $dept->sig_2_name ?? '' }}</span>
+                                        <span class="doc-desig">{{ $dept->sig_2_desig ?? '' }}</span>
+                                    </td>
+                                @endif
+                            </tr>
+                        </table>
+                    @endif
+                @endif
+
+            </div>
 
             @php $testIndex++; @endphp
         @endforeach

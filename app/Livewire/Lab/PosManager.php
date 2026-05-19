@@ -899,23 +899,60 @@ class PosManager extends Component
             if ($doctorId) {
                 $profile = DoctorProfile::where('user_id', $doctorId)->first();
                 $basis = Configuration::getFor('commission_basis_doctor', 'gross');
+                $globalCommission = $profile->commission_percentage ?? 0;
                 
-                if ($basis === 'profit') {
-                    $profit = max(0, $this->net_payable - $totalB2bForComm);
-                    $docCommission = ($profit * ($profile->commission_percentage ?? 0)) / 100;
-                } else {
-                    $docCommission = ($this->net_payable * ($profile->commission_percentage ?? 0)) / 100;
+                $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $doctorId)->get()->keyBy('lab_test_id');
+
+                foreach ($this->cart as $item) {
+                    $testId = $item['id'];
+                    $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
+                    
+                    // Apportion the net_payable across items based on MRP ratio to account for discounts fairly
+                    $itemRatio = $this->subtotal > 0 ? ((float)$item['mrp'] / $this->subtotal) : 0;
+                    $effectivePrice = $this->net_payable * $itemRatio;
+                    
+                    $rule = $testCommissions->get($testId);
+                    
+                    if ($rule) {
+                        if ($rule->commission_type === 'fixed') {
+                            $docCommission += (float) $rule->commission_value;
+                        } else {
+                            $baseAmount = ($basis === 'profit') ? max(0, $effectivePrice - $itemB2b) : $effectivePrice;
+                            $docCommission += ($baseAmount * (float) $rule->commission_value) / 100;
+                        }
+                    } else {
+                        $baseAmount = ($basis === 'profit') ? max(0, $effectivePrice - $itemB2b) : $effectivePrice;
+                        $docCommission += ($baseAmount * $globalCommission) / 100;
+                    }
                 }
             }
             if ($agentId) {
                 $profile = AgentProfile::where('user_id', $agentId)->first();
                 $basis = Configuration::getFor('commission_basis_agent', 'gross');
+                $globalCommission = $profile->commission_percentage ?? 0;
+                
+                $testCommissions = \App\Models\PartnerTestCommission::where('company_id', auth()->user()->company_id)->where('user_id', $agentId)->get()->keyBy('lab_test_id');
 
-                if ($basis === 'profit') {
-                    $profit = max(0, $this->net_payable - $totalB2bForComm);
-                    $agentCommission = ($profit * ($profile->commission_percentage ?? 0)) / 100;
-                } else {
-                    $agentCommission = ($this->net_payable * ($profile->commission_percentage ?? 0)) / 100;
+                foreach ($this->cart as $item) {
+                    $testId = $item['id'];
+                    $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
+                    
+                    $itemRatio = $this->subtotal > 0 ? ((float)$item['mrp'] / $this->subtotal) : 0;
+                    $effectivePrice = $this->net_payable * $itemRatio;
+                    
+                    $rule = $testCommissions->get($testId);
+                    
+                    if ($rule) {
+                        if ($rule->commission_type === 'fixed') {
+                            $agentCommission += (float) $rule->commission_value;
+                        } else {
+                            $baseAmount = ($basis === 'profit') ? max(0, $effectivePrice - $itemB2b) : $effectivePrice;
+                            $agentCommission += ($baseAmount * (float) $rule->commission_value) / 100;
+                        }
+                    } else {
+                        $baseAmount = ($basis === 'profit') ? max(0, $effectivePrice - $itemB2b) : $effectivePrice;
+                        $agentCommission += ($baseAmount * $globalCommission) / 100;
+                    }
                 }
             }
 
