@@ -178,7 +178,7 @@ class LabManager extends Component
             $user = \App\Models\User::create([
                 'name' => $this->adminName,
                 'email' => $this->adminEmail,
-                'password' => $this->adminPassword,
+                'password' => \Illuminate\Support\Facades\Hash::make($this->adminPassword),
                 'company_id' => $company->id,
                 'branch_id' => $branch->id,
                 'is_active' => true,
@@ -239,7 +239,7 @@ class LabManager extends Component
                     'email' => $this->adminEmail,
                 ];
                 if ($this->adminPassword) {
-                    $userData['password'] = $this->adminPassword;
+                    $userData['password'] = \Illuminate\Support\Facades\Hash::make($this->adminPassword);
                 }
                 $admin->update($userData);
             }
