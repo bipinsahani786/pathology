@@ -348,13 +348,64 @@ class LabManager extends Component
                 $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'lab_admin']);
                 $admin->assignRole($role);
 
-                session()->flash('success', "SUCCESS: Restored Lab Admin & Branch! Login Email: {$admin->email} | Password: password123");
+                // --- GENIUS HISTORY RESTORER: Relink all orphaned invoices, reports, and data ---
+                $tables = \Illuminate\Support\Facades\DB::select("
+                    SELECT table_name 
+                    FROM information_schema.columns 
+                    WHERE column_name = 'branch_id' 
+                      AND table_schema = 'public'
+                      AND table_name IN (
+                          SELECT table_name 
+                          FROM information_schema.columns 
+                          WHERE column_name = 'company_id' 
+                            AND table_schema = 'public'
+                      )
+                ");
+
+                foreach ($tables as $t) {
+                    $tableName = $t->table_name;
+                    if ($tableName === 'users' || $tableName === 'branches') {
+                        continue;
+                    }
+                    \Illuminate\Support\Facades\DB::table($tableName)
+                        ->where('company_id', $company->id)
+                        ->whereNull('branch_id')
+                        ->update(['branch_id' => $branch->id]);
+                }
+
+                session()->flash('success', "SUCCESS: Restored Lab Admin, Branch & Linked all historical Invoices/Reports! Login Email: {$admin->email} | Password: password123");
             } else {
                 // Admin exists, just make sure branch is updated
                 if (!$admin->branch_id) {
                     $admin->update(['branch_id' => $branch->id]);
                 }
-                session()->flash('success', "Lab Admin already exists! Name: {$admin->name} | Email: {$admin->email}");
+                
+                // Also trigger history relink even if admin exists to fix any loose ends
+                $tables = \Illuminate\Support\Facades\DB::select("
+                    SELECT table_name 
+                    FROM information_schema.columns 
+                    WHERE column_name = 'branch_id' 
+                      AND table_schema = 'public'
+                      AND table_name IN (
+                          SELECT table_name 
+                          FROM information_schema.columns 
+                          WHERE column_name = 'company_id' 
+                            AND table_schema = 'public'
+                      )
+                ");
+
+                foreach ($tables as $t) {
+                    $tableName = $t->table_name;
+                    if ($tableName === 'users' || $tableName === 'branches') {
+                        continue;
+                    }
+                    \Illuminate\Support\Facades\DB::table($tableName)
+                        ->where('company_id', $company->id)
+                        ->whereNull('branch_id')
+                        ->update(['branch_id' => $branch->id]);
+                }
+
+                session()->flash('success', "Lab Admin restored! Relinked all historical Invoices/Reports. Name: {$admin->name} | Email: {$admin->email}");
             }
         });
     }
