@@ -221,9 +221,23 @@ class BranchManager extends Component
         $this->authorize('delete branches');
         $branch = Branch::findOrFail($id);
         
-        // Also delete the branch admin accounts? Yes, cascade should handle it or manually delete
+        $companyId = auth()->user()->company_id;
+
+        // Safeguard 1: Cannot delete the branch the currently logged-in user belongs to
+        if (auth()->user()->branch_id === $branch->id) {
+            session()->flash('error', 'You cannot delete the branch you are currently assigned to.');
+            return;
+        }
+
+        // Safeguard 2: Must keep at least one branch
+        $branchCount = Branch::where('company_id', $companyId)->count();
+        if ($branchCount <= 1) {
+            session()->flash('error', 'You must keep at least one branch for your laboratory.');
+            return;
+        }
+
+        // Also delete the branch admin accounts
         \App\Models\User::where('branch_id', $branch->id)->delete();
-        $companyId = $branch->company_id;
         $branch->delete();
         Cache::forget("branches_" . $companyId);
         Cache::forget("centers_" . $companyId . "_all");

@@ -129,6 +129,9 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">
+                                            <button class="btn btn-sm btn-icon btn-soft-warning" onclick="confirm('Are you sure you want to restore/reset the default branch and admin for this lab?') || event.stopImmediatePropagation()" wire:click="restoreLab({{ $lab->id }})" title="Restore Default Branch & Admin">
+                                                <i class="feather-life-buoy"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-icon btn-soft-success" wire:click="openRenewModal({{ $lab->id }})" title="Renew/Upgrade Plan">
                                                  <i class="feather-refresh-cw"></i>
                                              </button>
