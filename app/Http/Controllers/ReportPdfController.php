@@ -149,6 +149,20 @@ class ReportPdfController extends Controller
             'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
             'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
             'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
+
+            'sig_1_position' => Configuration::getFor('sig_1_position', 'right', $companyId) ?: 'right',
+            'sig_1_enabled' => Configuration::getFor('sig_1_enabled', '1', $companyId) !== '0',
+            'sig_2_position' => Configuration::getFor('sig_2_position', 'left', $companyId) ?: 'left',
+            'sig_2_enabled' => Configuration::getFor('sig_2_enabled', '1', $companyId) !== '0',
+            'sig_3_position' => Configuration::getFor('sig_3_position', 'center', $companyId) ?: 'center',
+            'sig_3_enabled' => Configuration::getFor('sig_3_enabled', '1', $companyId) !== '0',
+            
+            'report_flag_high_color' => Configuration::getFor('report_flag_high_color', '#cc0000', $companyId) ?: '#cc0000',
+            'report_flag_low_color' => Configuration::getFor('report_flag_low_color', '#0055aa', $companyId) ?: '#0055aa',
+            
+            'report_abnormal_indicator' => Configuration::getFor('report_abnormal_indicator', '*', $companyId) ?: '*',
+            'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId) ?: '#d32f2f',
+            
             'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
 
@@ -205,7 +219,23 @@ class ReportPdfController extends Controller
 
         if ($request->has('tests')) {
             $testIds = explode(',', $request->tests);
-            $results = $results->whereIn('invoice_item_id', $testIds);
+            
+            $selectedItemIds = [];
+            $selectedItemTestIds = [];
+            
+            foreach ($testIds as $t) {
+                if (str_contains($t, '_')) {
+                    $selectedItemTestIds[] = $t;
+                } else {
+                    $selectedItemIds[] = $t;
+                }
+            }
+
+            $results = $results->filter(function($r) use ($selectedItemIds, $selectedItemTestIds) {
+                $matchItem = in_array((string)$r->invoice_item_id, $selectedItemIds);
+                $matchItemTest = in_array($r->invoice_item_id . '_' . $r->lab_test_id, $selectedItemTestIds);
+                return $matchItem || $matchItemTest;
+            });
         }
 
         $groupedResults = $results->groupBy(function ($result) {

@@ -372,11 +372,12 @@
                             <td>
                                 @if($r->is_highlighted)
                                     @php 
-                                        $flag = substr($r->status, 0, 1);
-                                        $flagText = in_array($flag, ['H', 'L']) ? $flag : '*';
+                                        $flag = strtoupper(trim(substr($r->status ?? '', 0, 1)));
+                                        $flagText = in_array($flag, ['H', 'L']) ? $flag : ($settings['report_abnormal_indicator'] ?? '*');
+                                        $flagColor = $flag === 'H' ? ($settings['report_flag_high_color'] ?? '#cc0000') : ($flag === 'L' ? ($settings['report_flag_low_color'] ?? '#0055aa') : ($settings['report_abnormal_color'] ?? '#d32f2f'));
                                     @endphp
-                                    <span class="text-danger bg-abnormal">{{ $r->result_value }}</span>
-                                    <span class="text-danger" style="font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
+                                    <span class="bg-abnormal" style="color: {{ $flagColor }}; font-weight: bold;">{{ $r->result_value }}</span>
+                                    <span style="color: {{ $flagColor }}; font-weight: bold; font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
                                 @else
                                     <span style="font-weight:bold;">{{ $r->result_value }}</span>
                                 @endif

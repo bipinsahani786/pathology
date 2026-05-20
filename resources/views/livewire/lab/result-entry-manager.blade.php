@@ -153,10 +153,9 @@
                                             <td colspan="5" class="bg-light py-2 fs-12 fw-bold text-dark border-bottom">
                                                 <div class="d-flex align-items-center justify-content-between px-3">
                                                     <div class="d-flex align-items-center">
-                                                        @if(!($testItem->labTest->is_package ?? false))
-                                                            <input type="checkbox" class="form-check-input me-2" 
-                                                                   wire:model.live="selectedTests" value="{{ $itemId }}">
-                                                        @endif
+                                                        <input type="checkbox" class="form-check-input me-2" 
+                                                               wire:model.live="selectedTests" 
+                                                               value="{{ ($testItem->labTest->is_package ?? false) ? $itemId . '_' . $labTestId : $itemId }}">
                                                         <i class="feather-activity text-muted me-2"></i>{{ $testName }}
                                                         @php
                                                             $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];

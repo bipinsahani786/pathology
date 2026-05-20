@@ -331,6 +331,7 @@
         </div>
         @endif
         
+        @if($showStats)
         {{-- Header & Filters --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-4">
             <div>
@@ -685,8 +686,18 @@
                 </div>
             </div>
         </div>
+        @else
+            <div class="text-center py-5 mt-5">
+                <div class="avatar-text avatar-xl mx-auto mb-4 bg-soft-primary text-primary">
+                    <i class="feather-pie-chart fs-1"></i>
+                </div>
+                <h2 class="fw-black mb-3 text-dark">Welcome to {{ auth()->user()->company->name ?? 'Pathology Lab' }}</h2>
+                <p class="text-muted fs-5 mb-4">Dashboard statistics are currently disabled by your administrator.</p>
+            </div>
+        @endif
     </div>
 
+    @if($showStats)
     {{-- Analysis Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -867,4 +878,5 @@
             }
         })();
     </script>
+    @endif
 </div>

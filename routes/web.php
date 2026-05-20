@@ -265,6 +265,10 @@ Route::middleware(['auth'])->group(function () {
 
 // Global dashboard alias for tests/middleware
 Route::get('/dashboard', function () {
+    if (auth()->check() && auth()->user()->company_id && !auth()->user()->hasRole('super_admin') && !auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) && !auth()->user()->collection_center_id) {
+        $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
+        return redirect()->route($defaultPage);
+    }
     return redirect()->route('lab.dashboard');
 })->middleware(['auth'])->name('dashboard');
 

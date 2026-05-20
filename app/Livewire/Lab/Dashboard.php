@@ -22,9 +22,9 @@ class Dashboard extends Component
 
     public function mount()
     {
-        // Default to current month
-        $this->fromDate = Carbon::now()->startOfMonth()->toDateString();
-        $this->toDate = Carbon::now()->endOfMonth()->toDateString();
+        // Default to today
+        $this->fromDate = Carbon::today()->toDateString();
+        $this->toDate = Carbon::today()->toDateString();
     }
 
     /**
@@ -126,6 +126,15 @@ class Dashboard extends Component
 
         $start = Carbon::parse($this->fromDate)->startOfDay();
         $end = Carbon::parse($this->toDate)->setHour(23)->setMinute(59)->setSecond(59);
+
+        $showStats = \App\Models\Configuration::getFor('show_dashboard_stats', '1') === '1';
+
+        if (!$showStats) {
+            return view('livewire.lab.dashboard', [
+                'showStats' => false,
+                'daysLeft' => $daysLeft,
+            ])->layout('layouts.app', ['title' => 'Lab Performance Analytics']);
+        }
 
         // Cache Key based on filters
         $cacheKey = "dashboard_stats_{$companyId}_{$branchId}_".$start->format('Ymd').'_'.$end->format('Ymd');
@@ -280,6 +289,7 @@ class Dashboard extends Component
         $channelData = $data['channelData'];
 
         return view('livewire.lab.dashboard', [
+            'showStats' => \App\Models\Configuration::getFor('show_dashboard_stats', '1') === '1',
             'daysLeft' => $daysLeft,
             'stats' => $data['stats'],
             'ops' => $data['ops'],

@@ -617,7 +617,22 @@ class PosManager extends Component
         $currentCollected = collect($this->payments)->sum(fn ($p) => (float) ($p['amount'] ?? 0));
         $remaining = max(0, $this->net_payable - $currentCollected);
 
-        $this->payments[] = ['mode_id' => '', 'amount' => $remaining > 0 ? $remaining : null, 'transaction_id' => ''];
+        // Find default Cash mode or fallback to first available mode
+        $companyId = auth()->user()->company_id;
+        $cashMode = PaymentMode::where('company_id', $companyId)
+            ->where('name', 'Cash')
+            ->where('is_active', true)
+            ->first();
+            
+        if (!$cashMode) {
+            $cashMode = PaymentMode::where('company_id', $companyId)
+                ->where('is_active', true)
+                ->first();
+        }
+            
+        $defaultModeId = $cashMode ? $cashMode->id : '';
+
+        $this->payments[] = ['mode_id' => $defaultModeId, 'amount' => $remaining > 0 ? $remaining : null, 'transaction_id' => ''];
     }
 
     public function removePaymentRow($index)

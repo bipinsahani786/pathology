@@ -42,7 +42,8 @@ class Login extends Component
 
             // 4. Lab Staff
             if ($user->company_id) {
-                return redirect()->route('lab.dashboard');
+                $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
+                return redirect()->route($defaultPage);
             }
         }
     }
@@ -86,7 +87,8 @@ class Login extends Component
 
             // 2. Internal Lab Staff (Standard Lab Operations)
             if ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin']) || $user->company_id) {
-                return redirect()->route('lab.dashboard');
+                $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
+                return redirect()->route($defaultPage);
             }
 
             return redirect('/');

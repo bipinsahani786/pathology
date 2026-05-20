@@ -155,6 +155,14 @@ class SettingsManager extends Component
 
     public $report_show_interpretation = true;
 
+    public $report_flag_high_color = '#cc0000';
+
+    public $report_flag_low_color = '#0055aa';
+
+    public $report_abnormal_indicator = '*';
+
+    public $report_abnormal_color = '#d32f2f';
+
     public $pdfSaved = false;
 
     // ==========================================
@@ -175,6 +183,10 @@ class SettingsManager extends Component
     // ==========================================
     // MODULE VISIBILITY SETTINGS
     // ==========================================
+    public $default_login_page = 'lab.dashboard';
+    
+    public $show_dashboard_stats = true;
+
     public $module_pos = true;
 
     public $module_invoices = true;
@@ -228,6 +240,15 @@ class SettingsManager extends Component
     public $global_sig_3_path;
 
     public $new_global_sig_3;
+
+    public $sig_1_position = 'right';
+    public $sig_1_enabled = true;
+
+    public $sig_2_position = 'left';
+    public $sig_2_enabled = true;
+
+    public $sig_3_position = 'center';
+    public $sig_3_enabled = true;
 
     // Department-wise Signatures
     public $report_signature_mode = 'global_bottom';
@@ -323,6 +344,12 @@ class SettingsManager extends Component
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1') === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1') === '1';
 
+        $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000');
+        $this->report_flag_low_color = Configuration::getFor('report_flag_low_color', '#0055aa');
+        
+        $this->report_abnormal_indicator = Configuration::getFor('report_abnormal_indicator', '*');
+        $this->report_abnormal_color = Configuration::getFor('report_abnormal_color', '#d32f2f');
+
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
         $this->signature_image = Configuration::getFor('signature_image', null);
@@ -334,6 +361,13 @@ class SettingsManager extends Component
         $this->global_sig_3_name = Configuration::getFor('global_sig_3_name', '');
         $this->global_sig_3_desig = Configuration::getFor('global_sig_3_desig', '');
         $this->global_sig_3_path = Configuration::getFor('global_sig_3_path', null);
+
+        $this->sig_1_position = Configuration::getFor('sig_1_position', 'right');
+        $this->sig_1_enabled = Configuration::getFor('sig_1_enabled', '1') === '1';
+        $this->sig_2_position = Configuration::getFor('sig_2_position', 'left');
+        $this->sig_2_enabled = Configuration::getFor('sig_2_enabled', '1') === '1';
+        $this->sig_3_position = Configuration::getFor('sig_3_position', 'center');
+        $this->sig_3_enabled = Configuration::getFor('sig_3_enabled', '1') === '1';
 
         $this->report_signature_mode = Configuration::getFor('report_signature_mode', 'global_bottom');
 
@@ -350,6 +384,8 @@ class SettingsManager extends Component
         $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1') === '1';
 
         // Module Visibility
+        $this->default_login_page = Configuration::getFor('default_login_page', 'lab.dashboard');
+        $this->show_dashboard_stats = Configuration::getFor('show_dashboard_stats', '1') === '1';
         $this->module_pos = Configuration::getFor('module_pos', '1') === '1';
         $this->module_invoices = Configuration::getFor('module_invoices', '1') === '1';
         $this->module_departments = Configuration::getFor('module_departments', '1') === '1';
@@ -620,6 +656,12 @@ class SettingsManager extends Component
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0');
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0');
 
+        Configuration::setFor('report_flag_high_color', $this->report_flag_high_color);
+        Configuration::setFor('report_flag_low_color', $this->report_flag_low_color);
+        
+        Configuration::setFor('report_abnormal_indicator', $this->report_abnormal_indicator);
+        Configuration::setFor('report_abnormal_color', $this->report_abnormal_color);
+
         Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
         Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
         Configuration::setFor('signature_image', $this->signature_image);
@@ -685,6 +727,13 @@ class SettingsManager extends Component
         Configuration::setFor('global_sig_3_desig', $this->global_sig_3_desig);
         Configuration::setFor('global_sig_3_path', $this->global_sig_3_path);
 
+        Configuration::setFor('sig_1_position', $this->sig_1_position);
+        Configuration::setFor('sig_1_enabled', $this->sig_1_enabled ? '1' : '0');
+        Configuration::setFor('sig_2_position', $this->sig_2_position);
+        Configuration::setFor('sig_2_enabled', $this->sig_2_enabled ? '1' : '0');
+        Configuration::setFor('sig_3_position', $this->sig_3_position);
+        Configuration::setFor('sig_3_enabled', $this->sig_3_enabled ? '1' : '0');
+
         // 2. Save Selected Department Signatures
         if ($this->selected_dept_id) {
             $dept = \App\Models\Department::find($this->selected_dept_id);
@@ -728,6 +777,8 @@ class SettingsManager extends Component
     {
         $this->authorize('edit settings');
 
+        Configuration::setFor('default_login_page', $this->default_login_page);
+        Configuration::setFor('show_dashboard_stats', $this->show_dashboard_stats ? '1' : '0');
         Configuration::setFor('module_pos', $this->module_pos ? '1' : '0');
         Configuration::setFor('module_invoices', $this->module_invoices ? '1' : '0');
         Configuration::setFor('module_departments', $this->module_departments ? '1' : '0');
