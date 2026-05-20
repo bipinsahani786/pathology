@@ -2,20 +2,22 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Gate;
+use Livewire\Component;
 
 class LogViewer extends Component
 {
     public $logs = '';
+
     public $lines = 100;
+
     public $search = '';
+
     public $autoRefresh = false;
 
     public function mount()
     {
-        if (!auth()->user()->hasRole('super_admin')) {
+        if (! auth()->user()->hasRole('super_admin')) {
             abort(403);
         }
         $this->loadLogs();
@@ -25,8 +27,9 @@ class LogViewer extends Component
     {
         $logPath = storage_path('logs/laravel.log');
 
-        if (!File::exists($logPath)) {
-            $this->logs = "Log file not found at: " . $logPath;
+        if (! File::exists($logPath)) {
+            $this->logs = 'Log file not found at: '.$logPath;
+
             return;
         }
 
@@ -34,26 +37,28 @@ class LogViewer extends Component
         $file = new \SplFileObject($logPath, 'r');
         $file->seek(PHP_INT_MAX);
         $totalLines = $file->key();
-        
+
         $startLine = max(0, $totalLines - $this->lines);
         $file->seek($startLine);
 
         $content = [];
-        while (!$file->eof()) {
+        while (! $file->eof()) {
             $line = $file->fgets();
-            if ($this->search && !str_contains(strtolower($line), strtolower($this->search))) {
+            if ($this->search && ! str_contains(strtolower($line), strtolower($this->search))) {
                 continue;
             }
             $content[] = $line;
         }
 
-        $this->logs = implode("", array_reverse($content));
+        $this->logs = implode('', array_reverse($content));
     }
 
     public function clearLog()
     {
-        if (!auth()->user()->hasRole('super_admin')) return;
-        
+        if (! auth()->user()->hasRole('super_admin')) {
+            return;
+        }
+
         $logPath = storage_path('logs/laravel.log');
         File::put($logPath, '');
         $this->loadLogs();

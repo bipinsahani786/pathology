@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PatientMembership extends Model
 {
     use BelongsToCompany;
+
     protected $table = 'patient_memberships';
 
     protected $fillable = [

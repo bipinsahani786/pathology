@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\Company;
+use App\Models\Configuration;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\{Company, Configuration};
-use Illuminate\Support\Facades\Storage;
 
 class SettingsManager extends Component
 {
@@ -17,10 +17,28 @@ class SettingsManager extends Component
     // ==========================================
     // LAB PROFILE
     // ==========================================
-    public $lab_name, $lab_email, $lab_phone, $lab_address;
-    public $lab_website, $lab_gst_number, $lab_tagline;
-    public $lab_logo, $lab_favicon;
-    public $new_logo, $new_favicon;
+    public $lab_name;
+
+    public $lab_email;
+
+    public $lab_phone;
+
+    public $lab_address;
+
+    public $lab_website;
+
+    public $lab_gst_number;
+
+    public $lab_tagline;
+
+    public $lab_logo;
+
+    public $lab_favicon;
+
+    public $new_logo;
+
+    public $new_favicon;
+
     public $profileSaved = false;
 
     // UI SETTINGS
@@ -30,73 +48,111 @@ class SettingsManager extends Component
     // INVOICE SETTINGS
     // ==========================================
     public $invoice_prefix = 'INV';
+
     public $invoice_separator = '-';
+
     public $invoice_date_format = 'ym';
+
     public $invoice_counter_digits = 4;
+
     public $invoice_counter_reset = 'monthly';
+
     public $restrict_billing_below_b2b = false;
+
     public $commission_basis_doctor = 'gross';
+
     public $commission_basis_agent = 'gross';
+
     public $restrict_unpaid_reports = false;
-    
+
     // Invoice Print & Layout Settings
     public $invoice_show_header = true;
+
     public $invoice_show_footer = true;
+
     public $invoice_header_image;
+
     public $invoice_footer_image;
+
     public $new_invoice_header_image;
+
     public $new_invoice_footer_image;
+
     public $invoice_margin_top = 310;
+
     public $invoice_margin_bottom = 255;
+
     public $invoice_header_height = 200;
+
     public $invoice_footer_height = 180;
-    
+
     public $invoiceSaved = false;
 
     // ==========================================
     // PATIENT SETTINGS
     // ==========================================
     public $patient_id_prefix = 'PAT';
+
     public $patient_id_digits = 4;
+
     public $patientSettingsSaved = false;
 
     // ==========================================
     // BARCODE SETTINGS
     // ==========================================
     public $barcode_prefix = 'LAB';
+
     public $barcode_date_format = 'ymd';
+
     public $barcode_counter_digits = 6;
+
     public $barcodeSaved = false;
 
     // ==========================================
     // BILL TEMPLATE
     // ==========================================
     public $bill_template = 'classic';
+
     public $templateSaved = false;
 
     // ==========================================
     // PDF HEADER / FOOTER
     // ==========================================
     public $pdf_show_header = true;
+
     public $pdf_show_footer = true;
+
     public $pdf_show_signatures = true; // New Toggle
+
     public $pdf_show_test_method = true;
+
     public $pdf_show_watermark = true;
+
     public $pdf_header_image;       // stored path
+
     public $pdf_footer_image;       // stored path
+
     public $new_header_image;       // upload
+
     public $new_footer_image;       // upload
-    
+
     // PDF Typography & Layout
     public $pdf_font_size = 13;
+
     public $pdf_font_family = 'Helvetica';
+
     public $pdf_margin_top = 310;
+
     public $pdf_margin_bottom = 255;
+
     public $pdf_header_height = 200;
+
     public $pdf_footer_height = 180;
 
     public $report_page_break_style = 'continuous';
+
     public $report_show_dept_header_always = true;
+
     public $report_show_interpretation = true;
 
     public $pdfSaved = false;
@@ -105,47 +161,102 @@ class SettingsManager extends Component
     // BRANCH CONTROLS
     // ==========================================
     public $branch_share_patients = true;
+
     public $branch_share_doctors = true;
+
     public $branch_share_agents = true;
+
     public $branch_share_tests = true;
+
     public $restrict_branch_access = true;
+
     public $branchControlsSaved = false;
 
     // ==========================================
     // MODULE VISIBILITY SETTINGS
     // ==========================================
     public $module_pos = true;
+
     public $module_invoices = true;
+
     public $module_departments = true;
+
     public $module_tests = true;
+
     public $module_packages = true;
+
     public $module_branches = true;
+
     public $module_collection_centers = true;
+
     public $module_patients = true;
+
     public $module_doctors = true;
+
     public $module_agents = true;
+
     public $module_settlements = true;
+
     public $module_marketing = true;
+
     public $module_inventory = true;
 
     public $modulesSaved = false;
 
     // Report Signatory (Global 1)
     public $authorized_signatory_name;
+
     public $authorized_signatory_designation;
+
     public $signature_image;
+
     public $new_signature_image;
 
     // Global Signatories (2 & 3)
-    public $global_sig_2_name, $global_sig_2_desig, $global_sig_2_path, $new_global_sig_2;
-    public $global_sig_3_name, $global_sig_3_desig, $global_sig_3_path, $new_global_sig_3;
+    public $global_sig_2_name;
+
+    public $global_sig_2_desig;
+
+    public $global_sig_2_path;
+
+    public $new_global_sig_2;
+
+    public $global_sig_3_name;
+
+    public $global_sig_3_desig;
+
+    public $global_sig_3_path;
+
+    public $new_global_sig_3;
 
     // Department-wise Signatures
     public $report_signature_mode = 'global_bottom';
+
     public $selected_dept_id;
-    public $dept_sig_1_name, $dept_sig_1_desig, $dept_sig_1_path, $new_dept_sig_1;
-    public $dept_sig_2_name, $dept_sig_2_desig, $dept_sig_2_path, $new_dept_sig_2;
-    public $dept_sig_3_name, $dept_sig_3_desig, $dept_sig_3_path, $new_dept_sig_3;
+
+    public $dept_sig_1_name;
+
+    public $dept_sig_1_desig;
+
+    public $dept_sig_1_path;
+
+    public $new_dept_sig_1;
+
+    public $dept_sig_2_name;
+
+    public $dept_sig_2_desig;
+
+    public $dept_sig_2_path;
+
+    public $new_dept_sig_2;
+
+    public $dept_sig_3_name;
+
+    public $dept_sig_3_desig;
+
+    public $dept_sig_3_path;
+
+    public $new_dept_sig_3;
 
     public $signaturesSaved = false;
 
@@ -207,11 +318,11 @@ class SettingsManager extends Component
         $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255);
         $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200);
         $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180);
-        
+
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous');
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1') === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1') === '1';
-        
+
         $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
         $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
         $this->signature_image = Configuration::getFor('signature_image', null);
@@ -230,7 +341,7 @@ class SettingsManager extends Component
         $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB');
         $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd');
         $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6);
-        
+
         // Branch Controls
         $this->branch_share_patients = Configuration::getFor('branch_share_patients', '1') === '1';
         $this->branch_share_doctors = Configuration::getFor('branch_share_doctors', '1') === '1';
@@ -312,7 +423,7 @@ class SettingsManager extends Component
         $this->lab_favicon = $faviconPath;
         $this->new_logo = null;
         $this->new_favicon = null;
-        
+
         session()->flash('ui_updated', 'Settings updated successfully!');
         $this->profileSaved = true;
     }
@@ -342,11 +453,12 @@ class SettingsManager extends Component
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent);
 
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (!$hasCustomInvoice) {
+        if (! $hasCustomInvoice) {
             if (is_object($this->new_invoice_header_image) || is_object($this->new_invoice_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
                 $this->new_invoice_header_image = null;
                 $this->new_invoice_footer_image = null;
+
                 return;
             }
         }
@@ -436,9 +548,10 @@ class SettingsManager extends Component
 
         // SaaS Plan Enforcement
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (!$hasCustomInvoice && $this->bill_template !== 'classic') {
+        if (! $hasCustomInvoice && $this->bill_template !== 'classic') {
             session()->flash('error', 'Plan Restriction: Your current plan only supports the Classic invoice template. Upgrade to a premium plan to use Modern or Professional templates.');
             $this->bill_template = 'classic';
+
             return;
         }
 
@@ -459,11 +572,12 @@ class SettingsManager extends Component
 
         // SaaS Plan Enforcement for Custom Branding
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (!$hasCustomInvoice) {
+        if (! $hasCustomInvoice) {
             if (is_object($this->new_header_image) || is_object($this->new_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
                 $this->new_header_image = null;
                 $this->new_footer_image = null;
+
                 return;
             }
         }
@@ -493,7 +607,7 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0');
         Configuration::setFor('pdf_header_image', $this->pdf_header_image);
         Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);
-        
+
         // Layout & Typography
         Configuration::setFor('pdf_font_size', $this->pdf_font_size);
         Configuration::setFor('pdf_font_family', $this->pdf_font_family);
@@ -501,11 +615,11 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom);
         Configuration::setFor('pdf_header_height', $this->pdf_header_height);
         Configuration::setFor('pdf_footer_height', $this->pdf_footer_height);
-        
+
         Configuration::setFor('report_page_break_style', $this->report_page_break_style);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0');
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0');
-        
+
         Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
         Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
         Configuration::setFor('signature_image', $this->signature_image);
@@ -518,8 +632,9 @@ class SettingsManager extends Component
     // ==========================================
     public function updatedSelectedDeptId($value)
     {
-        if (!$value) {
+        if (! $value) {
             $this->reset(['dept_sig_1_name', 'dept_sig_1_desig', 'dept_sig_1_path', 'dept_sig_2_name', 'dept_sig_2_desig', 'dept_sig_2_path', 'dept_sig_3_name', 'dept_sig_3_desig', 'dept_sig_3_path']);
+
             return;
         }
 
@@ -675,9 +790,10 @@ class SettingsManager extends Component
         ];
         $datePart = $dateMap[$this->invoice_date_format] ?? date('ym');
 
-        $counter = str_pad(1, max((int)$this->invoice_counter_digits, 2), '0', STR_PAD_LEFT);
+        $counter = str_pad(1, max((int) $this->invoice_counter_digits, 2), '0', STR_PAD_LEFT);
 
         $parts = array_filter([$prefix, $datePart, $counter]);
+
         return implode($sep, $parts);
     }
 
@@ -695,9 +811,9 @@ class SettingsManager extends Component
             'none' => '',
         ];
         $datePart = $dateMap[$this->barcode_date_format] ?? date('ymd');
-        $counter = str_pad(1, max((int)$this->barcode_counter_digits, 2), '0', STR_PAD_LEFT);
+        $counter = str_pad(1, max((int) $this->barcode_counter_digits, 2), '0', STR_PAD_LEFT);
 
-        return $prefix . $datePart . $counter;
+        return $prefix.$datePart.$counter;
     }
 
     /**
@@ -706,8 +822,9 @@ class SettingsManager extends Component
     public function getPatientIdPreviewProperty(): string
     {
         $prefix = $this->patient_id_prefix ?: 'PAT';
-        $counter = str_pad(1, max((int)$this->patient_id_digits, 2), '0', STR_PAD_LEFT);
-        return $prefix . $counter;
+        $counter = str_pad(1, max((int) $this->patient_id_digits, 2), '0', STR_PAD_LEFT);
+
+        return $prefix.$counter;
     }
 
     public function getFontFamiliesProperty()

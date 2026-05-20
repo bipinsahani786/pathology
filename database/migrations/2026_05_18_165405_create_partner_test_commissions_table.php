@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('commission_type', ['fixed', 'percentage'])->default('percentage');
             $table->decimal('commission_value', 10, 2)->default(0);
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'lab_test_id']);
         });
     }

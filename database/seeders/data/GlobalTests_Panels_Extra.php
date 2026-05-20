@@ -1,4 +1,5 @@
 <?php
+
 // Common Panel & Profile Tests - Standalone individual tests and common panels
 return [
     ['test_code' => 'TLC-S', 'name' => 'Total Leukocyte Count (TLC)', 'category' => 'Haematology', 'description' => 'White blood cell count. Infection and immunity assessment.', 'interpretation' => 'High (Leukocytosis): Infection, Inflammation, Leukemia, Stress. Low (Leukopenia): Viral infection, Aplastic anemia, Chemotherapy, Autoimmune.', 'suggested_price' => 60, 'method' => 'Automated / Manual', 'sample_type' => 'EDTA Blood', 'tat_hours' => 2, 'default_parameters' => [['name' => 'TLC', 'unit' => 'x10³/µL', 'short_code' => 'TLCS', 'input_type' => 'numeric', 'method' => 'Automated', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.0', 'max_val' => '11.0', 'display_range' => '4.0 - 11.0']]]]],

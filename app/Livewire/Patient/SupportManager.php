@@ -2,26 +2,36 @@
 
 namespace App\Livewire\Patient;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class SupportManager extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $view = 'list'; // list, create, view
+
     public $selectedTicket;
-    
+
     // New Ticket Form
-    public $subject, $category, $priority = 'Medium', $description, $attachment;
-    
+    public $subject;
+
+    public $category;
+
+    public $priority = 'Medium';
+
+    public $description;
+
+    public $attachment;
+
     // Reply Form
-    public $message, $replyAttachment;
+    public $message;
+
+    public $replyAttachment;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -48,7 +58,7 @@ class SupportManager extends Component
         ]);
 
         $user = Auth::user();
-        $ticketId = 'PAT-' . strtoupper(bin2hex(random_bytes(3)));
+        $ticketId = 'PAT-'.strtoupper(bin2hex(random_bytes(3)));
 
         $path = null;
         if ($this->attachment) {
@@ -68,7 +78,7 @@ class SupportManager extends Component
             'is_system_ticket' => false, // Patient tickets go to their Lab
         ]);
 
-        session()->flash('message', 'Ticket ' . $ticketId . ' created successfully.');
+        session()->flash('message', 'Ticket '.$ticketId.' created successfully.');
         $this->viewTicket($ticket->id);
     }
 
@@ -117,7 +127,7 @@ class SupportManager extends Component
         }
 
         return view('livewire.patient.support-manager', [
-            'tickets' => $tickets
+            'tickets' => $tickets,
         ])->layout('layouts.app', ['title' => 'Support & Help']);
     }
 }

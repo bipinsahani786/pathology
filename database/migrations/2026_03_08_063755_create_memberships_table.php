@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('memberships', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete(); // Multi-tenancy
-            
+
             $table->string('name'); // e.g., Gold Health Card, Senior Citizen
             $table->decimal('price', 10, 2)->default(0); // Cost to buy this membership (₹)
             $table->decimal('discount_percentage', 5, 2)->default(0); // Flat % discount on all tests
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('color_code', 20)->default('#3b71ca'); // For beautiful UI cards
             $table->text('description')->nullable(); // Benefits details
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
             $table->index(['company_id', 'is_active']);
         });

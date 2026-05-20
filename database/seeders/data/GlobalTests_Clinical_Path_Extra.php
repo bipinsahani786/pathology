@@ -1,4 +1,5 @@
 <?php
+
 // Clinical Pathology Extra: Urine, Stool, Semen, Body fluid tests
 return [
     ['test_code' => 'UPR-S', 'name' => 'Urine Protein (Spot)', 'category' => 'Clinical Pathology', 'description' => 'Qualitative/semi-quantitative urine protein.', 'interpretation' => 'Trace: Normal variant. 1+: 30 mg/dL. 2+: 100. 3+: 300. 4+: >2000. Confirm with 24hr urine protein or PCR.', 'suggested_price' => 50, 'method' => 'Dipstick (pH Indicator)', 'sample_type' => 'Random Urine', 'tat_hours' => 2, 'default_parameters' => [['name' => 'Urine Protein', 'unit' => '', 'short_code' => 'UPRS', 'input_type' => 'selection', 'method' => 'Dipstick', 'options' => ['Nil', 'Trace', '1+', '2+', '3+', '4+'], 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Nil', 'display_range' => 'Nil']]]]],

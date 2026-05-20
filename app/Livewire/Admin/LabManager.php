@@ -9,34 +9,50 @@ use Livewire\WithPagination;
 class LabManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public $searchTerm = '';
+
     public $subscriptionFilter = 'all'; // all, expired, expiring_soon, active
 
     public $isRegistrationModalOpen = false;
 
     // Registration Form
     public $labName;
+
     public $labEmail;
+
     public $labPhone;
+
     public $labAddress;
+
     public $planId;
+
     public $adminName;
+
     public $adminEmail;
+
     public $adminPassword;
+
     public $referredBy; // Legacy field
+
     public $salesAgentId; // Professional system
 
     // UI State
     public $editingLabId = null;
+
     public $isViewModalOpen = false;
+
     public $selectedLab = null;
 
     // Renewal / Upgrade State
     public $isRenewModalOpen = false;
+
     public $renewLabId;
+
     public $renewPlanId;
+
     public $renewAmount;
 
     protected $rules = [
@@ -56,8 +72,8 @@ class LabManager extends Component
     {
         $query = Company::with('plan')
             ->where(function ($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                    ->orWhere('email', 'ilike', '%' . $this->searchTerm . '%');
+                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'ilike', '%'.$this->searchTerm.'%');
             });
 
         // Apply Subscription Filters
@@ -79,6 +95,7 @@ class LabManager extends Component
             } else {
                 $lab->days_left = null;
             }
+
             return $lab;
         });
 
@@ -88,7 +105,7 @@ class LabManager extends Component
         return view('livewire.admin.lab-manager', [
             'labs' => $labs,
             'plans' => $plans,
-            'salesAgents' => $salesAgents
+            'salesAgents' => $salesAgents,
         ])->layout('layouts.app');
     }
 
@@ -197,12 +214,12 @@ class LabManager extends Component
     {
         $this->validate([
             'labName' => 'required|string|max:255',
-            'labEmail' => 'required|email|unique:companies,email,' . $this->editingLabId,
+            'labEmail' => 'required|email|unique:companies,email,'.$this->editingLabId,
             'labPhone' => 'required|string|max:15',
             'labAddress' => 'required|string',
             'planId' => 'required|exists:plans,id',
             'adminName' => 'required|string|max:255',
-            'adminEmail' => 'required|email|unique:users,email,' . (\App\Models\User::where('company_id', $this->editingLabId)->role('lab_admin')->first()->id ?? 0),
+            'adminEmail' => 'required|email|unique:users,email,'.(\App\Models\User::where('company_id', $this->editingLabId)->role('lab_admin')->first()->id ?? 0),
             'adminPassword' => 'nullable|min:6',
         ]);
 
@@ -224,7 +241,7 @@ class LabManager extends Component
             if ($oldPlanId != $this->planId) {
                 $plan = \App\Models\Plan::find($this->planId);
                 $company->update([
-                    'trial_ends_at' => now()->addDays($plan->duration_in_days ?? 30)
+                    'trial_ends_at' => now()->addDays($plan->duration_in_days ?? 30),
                 ]);
             }
 
@@ -316,7 +333,7 @@ class LabManager extends Component
         \Illuminate\Support\Facades\DB::transaction(function () use ($company) {
             // 1. Recreate the default branch if missing
             $branch = \App\Models\Branch::where('company_id', $company->id)->first();
-            if (!$branch) {
+            if (! $branch) {
                 $branch = \App\Models\Branch::create([
                     'company_id' => $company->id,
                     'name' => 'Main Center',
@@ -330,11 +347,11 @@ class LabManager extends Component
                 ->role('lab_admin')
                 ->first();
 
-            if (!$admin) {
+            if (! $admin) {
                 // Create a new lab admin
-                $email = $company->email ?: 'admin' . $company->id . '@example.com';
+                $email = $company->email ?: 'admin'.$company->id.'@example.com';
                 $admin = \App\Models\User::create([
-                    'name' => $company->name . ' Admin',
+                    'name' => $company->name.' Admin',
                     'email' => $email,
                     'phone' => $company->phone ?: '9999999999',
                     'password' => \Illuminate\Support\Facades\Hash::make('password123'),
@@ -376,10 +393,10 @@ class LabManager extends Component
                 session()->flash('success', "SUCCESS: Restored Lab Admin, Branch & Linked all historical Invoices/Reports! Login Email: {$admin->email} | Password: password123");
             } else {
                 // Admin exists, just make sure branch is updated
-                if (!$admin->branch_id) {
+                if (! $admin->branch_id) {
                     $admin->update(['branch_id' => $branch->id]);
                 }
-                
+
                 // Also trigger history relink even if admin exists to fix any loose ends
                 $tables = \Illuminate\Support\Facades\DB::select("
                     SELECT table_name 

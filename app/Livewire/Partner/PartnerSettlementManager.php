@@ -2,28 +2,37 @@
 
 namespace App\Livewire\Partner;
 
+use App\Models\Invoice;
+use App\Models\Settlement;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Settlement;
-use App\Models\Invoice;
-use Illuminate\Support\Facades\Auth;
 
 class PartnerSettlementManager extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $filterDateFrom;
+
     public $filterDateTo;
+
     public $stats = [];
-    
+
     // Payment Recording Fields
     public $isModalOpen = false;
+
     public $amount;
+
     public $payment_date;
+
     public $payment_mode = 'UPI';
+
     public $reference_no;
+
     public $notes;
 
     public function mount()
@@ -46,9 +55,9 @@ class PartnerSettlementManager extends Component
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn ($r) => str_ends_with($r, '_collection_center'));
 
-        if (!$isCC) {
+        if (! $isCC) {
             abort(403, 'Only Collection Centers can record payments.');
         }
 
@@ -82,7 +91,7 @@ class PartnerSettlementManager extends Component
         $query = Settlement::where('user_id', $user->id);
 
         if ($this->search) {
-            $query->where('reference_no', 'like', '%' . $this->search . '%');
+            $query->where('reference_no', 'like', '%'.$this->search.'%');
         }
 
         if ($this->filterDateFrom) {
@@ -95,9 +104,9 @@ class PartnerSettlementManager extends Component
         // Stats calculation
         $invoices = Invoice::where('status', '!=', 'Cancelled')->where('payment_status', 'Paid');
         $roles = $user->roles->pluck('name')->toArray();
-        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
-        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_doctor'));
-        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_agent'));
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn ($r) => str_ends_with($r, '_collection_center'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn ($r) => str_ends_with($r, '_doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn ($r) => str_ends_with($r, '_agent'));
 
         if ($isCC) {
             $invoices->where('collection_center_id', $user->collection_center_id);
@@ -129,7 +138,7 @@ class PartnerSettlementManager extends Component
         ];
 
         return view('livewire.partner.partner-settlement-manager', [
-            'settlements' => $query->latest()->paginate($this->perPage)
+            'settlements' => $query->latest()->paginate($this->perPage),
         ]);
     }
 

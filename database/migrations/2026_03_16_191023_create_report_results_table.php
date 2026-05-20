@@ -15,17 +15,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('test_report_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lab_test_id')->constrained('lab_tests')->cascadeOnDelete();
-            
+
             $table->string('parameter_name');
             $table->string('short_code')->nullable();
             $table->string('result_value')->nullable();
-            
+
             $table->enum('status', ['Normal', 'High', 'Low'])->default('Normal');
             $table->boolean('is_highlighted')->default(false);
-            
+
             $table->string('reference_range')->nullable();
             $table->string('unit')->nullable();
-            
+
             $table->timestamps();
         });
     }

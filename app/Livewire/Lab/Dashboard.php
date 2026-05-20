@@ -2,14 +2,22 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use App\Models\{Invoice, LabTest, DoctorProfile, PatientProfile, CollectionCenter, User, InvoiceItem, Payment, Department, Configuration};
-use Illuminate\Support\Facades\DB;
+use App\Models\CollectionCenter;
+use App\Models\Configuration;
+use App\Models\DoctorProfile;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\LabTest;
+use App\Models\Payment;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class Dashboard extends Component
 {
     public $fromDate;
+
     public $toDate;
 
     public function mount()
@@ -70,13 +78,17 @@ class Dashboard extends Component
         $companyId = $companyId ?? auth()->user()->company_id;
         // Clear all dashboard cache keys for this company using pattern
         $cachePrefix = "dashboard_stats_{$companyId}_";
-        // Since we can't wildcard-delete with all cache drivers, 
+        // Since we can't wildcard-delete with all cache drivers,
         // we flush the most common keys (current month, today, etc.)
         $branches = ['', 'all'];
         $userBranchId = auth()->check() ? auth()->user()->branch_id : null;
-        if ($userBranchId) $branches[] = $userBranchId;
+        if ($userBranchId) {
+            $branches[] = $userBranchId;
+        }
         $activeBranch = session('active_branch_id', 'all');
-        if ($activeBranch && $activeBranch !== 'all') $branches[] = $activeBranch;
+        if ($activeBranch && $activeBranch !== 'all') {
+            $branches[] = $activeBranch;
+        }
 
         $dateRanges = [
             [Carbon::today()->toDateString(), Carbon::today()->toDateString()],
@@ -88,7 +100,7 @@ class Dashboard extends Component
 
         foreach ($branches as $b) {
             foreach ($dateRanges as [$from, $to]) {
-                $key = "dashboard_stats_{$companyId}_{$b}_" . Carbon::parse($from)->format('Ymd') . "_" . Carbon::parse($to)->format('Ymd');
+                $key = "dashboard_stats_{$companyId}_{$b}_".Carbon::parse($from)->format('Ymd').'_'.Carbon::parse($to)->format('Ymd');
                 \Illuminate\Support\Facades\Cache::forget($key);
             }
         }
@@ -104,9 +116,9 @@ class Dashboard extends Component
         }
         $activeBranchId = session('active_branch_id', 'all');
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !auth()->user()->hasRole('branch_admin');
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! auth()->user()->hasRole('branch_admin');
 
         $branchId = ($isGlobalAdmin)
             ? ($activeBranchId === 'all' ? null : $activeBranchId)
@@ -116,34 +128,34 @@ class Dashboard extends Component
         $end = Carbon::parse($this->toDate)->setHour(23)->setMinute(59)->setSecond(59);
 
         // Cache Key based on filters
-        $cacheKey = "dashboard_stats_{$companyId}_{$branchId}_" . $start->format('Ymd') . "_" . $end->format('Ymd');
+        $cacheKey = "dashboard_stats_{$companyId}_{$branchId}_".$start->format('Ymd').'_'.$end->format('Ymd');
 
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function() use ($companyId, $branchId, $start, $end) {
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($companyId, $branchId, $start, $end) {
             // 1. Master Counts
             $stats = [
                 'total_tests' => LabTest::where('company_id', $companyId)->where('is_package', false)->count(),
                 'total_packages' => LabTest::where('company_id', $companyId)->where('is_package', true)->count(),
-                'total_doctors' => DoctorProfile::where('company_id', $companyId)->when($branchId && !Configuration::getFor('branch_share_doctors', true), fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $branchId)))->count(),
-                'total_patients' => User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))->when($branchId && !Configuration::getFor('branch_share_patients', true), fn($q) => $q->where('branch_id', $branchId))->count(),
-                'total_ccs' => CollectionCenter::where('company_id', $companyId)->when($branchId, fn($q) => $q->where('branch_id', $branchId))->count(),
+                'total_doctors' => DoctorProfile::where('company_id', $companyId)->when($branchId && ! Configuration::getFor('branch_share_doctors', true), fn ($q) => $q->whereHas('user', fn ($u) => $u->where('branch_id', $branchId)))->count(),
+                'total_patients' => User::whereHas('patientProfile', fn ($q) => $q->where('company_id', $companyId))->when($branchId && ! Configuration::getFor('branch_share_patients', true), fn ($q) => $q->where('branch_id', $branchId))->count(),
+                'total_ccs' => CollectionCenter::where('company_id', $companyId)->when($branchId, fn ($q) => $q->where('branch_id', $branchId))->count(),
             ];
 
             // 2. Operational Stats
             $ops = [
                 'pending_tests' => Invoice::where('company_id', $companyId)
-                    ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                     ->where('status', '!=', 'Cancelled')
                     ->whereNotIn('sample_status', ['Ready'])
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),
                 'completed_tests' => Invoice::where('company_id', $companyId)
-                    ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                     ->where('status', '!=', 'Cancelled')
                     ->where('sample_status', 'Ready')
                     ->whereBetween('invoice_date', [$start, $end])
                     ->count(),
                 'home_visits' => Invoice::where('company_id', $companyId)
-                    ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                     ->where('status', '!=', 'Cancelled')
                     ->where('collection_type', 'Home Collection')
                     ->whereBetween('invoice_date', [$start, $end])
@@ -152,7 +164,7 @@ class Dashboard extends Component
 
             // 3. Financial Totals
             $financials = Invoice::where('company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->selectRaw('
@@ -164,14 +176,14 @@ class Dashboard extends Component
                 ->first();
 
             // 4. Rankings
-            $topPackages = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
+            $topPackages = InvoiceItem::whereHas('invoice', fn ($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn ($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
                 ->where('is_package', true)
                 ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
                 ->groupBy('lab_test_id', 'test_name')
                 ->orderByDesc('total_income')
                 ->take(5)->get();
 
-            $topTests = InvoiceItem::whereHas('invoice', fn($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
+            $topTests = InvoiceItem::whereHas('invoice', fn ($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn ($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
                 ->where('is_package', false)
                 ->select('lab_test_id', 'test_name', DB::raw('SUM(price) as total_income'), DB::raw('COUNT(*) as total_sold'))
                 ->groupBy('lab_test_id', 'test_name')
@@ -179,7 +191,7 @@ class Dashboard extends Component
                 ->take(5)->get();
 
             $topCCs = Invoice::where('company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->with('collectionCenter')
@@ -189,22 +201,22 @@ class Dashboard extends Component
                 ->take(5)->get();
 
             $topDoctors = Invoice::where('company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->whereNotNull('referred_by_doctor_id')
-                ->with(['doctor' => fn($q) => $q->select('id', 'name')])
+                ->with(['doctor' => fn ($q) => $q->select('id', 'name')])
                 ->select('referred_by_doctor_id', DB::raw('SUM(total_amount) as total_income'))
                 ->groupBy('referred_by_doctor_id')
                 ->orderByDesc('total_income')
                 ->take(5)->get();
 
             $topAgents = Invoice::where('company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->whereNotNull('referred_by_agent_id')
-                ->with(['agent' => fn($q) => $q->select('id', 'name')])
+                ->with(['agent' => fn ($q) => $q->select('id', 'name')])
                 ->select('referred_by_agent_id', DB::raw('SUM(total_amount) as total_income'))
                 ->groupBy('referred_by_agent_id')
                 ->orderByDesc('total_income')
@@ -212,17 +224,17 @@ class Dashboard extends Component
 
             // 5. Chart Data
             $chartRawData = Invoice::where('company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                 ->where('status', '!=', 'Cancelled')
                 ->whereBetween('invoice_date', [$start, $end])
                 ->select(
-                    DB::raw('DATE(invoice_date) as date'), 
-                    DB::raw('SUM(total_amount) as daily_revenue'), 
+                    DB::raw('DATE(invoice_date) as date'),
+                    DB::raw('SUM(total_amount) as daily_revenue'),
                     DB::raw('SUM(total_amount - COALESCE(cc_profit_amount, 0) - COALESCE(doctor_commission_amount, 0) - COALESCE(agent_commission_amount, 0)) as daily_profit')
                 )
                 ->groupBy('date')->orderBy('date')->get();
 
-            $deptData = InvoiceItem::whereHas('invoice', fn($q) => $q->where('invoices.company_id', $companyId)->where('invoices.status', '!=', 'Cancelled')->when($branchId, fn($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
+            $deptData = InvoiceItem::whereHas('invoice', fn ($q) => $q->where('invoices.company_id', $companyId)->where('invoices.status', '!=', 'Cancelled')->when($branchId, fn ($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoices.invoice_date', [$start, $end]))
                 ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
                 ->join('departments', 'lab_tests.department_id', '=', 'departments.id')
                 ->select('departments.name as dept_name', DB::raw('COUNT(*) as test_count'))
@@ -232,7 +244,7 @@ class Dashboard extends Component
 
             $paymentData = Payment::where('payments.company_id', $companyId)
                 ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
-                ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('invoices.branch_id', $branchId))
                 ->whereBetween('payments.created_at', [$start, $end])
                 ->join('payment_modes', 'payments.payment_mode_id', '=', 'payment_modes.id')
                 ->select('payment_modes.name as mode_name', DB::raw('SUM(payments.amount) as total_collected'))
@@ -241,7 +253,7 @@ class Dashboard extends Component
                 ->get();
 
             $channelData = Invoice::where('invoices.company_id', $companyId)
-                ->when($branchId, fn($q) => $q->where('invoices.branch_id', $branchId))
+                ->when($branchId, fn ($q) => $q->where('invoices.branch_id', $branchId))
                 ->where('invoices.status', '!=', 'Cancelled')
                 ->whereBetween('invoices.invoice_date', [$start, $end])
                 ->select(DB::raw("COALESCE(collection_type, 'Direct') as channel"), DB::raw('COUNT(*) as count'))
@@ -254,10 +266,10 @@ class Dashboard extends Component
         // Other non-cached or lightweight data
         $staffActivity = [
             'active_admins' => User::where('company_id', $companyId)
-                ->whereHas('roles', fn($q) => $q->where('name', 'like', '%admin%'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'like', '%admin%'))
                 ->where('is_active', true)->count(),
             'active_staff' => User::where('company_id', $companyId)
-                ->whereHas('roles', fn($q) => $q->where('name', 'not like', '%admin%')->whereNotIn('name', ['patient', 'doctor', 'agent']))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'not like', '%admin%')->whereNotIn('name', ['patient', 'doctor', 'agent']))
                 ->where('is_active', true)->count(),
         ];
 
@@ -279,7 +291,7 @@ class Dashboard extends Component
             'topAgents' => $data['topAgents'],
             'staffActivity' => $staffActivity,
             // Chart 1
-            'chartLabels' => $chartRawData->pluck('date')->map(fn($d) => Carbon::parse($d)->format('d M'))->toArray(),
+            'chartLabels' => $chartRawData->pluck('date')->map(fn ($d) => Carbon::parse($d)->format('d M'))->toArray(),
             'revenueValues' => $chartRawData->pluck('daily_revenue')->toArray(),
             'profitValues' => $chartRawData->pluck('daily_profit')->toArray(),
             // Chart 2

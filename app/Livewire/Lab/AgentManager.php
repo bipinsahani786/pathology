@@ -2,18 +2,18 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\User;
 use App\Models\AgentProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class AgentManager extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -23,16 +23,21 @@ class AgentManager extends Component
 
     // State variables
     public $searchTerm = '';
+
     public $user_id = null; // Tracks the User ID for editing
-    
+
     // User Table Fields
     public $name;
+
     public $phone;
+
     public $email;
+
     public $password;
-    
+
     // Agent Profile Fields
     public $agency_name;
+
     public $commission_percentage = 0;
 
     public $isModalOpen = false;
@@ -62,15 +67,15 @@ class AgentManager extends Component
     {
         $this->authorize('edit agents');
         $this->resetFields();
-        
+
         // Eager load the profile to avoid N+1 query issues
         $user = User::with('agentProfile')->findOrFail($id);
-        
+
         $this->user_id = $user->id;
         $this->name = $user->name;
         $this->phone = $user->phone;
         $this->email = $user->email;
-        
+
         if ($user->agentProfile) {
             $this->agency_name = $user->agentProfile->agency_name;
             $this->commission_percentage = $user->agentProfile->commission_percentage;
@@ -129,28 +134,29 @@ class AgentManager extends Component
             } else {
                 $this->authorize('create agents');
                 $company = auth()->user()->company;
-                
+
                 // SaaS Plan Enforcement for Agents
                 $maxAgents = $company->plan->features['agents'] ?? -1;
                 if ($maxAgents != -1) {
                     $currentAgentsCount = \App\Models\AgentProfile::where('company_id', $company->id)->count();
                     if ($currentAgentsCount >= $maxAgents) {
                         $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxAgents} marketing agent(s). Upgrade your plan to add more.");
+
                         return;
                     }
                 }
 
                 $companyId = $company->id;
                 // CREATE NEW AGENT
-                
+
                 $activeBranchId = session('active_branch_id', 'all');
                 $roles = auth()->user()->roles->pluck('name')->toArray();
-                $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                                 collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                                 && !auth()->user()->hasRole('branch_admin');
+                $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
+                                 collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                                 && ! auth()->user()->hasRole('branch_admin');
 
-                $myBranchId = $isGlobalAdmin 
-                    ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+                $myBranchId = $isGlobalAdmin
+                    ? ($activeBranchId === 'all' ? null : $activeBranchId)
                     : auth()->user()->branch_id;
 
                 // 1. Create the base User record
@@ -159,8 +165,8 @@ class AgentManager extends Component
                     'branch_id' => $myBranchId,
                     'name' => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email ?: null, 
-                    'password' => Hash::make($this->password ?? $this->phone ?? 'password123'), 
+                    'email' => $this->email ?: null,
+                    'password' => Hash::make($this->password ?? $this->phone ?? 'password123'),
                     'is_active' => true,
                 ]);
 
@@ -180,10 +186,10 @@ class AgentManager extends Component
 
             DB::commit();
             $this->closeModal();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error saving agent: ' . $e->getMessage());
+            session()->flash('error', 'Error saving agent: '.$e->getMessage());
         }
     }
 
@@ -194,10 +200,10 @@ class AgentManager extends Component
     {
         $this->authorize('edit agents');
         $user = User::findOrFail($id);
-        $user->is_active = !$user->is_active;
+        $user->is_active = ! $user->is_active;
         $user->save();
-        
-        session()->flash('message', 'Agent status updated to ' . ($user->is_active ? 'Active' : 'Inactive'));
+
+        session()->flash('message', 'Agent status updated to '.($user->is_active ? 'Active' : 'Inactive'));
     }
 
     public function delete($id)
@@ -228,48 +234,48 @@ class AgentManager extends Component
         $companyId = auth()->user()->company_id;
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        
+
         $roles = auth()->user()->roles->pluck('name')->toArray();
-        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !auth()->user()->hasRole('branch_admin');
+        $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! auth()->user()->hasRole('branch_admin');
 
         $myBranchId = null;
         if ($isGlobalAdmin) {
-             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
         } else {
-             $myBranchId = auth()->user()->branch_id;
+            $myBranchId = auth()->user()->branch_id;
         }
 
         // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
-        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+        if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
             $myBranchId = auth()->user()->branch_id;
         }
-        
+
         $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
 
         // Fetch only users who have an AgentProfile attached to the current company
-        $query = User::whereHas('agentProfile', function($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            });
+        $query = User::whereHas('agentProfile', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        });
 
-        if ($myBranchId && !$shareAgents) {
+        if ($myBranchId && ! $shareAgents) {
             $query->where('branch_id', $myBranchId);
         }
 
-        $agents = $query->with('agentProfile') 
-            ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhereHas('agentProfile', function($query2) {
-                      $query2->where('agency_name', 'ilike', '%' . $this->searchTerm . '%');
-                  });
+        $agents = $query->with('agentProfile')
+            ->where(function ($q) {
+                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('phone', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('agentProfile', function ($query2) {
+                        $query2->where('agency_name', 'ilike', '%'.$this->searchTerm.'%');
+                    });
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.lab.agent-manager', [
-            'agents' => $agents
+            'agents' => $agents,
         ])->layout('layouts.app', ['title' => 'Referral Agents']);
     }
 }

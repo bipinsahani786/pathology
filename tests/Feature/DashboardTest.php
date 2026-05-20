@@ -11,10 +11,10 @@ test('guests are redirected to the login page', function () {
 test('authenticated users are redirected to their specific dashboard', function () {
     // Ensure the role exists
     $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-    
+
     $user = User::factory()->create();
-    $user->assignRole($role); 
-    
+    $user->assignRole($role);
+
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));

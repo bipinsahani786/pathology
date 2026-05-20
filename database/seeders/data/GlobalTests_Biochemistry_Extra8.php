@@ -1,4 +1,5 @@
 <?php
+
 // Biochemistry Extra 8: More standalone common tests
 return [
     ['test_code' => 'IRON-S', 'name' => 'Serum Iron Standalone', 'category' => 'Biochemistry', 'description' => 'Serum iron level.', 'interpretation' => 'Low in IDA, chronic disease. High in hemochromatosis, iron overload, hemolytic anemia.', 'suggested_price' => 200, 'method' => 'Ferrozine (Colorimetric)', 'sample_type' => 'Clotted Blood (Fasting)', 'tat_hours' => 6, 'default_parameters' => [['name' => 'Serum Iron', 'unit' => 'µg/dL', 'short_code' => 'IRNS', 'input_type' => 'numeric', 'method' => 'Ferrozine', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Male', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '65', 'max_val' => '175', 'display_range' => '65 - 175'], ['gender' => 'Female', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '50', 'max_val' => '170', 'display_range' => '50 - 170']]]]],

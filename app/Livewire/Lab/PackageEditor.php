@@ -2,23 +2,41 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use App\Services\LabTestService;
 use App\Models\LabTest;
+use App\Services\LabTestService;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class PackageEditor extends Component
 {
-    public $package_id, $test_code, $name, $department = 'Profiles/Packages';
-    public $mrp, $b2b_price, $sample_type, $tat_hours = 24, $description, $is_active = true;
-    
-    public array $selectedTests = []; 
+    public $package_id;
+
+    public $test_code;
+
+    public $name;
+
+    public $department = 'Profiles/Packages';
+
+    public $mrp;
+
+    public $b2b_price;
+
+    public $sample_type;
+
+    public $tat_hours = 24;
+
+    public $description;
+
+    public $is_active = true;
+
+    public array $selectedTests = [];
+
     public $testSearchTerm = '';
 
     public function mount($id = null)
     {
         $this->authorize('view test_packages');
-        $labTestService = new LabTestService();
+        $labTestService = new LabTestService;
         if ($id) {
             $package = $labTestService->getTestById($id);
             $this->package_id = $package->id;
@@ -32,14 +50,14 @@ class PackageEditor extends Component
             $this->description = $package->description;
             $this->is_active = $package->is_active;
 
-            if (!empty($package->linked_test_ids)) {
+            if (! empty($package->linked_test_ids)) {
                 $tests = $labTestService->getTestsByIds($package->linked_test_ids);
                 foreach ($tests as $t) {
                     $this->selectedTests[$t->id] = [
-                        'id' => (int) $t->id, 
-                        'name' => (string) $t->name, 
+                        'id' => (int) $t->id,
+                        'name' => (string) $t->name,
                         'department' => (string) $t->department,
-                        'mrp' => (float) $t->mrp
+                        'mrp' => (float) $t->mrp,
                     ];
                 }
             }
@@ -49,12 +67,12 @@ class PackageEditor extends Component
     public function addTestToPackage($testId, $testName, $testDept, $testMrp)
     {
         $this->selectedTests[$testId] = [
-            'id' => (int) $testId, 
-            'name' => (string) $testName, 
+            'id' => (int) $testId,
+            'name' => (string) $testName,
             'department' => (string) $testDept,
-            'mrp' => (float) $testMrp
+            'mrp' => (float) $testMrp,
         ];
-        $this->testSearchTerm = ''; 
+        $this->testSearchTerm = '';
     }
 
     public function removeTestFromPackage($testId)
@@ -70,7 +88,7 @@ class PackageEditor extends Component
             'selectedTests' => 'required|array|min:1',
         ], [
             'selectedTests.required' => 'Please add at least one test to this package.',
-            'selectedTests.min' => 'Please add at least one test to this package.'
+            'selectedTests.min' => 'Please add at least one test to this package.',
         ]);
 
         try {
@@ -95,21 +113,22 @@ class PackageEditor extends Component
             );
 
             session()->flash('message', $this->package_id ? 'Package updated successfully.' : 'Package created successfully.');
+
             return redirect()->route('lab.packages');
-            
+
         } catch (\Exception $e) {
-            Log::error('Error saving package: ' . $e->getMessage());
-            session()->flash('error', 'Database Error: ' . $e->getMessage());
+            Log::error('Error saving package: '.$e->getMessage());
+            session()->flash('error', 'Database Error: '.$e->getMessage());
         }
     }
 
     public function render()
     {
-        $labTestService = new LabTestService();
+        $labTestService = new LabTestService;
         $searchResultTests = $labTestService->searchSingleTestsForPackage($this->testSearchTerm, 10);
 
         return view('livewire.lab.package-editor', [
-            'searchResultTests' => $searchResultTests
+            'searchResultTests' => $searchResultTests,
         ])->layout('layouts.app', ['title' => $this->package_id ? 'Edit Package' : 'New Package']);
     }
 }

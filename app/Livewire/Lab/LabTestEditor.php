@@ -2,26 +2,46 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use App\Services\LabTestService;
 use App\Models\Department;
-use Illuminate\Validation\Rule;
+use App\Services\LabTestService;
+use Livewire\Component;
 
 class LabTestEditor extends Component
 {
-    public $test_id, $test_code, $name, $method, $department_id, $mrp, $b2b_price, $sample_type;
+    public $test_id;
+
+    public $test_code;
+
+    public $name;
+
+    public $method;
+
+    public $department_id;
+
+    public $mrp;
+
+    public $b2b_price;
+
+    public $sample_type;
+
     public $tat_hours = 24;
+
     public $is_active = true;
+
     public $description;
+
     public $interpretation;
+
     public array $parameters = [];
+
     public $editingParamIndex = null;
+
     public $isRangeModalOpen = false;
 
     public function mount($id = null)
     {
         $this->authorize('view lab_tests');
-        $labTestService = new LabTestService();
+        $labTestService = new LabTestService;
         if ($id) {
             $test = $labTestService->getTestById($id);
             $this->test_id = $test->id;
@@ -57,17 +77,17 @@ class LabTestEditor extends Component
                     'max_val' => '',
                     'display_range' => '',
                     'normal_value' => '',
-                    'is_critical' => false
-                ]
+                    'is_critical' => false,
+                ],
             ],
-            'short_code' => '', 'input_type' => 'numeric', 'formula' => '', 'method' => ''
+            'short_code' => '', 'input_type' => 'numeric', 'formula' => '', 'method' => '',
         ];
     }
 
     public function openRangeModal($index)
     {
         $this->editingParamIndex = $index;
-        if (!isset($this->parameters[$index]['ranges'])) {
+        if (! isset($this->parameters[$index]['ranges'])) {
             $this->parameters[$index]['ranges'] = [];
         }
         if (empty($this->parameters[$index]['ranges'])) {
@@ -88,7 +108,7 @@ class LabTestEditor extends Component
                 'max_val' => '',
                 'display_range' => '',
                 'normal_value' => '',
-                'is_critical' => false
+                'is_critical' => false,
             ];
         }
     }
@@ -161,7 +181,7 @@ class LabTestEditor extends Component
 
     public function save()
     {
-        $labTestService = new LabTestService();
+        $labTestService = new LabTestService;
         $this->validate([
             'name' => 'required|string|max:255',
             'method' => 'nullable|string|max:100',
@@ -171,7 +191,7 @@ class LabTestEditor extends Component
             'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
             'parameters.*.method' => 'nullable|string|max:100',
         ], [
-            'parameters.*.name.required' => 'Parameter name is required.'
+            'parameters.*.name.required' => 'Parameter name is required.',
         ]);
 
         try {
@@ -193,9 +213,10 @@ class LabTestEditor extends Component
             $labTestService->saveTest($data, $this->test_id);
 
             session()->flash('message', $this->test_id ? 'Test updated successfully.' : 'New test created.');
+
             return redirect()->route('lab.tests');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error saving test: ' . $e->getMessage());
+            session()->flash('error', 'Error saving test: '.$e->getMessage());
         }
     }
 
@@ -208,7 +229,7 @@ class LabTestEditor extends Component
             ->get();
 
         return view('livewire.lab.lab-test-editor', [
-            'departments' => $departments
+            'departments' => $departments,
         ])->layout('layouts.app', ['title' => $this->test_id ? 'Edit Lab Test' : 'New Lab Test']);
     }
 }

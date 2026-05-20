@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('patient_memberships', function (Blueprint $table) {
-           $table->id();
+            $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('patient_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('membership_id')->constrained('lab_tests')->cascadeOnDelete(); // Assuming health cards are saved in lab_tests
-            
+
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->date('valid_from');
             $table->date('valid_until');

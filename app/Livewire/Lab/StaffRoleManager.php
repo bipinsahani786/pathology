@@ -2,26 +2,42 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class StaffRoleManager extends Component
 {
     public $activeSubTab = 'staff'; // staff or roles
+
     public $searchTerm = '';
 
     // Staff State
-    public $staff_id, $name, $email, $phone, $password, $role_id;
+    public $staff_id;
+
+    public $name;
+
+    public $email;
+
+    public $phone;
+
+    public $password;
+
+    public $role_id;
+
     public $isStaffModalOpen = false;
 
     // Role State
-    public $role_id_to_edit, $role_name;
+    public $role_id_to_edit;
+
+    public $role_name;
+
     public $selectedPermissions = [];
+
     public $isRoleModalOpen = false;
 
     protected $listeners = ['refreshComponent' => '$refresh'];
@@ -34,7 +50,7 @@ class StaffRoleManager extends Component
     // ==========================================
     // STAFF MANAGEMENT
     // ==========================================
-    
+
     public function createStaff()
     {
         $this->authorize('create staff_roles');
@@ -74,18 +90,19 @@ class StaffRoleManager extends Component
         $this->authorize($this->staff_id ? 'edit staff_roles' : 'create staff_roles');
 
         // Pre-validation for SaaS Staff Limit
-        if (!$this->staff_id) {
+        if (! $this->staff_id) {
             $company = auth()->user()->company;
             $maxStaff = $company->plan->features['staff'] ?? -1;
-            
+
             if ($maxStaff != -1) {
                 $currentStaffCount = \App\Models\User::where('company_id', $company->id)
-                    ->whereHas('roles', function($q) {
+                    ->whereHas('roles', function ($q) {
                         $q->whereIn('name', ['staff', 'lab_admin', 'branch_admin', 'collection_center']);
                     })->count();
-                    
+
                 if ($currentStaffCount >= $maxStaff) {
                     $this->addError('name', "Plan Limit Reached! Your plan allows a maximum of {$maxStaff} staff members. Please upgrade your plan to add more.");
+
                     return;
                 }
             }
@@ -128,7 +145,7 @@ class StaffRoleManager extends Component
             session()->flash('message', 'Staff member saved successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error: '.$e->getMessage());
         }
     }
 
@@ -137,6 +154,7 @@ class StaffRoleManager extends Component
         $this->authorize('delete staff_roles');
         if ($id == auth()->id()) {
             session()->flash('error', 'You cannot delete yourself.');
+
             return;
         }
         User::findOrFail($id)->delete();
@@ -164,24 +182,23 @@ class StaffRoleManager extends Component
         $this->authorize('edit staff_roles');
         $this->resetRoleFields();
         $role = Role::findOrFail($id);
-        
-        // Don't allow editing system roles from here if needed
-        // For now, allow everything
-        
-        $this->role_id_to_edit = $role->id;
-        
-        // Technical name cleanup logic
+
+        // Don't allow editing system roles or other tenant's roles
         $user = auth()->user();
-        $prefix = 'lab_' . $user->company_id . '_';
-        
-        // If it starts with prefix, strip it. If it's a known system role, use friendly name.
-        if (str_starts_with($role->name, $prefix)) {
-            $this->role_name = str_replace($prefix, '', $role->name);
-        } else {
-            // Keep system role names as is for editing, but they will be prefixed on save
-            $this->role_name = $role->name;
+        $prefix = 'lab_'.$user->company_id.'_';
+        $systemRoleNames = ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent', 'super_admin', 'patient'];
+
+        if (in_array($role->name, $systemRoleNames) || ! str_starts_with($role->name, $prefix)) {
+            session()->flash('error', 'Core system roles and other tenant roles cannot be modified.');
+
+            return;
         }
-        
+
+        $this->role_id_to_edit = $role->id;
+
+        // Technical name cleanup logic
+        $this->role_name = str_replace($prefix, '', $role->name);
+
         $this->selectedPermissions = $role->permissions->pluck('name')->toArray();
         $this->isRoleModalOpen = true;
     }
@@ -198,19 +215,37 @@ class StaffRoleManager extends Component
             // Company specific role name logic
             $cleanName = strtolower(str_replace(' ', '_', $this->role_name));
             $user = auth()->user();
-            
+
             // All custom roles are tenant-scoped, not branch-scoped
-            $internalName = 'lab_' . $user->company_id . '_' . $cleanName;
+            $internalName = 'lab_'.$user->company_id.'_'.$cleanName;
+            $systemRoleNames = ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent', 'super_admin', 'patient'];
 
             if ($this->role_id_to_edit) {
                 $this->authorize('edit staff_roles');
                 $role = Role::findOrFail($this->role_id_to_edit);
+
+                // Security check
+                $prefix = 'lab_'.$user->company_id.'_';
+                if (in_array($role->name, $systemRoleNames) || ! str_starts_with($role->name, $prefix)) {
+                    session()->flash('error', 'Unauthorized action.');
+
+                    return;
+                }
+
                 $role->update(['name' => $internalName]);
             } else {
                 $this->authorize('create staff_roles');
+
+                // Prevent clashing with system role names
+                if (in_array($cleanName, $systemRoleNames)) {
+                    $this->addError('role_name', 'Cannot use system role names.');
+
+                    return;
+                }
+
                 $role = Role::create([
                     'name' => $internalName,
-                    'guard_name' => 'web'
+                    'guard_name' => 'web',
                 ]);
             }
 
@@ -223,7 +258,7 @@ class StaffRoleManager extends Component
             session()->flash('message', 'Role permissions updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error: '.$e->getMessage());
         }
     }
 
@@ -239,16 +274,16 @@ class StaffRoleManager extends Component
         $user = auth()->user();
         $query = User::where('company_id', $labId)
             ->where('id', '!=', auth()->id()) // Hide self from list
-            ->whereDoesntHave('roles', function($query) {
-                $query->whereIn('name', ['patient', 'doctor', 'agent']);
+            ->whereDoesntHave('roles', function ($query) {
+                $query->whereIn('name', ['patient', 'doctor', 'agent', 'collection_center']);
             });
 
         // Apply Search Filter
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('email', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('phone', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -257,37 +292,38 @@ class StaffRoleManager extends Component
             $query->where('branch_id', $user->branch_id);
         }
 
-        $staff = $query->where(function($query) {
-                // Either they have a role (and it's not excluded above)
-                // OR they have no role but also NO profile (patient/doctor/agent)
-                $query->has('roles')
-                      ->orWhere(function($q) {
-                          $q->doesntHave('patientProfile')
-                            ->doesntHave('doctorProfile')
-                            ->doesntHave('agentProfile');
-                      });
-            })
+        $staff = $query->where(function ($query) {
+            // Either they have a role (and it's not excluded above)
+            // OR they have no role but also NO profile (patient/doctor/agent/collection center)
+            $query->has('roles')
+                ->orWhere(function ($q) {
+                    $q->doesntHave('patientProfile')
+                        ->doesntHave('doctorProfile')
+                        ->doesntHave('agentProfile')
+                        ->whereNull('collection_center_id');
+                });
+        })
             ->with('roles')
             ->get();
 
         // Get roles: Fetch System roles + Current Lab's custom roles
-        $tenantPrefix = 'lab_' . $labId . '_';
+        $tenantPrefix = 'lab_'.$labId.'_';
         $systemRoleNames = ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent'];
 
-        $rolesQuery = Role::where(function($q) use ($tenantPrefix, $systemRoleNames) {
+        $rolesQuery = Role::where(function ($q) use ($tenantPrefix, $systemRoleNames) {
             $q->whereIn('name', $systemRoleNames)
-              ->orWhere('name', 'like', $tenantPrefix . '%');
+                ->orWhere('name', 'like', $tenantPrefix.'%');
         });
 
         if ($user->hasRole('branch_admin')) {
             // Branch admins see restricted set
             // Filter: Name must be in the basic list OR start with prefix AND not be the admin version
-            $roles = $rolesQuery->where(function($q) use ($tenantPrefix) {
+            $roles = $rolesQuery->where(function ($q) use ($tenantPrefix) {
                 $q->whereIn('name', ['staff', 'collection_center', 'doctor', 'agent'])
-                  ->orWhere(function($sub) use ($tenantPrefix) {
-                      $sub->where('name', 'like', $tenantPrefix . '%')
-                          ->where('name', 'not like', '%admin%');
-                  });
+                    ->orWhere(function ($sub) use ($tenantPrefix) {
+                        $sub->where('name', 'like', $tenantPrefix.'%')
+                            ->where('name', 'not like', '%admin%');
+                    });
             })->orderBy('id', 'asc')->get();
         } else {
             // Main Admin sees all
@@ -299,7 +335,7 @@ class StaffRoleManager extends Component
             'manage global_tests',
             'manage plans',
             'manage subscriptions',
-            'manage departments' // System departments
+            'manage departments', // System departments
         ];
 
         // Fetch all permissions except those excluded
@@ -310,7 +346,7 @@ class StaffRoleManager extends Component
         return view('livewire.lab.staff-role-manager', [
             'staff' => $staff,
             'roles' => $roles,
-            'permissions' => $permissions
+            'permissions' => $permissions,
         ]);
     }
 }

@@ -36,9 +36,9 @@ class InventoryStock extends Model
     {
         return $this->batches()
             ->where('quantity', '>', 0)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('expiry_date')
-                      ->orWhere('expiry_date', '>=', now());
+                    ->orWhere('expiry_date', '>=', now());
             })
             ->orderBy('expiry_date', 'asc');
     }

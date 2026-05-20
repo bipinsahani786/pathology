@@ -1,4 +1,5 @@
 <?php
+
 // Biochemistry Extra 7: Standalone electrolytes, minerals, glucose variants
 return [
     ['test_code' => 'NA-S', 'name' => 'Serum Sodium Standalone', 'category' => 'Biochemistry', 'description' => 'Essential electrolyte. Evaluates fluid balance and ADH function.', 'interpretation' => 'Low: SIADH, Diuretics, Heart failure. High: Dehydration, Diabetes insipidus.', 'suggested_price' => 100, 'method' => 'ISE (Ion Selective Electrode)', 'sample_type' => 'Clotted Blood', 'tat_hours' => 4, 'default_parameters' => [['name' => 'Sodium', 'unit' => 'mEq/L', 'short_code' => 'NAS', 'input_type' => 'numeric', 'method' => 'ISE', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '136', 'max_val' => '146', 'display_range' => '136 - 146']]]]],

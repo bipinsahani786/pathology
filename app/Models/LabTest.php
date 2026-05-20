@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class LabTest extends Model
 {
-    use BelongsToCompany, \App\Traits\Auditable;
+    use \App\Traits\Auditable, BelongsToCompany;
 
     protected $fillable = [
         'company_id', 'global_test_id', 'department_id', 'test_code', 'name', 'method', 'department',
-        'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description' , 'interpretation', 'is_package', 'linked_test_ids',
+        'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description', 'interpretation', 'is_package', 'linked_test_ids',
     ];
 
     protected $casts = [
@@ -19,9 +19,9 @@ class LabTest extends Model
         'mrp' => 'decimal:2',
         'b2b_price' => 'decimal:2',
         'is_active' => 'boolean',
-        'parameters' => 'array', 
-        'is_package' => 'boolean',  
-        'linked_test_ids' => 'array',     
+        'parameters' => 'array',
+        'is_package' => 'boolean',
+        'linked_test_ids' => 'array',
     ];
 
     public function dept()

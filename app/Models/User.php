@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Auditable;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,20 +12,19 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
-use App\Traits\BelongsToCompany;
-use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
+    use Auditable, BelongsToCompany, TwoFactorAuthenticatable;
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles {
+    use HasFactory, HasRoles, Notifiable {
         HasRoles::assignRole as traitAssignRole;
         HasRoles::syncRoles as traitSyncRoles;
         HasRoles::removeRole as traitRemoveRole;
         HasRoles::scopeRole as traitScopeRole;
         HasRoles::scopeWithoutRole as traitScopeWithoutRole;
     }
-    use TwoFactorAuthenticatable, BelongsToCompany, Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -83,7 +84,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 
@@ -94,7 +95,8 @@ class User extends Authenticatable
     {
         $prefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
         $digits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
-        return $prefix . str_pad($this->id, $digits, '0', STR_PAD_LEFT);
+
+        return $prefix.str_pad($this->id, $digits, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -214,7 +216,7 @@ class User extends Authenticatable
     public function hasRole($roles, $guard = null): bool
     {
         // Spatie HasRoles trait might not be initialized yet in some boot phases
-        if (!method_exists($this, 'roles') || !$this->roles) {
+        if (! method_exists($this, 'roles') || ! $this->roles) {
             return false;
         }
 
@@ -232,15 +234,17 @@ class User extends Authenticatable
         }
 
         foreach ($roleArray as $role) {
-            if (is_null($role))
+            if (is_null($role)) {
                 continue;
+            }
 
             $roleName = is_string($role) ? $role : ($role->name ?? null);
-            if (is_null($roleName))
+            if (is_null($roleName)) {
                 continue;
+            }
 
             foreach ($userRoles as $userRole) {
-                if ($userRole === $roleName || str_ends_with($userRole, '_' . $roleName)) {
+                if ($userRole === $roleName || str_ends_with($userRole, '_'.$roleName)) {
                     return true;
                 }
             }
@@ -248,6 +252,7 @@ class User extends Authenticatable
 
         return false;
     }
+
     public function scopeRole($query, $roles, $guard = null, $without = false)
     {
         if ($roles instanceof \Illuminate\Support\Collection) {
@@ -258,6 +263,7 @@ class User extends Authenticatable
         foreach (Arr::wrap($roles) as $role) {
             if ($role instanceof \Spatie\Permission\Models\Role || $role instanceof \Spatie\Permission\Contracts\Role) {
                 $resolved[] = $role;
+
                 continue;
             }
 
@@ -267,11 +273,13 @@ class User extends Authenticatable
 
             if (is_numeric($role) || \Spatie\Permission\PermissionRegistrar::isUid($role)) {
                 $resolved[] = $role;
+
                 continue;
             }
 
             if (is_string($role)) {
                 $resolved[] = $this->resolveRoleForQuery($role, $guard);
+
                 continue;
             }
 
@@ -295,7 +303,7 @@ class User extends Authenticatable
             return $roleClass::findByName($roleName, $guard);
         } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
             if ($this->company_id) {
-                $tenantName = 'lab_' . $this->company_id . '_' . $roleName;
+                $tenantName = 'lab_'.$this->company_id.'_'.$roleName;
                 try {
                     return $roleClass::findByName($tenantName, $guard);
                 } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
@@ -306,6 +314,7 @@ class User extends Authenticatable
             return $roleName;
         }
     }
+
     /**
      * Send the password reset notification.
      *

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('invoices', function (Blueprint $table) {
             // Drop global unique constraint
             $table->dropUnique(['barcode']);
-            
+
             // Add composite unique constraint per company
             $table->unique(['company_id', 'barcode']);
         });

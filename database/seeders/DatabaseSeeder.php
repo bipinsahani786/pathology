@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,17 +17,17 @@ class DatabaseSeeder extends Seeder
         // 2. System Departments
         $this->call(SystemDepartmentSeeder::class);
 
-        // 2. Super Admin Account 
+        // 2. Super Admin Account
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
         $superAdmin = User::firstOrCreate(
-        ['email' => 'admin@sws.com'],
-        [
-            'name' => 'Super Admin',
-            'password' => Hash::make('password123'),
-            'is_active' => true,
-        ]
+            ['email' => 'admin@sws.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password123'),
+                'is_active' => true,
+            ]
         );
-        if (!$superAdmin->hasRole('super_admin')) {
+        if (! $superAdmin->hasRole('super_admin')) {
             $superAdmin->assignRole($superAdminRole);
         }
 

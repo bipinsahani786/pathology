@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\PaymentMode;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\PaymentMode;
 
 class PaymentModeManager extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -19,9 +19,13 @@ class PaymentModeManager extends Component
 
     // State variables
     public $searchTerm = '';
+
     public $mode_id = null; // Ensure this is null by default
+
     public $name;
+
     public $is_active = true;
+
     public $isModalOpen = false;
 
     /**
@@ -50,7 +54,7 @@ class PaymentModeManager extends Component
         $this->authorize('edit payment_modes');
         $this->resetFields();
         $mode = PaymentMode::findOrFail($id);
-        
+
         $this->mode_id = $mode->id;
         $this->name = $mode->name;
         $this->is_active = $mode->is_active;
@@ -94,9 +98,9 @@ class PaymentModeManager extends Component
     {
         $this->authorize('edit payment_modes');
         $mode = PaymentMode::findOrFail($id);
-        $mode->update(['is_active' => !$mode->is_active]);
-        
-        \Illuminate\Support\Facades\Cache::forget("payment_modes_" . auth()->user()->company_id);
+        $mode->update(['is_active' => ! $mode->is_active]);
+
+        \Illuminate\Support\Facades\Cache::forget('payment_modes_'.auth()->user()->company_id);
         session()->flash('message', 'Status updated successfully.');
     }
 
@@ -133,12 +137,12 @@ class PaymentModeManager extends Component
     public function render()
     {
         $paymentModes = PaymentMode::where('company_id', auth()->user()->company_id)
-            ->where('name', 'like', '%' . $this->searchTerm . '%')
+            ->where('name', 'like', '%'.$this->searchTerm.'%')
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.lab.payment-mode-manager', [
-            'paymentModes' => $paymentModes
+            'paymentModes' => $paymentModes,
         ])->layout('layouts.app', ['title' => 'Manage Payment Modes']);
     }
 }

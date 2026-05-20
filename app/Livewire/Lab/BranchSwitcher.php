@@ -2,12 +2,13 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
 use App\Models\Branch;
+use Livewire\Component;
 
 class BranchSwitcher extends Component
 {
     public $branches = [];
+
     public $activeBranchId;
 
     public function mount()
@@ -31,7 +32,7 @@ class BranchSwitcher extends Component
         } else {
             session(['active_branch_id' => $branchId]);
         }
-        
+
         // Refresh the page to apply the global scope
         $this->redirect(request()->header('Referer') ?? route('lab.dashboard'));
     }

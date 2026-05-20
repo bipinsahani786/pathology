@@ -1,4 +1,5 @@
 <?php
+
 // Special Extra 2: Tumor markers, Drug monitoring, Molecular tests
 return [
     ['test_code' => 'CA153', 'name' => 'CA 15-3 (Breast Cancer Marker)', 'category' => 'Biochemistry', 'description' => 'Tumor marker for breast cancer monitoring.', 'interpretation' => 'Normal: <30 U/mL. Elevated: Breast cancer (metastatic), also in liver disease, ovarian cancer. NOT for screening — monitoring only.', 'suggested_price' => 900, 'method' => 'ECLIA (Electrochemiluminescence)', 'sample_type' => 'Clotted Blood', 'tat_hours' => 24, 'default_parameters' => [['name' => 'CA 15-3', 'unit' => 'U/mL', 'short_code' => 'C153', 'input_type' => 'numeric', 'method' => 'ECLIA', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '30', 'display_range' => '< 30']]]]],

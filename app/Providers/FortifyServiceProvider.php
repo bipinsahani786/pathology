@@ -50,7 +50,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // These views are currently using placeholders or are handled by the new system
         // Mapping them to a generic auth layout or existing views to prevent crashes
-        Fortify::verifyEmailView(fn () => view('welcome')); 
+        Fortify::verifyEmailView(fn () => view('welcome'));
         Fortify::twoFactorChallengeView(fn () => view('welcome'));
         Fortify::confirmPasswordView(fn () => view('welcome'));
         Fortify::resetPasswordView(fn () => view('welcome'));

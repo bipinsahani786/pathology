@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DoctorProfile extends Model
 {
-    use BelongsToCompany, \App\Traits\Auditable;
+    use \App\Traits\Auditable, BelongsToCompany;
+
     protected $guarded = [];
 
     public function user()

@@ -2,24 +2,26 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\User;
 use App\Models\LabTest;
 use App\Models\PartnerTestCommission;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class PartnerCommissionManager extends Component
 {
     use WithPagination;
 
     public $partner_id;
+
     public $partner_role; // 'doctor' or 'agent'
+
     public $partner_name;
+
     public $global_commission;
 
     public $searchTerm = '';
-    
+
     // Stores existing override states
     // Structure: $commissions[$test_id] = ['type' => 'percentage', 'value' => 10]
     public $commissions = [];
@@ -31,7 +33,7 @@ class PartnerCommissionManager extends Component
         $this->partner_id = $partner_id;
         $user = User::with(['doctorProfile', 'agentProfile'])->findOrFail($partner_id);
         $this->partner_name = $user->name;
-        
+
         if ($user->hasRole('doctor')) {
             $this->partner_role = 'doctor';
             $this->global_commission = $user->doctorProfile->commission_percentage ?? 0;
@@ -65,8 +67,10 @@ class PartnerCommissionManager extends Component
 
     public function saveCommission($test_id)
     {
-        if (!isset($this->commissions[$test_id])) return;
-        
+        if (! isset($this->commissions[$test_id])) {
+            return;
+        }
+
         $type = $this->commissions[$test_id]['type'] ?? 'percentage';
         $value = $this->commissions[$test_id]['value'] ?? null;
 
@@ -77,6 +81,7 @@ class PartnerCommissionManager extends Component
                 ->delete();
             unset($this->commissions[$test_id]);
             session()->flash('success', 'Override removed.');
+
             return;
         }
 
@@ -99,16 +104,16 @@ class PartnerCommissionManager extends Component
     {
         $tests = LabTest::where('company_id', auth()->user()->company_id)
             ->where('is_active', true)
-            ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('test_code', 'ilike', '%' . $this->searchTerm . '%');
+            ->where(function ($q) {
+                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('test_code', 'ilike', '%'.$this->searchTerm.'%');
             })
             ->orderBy('is_package', 'desc')
             ->orderBy('name')
             ->paginate(20);
 
         return view('livewire.lab.partner-commission-manager', [
-            'tests' => $tests
-        ])->layout('layouts.app', ['title' => 'Test-based Commissions - ' . $this->partner_name]);
+            'tests' => $tests,
+        ])->layout('layouts.app', ['title' => 'Test-based Commissions - '.$this->partner_name]);
     }
 }

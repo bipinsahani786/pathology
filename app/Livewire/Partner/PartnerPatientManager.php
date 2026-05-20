@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Partner;
 
+use App\Models\Invoice;
+use App\Models\PatientProfile;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Invoice;
-use App\Models\User;
-use App\Models\PatientProfile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 
 class PartnerPatientManager extends Component
 {
@@ -17,31 +17,46 @@ class PartnerPatientManager extends Component
 
     // Patient profile edit state variables
     public $isModalOpen = false;
+
     public $user_id = null;
+
     public $name;
+
     public $phone;
+
     public $email;
+
     public $age;
+
     public $age_type = 'Years';
+
     public $gender = 'Male';
+
     public $blood_group;
+
     public $address;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $filterDateFrom;
+
     public $filterDateTo;
+
     public $filterStatus = '';
+
     public $role;
+
     public $stats = [];
 
     public function mount()
     {
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
-        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'));
-        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'doctor'));
-        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'agent'));
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'collection'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'agent'));
 
         if ($isDoctor) {
             $this->role = 'Doctor';
@@ -72,7 +87,7 @@ class PartnerPatientManager extends Component
         }
 
         if ($this->search) {
-            $searchTerm = '%' . $this->search . '%';
+            $searchTerm = '%'.$this->search.'%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('invoice_number', 'like', $searchTerm)
                     ->orWhereHas('patient', function ($pq) use ($searchTerm) {
@@ -110,7 +125,7 @@ class PartnerPatientManager extends Component
         ];
 
         return view('livewire.partner.partner-patient-manager', [
-            'invoices' => $query->latest()->paginate($this->perPage)
+            'invoices' => $query->latest()->paginate($this->perPage),
         ]);
     }
 
@@ -133,34 +148,36 @@ class PartnerPatientManager extends Component
         if ($this->role === 'Collection Center') {
             if ($invoice->collection_center_id != $user->collection_center_id) {
                 session()->flash('error', 'Unauthorized access.');
+
                 return;
             }
 
             $allowedStatuses = ['Pending', 'Collected', 'Dispatched'];
-            if (!in_array($status, $allowedStatuses)) {
+            if (! in_array($status, $allowedStatuses)) {
                 session()->flash('error', 'Collection Centers can only update status up to Dispatched.');
+
                 return;
             }
         }
 
         $invoice->update([
             'sample_status' => $status,
-            'sample_collected_at' => ($status === 'Collected' && !$invoice->sample_collected_at) ? now() : $invoice->sample_collected_at
+            'sample_collected_at' => ($status === 'Collected' && ! $invoice->sample_collected_at) ? now() : $invoice->sample_collected_at,
         ]);
 
-        session()->flash('message', 'Sample status updated to ' . $status);
+        session()->flash('message', 'Sample status updated to '.$status);
     }
 
     public function edit($id)
     {
         $this->resetFields();
         $user = User::with('patientProfile')->findOrFail($id);
-        
+
         $this->user_id = $user->id;
         $this->name = $user->name;
         $this->phone = $user->phone;
         $this->email = $user->email;
-        
+
         if ($user->patientProfile) {
             $this->age = $user->patientProfile->age;
             $this->age_type = $user->patientProfile->age_type;
@@ -215,7 +232,7 @@ class PartnerPatientManager extends Component
             $this->closeModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error saving patient: ' . $e->getMessage());
+            session()->flash('error', 'Error saving patient: '.$e->getMessage());
         }
     }
 

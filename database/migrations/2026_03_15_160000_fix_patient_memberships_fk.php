@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('patient_memberships', function (Blueprint $table) {
             // Drop the old wrong FK
             $table->dropForeign(['membership_id']);
-            
+
             // Re-add correct FK pointing to memberships table
             $table->foreign('membership_id')->references('id')->on('memberships')->cascadeOnDelete();
         });

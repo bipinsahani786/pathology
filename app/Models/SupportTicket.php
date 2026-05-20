@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Model;
 
 class SupportTicket extends Model
 {
-    use BelongsToCompany, \App\Traits\Auditable;
+    use \App\Traits\Auditable, BelongsToCompany;
 
     protected $guarded = [];
 

@@ -4,32 +4,30 @@ use App\Livewire\Admin\AdminDashboard;
 use App\Livewire\Admin\GlobalTestManager;
 use App\Livewire\Admin\PlanManager;
 use App\Livewire\Auth\Login;
-use App\Livewire\Auth\RegisterCompany;
 use App\Livewire\Lab\AgentManager;
 use App\Livewire\Lab\BranchManager;
 use App\Livewire\Lab\CollectionCenterManager;
 use App\Livewire\Lab\Dashboard;
+use App\Livewire\Lab\DepartmentManager;
 use App\Livewire\Lab\DoctorManager;
+use App\Livewire\Lab\InvoiceManager;
+use App\Livewire\Lab\InvoicePrint;
 use App\Livewire\Lab\LabTestManager;
 use App\Livewire\Lab\MarketingManager;
 use App\Livewire\Lab\PackageManager;
+use App\Livewire\Lab\PartnerCommissionManager;
 use App\Livewire\Lab\PatientManager;
 use App\Livewire\Lab\PaymentModeManager;
+use App\Livewire\Lab\PosEditManager;
 use App\Livewire\Lab\PosManager;
 use App\Livewire\Lab\PosSummary;
-use App\Livewire\Lab\SettingsManager;
-use App\Livewire\Lab\InvoicePrint;
-use App\Livewire\Lab\InvoiceManager;
-use App\Livewire\Lab\PosEditManager;
-use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Lab\ReportManager;
 use App\Livewire\Lab\ResultEntryManager;
-use App\Livewire\Lab\DepartmentManager;
-use App\Livewire\Lab\PartnerCommissionManager;
+use App\Livewire\Lab\SettingsManager;
+use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Partner\PartnerDashboard;
 use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
-
 
 // Public Routes
 Route::get('/', function () {
@@ -61,7 +59,7 @@ Route::post('/contact/submit', function (\Illuminate\Http\Request $request) {
     ]);
 
     \App\Models\Enquiry::create([
-        'name' => trim($request->input('first_name') . ' ' . $request->input('last_name')),
+        'name' => trim($request->input('first_name').' '.$request->input('last_name')),
         'email' => $request->input('email'),
         'lab_name' => $request->input('lab_name'),
         'message' => $request->input('message'),
@@ -94,12 +92,10 @@ Route::get('/privacy', function () {
 Route::get('/v/{hash}', [\App\Http\Controllers\PublicReportController::class, 'download'])->name('public.report.download');
 Route::get('/bill/{hash}', [\App\Http\Controllers\InvoicePdfController::class, 'streamPublic'])->name('public.bill.download');
 
-
 // Auth Routes (Guest access is handled inside components to prevent role conflicts)
 Route::get('/login', Login::class)->name('login');
 Route::get('/forgot-password', \App\Livewire\Auth\ForgotPassword::class)->name('password.request');
 Route::get('/reset-password/{token}', \App\Livewire\Auth\ResetPassword::class)->name('password.reset');
-
 
 // ==========================================
 // PROTECTED ROUTES (Must be logged in)
@@ -136,7 +132,6 @@ Route::middleware(['auth'])->group(function () {
         }
     });
 
-
     // ----------------------------------------------------
     // 2. LAB OWNER / TENANT ROUTES
     // ----------------------------------------------------
@@ -149,7 +144,6 @@ Route::middleware(['auth'])->group(function () {
             // URL: /lab/dashboard  |  Route Name: lab.dashboard
             Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-
             // Billing & Upgrade Page (Users will be redirected here when their trial expires)
             Route::get('/upgrade-plan', function () {
                 return view('lab.subscription-expired');
@@ -158,8 +152,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/subscription-expired', function () {
                 return view('lab.subscription-expired');
             })->name('subscription.expired');
-
-
 
             // Lab Departments
             Route::get('/departments', DepartmentManager::class)->name('departments');
@@ -174,23 +166,23 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/test-packages/create', \App\Livewire\Lab\PackageEditor::class)->name('packages.create');
             Route::get('/test-packages/{id}/edit', \App\Livewire\Lab\PackageEditor::class)->name('packages.edit');
 
-            //membership and vouchers
+            // membership and vouchers
             Route::get('/marketing', MarketingManager::class)->name('marketing');
             // Payment Modes
             Route::get('/payment-modes', PaymentModeManager::class)->name('payment.modes');
-            //collection centers
+            // collection centers
             Route::get('/collection-centers', CollectionCenterManager::class)->name('collection.centers');
-            //Branches
+            // Branches
             Route::get('/branches', BranchManager::class)->name('branches');
 
-            //patients
+            // patients
             Route::get('/patients', PatientManager::class)->name('patients');
 
             // Doctors
             Route::get('/doctors', DoctorManager::class)->name('doctors');
             Route::get('/doctors/{partner_id}/commissions', PartnerCommissionManager::class)->name('doctor.commissions');
 
-            //Agent
+            // Agent
             Route::get('/agents', AgentManager::class)->name('agents');
             Route::get('/agents/{partner_id}/commissions', PartnerCommissionManager::class)->name('agent.commissions');
 
@@ -262,14 +254,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
             Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
             Route::get('/invoice/{id}/print', \App\Livewire\Lab\InvoicePrint::class)->name('invoice.print');
-            
+
             // Support Tickets
             if (config('features.support_tickets', true)) {
                 Route::get('/support', \App\Livewire\Partner\SupportManager::class)->name('support');
             }
         });
-
-
 
 });
 
@@ -304,4 +294,3 @@ Route::prefix('portal')->name('portal.')->group(function () {
         }
     });
 });
-

@@ -28,7 +28,7 @@ class Wallet extends Model
     /**
      * Credit amount to wallet and log transaction.
      */
-    public function credit(float $amount, string $description, string $refType = null, int $refId = null): WalletTransaction
+    public function credit(float $amount, string $description, ?string $refType = null, ?int $refId = null): WalletTransaction
     {
         $this->increment('balance', $amount);
 
@@ -45,7 +45,7 @@ class Wallet extends Model
     /**
      * Debit amount from wallet and log transaction.
      */
-    public function debit(float $amount, string $description, string $refType = null, int $refId = null): WalletTransaction
+    public function debit(float $amount, string $description, ?string $refType = null, ?int $refId = null): WalletTransaction
     {
         $this->decrement('balance', $amount);
 

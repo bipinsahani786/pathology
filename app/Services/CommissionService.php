@@ -4,10 +4,6 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Wallet;
-use App\Models\DoctorProfile;
-use App\Models\AgentProfile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class CommissionService
 {
@@ -25,7 +21,7 @@ class CommissionService
             );
             $doctorWallet->credit(
                 $invoice->doctor_commission_amount,
-                "Commission for Invoice Rank #" . $invoice->invoice_number,
+                'Commission for Invoice Rank #'.$invoice->invoice_number,
                 'Invoice',
                 $invoice->id
             );
@@ -39,7 +35,7 @@ class CommissionService
             );
             $agentWallet->credit(
                 $invoice->agent_commission_amount,
-                "Commission for Invoice Rank #" . $invoice->invoice_number,
+                'Commission for Invoice Rank #'.$invoice->invoice_number,
                 'Invoice',
                 $invoice->id
             );
@@ -59,7 +55,7 @@ class CommissionService
                 );
                 $ccWallet->credit(
                     $invoice->cc_profit_amount,
-                    "Profit Margin for Invoice #" . $invoice->invoice_number,
+                    'Profit Margin for Invoice #'.$invoice->invoice_number,
                     'Invoice',
                     $invoice->id
                 );
@@ -71,7 +67,7 @@ class CommissionService
      * Reverse commissions for a given invoice.
      * This debits the wallets of the referring doctor, agent, and collection center.
      */
-    public function reverseCommissions(Invoice $invoice, string $reason = "Invoice Cancelled")
+    public function reverseCommissions(Invoice $invoice, string $reason = 'Invoice Cancelled')
     {
         // 1. Reverse Doctor Commission
         if ($invoice->referred_by_doctor_id && $invoice->doctor_commission_amount > 0) {
@@ -82,7 +78,7 @@ class CommissionService
             if ($doctorWallet) {
                 $doctorWallet->debit(
                     $invoice->doctor_commission_amount,
-                    "Reversal: {$reason} #" . $invoice->invoice_number,
+                    "Reversal: {$reason} #".$invoice->invoice_number,
                     'Invoice_Cancel',
                     $invoice->id
                 );
@@ -98,7 +94,7 @@ class CommissionService
             if ($agentWallet) {
                 $agentWallet->debit(
                     $invoice->agent_commission_amount,
-                    "Reversal: {$reason} #" . $invoice->invoice_number,
+                    "Reversal: {$reason} #".$invoice->invoice_number,
                     'Invoice_Cancel',
                     $invoice->id
                 );
@@ -119,7 +115,7 @@ class CommissionService
                 if ($ccWallet) {
                     $ccWallet->debit(
                         $invoice->cc_profit_amount,
-                        "Reversal: {$reason} #" . $invoice->invoice_number,
+                        "Reversal: {$reason} #".$invoice->invoice_number,
                         'Invoice_Cancel',
                         $invoice->id
                     );

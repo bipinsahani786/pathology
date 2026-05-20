@@ -2,19 +2,26 @@
 
 namespace App\Livewire\Lab\Inventory;
 
-use App\Models\User;
-use App\Models\InventoryItem;
 use App\Models\InventoryStock;
 use App\Models\InventoryTransaction;
+use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class IssuanceManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
-    public $item_id, $issued_to_id, $quantity, $remarks;
+    public $item_id;
+
+    public $issued_to_id;
+
+    public $quantity;
+
+    public $remarks;
+
     public $searchTerm = '';
 
     public function render()
@@ -44,7 +51,7 @@ class IssuanceManager extends Component
         return view('livewire.lab.inventory.issuance-manager', [
             'staff' => $staff,
             'stocks' => $stocks,
-            'history' => $history
+            'history' => $history,
         ])->layout('layouts.app');
     }
 
@@ -59,8 +66,9 @@ class IssuanceManager extends Component
         $branchId = auth()->user()->branch_id;
         $stock = InventoryStock::where('branch_id', $branchId)->where('item_id', $this->item_id)->first();
 
-        if (!$stock || $stock->quantity < $this->quantity) {
+        if (! $stock || $stock->quantity < $this->quantity) {
             $this->addError('quantity', 'Insufficient stock available.');
+
             return;
         }
 
@@ -71,7 +79,9 @@ class IssuanceManager extends Component
         $remainingToDeduct = $this->quantity;
         $batches = $stock->batches()->where('quantity', '>', 0)->orderBy('expiry_date', 'asc')->get();
         foreach ($batches as $batch) {
-            if ($remainingToDeduct <= 0) break;
+            if ($remainingToDeduct <= 0) {
+                break;
+            }
             if ($batch->quantity >= $remainingToDeduct) {
                 $batch->decrement('quantity', $remainingToDeduct);
                 $remainingToDeduct = 0;

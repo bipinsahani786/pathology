@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\LabTest;
 use App\Models\GlobalTest;
+use App\Models\LabTest;
 use Illuminate\Support\Facades\Log;
 
 class LabTestService
@@ -15,14 +15,14 @@ class LabTestService
     {
         $query = LabTest::where('is_package', false)->with('dept');
 
-        if (!empty($searchTerm)) {
+        if (! empty($searchTerm)) {
             $query = $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+                $q->where('name', 'ilike', '%'.$searchTerm.'%')
+                    ->orWhere('test_code', 'ilike', '%'.$searchTerm.'%');
             });
         }
 
-        return $query->when($filterCategory, fn($q) => $q->where('department_id', $filterCategory))
+        return $query->when($filterCategory, fn ($q) => $q->where('department_id', $filterCategory))
             ->orderBy('id', 'desc')
             ->paginate($perPage);
     }
@@ -33,8 +33,8 @@ class LabTestService
     public function searchGlobalTests($globalSearch = null, $limit = 15)
     {
         return GlobalTest::with('dept')
-            ->where('name', 'ilike', '%' . $globalSearch . '%')
-            ->orWhere('test_code', 'ilike', '%' . $globalSearch . '%')
+            ->where('name', 'ilike', '%'.$globalSearch.'%')
+            ->orWhere('test_code', 'ilike', '%'.$globalSearch.'%')
             ->limit($limit)
             ->get();
     }
@@ -46,25 +46,24 @@ class LabTestService
     {
         try {
             return LabTest::updateOrCreate(
-            ['id' => $testId],
-            [
-                'company_id' => auth()->user()->company_id, // Handled by trait, but safe to pass
-                'name' => $data['name'],
-                'test_code' => $data['test_code'] ?? null,
-                'department_id' => $data['department_id'] ?? null,
-                'description' => $data['description'] ?? null,
-                'interpretation' => $data['interpretation'] ?? null,
-                'mrp' => $data['mrp'] ?? 0,
-                'b2b_price' => $data['b2b_price'] ?? 0,
-                'sample_type' => $data['sample_type'] ?? null,
-                'tat_hours' => $data['tat_hours'] ?? 24,
-                'parameters' => $data['parameters'] ?? [],
-                'is_active' => $data['is_active'] ?? true,
-            ]
+                ['id' => $testId],
+                [
+                    'company_id' => auth()->user()->company_id, // Handled by trait, but safe to pass
+                    'name' => $data['name'],
+                    'test_code' => $data['test_code'] ?? null,
+                    'department_id' => $data['department_id'] ?? null,
+                    'description' => $data['description'] ?? null,
+                    'interpretation' => $data['interpretation'] ?? null,
+                    'mrp' => $data['mrp'] ?? 0,
+                    'b2b_price' => $data['b2b_price'] ?? 0,
+                    'sample_type' => $data['sample_type'] ?? null,
+                    'tat_hours' => $data['tat_hours'] ?? 24,
+                    'parameters' => $data['parameters'] ?? [],
+                    'is_active' => $data['is_active'] ?? true,
+                ]
             );
-        }
-        catch (\Exception $e) {
-            Log::error('Error saving Lab Test: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Error saving Lab Test: '.$e->getMessage());
             throw $e;
         }
     }
@@ -120,7 +119,8 @@ class LabTestService
     public function toggleStatus($id)
     {
         $test = LabTest::findOrFail($id);
-        $test->update(['is_active' => !$test->is_active]);
+        $test->update(['is_active' => ! $test->is_active]);
+
         return $test->is_active;
     }
 
@@ -130,6 +130,7 @@ class LabTestService
     public function deleteTest($id)
     {
         $test = LabTest::findOrFail($id);
+
         return $test->delete();
     }
 
@@ -140,8 +141,6 @@ class LabTestService
     {
         return LabTest::findOrFail($id);
     }
-
-
 
     // ==========================================
     // PACKAGE (PROFILES) SPECIFIC METHODS
@@ -154,10 +153,10 @@ class LabTestService
     {
         $query = LabTest::where('is_package', true);
 
-        if (!empty($searchTerm)) {
+        if (! empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+                $q->where('name', 'ilike', '%'.$searchTerm.'%')
+                    ->orWhere('test_code', 'ilike', '%'.$searchTerm.'%');
             });
         }
 
@@ -169,15 +168,16 @@ class LabTestService
      */
     public function searchSingleTestsForPackage($searchTerm, $limit = 10)
     {
-        if (empty($searchTerm))
+        if (empty($searchTerm)) {
             return collect();
+        }
 
         $query = LabTest::where('is_package', false);
 
-        if (!empty($searchTerm)) {
+        if (! empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'ilike', '%' . $searchTerm . '%')
-                  ->orWhere('test_code', 'ilike', '%' . $searchTerm . '%');
+                $q->where('name', 'ilike', '%'.$searchTerm.'%')
+                    ->orWhere('test_code', 'ilike', '%'.$searchTerm.'%');
             });
         }
 

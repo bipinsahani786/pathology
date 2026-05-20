@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lab_test_id')->constrained('lab_tests')->cascadeOnDelete();
-            
+
             $table->string('test_name');
             $table->boolean('is_package')->default(false);
             $table->decimal('mrp', 10, 2)->default(0);

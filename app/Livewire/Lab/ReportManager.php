@@ -2,32 +2,40 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Invoice;
 use App\Models\TestReport;
 use Carbon\Carbon;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class ReportManager extends Component
 {
     use WithPagination;
-    
+
     public $search = '';
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
         $this->authorize('view reports');
     }
+
     public $dateRange = 'all'; // all, today, week, month, custom
+
     public $statusFilter = 'all'; // all, pending, draft, approved
+
     public $perPage = 15;
 
     // New Filters
     public $filterDoctor = '';
+
     public $filterAgent = '';
+
     public $filterCC = '';
+
     public $filterDateFrom = '';
+
     public $filterDateTo = '';
 
     // Selective Printing
@@ -37,7 +45,7 @@ class ReportManager extends Component
     {
         $this->resetPage();
     }
-    
+
     public function updatingStatusFilter()
     {
         $this->resetPage();
@@ -67,7 +75,7 @@ class ReportManager extends Component
     {
         $this->resetPage();
     }
-    
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -77,15 +85,16 @@ class ReportManager extends Component
     {
         if (empty($this->selectedTests)) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Please select at least one test to print.']);
+
             return;
         }
 
         // Printing proceeds regardless of image presence to allow for physical letterhead space
         $testIds = implode(',', $this->selectedTests);
         $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
-             . '?tests=' . $testIds
-             . '&header=' . ($withHeader ? '1' : '0');
-        
+             .'?tests='.$testIds
+             .'&header='.($withHeader ? '1' : '0');
+
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 
@@ -96,14 +105,15 @@ class ReportManager extends Component
 
         if (empty($completedItemIds)) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'No completed tests found to print.']);
+
             return;
         }
 
         $testIds = implode(',', $completedItemIds);
         $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
-             . '?tests=' . $testIds
-             . '&header=' . ($withHeader ? '1' : '0');
-        
+             .'?tests='.$testIds
+             .'&header='.($withHeader ? '1' : '0');
+
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 
@@ -114,47 +124,47 @@ class ReportManager extends Component
         $activeBranchId = session('active_branch_id', 'all');
 
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !$user->hasRole('branch_admin');
-        
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! $user->hasRole('branch_admin');
+
         $myBranchId = null;
         if ($isGlobalAdmin) {
-             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
         } else {
-             $myBranchId = $user->branch_id;
+            $myBranchId = $user->branch_id;
         }
 
         // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
-        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+        if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
             $myBranchId = $user->branch_id;
         }
 
         $companyId = $user->company_id;
         $invoicesQuery = Invoice::where('company_id', $companyId)
-            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
-            ->when($user->collection_center_id, fn($q) => $q->where('collection_center_id', $user->collection_center_id))
-            ->when(!$isGlobalAdmin && ($user->hasRole('doctor') || $user->doctorProfile), fn($q) => $q->where('referred_by_doctor_id', $user->id))
-            ->when(!$isGlobalAdmin && ($user->hasRole('agent') || $user->agentProfile), fn($q) => $q->where('referred_by_agent_id', $user->id))
+            ->when($myBranchId, fn ($q) => $q->where('branch_id', $myBranchId))
+            ->when($user->collection_center_id, fn ($q) => $q->where('collection_center_id', $user->collection_center_id))
+            ->when(! $isGlobalAdmin && ($user->hasRole('doctor') || $user->doctorProfile), fn ($q) => $q->where('referred_by_doctor_id', $user->id))
+            ->when(! $isGlobalAdmin && ($user->hasRole('agent') || $user->agentProfile), fn ($q) => $q->where('referred_by_agent_id', $user->id))
             ->with([
-                'patient.patientProfile', 
-                'testReport.results', 
+                'patient.patientProfile',
+                'testReport.results',
                 'items.labTest',
                 'doctor',
                 'agent',
-                'collectionCenter'
+                'collectionCenter',
             ])
             ->orderBy('created_at', 'desc');
 
         // Search
         if ($this->search) {
-            $invoicesQuery->where(function($q) {
+            $invoicesQuery->where(function ($q) {
                 $q->where('invoice_number', 'like', "%{$this->search}%")
-                  ->orWhere('barcode', 'like', "%{$this->search}%")
-                  ->orWhereHas('patient', function($q) {
-                      $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('phone', 'like', "%{$this->search}%");
-                  });
+                    ->orWhere('barcode', 'like', "%{$this->search}%")
+                    ->orWhereHas('patient', function ($q) {
+                        $q->where('name', 'like', "%{$this->search}%")
+                            ->orWhere('phone', 'like', "%{$this->search}%");
+                    });
             });
         }
 
@@ -189,7 +199,7 @@ class ReportManager extends Component
                     if ($this->filterDateFrom && $this->filterDateTo) {
                         $invoicesQuery->whereBetween('created_at', [
                             Carbon::parse($this->filterDateFrom)->startOfDay(),
-                            Carbon::parse($this->filterDateTo)->endOfDay()
+                            Carbon::parse($this->filterDateTo)->endOfDay(),
                         ]);
                     }
                     break;
@@ -201,11 +211,11 @@ class ReportManager extends Component
             if ($this->statusFilter === 'pending') {
                 $invoicesQuery->doesntHave('testReport');
             } elseif ($this->statusFilter === 'draft') {
-                $invoicesQuery->whereHas('testReport', function($q) {
+                $invoicesQuery->whereHas('testReport', function ($q) {
                     $q->where('status', 'Draft');
                 });
             } elseif ($this->statusFilter === 'approved') {
-                $invoicesQuery->whereHas('testReport', function($q) {
+                $invoicesQuery->whereHas('testReport', function ($q) {
                     $q->where('status', 'Approved');
                 });
             }
@@ -237,13 +247,14 @@ class ReportManager extends Component
     {
         if ($withHeader) {
             $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (!$header) {
+            if (! $header) {
                 $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+
                 return;
             }
         }
-        
-        $url = route('lab.reports.print', [$invoiceId, 'new']) . '?header=' . ($withHeader ? '1' : '0');
+
+        $url = route('lab.reports.print', [$invoiceId, 'new']).'?header='.($withHeader ? '1' : '0');
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 

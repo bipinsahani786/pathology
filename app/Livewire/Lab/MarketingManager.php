@@ -2,16 +2,17 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Membership;
 use App\Models\Voucher;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class MarketingManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -22,14 +23,45 @@ class MarketingManager extends Component
     public $activeTab = 'memberships'; // Default Tab
 
     // ================= MEMBERSHIP FIELDS =================
-    public $membership_id, $m_name, $m_price = 0, $m_discount_percentage = 0;
-    public $m_validity_days = 365, $m_color_code = '#3b71ca', $m_description, $m_is_active = true;
+    public $membership_id;
+
+    public $m_name;
+
+    public $m_price = 0;
+
+    public $m_discount_percentage = 0;
+
+    public $m_validity_days = 365;
+
+    public $m_color_code = '#3b71ca';
+
+    public $m_description;
+
+    public $m_is_active = true;
+
     public $isMembershipModalOpen = false;
 
     // ================= VOUCHER FIELDS =================
-    public $voucher_id, $v_code, $v_discount_type = 'percentage', $v_discount_value = 0;
-    public $v_min_bill_amount = 0, $v_max_discount_amount, $v_valid_from, $v_valid_until;
-    public $v_usage_limit, $v_is_active = true;
+    public $voucher_id;
+
+    public $v_code;
+
+    public $v_discount_type = 'percentage';
+
+    public $v_discount_value = 0;
+
+    public $v_min_bill_amount = 0;
+
+    public $v_max_discount_amount;
+
+    public $v_valid_from;
+
+    public $v_valid_until;
+
+    public $v_usage_limit;
+
+    public $v_is_active = true;
+
     public $isVoucherModalOpen = false;
 
     public function switchTab($tab)
@@ -75,21 +107,21 @@ class MarketingManager extends Component
         ]);
 
         Membership::updateOrCreate(
-        ['id' => $this->membership_id],
-        [
-            'company_id' => auth()->user()->company_id,
-            'name' => $this->m_name,
-            'price' => $this->m_price,
-            'discount_percentage' => $this->m_discount_percentage,
-            'validity_days' => $this->m_validity_days,
-            'color_code' => $this->m_color_code,
-            'description' => $this->m_description,
-            'is_active' => $this->m_is_active,
-        ]
+            ['id' => $this->membership_id],
+            [
+                'company_id' => auth()->user()->company_id,
+                'name' => $this->m_name,
+                'price' => $this->m_price,
+                'discount_percentage' => $this->m_discount_percentage,
+                'validity_days' => $this->m_validity_days,
+                'color_code' => $this->m_color_code,
+                'description' => $this->m_description,
+                'is_active' => $this->m_is_active,
+            ]
         );
 
         session()->flash('message', 'Membership saved successfully.');
-        Cache::forget("memberships_" . auth()->user()->company_id);
+        Cache::forget('memberships_'.auth()->user()->company_id);
         $this->isMembershipModalOpen = false;
     }
 
@@ -99,7 +131,7 @@ class MarketingManager extends Component
         $m = Membership::findOrFail($id);
         $companyId = $m->company_id;
         $m->delete();
-        Cache::forget("memberships_" . $companyId);
+        Cache::forget('memberships_'.$companyId);
         session()->flash('message', 'Membership deleted.');
     }
 
@@ -107,8 +139,8 @@ class MarketingManager extends Component
     {
         $this->authorize('edit marketing');
         $m = Membership::findOrFail($id);
-        $m->update(['is_active' => !$m->is_active]);
-        Cache::forget("memberships_" . $m->company_id);
+        $m->update(['is_active' => ! $m->is_active]);
+        Cache::forget('memberships_'.$m->company_id);
     }
 
     public function resetMembershipFields()
@@ -154,8 +186,8 @@ class MarketingManager extends Component
             'v_code' => [
                 'required', 'string', 'max:50',
                 Rule::unique('vouchers', 'code')
-                ->where('company_id', auth()->user()->company_id)
-                ->ignore($this->voucher_id)
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($this->voucher_id),
             ],
             'v_discount_type' => 'required|in:percentage,flat',
             'v_discount_value' => 'required|numeric|min:0.01',
@@ -167,19 +199,19 @@ class MarketingManager extends Component
         ]);
 
         Voucher::updateOrCreate(
-        ['id' => $this->voucher_id],
-        [
-            'company_id' => auth()->user()->company_id,
-            'code' => $this->v_code,
-            'discount_type' => $this->v_discount_type,
-            'discount_value' => $this->v_discount_value,
-            'min_bill_amount' => $this->v_min_bill_amount ?? 0,
-            'max_discount_amount' => $this->v_max_discount_amount ?: null,
-            'valid_from' => $this->v_valid_from ?: null,
-            'valid_until' => $this->v_valid_until ?: null,
-            'usage_limit' => $this->v_usage_limit ?: null,
-            'is_active' => $this->v_is_active,
-        ]
+            ['id' => $this->voucher_id],
+            [
+                'company_id' => auth()->user()->company_id,
+                'code' => $this->v_code,
+                'discount_type' => $this->v_discount_type,
+                'discount_value' => $this->v_discount_value,
+                'min_bill_amount' => $this->v_min_bill_amount ?? 0,
+                'max_discount_amount' => $this->v_max_discount_amount ?: null,
+                'valid_from' => $this->v_valid_from ?: null,
+                'valid_until' => $this->v_valid_until ?: null,
+                'usage_limit' => $this->v_usage_limit ?: null,
+                'is_active' => $this->v_is_active,
+            ]
         );
 
         session()->flash('message', 'Promo Code saved successfully.');
@@ -197,7 +229,7 @@ class MarketingManager extends Component
     {
         $this->authorize('edit marketing');
         $v = Voucher::findOrFail($id);
-        $v->update(['is_active' => !$v->is_active]);
+        $v->update(['is_active' => ! $v->is_active]);
     }
 
     public function resetVoucherFields()

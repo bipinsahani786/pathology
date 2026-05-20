@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ImpersonationController extends Controller
@@ -14,13 +13,13 @@ class ImpersonationController extends Controller
     public function loginAs(User $user)
     {
         // 0. Feature Check
-        if (!config('features.impersonation', true)) {
+        if (! config('features.impersonation', true)) {
             abort(403, 'Impersonation feature is disabled by the administrator.');
         }
 
         // 1. Security Check: Only admins can impersonate
         $originalUser = auth()->user();
-        if (!$originalUser->hasAnyRole(['super_admin', 'lab_admin'])) {
+        if (! $originalUser->hasAnyRole(['super_admin', 'lab_admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -52,6 +51,7 @@ class ImpersonationController extends Controller
 
         if ($originalId) {
             Auth::loginUsingId($originalId);
+
             return redirect()->route('lab.dashboard')->with('message', 'Back to Admin session.');
         }
 

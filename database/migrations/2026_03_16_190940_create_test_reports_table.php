@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
             $table->foreignId('patient_id')->constrained('users')->cascadeOnDelete();
-            
+
             $table->enum('status', ['Pending', 'Draft', 'Approved'])->default('Pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
-            
+
             $table->timestamps();
         });
     }

@@ -1,4 +1,5 @@
 <?php
+
 // Serology Extra 4: More autoimmune and infectious disease tests
 return [
     ['test_code' => 'ANTI-SM', 'name' => 'Anti-Smith (Anti-Sm) Antibody', 'category' => 'Serology & Immunology', 'description' => 'Highly specific for SLE. Part of ENA panel.', 'interpretation' => 'Positive: Highly specific for SLE (99%). Low sensitivity (~30%). Part of extractable nuclear antigen (ENA) panel.', 'suggested_price' => 1200, 'method' => 'ELISA / Line Immunoassay', 'sample_type' => 'Clotted Blood', 'tat_hours' => 48, 'default_parameters' => [['name' => 'Anti-Sm', 'unit' => '', 'short_code' => 'ANSM', 'input_type' => 'selection', 'method' => 'ELISA', 'options' => ['Negative', 'Positive'], 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Negative', 'display_range' => 'Negative']]]]],

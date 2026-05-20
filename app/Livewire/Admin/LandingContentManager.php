@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
-use App\Models\LandingFeature;
-use App\Models\LandingTestimonial;
 use App\Models\LandingFaq;
+use App\Models\LandingFeature;
 use App\Models\LandingPlan;
+use App\Models\LandingTestimonial;
+use Livewire\Component;
 
 class LandingContentManager extends Component
 {
@@ -14,36 +14,58 @@ class LandingContentManager extends Component
 
     // Plan form
     public ?int $editingPlanId = null;
+
     public string $planName = '';
+
     public string $planPriceText = '';
+
     public string $planBadge = '';
+
     public string $planFeaturesText = ''; // Newline separated
+
     public string $planCtaText = '';
+
     public string $planCtaLink = '';
+
     public bool $showPlanModal = false;
 
     // Feature form
     public ?int $editingFeatureId = null;
+
     public string $featureTitle = '';
+
     public string $featureDescription = '';
+
     public string $featureIcon = 'feather-zap';
+
     public string $featureColor = 'primary';
+
     public bool $showFeatureModal = false;
 
     // Testimonial form
     public ?int $editingTestimonialId = null;
+
     public string $testimonialName = '';
+
     public string $testimonialRole = '';
+
     public string $testimonialCompany = '';
+
     public string $testimonialQuote = '';
+
     public int $testimonialRating = 5;
+
     public bool $showTestimonialModal = false;
 
     // FAQ form
     public ?int $editingFaqId = null;
+
     public string $faqQuestion = '';
+
     public string $faqAnswer = '';
+
     public string $faqCategory = 'general';
+
     public bool $showFaqModal = false;
 
     // ── FEATURES ──
@@ -94,7 +116,7 @@ class LandingContentManager extends Component
     public function toggleFeature($id)
     {
         $feature = LandingFeature::findOrFail($id);
-        $feature->update(['is_active' => !$feature->is_active]);
+        $feature->update(['is_active' => ! $feature->is_active]);
     }
 
     public function deleteFeature($id)
@@ -283,7 +305,7 @@ class LandingContentManager extends Component
     public function togglePlan($id)
     {
         $plan = LandingPlan::findOrFail($id);
-        $plan->update(['is_active' => !$plan->is_active]);
+        $plan->update(['is_active' => ! $plan->is_active]);
     }
 
     public function deletePlan($id)

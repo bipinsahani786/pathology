@@ -2,14 +2,19 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\Company;
+use App\Models\Configuration;
+use App\Models\Invoice;
 use Livewire\Component;
-use App\Models\{Invoice, Company, Configuration};
 
 class InvoicePrint extends Component
 {
     public $invoiceId;
+
     public Invoice $invoice;
+
     public $company;
+
     public $template;
 
     public function mount($id)
@@ -24,9 +29,9 @@ class InvoicePrint extends Component
 
     public function render()
     {
-        return view('livewire.lab.invoice-templates.' . $this->template, [
+        return view('livewire.lab.invoice-templates.'.$this->template, [
             'invoice' => $this->invoice,
             'company' => $this->company,
-        ])->layout('layouts.app', ['title' => 'Print Invoice #' . $this->invoice->invoice_number]);
+        ])->layout('layouts.app', ['title' => 'Print Invoice #'.$this->invoice->invoice_number]);
     }
 }

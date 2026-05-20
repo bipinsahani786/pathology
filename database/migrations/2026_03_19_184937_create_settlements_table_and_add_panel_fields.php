@@ -35,7 +35,7 @@ return new class extends Migration
             $table->foreignId('doctor_settlement_id')->nullable()->after('referred_by_doctor_id')->constrained('settlements')->nullOnDelete();
             $table->foreignId('agent_settlement_id')->nullable()->after('referred_by_agent_id')->constrained('settlements')->nullOnDelete();
             $table->foreignId('cc_settlement_id')->nullable()->after('collection_center_id')->constrained('settlements')->nullOnDelete();
-            
+
             // Helpful flags for quick filtering
             $table->boolean('is_doctor_settled')->default(false);
             $table->boolean('is_agent_settled')->default(false);

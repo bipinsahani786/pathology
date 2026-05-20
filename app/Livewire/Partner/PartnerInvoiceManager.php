@@ -2,30 +2,36 @@
 
 namespace App\Livewire\Partner;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class PartnerInvoiceManager extends Component
 {
     use WithPagination;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $filterDateFrom;
+
     public $filterDateTo;
+
     public $filterStatus = '';
+
     public $role;
+
     public $stats = [];
 
     public function mount()
     {
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
-        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_ends_with($r, '_collection_center'));
-        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_doctor'));
-        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_ends_with($r, '_agent'));
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn ($r) => str_ends_with($r, '_collection_center'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn ($r) => str_ends_with($r, '_doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn ($r) => str_ends_with($r, '_agent'));
 
         if ($isDoctor) {
             $this->role = 'Doctor';
@@ -55,7 +61,7 @@ class PartnerInvoiceManager extends Component
         }
 
         if ($this->search) {
-            $searchTerm = '%' . $this->search . '%';
+            $searchTerm = '%'.$this->search.'%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('invoice_number', 'like', $searchTerm)
                     ->orWhereHas('patient', function ($pq) use ($searchTerm) {
@@ -105,7 +111,7 @@ class PartnerInvoiceManager extends Component
         }
 
         return view('livewire.partner.partner-invoice-manager', [
-            'invoices' => $query->latest()->paginate($this->perPage)
+            'invoices' => $query->latest()->paginate($this->perPage),
         ]);
     }
 

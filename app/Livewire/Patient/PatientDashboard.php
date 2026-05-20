@@ -2,23 +2,30 @@
 
 namespace App\Livewire\Patient;
 
-use App\Models\User;
-use App\Models\TestReport;
 use App\Models\Invoice;
 use App\Models\SiteSetting;
-use Livewire\Component;
+use App\Models\TestReport;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class PatientDashboard extends Component
 {
     public $patient;
+
     public $reportsCount = 0;
+
     public $pendingReportsCount = 0;
+
     public $activeMembership;
+
     public $totalSavings = 0;
+
     public $greeting;
+
     public $lab;
+
     public $branch;
+
     public $siteSetting;
 
     public function mount()
@@ -30,7 +37,7 @@ class PatientDashboard extends Component
         $this->reportsCount = TestReport::where('patient_id', $this->patient->id)->count();
         $this->pendingReportsCount = TestReport::where('patient_id', $this->patient->id)->where('status', 'pending')->count();
         $this->activeMembership = $this->patient->activeMembership ? $this->patient->activeMembership->load('membership') : null;
-        
+
         $this->totalSavings = Invoice::where('patient_id', $this->patient->id)->sum('discount_amount');
 
         $this->lab = $this->patient->company;
@@ -39,12 +46,12 @@ class PatientDashboard extends Component
 
         // Random medical greeting
         $greetings = [
-            "Wishing you a speedy and full recovery!",
-            "Take care of yourself, and get well soon!",
-            "Sending you strength and healthy vibes for your recovery.",
-            "Health is wealth. We are here to help you get back on your feet.",
-            "Rest up and feel better soon. Your health is our priority.",
-            "Hope you feel better with each passing day!",
+            'Wishing you a speedy and full recovery!',
+            'Take care of yourself, and get well soon!',
+            'Sending you strength and healthy vibes for your recovery.',
+            'Health is wealth. We are here to help you get back on your feet.',
+            'Rest up and feel better soon. Your health is our priority.',
+            'Hope you feel better with each passing day!',
         ];
         $this->greeting = $greetings[array_rand($greetings)];
     }
@@ -54,7 +61,7 @@ class PatientDashboard extends Component
         Auth::logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
-        
+
         return redirect()->route('portal.login');
     }
 

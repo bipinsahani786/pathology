@@ -2,13 +2,26 @@
 
 namespace Database\Seeders;
 
+use App\Models\AgentProfile;
+use App\Models\Branch;
+use App\Models\CollectionCenter;
+use App\Models\Company;
+use App\Models\Configuration;
+use App\Models\DoctorProfile;
+use App\Models\GlobalTest;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\LabTest;
+use App\Models\Membership;
+use App\Models\PatientProfile;
+use App\Models\Payment;
+use App\Models\PaymentMode;
+use App\Models\Plan;
+use App\Models\ReportResult;
+use App\Models\TestReport;
+use App\Models\User;
+use App\Models\Voucher;
 use Illuminate\Database\Seeder;
-use App\Models\{
-    Plan, Company, Branch, CollectionCenter, PaymentMode,
-    GlobalTest, LabTest, Membership, Voucher, Configuration,
-    User, PatientProfile, DoctorProfile, AgentProfile,
-    Invoice, InvoiceItem, Payment, TestReport, ReportResult
-};
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -27,7 +40,7 @@ class DemoSeeder extends Seeder
             'features' => [
                 'tests' => 50, 'patients' => 200, 'branches' => 1, 'staff' => 2,
                 'inventory' => false, 'custom_invoice' => false, 'collection_centers' => 1,
-                'doctors' => 5, 'agents' => 0, 'reports' => true
+                'doctors' => 5, 'agents' => 0, 'reports' => true,
             ],
             'is_active' => true,
             'show_on_landing' => true,
@@ -40,7 +53,7 @@ class DemoSeeder extends Seeder
                 'Core Reporting Module',
                 'Cloud Inventory Tracking',
                 'Basic WhatsApp Notifications',
-                '1 Collection Center Access'
+                '1 Collection Center Access',
             ],
         ]);
         $proPlan = Plan::updateOrCreate(['name' => 'Professional'], [
@@ -49,7 +62,7 @@ class DemoSeeder extends Seeder
             'features' => [
                 'tests' => 500, 'patients' => 5000, 'branches' => 5, 'staff' => 10,
                 'inventory' => true, 'custom_invoice' => true, 'collection_centers' => 5,
-                'doctors' => 50, 'agents' => 10, 'reports' => true
+                'doctors' => 50, 'agents' => 10, 'reports' => true,
             ],
             'is_active' => true,
             'show_on_landing' => true,
@@ -62,7 +75,7 @@ class DemoSeeder extends Seeder
                 'Advanced B2B Partner Portals',
                 'Multi-Branch Consolidated Billing',
                 'API-driven Machine Workflows',
-                'Custom Invoice PDF Engine'
+                'Custom Invoice PDF Engine',
             ],
         ]);
         $enterprisePlan = Plan::updateOrCreate(['name' => 'Enterprise'], [
@@ -71,7 +84,7 @@ class DemoSeeder extends Seeder
             'features' => [
                 'tests' => -1, 'patients' => -1, 'branches' => -1, 'staff' => -1,
                 'inventory' => true, 'custom_invoice' => true, 'collection_centers' => -1,
-                'doctors' => -1, 'agents' => -1, 'reports' => true, 'api' => true, 'whatsapp' => true
+                'doctors' => -1, 'agents' => -1, 'reports' => true, 'api' => true, 'whatsapp' => true,
             ],
             'is_active' => true,
             'show_on_landing' => true,
@@ -84,7 +97,7 @@ class DemoSeeder extends Seeder
                 'Dedicated Account Architecture',
                 'Custom EMR/EHR Integrations',
                 'White-glove 24/7 SLA Support',
-                'Bespoke BI & Financial Analytics'
+                'Bespoke BI & Financial Analytics',
             ],
         ]);
         $this->command->info('✅ Plans created');
@@ -103,7 +116,7 @@ class DemoSeeder extends Seeder
             'gst_number' => '10AABCS1234F1Z5',
             'tagline' => 'Trusted Diagnostics Since 2010',
         ]);
-        $this->command->info('✅ Company created: ' . $company->name);
+        $this->command->info('✅ Company created: '.$company->name);
 
         // ============================================================
         // 3. LAB ADMIN USER
@@ -121,7 +134,7 @@ class DemoSeeder extends Seeder
             'company_id' => $company->id,
             'is_active' => true,
         ]);
-        if (!$labAdmin->hasRole('lab_admin')) {
+        if (! $labAdmin->hasRole('lab_admin')) {
             $labAdmin->assignRole($labAdminRole);
         }
 
@@ -133,7 +146,7 @@ class DemoSeeder extends Seeder
             'company_id' => $company->id,
             'is_active' => true,
         ]);
-        if (!$staff1->hasRole('staff')) {
+        if (! $staff1->hasRole('staff')) {
             $staff1->assignRole($staffRole);
         }
 
@@ -166,7 +179,7 @@ class DemoSeeder extends Seeder
             'branch_id' => $branch2->id,
             'is_active' => true,
         ]);
-        if (!$boringAdmin->hasRole('branch_admin')) {
+        if (! $boringAdmin->hasRole('branch_admin')) {
             $boringAdmin->assignRole($branchAdminRole);
         }
 
@@ -215,7 +228,9 @@ class DemoSeeder extends Seeder
             'collection_center_id' => $boringCenter->id,
             'is_active' => true,
         ]);
-        if (!$ccUser1->hasRole('collection_center')) $ccUser1->assignRole($ccRole);
+        if (! $ccUser1->hasRole('collection_center')) {
+            $ccUser1->assignRole($ccRole);
+        }
 
         $ccUser2 = User::firstOrCreate(['email' => 'rajiv@center.com'], [
             'name' => 'Rajiv Nagar CC Admin',
@@ -226,7 +241,9 @@ class DemoSeeder extends Seeder
             'collection_center_id' => $rajivCenter->id,
             'is_active' => true,
         ]);
-        if (!$ccUser2->hasRole('collection_center')) $ccUser2->assignRole($ccRole);
+        if (! $ccUser2->hasRole('collection_center')) {
+            $ccUser2->assignRole($ccRole);
+        }
 
         $this->command->info('✅ Collection Centers & CC Users created');
 
@@ -328,7 +345,7 @@ class DemoSeeder extends Seeder
         foreach ($doctorsData as $doc) {
             $user = User::firstOrCreate(['phone' => $doc['phone']], [
                 'name' => $doc['name'],
-                'email' => strtolower(str_replace([' ', 'Dr.'], ['', ''], $doc['name'])) . '@doctor.com',
+                'email' => strtolower(str_replace([' ', 'Dr.'], ['', ''], $doc['name'])).'@doctor.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
                 'branch_id' => (rand(0, 1) ? $mainBranch->id : $branch2->id),
@@ -340,7 +357,7 @@ class DemoSeeder extends Seeder
                 'clinic_name' => $doc['clinic'],
                 'commission_percentage' => $doc['comm'],
             ]);
-            if (!$user->hasRole('doctor')) {
+            if (! $user->hasRole('doctor')) {
                 $user->assignRole($doctorRole);
             }
             $doctorUsers[] = $user;
@@ -361,7 +378,7 @@ class DemoSeeder extends Seeder
         foreach ($agentsData as $agt) {
             $user = User::firstOrCreate(['phone' => $agt['phone']], [
                 'name' => $agt['name'],
-                'email' => strtolower(str_replace(' ', '', $agt['agency'])) . '@agent.com',
+                'email' => strtolower(str_replace(' ', '', $agt['agency'])).'@agent.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
                 'branch_id' => (rand(0, 1) ? $mainBranch->id : $branch3->id),
@@ -372,7 +389,7 @@ class DemoSeeder extends Seeder
                 'agency_name' => $agt['agency'],
                 'commission_percentage' => $agt['comm'],
             ]);
-            if (!$user->hasRole('agent')) {
+            if (! $user->hasRole('agent')) {
                 $user->assignRole($agentRole);
             }
             $agentUsers[] = $user;
@@ -405,7 +422,7 @@ class DemoSeeder extends Seeder
         foreach ($patientsData as $pat) {
             $user = User::firstOrCreate(['phone' => $pat['phone']], [
                 'name' => $pat['name'],
-                'email' => strtolower(str_replace(' ', '', $pat['name'])) . '@patient.com',
+                'email' => strtolower(str_replace(' ', '', $pat['name'])).'@patient.com',
                 'password' => Hash::make('password123'),
                 'company_id' => $company->id,
                 'branch_id' => (rand(0, 2) === 0 ? $mainBranch->id : (rand(0, 1) ? $branch2->id : $branch3->id)),
@@ -413,7 +430,7 @@ class DemoSeeder extends Seeder
             ]);
             PatientProfile::firstOrCreate(['user_id' => $user->id], [
                 'company_id' => $company->id,
-                'patient_id_string' => 'PAT-' . $patCounter,
+                'patient_id_string' => 'PAT-'.$patCounter,
                 'age' => $pat['age'],
                 'age_type' => 'Years',
                 'gender' => $pat['gender'],
@@ -423,7 +440,7 @@ class DemoSeeder extends Seeder
             $patientUsers[] = $user;
             $patCounter++;
         }
-        $this->command->info('✅ ' . count($patientsData) . ' Patients created');
+        $this->command->info('✅ '.count($patientsData).' Patients created');
 
         // ============================================================
         // 12. MEMBERSHIPS
@@ -504,8 +521,8 @@ class DemoSeeder extends Seeder
             $due = round($total - $paidAmount, 2);
 
             $invoiceDate = now()->subDays(rand(0, 30))->subHours(rand(0, 12));
-            $invoiceNumber = 'INV-' . $invoiceDate->format('ym') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
-            $barcode = 'INV' . $invoiceDate->format('ymd') . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = 'INV-'.$invoiceDate->format('ym').'-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $barcode = 'INV'.$invoiceDate->format('ymd').str_pad($i + 1, 4, '0', STR_PAD_LEFT);
 
             $selectedBranch = rand(0, 2) === 0 ? $mainBranch : (rand(0, 1) ? $branch2 : $branch3);
             $selectedCC = $selectedBranch->id === $mainBranch->id ? $mainCenter : (rand(0, 1) ? $boringCenter : $rajivCenter);
@@ -516,31 +533,31 @@ class DemoSeeder extends Seeder
                 ['company_id' => $company->id, 'invoice_number' => $invoiceNumber],
                 [
                     'collection_center_id' => $selectedCC->id,
-                'branch_id' => $selectedBranch->id,
-                'patient_id' => $patient->id,
-                'created_by' => $labAdmin->id,
-                'referred_by_doctor_id' => $doctor?->id,
-                'referred_by_agent_id' => null,
-                'invoice_number' => $invoiceNumber,
-                'barcode' => $barcode,
-                'invoice_date' => $invoiceDate,
-                'subtotal' => $subtotal,
-                'discount_amount' => $discount,
-                'membership_discount_amount' => 0,
-                'voucher_discount_amount' => 0,
-                'total_amount' => $total,
-                'total_b2b_amount' => $totalB2b,
-                'cc_profit_amount' => $ccProfit,
-                'paid_amount' => $paidAmount,
-                'due_amount' => max($due, 0),
-                'payment_status' => $due <= 0 ? 'Paid' : ($paidAmount > 0 ? 'Partial' : 'Unpaid'),
-                'status' => 'Pending',
-                'sample_status' => ['Pending', 'Collected', 'Dispatched', 'Received', 'Ready'][rand(0, 4)],
-                'collection_type' => $collectionTypes[array_rand($collectionTypes)],
-                'expected_report_time' => $invoiceDate->copy()->addHours(24),
-                'doctor_commission_amount' => 0,
-                'agent_commission_amount' => 0,
-            ]);
+                    'branch_id' => $selectedBranch->id,
+                    'patient_id' => $patient->id,
+                    'created_by' => $labAdmin->id,
+                    'referred_by_doctor_id' => $doctor?->id,
+                    'referred_by_agent_id' => null,
+                    'invoice_number' => $invoiceNumber,
+                    'barcode' => $barcode,
+                    'invoice_date' => $invoiceDate,
+                    'subtotal' => $subtotal,
+                    'discount_amount' => $discount,
+                    'membership_discount_amount' => 0,
+                    'voucher_discount_amount' => 0,
+                    'total_amount' => $total,
+                    'total_b2b_amount' => $totalB2b,
+                    'cc_profit_amount' => $ccProfit,
+                    'paid_amount' => $paidAmount,
+                    'due_amount' => max($due, 0),
+                    'payment_status' => $due <= 0 ? 'Paid' : ($paidAmount > 0 ? 'Partial' : 'Unpaid'),
+                    'status' => 'Pending',
+                    'sample_status' => ['Pending', 'Collected', 'Dispatched', 'Received', 'Ready'][rand(0, 4)],
+                    'collection_type' => $collectionTypes[array_rand($collectionTypes)],
+                    'expected_report_time' => $invoiceDate->copy()->addHours(24),
+                    'doctor_commission_amount' => 0,
+                    'agent_commission_amount' => 0,
+                ]);
 
             // Invoice Items
             foreach ($selectedTests as $test) {
@@ -577,7 +594,7 @@ class DemoSeeder extends Seeder
                                 'lab_test_id' => $test->id,
                                 'parameter_name' => $param['name'] ?? 'Result',
                                 'short_code' => $param['short_code'] ?? null,
-                                'result_value' => $param['input_type'] === 'numeric' ? (string)rand(10, 100) : 'Normal',
+                                'result_value' => $param['input_type'] === 'numeric' ? (string) rand(10, 100) : 'Normal',
                                 'unit' => $param['unit'] ?? '',
                                 'reference_range' => $param['general_range'] ?? '',
                                 'status' => 'Normal',
@@ -596,12 +613,12 @@ class DemoSeeder extends Seeder
                     'collected_by' => $selectedBranch->id === $mainBranch->id ? $labAdmin->id : $boringAdmin->id,
                     'payment_mode_id' => rand(0, 1) ? $cashMode->id : ($upiMode->id ?? $cashMode->id),
                     'amount' => $paidAmount,
-                    'transaction_id' => rand(0, 1) ? 'TXN' . strtoupper(substr(md5(rand()), 0, 8)) : null,
+                    'transaction_id' => rand(0, 1) ? 'TXN'.strtoupper(substr(md5(rand()), 0, 8)) : null,
                 ]);
             }
         }
         $this->command->info('✅ 20 Sample Invoices created');
- 
+
         // ============================================================
         // 16. SAMPLE SETTLEMENTS
         // ============================================================
@@ -616,7 +633,7 @@ class DemoSeeder extends Seeder
             'reference_no' => 'UPI123456789',
             'type' => 'CollectionCenter',
             'status' => 'Pending',
-            'notes' => 'Bulk payment for last week'
+            'notes' => 'Bulk payment for last week',
         ]);
 
         $approvedSettlement = \App\Models\Settlement::create([
@@ -630,7 +647,7 @@ class DemoSeeder extends Seeder
             'reference_no' => 'TXN987654321',
             'type' => 'CollectionCenter',
             'status' => 'Approved',
-            'notes' => 'Monthly settlement'
+            'notes' => 'Monthly settlement',
         ]);
         $this->command->info('✅ Sample Settlements created');
 

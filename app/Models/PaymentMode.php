@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentMode extends Model
 {
     use BelongsToCompany;
+
     protected $guarded = [];
 }

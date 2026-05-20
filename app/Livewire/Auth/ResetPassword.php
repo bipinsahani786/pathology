@@ -2,17 +2,19 @@
 
 namespace App\Livewire\Auth;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Livewire\Component;
 
 class ResetPassword extends Component
 {
     public $token;
+
     public $email;
+
     public $password;
+
     public $password_confirmation;
 
     protected $rules = [
@@ -40,7 +42,7 @@ class ResetPassword extends Component
             ],
             function ($user, $password) {
                 $user->forceFill([
-                    'password' => $password
+                    'password' => $password,
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
@@ -51,6 +53,7 @@ class ResetPassword extends Component
 
         if ($status === Password::PASSWORD_RESET) {
             session()->flash('status', trans($status));
+
             return redirect()->route('login');
         } else {
             $this->addError('email', trans($status));

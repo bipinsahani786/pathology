@@ -2,15 +2,19 @@
 
 namespace App\Livewire\Landing;
 
-use Livewire\Component;
 use App\Models\Enquiry;
+use Livewire\Component;
 
 class ContactPage extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $message = '';
+
     public bool $submitted = false;
 
     protected $rules = [
@@ -40,6 +44,6 @@ class ContactPage extends Component
     public function render()
     {
         return view('livewire.landing.contact-page')
-            ->layout('components.landing-layout', ['title' => 'Contact Us - ' . \App\Models\SiteSetting::get('site_name', 'SWS Pathology')]);
+            ->layout('components.landing-layout', ['title' => 'Contact Us - '.\App\Models\SiteSetting::get('site_name', 'SWS Pathology')]);
     }
 }

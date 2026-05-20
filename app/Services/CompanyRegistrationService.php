@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Company;
 use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Plan;
 use App\Models\User;
 use App\Models\UserDetail;
-use App\Models\Plan;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class CompanyRegistrationService
 {

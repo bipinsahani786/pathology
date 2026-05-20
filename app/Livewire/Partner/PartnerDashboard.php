@@ -2,14 +2,19 @@
 
 namespace App\Livewire\Partner;
 
-use Livewire\Component;
-use App\Models\{Invoice, Settlement, User};
+use App\Models\Invoice;
+use App\Models\Settlement;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class PartnerDashboard extends Component
 {
     public $role;
-    public $startDate, $endDate;
+
+    public $startDate;
+
+    public $endDate;
+
     public $stats = [
         'reports_ready' => 0,
         'pending_collection' => 0,
@@ -40,9 +45,9 @@ class PartnerDashboard extends Component
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'));
-        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'doctor'));
-        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'agent'));
+        $isCC = $user->hasRole('collection_center') || $user->collection_center_id || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'collection'));
+        $isDoctor = $user->hasRole('doctor') || $user->doctorProfile || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'doctor'));
+        $isAgent = $user->hasRole('agent') || $user->agentProfile || collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'agent'));
 
         if ($isDoctor) {
             $this->role = 'Doctor';
@@ -55,7 +60,7 @@ class PartnerDashboard extends Component
             $this->loadCollectionCenterStats($user->id);
         } else {
             // Only redirect to lab dashboard if they are actually lab staff
-            if (collect($roles)->contains(fn($r) => in_array($r, ['lab_admin', 'staff', 'branch_admin']) || str_ends_with($r, '_admin') || str_ends_with($r, '_staff'))) {
+            if (collect($roles)->contains(fn ($r) => in_array($r, ['lab_admin', 'staff', 'branch_admin']) || str_ends_with($r, '_admin') || str_ends_with($r, '_staff'))) {
                 return redirect()->route('lab.dashboard');
             }
             abort(403, 'Unauthorized access to the Partner Portal.');
@@ -67,7 +72,7 @@ class PartnerDashboard extends Component
         $query = Invoice::where('referred_by_doctor_id', $userId)->where('status', '!=', 'Cancelled');
         $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
         $allInvoices = (clone $query)->get();
-        
+
         $this->stats['total_earnings'] = $allInvoices->sum('doctor_commission_amount');
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
         $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
@@ -75,7 +80,7 @@ class PartnerDashboard extends Component
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
         $this->stats['this_month_earnings'] = $rangeInvoices->sum('doctor_commission_amount');
-            
+
         $this->stats['last_month_earnings'] = Invoice::where('referred_by_doctor_id', $userId)
             ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
@@ -88,7 +93,7 @@ class PartnerDashboard extends Component
         $query = Invoice::where('referred_by_agent_id', $userId)->where('status', '!=', 'Cancelled');
         $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
         $allInvoices = (clone $query)->get();
-        
+
         $this->stats['total_earnings'] = $allInvoices->sum('agent_commission_amount');
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
         $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
@@ -96,7 +101,7 @@ class PartnerDashboard extends Component
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
         $this->stats['this_month_earnings'] = $rangeInvoices->sum('agent_commission_amount');
-            
+
         $this->stats['last_month_earnings'] = Invoice::where('referred_by_agent_id', $userId)
             ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
@@ -108,17 +113,19 @@ class PartnerDashboard extends Component
     {
         $user = Auth::user();
         $ccId = $user->collection_center_id;
-        if (!$ccId) return;
+        if (! $ccId) {
+            return;
+        }
 
         $query = Invoice::where('collection_center_id', $ccId)->where('status', '!=', 'Cancelled');
         $rangeInvoices = (clone $query)->whereBetween('invoice_date', [$this->startDate, $this->endDate])->get();
         $allInvoices = (clone $query)->get();
-        
+
         $this->stats['total_billing'] = $allInvoices->sum('total_amount');
         $this->stats['total_profit'] = $allInvoices->sum('cc_profit_amount');
         $this->stats['lab_dues'] = $allInvoices->sum('total_b2b_amount');
         $this->stats['total_earnings'] = $this->stats['total_profit']; // For UI consistency
-        
+
         $this->stats['settled_amount'] = Settlement::where('user_id', $userId)->where('status', 'Approved')->sum('amount');
         $this->stats['pending_approval_amount'] = Settlement::where('user_id', $userId)->where('status', 'Pending')->sum('amount');
         $this->stats['pending_lab_payment'] = $this->stats['lab_dues'] - $this->stats['settled_amount'];
@@ -126,7 +133,7 @@ class PartnerDashboard extends Component
         $this->stats['total_invoices'] = $rangeInvoices->count();
 
         $this->stats['this_month_profit'] = $rangeInvoices->sum('cc_profit_amount');
-            
+
         $this->stats['last_month_profit'] = Invoice::where('collection_center_id', $ccId)
             ->where('status', '!=', 'Cancelled')
             ->whereMonth('invoice_date', now()->subMonth()->month)
@@ -154,23 +161,27 @@ class PartnerDashboard extends Component
     {
         $user = Auth::user();
         $column = '';
-        if ($this->role === 'Doctor') $column = 'doctor_commission_amount';
-        elseif ($this->role === 'Agent') $column = 'agent_commission_amount';
-        elseif ($this->role === 'Collection Center') $column = 'cc_profit_amount';
+        if ($this->role === 'Doctor') {
+            $column = 'doctor_commission_amount';
+        } elseif ($this->role === 'Agent') {
+            $column = 'agent_commission_amount';
+        } elseif ($this->role === 'Collection Center') {
+            $column = 'cc_profit_amount';
+        }
 
         $data = Invoice::whereBetween('invoice_date', [$this->startDate, $this->endDate])
             ->where('status', '!=', 'Cancelled')
-            ->when($this->role === 'Doctor', fn($q) => $q->where('referred_by_doctor_id', $user->id))
-            ->when($this->role === 'Agent', fn($q) => $q->where('referred_by_agent_id', $user->id))
-            ->when($this->role === 'Collection Center', fn($q) => $q->where('collection_center_id', $user->collection_center_id))
+            ->when($this->role === 'Doctor', fn ($q) => $q->where('referred_by_doctor_id', $user->id))
+            ->when($this->role === 'Agent', fn ($q) => $q->where('referred_by_agent_id', $user->id))
+            ->when($this->role === 'Collection Center', fn ($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->selectRaw('DATE(invoice_date) as date, SUM('.$column.') as total')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
         return [
-            'labels' => $data->pluck('date')->map(fn($d) => date('d M', strtotime($d))),
-            'data' => $data->pluck('total')
+            'labels' => $data->pluck('date')->map(fn ($d) => date('d M', strtotime($d))),
+            'data' => $data->pluck('total'),
         ];
     }
 
@@ -192,7 +203,7 @@ class PartnerDashboard extends Component
         return view('livewire.partner.partner-dashboard', [
             'recentInvoices' => $recentInvoices,
             'recentSettlements' => $recentSettlements,
-            'chartData' => $this->getChartData()
+            'chartData' => $this->getChartData(),
         ]);
     }
 }

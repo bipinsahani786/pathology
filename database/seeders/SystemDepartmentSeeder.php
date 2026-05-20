@@ -23,7 +23,7 @@ class SystemDepartmentSeeder extends Seeder
             'Special Tests',
             'Vitamins',
             'Molecular Diagnostics',
-            'Other'
+            'Other',
         ];
 
         foreach ($departments as $dept) {

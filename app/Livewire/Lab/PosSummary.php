@@ -8,6 +8,7 @@ use Livewire\Component;
 class PosSummary extends Component
 {
     public $invoiceId;
+
     public $invoice;
 
     public function mount($invoice)
@@ -19,19 +20,19 @@ class PosSummary extends Component
     public function loadInvoice()
     {
         $companyId = auth()->user()->company_id;
-        
+
         // Find the invoice strictly for this company
         $this->invoice = Invoice::with([
-            'patient.patientProfile', 
-            'doctor.doctorProfile', 
-            'items', 
+            'patient.patientProfile',
+            'doctor.doctorProfile',
+            'items',
             'payments',
             'branch',
             'membership',
-            'patientMembership'
+            'patientMembership',
         ])
-        ->where('company_id', $companyId)
-        ->findOrFail($this->invoiceId);
+            ->where('company_id', $companyId)
+            ->findOrFail($this->invoiceId);
     }
 
     public function render()

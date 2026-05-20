@@ -2,43 +2,48 @@
 
 namespace App\Livewire\Lab\Inventory;
 
-use App\Models\InventoryItem;
-use App\Models\InventoryStock;
 use App\Models\InventoryBatch;
+use App\Models\InventoryStock;
 use App\Models\InventoryTransaction;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\Response;
 
 class StockManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public $searchTerm = '';
+
     public $selectedItem;
+
     public $isAdjustmentModalOpen = false;
-    
+
     // Adjustment fields
     public $adjustment_type = 'in'; // in, out
+
     public $adjustment_quantity;
+
     public $adjustment_remarks;
+
     public $adjustment_batch_number;
+
     public $adjustment_expiry_date;
 
     public function render()
     {
         $branchId = auth()->user()->branch_id;
-        
+
         $stocks = InventoryStock::with(['item', 'batches'])
             ->where('branch_id', $branchId)
-            ->whereHas('item', function($query) {
-                $query->where('name', 'ilike', '%' . $this->searchTerm . '%');
+            ->whereHas('item', function ($query) {
+                $query->where('name', 'ilike', '%'.$this->searchTerm.'%');
             })
             ->paginate(15);
 
         return view('livewire.lab.inventory.stock-manager', [
-            'stocks' => $stocks
+            'stocks' => $stocks,
         ])->layout('layouts.app');
     }
 
@@ -64,11 +69,11 @@ class StockManager extends Component
         ]);
 
         $stock = $this->selectedItem;
-        
+
         // Update total quantity
         if ($this->adjustment_type == 'in') {
             $stock->increment('quantity', $this->adjustment_quantity);
-            
+
             // Create a batch if provided
             if ($this->adjustment_batch_number) {
                 InventoryBatch::create([
@@ -81,17 +86,20 @@ class StockManager extends Component
         } else {
             if ($stock->quantity < $this->adjustment_quantity) {
                 $this->addError('adjustment_quantity', 'Insufficient stock.');
+
                 return;
             }
             $stock->decrement('quantity', $this->adjustment_quantity);
-            
+
             // Deduct from batches (FIFO simple logic for now)
             $remainingToDeduct = $this->adjustment_quantity;
             $batches = $stock->batches()->where('quantity', '>', 0)->orderBy('expiry_date', 'asc')->get();
-            
+
             foreach ($batches as $batch) {
-                if ($remainingToDeduct <= 0) break;
-                
+                if ($remainingToDeduct <= 0) {
+                    break;
+                }
+
                 if ($batch->quantity >= $remainingToDeduct) {
                     $batch->decrement('quantity', $remainingToDeduct);
                     $remainingToDeduct = 0;
@@ -124,31 +132,31 @@ class StockManager extends Component
             ->where('branch_id', $branchId)
             ->get();
 
-        $csvFileName = 'inventory_stock_' . date('Y-m-d') . '.csv';
+        $csvFileName = 'inventory_stock_'.date('Y-m-d').'.csv';
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$csvFileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$csvFileName",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = ['Item Name', 'Category', 'Unit', 'Current Quantity', 'Min Stock Level', 'Status'];
 
-        $callback = function() use($stocks, $columns) {
+        $callback = function () use ($stocks, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
             foreach ($stocks as $stock) {
                 $status = ($stock->quantity <= $stock->item->min_stock_level) ? 'Low Stock' : 'In Stock';
-                
+
                 fputcsv($file, [
                     $stock->item->name,
                     $stock->item->category->name,
                     $stock->item->unit,
                     $stock->quantity,
                     $stock->item->min_stock_level,
-                    $status
+                    $status,
                 ]);
             }
 

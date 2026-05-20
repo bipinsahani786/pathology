@@ -9,25 +9,37 @@ use Livewire\WithPagination;
 class SalesAgentManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public $searchTerm = '';
+
     public $isModalOpen = false;
+
     public $isPayoutModalOpen = false;
 
     // Payout fields
     public $payoutAgentId;
+
     public $payoutAmount;
+
     public $payoutMethod = 'Bank Transfer';
+
     public $payoutReference;
+
     public $payoutNotes;
 
     // Form fields
     public $agentId;
+
     public $name;
+
     public $email;
+
     public $phone;
+
     public $commissionRate = 0;
+
     public $status = 'active';
 
     protected $rules = [
@@ -41,16 +53,16 @@ class SalesAgentManager extends Component
     public function render()
     {
         $agents = SalesAgent::withCount('companies')
-            ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('email', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'ilike', '%' . $this->searchTerm . '%');
+            ->where(function ($q) {
+                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('email', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('phone', 'ilike', '%'.$this->searchTerm.'%');
             })
             ->orderBy('name', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.sales-agent-manager', [
-            'agents' => $agents
+            'agents' => $agents,
         ])->layout('layouts.app');
     }
 
@@ -78,7 +90,7 @@ class SalesAgentManager extends Component
     {
         $rules = $this->rules;
         if ($this->agentId) {
-            $rules['email'] = 'nullable|email|unique:sales_agents,email,' . $this->agentId;
+            $rules['email'] = 'nullable|email|unique:sales_agents,email,'.$this->agentId;
         }
 
         $this->validate($rules);

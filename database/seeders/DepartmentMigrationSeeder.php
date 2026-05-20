@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DepartmentMigrationSeeder extends Seeder
@@ -18,10 +17,10 @@ class DepartmentMigrationSeeder extends Seeder
             $department = \App\Models\Department::firstOrCreate(
                 [
                     'company_id' => $test->company_id,
-                    'name' => $test->department
+                    'name' => $test->department,
                 ],
                 [
-                    'is_active' => true
+                    'is_active' => true,
                 ]
             );
 

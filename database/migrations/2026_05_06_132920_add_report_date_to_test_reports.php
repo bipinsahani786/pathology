@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('test_reports', function (Blueprint $table) {
-            if (!Schema::hasColumn('test_reports', 'report_date')) {
+            if (! Schema::hasColumn('test_reports', 'report_date')) {
                 $table->dateTime('report_date')->nullable()->after('approved_at');
             }
         });

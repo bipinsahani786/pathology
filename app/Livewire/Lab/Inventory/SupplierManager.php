@@ -9,25 +9,41 @@ use Livewire\WithPagination;
 class SupplierManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
-    public $name, $contact_person, $phone, $email, $address, $gst_number, $supplier_id;
+    public $name;
+
+    public $contact_person;
+
+    public $phone;
+
+    public $email;
+
+    public $address;
+
+    public $gst_number;
+
+    public $supplier_id;
+
     public $is_active = true;
+
     public $searchTerm = '';
+
     public $isModalOpen = false;
 
     public function render()
     {
         $suppliers = InventorySupplier::where('company_id', auth()->user()->company_id)
-            ->where(function($query) {
-                $query->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                      ->orWhere('contact_person', 'ilike', '%' . $this->searchTerm . '%');
+            ->where(function ($query) {
+                $query->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('contact_person', 'ilike', '%'.$this->searchTerm.'%');
             })
             ->orderBy('name')
             ->paginate(15);
 
         return view('livewire.lab.inventory.supplier-manager', [
-            'suppliers' => $suppliers
+            'suppliers' => $suppliers,
         ])->layout('layouts.app');
     }
 
@@ -40,7 +56,7 @@ class SupplierManager extends Component
     public function edit($id)
     {
         $supplier = InventorySupplier::where('company_id', auth()->user()->company_id)->findOrFail($id);
-        
+
         $this->supplier_id = $id;
         $this->name = $supplier->name;
         $this->contact_person = $supplier->contact_person;
@@ -93,6 +109,6 @@ class SupplierManager extends Component
     public function toggleStatus($id)
     {
         $supplier = InventorySupplier::where('company_id', auth()->user()->company_id)->findOrFail($id);
-        $supplier->update(['is_active' => !$supplier->is_active]);
+        $supplier->update(['is_active' => ! $supplier->is_active]);
     }
 }

@@ -2,16 +2,29 @@
 
 namespace App\Livewire\Lab\Inventory;
 
-use App\Models\InventorySupplier;
+use App\Models\InventoryBatch;
 use App\Models\InventoryItem;
 use App\Models\InventoryStock;
-use App\Models\InventoryBatch;
+use App\Models\InventorySupplier;
 use App\Models\InventoryTransaction;
 use Livewire\Component;
 
 class PurchaseManager extends Component
 {
-    public $supplier_id, $item_id, $quantity, $batch_number, $expiry_date, $purchase_price, $mrp;
+    public $supplier_id;
+
+    public $item_id;
+
+    public $quantity;
+
+    public $batch_number;
+
+    public $expiry_date;
+
+    public $purchase_price;
+
+    public $mrp;
+
     public $remarks;
 
     public function render()
@@ -21,7 +34,7 @@ class PurchaseManager extends Component
 
         return view('livewire.lab.inventory.purchase-manager', [
             'suppliers' => $suppliers,
-            'items' => $items
+            'items' => $items,
         ])->layout('layouts.app');
     }
 
@@ -64,7 +77,7 @@ class PurchaseManager extends Component
             'source' => 'purchase',
             'reference_id' => $this->supplier_id, // Store supplier ID as reference for now
             'performed_by_id' => auth()->id(),
-            'remarks' => "Purchased from " . InventorySupplier::find($this->supplier_id)->name . ". " . $this->remarks,
+            'remarks' => 'Purchased from '.InventorySupplier::find($this->supplier_id)->name.'. '.$this->remarks,
         ]);
 
         session()->flash('success', 'Stock received successfully.');

@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PatientMembership;
 use App\Models\Company;
+use App\Models\PatientMembership;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 
 class MembershipCardController extends Controller
 {
@@ -26,8 +25,8 @@ class MembershipCardController extends Controller
         ]);
 
         // Set card-like size (Custom size roughly 86mm x 54mm)
-        $pdf->setPaper([0, 0, 243.78, 153.07], 'portrait'); 
+        $pdf->setPaper([0, 0, 243.78, 153.07], 'portrait');
 
-        return $pdf->stream('MembershipCard-' . $membership->id . '.pdf');
+        return $pdf->stream('MembershipCard-'.$membership->id.'.pdf');
     }
 }

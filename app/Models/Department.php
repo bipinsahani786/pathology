@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class Department extends Model
@@ -16,10 +15,10 @@ class Department extends Model
         parent::boot();
 
         static::addGlobalScope('tenant', function ($builder) {
-            if (auth()->check() && !auth()->user()->hasRole('super_admin')) {
+            if (auth()->check() && ! auth()->user()->hasRole('super_admin')) {
                 $builder->where(function ($query) {
                     $query->where('company_id', auth()->user()->company_id)
-                          ->orWhere('is_system', true);
+                        ->orWhere('is_system', true);
                 });
             }
         });

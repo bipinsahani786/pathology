@@ -15,11 +15,11 @@ return new class extends Migration
             $table->string('sig_1_path')->nullable();
             $table->string('sig_1_name')->nullable();
             $table->string('sig_1_desig')->nullable();
-            
+
             $table->string('sig_2_path')->nullable();
             $table->string('sig_2_name')->nullable();
             $table->string('sig_2_desig')->nullable();
-            
+
             $table->string('sig_3_path')->nullable();
             $table->string('sig_3_name')->nullable();
             $table->string('sig_3_desig')->nullable();
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->dropColumn([
                 'sig_1_path', 'sig_1_name', 'sig_1_desig',
                 'sig_2_path', 'sig_2_name', 'sig_2_desig',
-                'sig_3_path', 'sig_3_name', 'sig_3_desig'
+                'sig_3_path', 'sig_3_name', 'sig_3_desig',
             ]);
         });
     }

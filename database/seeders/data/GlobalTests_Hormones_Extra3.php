@@ -1,4 +1,5 @@
 <?php
+
 // Hormones Extra 3: Adrenal, Pituitary, and miscellaneous hormones
 return [
     ['test_code' => 'ACTH', 'name' => 'ACTH (Adrenocorticotropic Hormone)', 'category' => 'Hormones', 'description' => 'Pituitary hormone regulating cortisol. Differentiates Cushing types.', 'interpretation' => 'High ACTH + High Cortisol: Cushing disease (pituitary), Ectopic ACTH. Low ACTH + High Cortisol: Adrenal adenoma/exogenous. High ACTH + Low Cortisol: Addison disease.', 'suggested_price' => 1500, 'method' => 'ECLIA (Electrochemiluminescence)', 'sample_type' => 'EDTA Plasma (on ice, AM)', 'tat_hours' => 24, 'default_parameters' => [['name' => 'ACTH (AM)', 'unit' => 'pg/mL', 'short_code' => 'ACTH', 'input_type' => 'numeric', 'method' => 'ECLIA', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '7.2', 'max_val' => '63.3', 'display_range' => '7.2 - 63.3 (AM)']]]]],

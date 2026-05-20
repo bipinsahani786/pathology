@@ -143,7 +143,10 @@
                                                 <span class="fs-12 fw-bold text-muted">{{ $role->permissions->count() }} permissions</span>
                                             </td>
                                             <td class="text-end pe-4">
-                                                @if($role->name !== 'lab_admin')
+                                                @php
+                                                    $isSystemRole = in_array($role->name, ['staff', 'lab_admin', 'collection_center', 'branch_admin', 'doctor', 'agent', 'super_admin', 'patient']);
+                                                @endphp
+                                                @if(!$isSystemRole)
                                                     <button wire:click="editRole({{ $role->id }})" class="btn btn-sm btn-soft-primary px-3 rounded-pill border-0">
                                                         <i class="feather-edit me-1"></i>Edit Permissions
                                                     </button>

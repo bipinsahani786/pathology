@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('patient_profiles', function (Blueprint $table) {
             // Drop the global unique constraint
             $table->dropUnique(['patient_id_string']);
-            
+
             // Create a company-scoped unique constraint
             $table->unique(['company_id', 'patient_id_string']);
         });
