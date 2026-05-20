@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
@@ -15,7 +16,14 @@ use App\Traits\Auditable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, BelongsToCompany, Auditable;
+    use HasFactory, Notifiable, HasRoles {
+        HasRoles::assignRole as traitAssignRole;
+        HasRoles::syncRoles as traitSyncRoles;
+        HasRoles::removeRole as traitRemoveRole;
+        HasRoles::scopeRole as traitScopeRole;
+        HasRoles::scopeWithoutRole as traitScopeWithoutRole;
+    }
+    use TwoFactorAuthenticatable, BelongsToCompany, Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -120,7 +128,7 @@ class User extends Authenticatable
     /**
      * Get the patient profile associated with the user.
      */
-    public function patientProfile() 
+    public function patientProfile()
     {
         return $this->hasOne(PatientProfile::class);
     }
@@ -128,7 +136,7 @@ class User extends Authenticatable
     /**
      * Get the doctor profile associated with the user.
      */
-    public function doctorProfile() 
+    public function doctorProfile()
     {
         return $this->hasOne(DoctorProfile::class);
     }
@@ -136,7 +144,7 @@ class User extends Authenticatable
     /**
      * Get the agent profile associated with the user.
      */
-    public function agentProfile() 
+    public function agentProfile()
     {
         return $this->hasOne(AgentProfile::class);
     }
@@ -211,34 +219,93 @@ class User extends Authenticatable
         }
 
         $userRoles = $this->roles->pluck('name')->toArray();
-        
+
         // Flatten Spatie's nested array parameter if passed via hasAnyRole
         if (is_array($roles)) {
             $roleArray = \Illuminate\Support\Arr::flatten($roles);
         } else {
             $roleArray = [$roles];
         }
-        
+
         if ($roles instanceof \Illuminate\Support\Collection) {
             $roleArray = $roles->pluck('name')->toArray();
         }
-        
+
         foreach ($roleArray as $role) {
-            if (is_null($role)) continue;
-            
+            if (is_null($role))
+                continue;
+
             $roleName = is_string($role) ? $role : ($role->name ?? null);
-            if (is_null($roleName)) continue;
-            
+            if (is_null($roleName))
+                continue;
+
             foreach ($userRoles as $userRole) {
                 if ($userRole === $roleName || str_ends_with($userRole, '_' . $roleName)) {
                     return true;
                 }
             }
         }
-        
+
         return false;
     }
+    public function scopeRole($query, $roles, $guard = null, $without = false)
+    {
+        if ($roles instanceof \Illuminate\Support\Collection) {
+            $roles = $roles->all();
+        }
 
+        $resolved = [];
+        foreach (Arr::wrap($roles) as $role) {
+            if ($role instanceof \Spatie\Permission\Models\Role || $role instanceof \Spatie\Permission\Contracts\Role) {
+                $resolved[] = $role;
+                continue;
+            }
+
+            if ($role instanceof \BackedEnum) {
+                $role = $role->value;
+            }
+
+            if (is_numeric($role) || \Spatie\Permission\PermissionRegistrar::isUid($role)) {
+                $resolved[] = $role;
+                continue;
+            }
+
+            if (is_string($role)) {
+                $resolved[] = $this->resolveRoleForQuery($role, $guard);
+                continue;
+            }
+
+            $resolved[] = $role;
+        }
+
+        return $this->traitScopeRole($query, $resolved, $guard, $without);
+    }
+
+    public function scopeWithoutRole($query, $roles, $guard = null)
+    {
+        return $this->scopeRole($query, $roles, $guard, true);
+    }
+
+    private function resolveRoleForQuery(string $roleName, ?string $guard)
+    {
+        $guard = $guard ?: config('auth.defaults.guard', 'web');
+        $roleClass = app(\Spatie\Permission\PermissionRegistrar::class)->getRoleClass();
+
+        try {
+            return $roleClass::findByName($roleName, $guard);
+        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+            if ($this->company_id) {
+                $tenantName = 'lab_' . $this->company_id . '_' . $roleName;
+                try {
+                    return $roleClass::findByName($tenantName, $guard);
+                } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+                    // Fall back to original role name so the trait can throw if truly invalid
+                }
+            }
+
+            return $roleName;
+        }
+    }
     /**
      * Send the password reset notification.
      *
