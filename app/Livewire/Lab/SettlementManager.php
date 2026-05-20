@@ -81,22 +81,24 @@ class SettlementManager extends Component
 
     private function getPartnerValId(): ?int
     {
-        if (!$this->selectedPartnerId) return null;
-        
+        if (!$this->selectedPartnerId)
+            return null;
+
         if (!$this->selectedPartner) {
             $companyId = auth()->user()->company_id;
             if ($this->partnerType === 'Collection Center') {
                 $this->selectedPartner = CollectionCenter::where('company_id', $companyId)->find($this->selectedPartnerId);
             } else {
-                $this->selectedPartner = User::where('company_id', $companyId)->find($this->selectedPartnerId);
+                $this->selectedPartner = $this->getPartnerUsersQuery($companyId)->find($this->selectedPartnerId);
             }
         }
-        
-        if (!$this->selectedPartner) return null;
+
+        if (!$this->selectedPartner)
+            return null;
 
         if ($this->partnerType === 'Collection Center') {
-            return ($this->selectedPartner instanceof CollectionCenter) 
-                ? $this->selectedPartner->id 
+            return ($this->selectedPartner instanceof CollectionCenter)
+                ? $this->selectedPartner->id
                 : $this->selectedPartner->collection_center_id;
         }
 
@@ -108,17 +110,17 @@ class SettlementManager extends Component
         $user = auth()->user();
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        
+
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !$user->hasRole('branch_admin');
-        
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && !$user->hasRole('branch_admin');
+
         $myBranchId = null;
         if ($isGlobalAdmin) {
-             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
         } else {
-             $myBranchId = $user->branch_id;
+            $myBranchId = $user->branch_id;
         }
 
         // Apply strict isolation if setting is ON and NOT a global admin
@@ -127,6 +129,25 @@ class SettlementManager extends Component
         }
 
         return $myBranchId;
+    }
+
+    private function getPartnerUsersQuery(int $companyId)
+    {
+        if ($this->partnerType === 'Doctor') {
+            return User::where('company_id', $companyId)
+                ->where(function ($q) use ($companyId) {
+                    $q->role('doctor')
+                        ->orWhereHas('doctorProfile', fn($q2) => $q2->where('company_id', $companyId));
+                });
+        } elseif ($this->partnerType === 'Agent') {
+            return User::where('company_id', $companyId)
+                ->where(function ($q) use ($companyId) {
+                    $q->role('agent')
+                        ->orWhereHas('agentProfile', fn($q2) => $q2->where('company_id', $companyId));
+                });
+        } else {
+            return User::where('company_id', $companyId)->role(strtolower($this->partnerType));
+        }
     }
 
     public function mount()
@@ -151,33 +172,35 @@ class SettlementManager extends Component
 
     public function updatedStartDate()
     {
-        if ($this->viewMode === 'insights') $this->loadPartnerInsights();
+        if ($this->viewMode === 'insights')
+            $this->loadPartnerInsights();
     }
 
     public function updatedEndDate()
     {
-        if ($this->viewMode === 'insights') $this->loadPartnerInsights();
+        if ($this->viewMode === 'insights')
+            $this->loadPartnerInsights();
     }
 
     public function selectPartner($id, $mode = 'process')
     {
         $companyId = auth()->user()->company_id;
         $this->selectedPartnerId = $id;
-        
+
         if ($this->partnerType === 'Collection Center') {
             $this->selectedPartner = CollectionCenter::where('company_id', $companyId)->find($id);
         } else {
-            $this->selectedPartner = User::where('company_id', $companyId)->find($id);
+            $this->selectedPartner = $this->getPartnerUsersQuery($companyId)->find($id);
         }
-        
+
         if (!$this->selectedPartner) {
-             $this->reset(['selectedPartnerId', 'selectedPartner']);
-             session()->flash('error', 'Partner not found or unauthorized.');
-             return;
+            $this->reset(['selectedPartnerId', 'selectedPartner']);
+            session()->flash('error', 'Partner not found or unauthorized.');
+            return;
         }
         $this->viewMode = $mode;
         $this->reset(['selectedInvoices', 'amount_to_pay']);
-        
+
         if ($mode === 'insights') {
             $this->loadPartnerInsights();
         }
@@ -197,7 +220,7 @@ class SettlementManager extends Component
             ->where('status', '!=', 'Cancelled');
 
         $statsQuery = (clone $query)->whereBetween('invoice_date', [
-            \Carbon\Carbon::parse($this->startDate)->startOfDay(), 
+            \Carbon\Carbon::parse($this->startDate)->startOfDay(),
             \Carbon\Carbon::parse($this->endDate)->endOfDay()
         ]);
 
@@ -243,7 +266,7 @@ class SettlementManager extends Component
 
         // Ensure we only have numeric IDs to avoid TypeErrors in whereIn
         $ids = array_values(array_filter($this->selectedInvoices, fn($v) => is_numeric($v)));
-        
+
         if (empty($ids)) {
             $this->amount_to_pay = 0;
             return;
@@ -290,8 +313,8 @@ class SettlementManager extends Component
             $settlement = Settlement::create([
                 'company_id' => $companyId,
                 'user_id' => ($this->partnerType === 'Collection Center') ? $this->selectedPartner->user_id : $this->selectedPartnerId,
-                'collection_center_id' => ($this->partnerType === 'Collection Center') 
-                    ? ($this->selectedPartner instanceof CollectionCenter ? $this->selectedPartner->id : $this->selectedPartner->collection_center_id) 
+                'collection_center_id' => ($this->partnerType === 'Collection Center')
+                    ? ($this->selectedPartner instanceof CollectionCenter ? $this->selectedPartner->id : $this->selectedPartner->collection_center_id)
                     : null,
                 'amount' => $this->amount_to_pay,
                 'payment_date' => $this->payment_date,
@@ -306,17 +329,17 @@ class SettlementManager extends Component
             $updateData = [];
             if ($this->partnerType === 'Doctor') {
                 $updateData = [
-                    'doctor_settlement_id' => $settlement->id, 
+                    'doctor_settlement_id' => $settlement->id,
                     'is_doctor_settled' => true
                 ];
             } elseif ($this->partnerType === 'Agent') {
                 $updateData = [
-                    'agent_settlement_id' => $settlement->id, 
+                    'agent_settlement_id' => $settlement->id,
                     'is_agent_settled' => true
                 ];
             } else {
                 $updateData = [
-                    'cc_settlement_id' => $settlement->id, 
+                    'cc_settlement_id' => $settlement->id,
                     'is_cc_settled' => true
                 ];
             }
@@ -338,7 +361,7 @@ class SettlementManager extends Component
     {
         $this->authorize('edit settlements');
         $settlement = Settlement::findOrFail($id);
-        
+
         if ($settlement->status !== 'Pending') {
             session()->flash('error', 'Only pending settlements can be approved.');
             return;
@@ -352,7 +375,7 @@ class SettlementManager extends Component
     {
         $this->authorize('edit settlements');
         $settlement = Settlement::findOrFail($id);
-        
+
         if ($settlement->status !== 'Pending') {
             session()->flash('error', 'Only pending settlements can be rejected.');
             return;
@@ -373,7 +396,7 @@ class SettlementManager extends Component
             if ($this->partnerType === 'Collection Center') {
                 $this->selectedPartner = CollectionCenter::where('company_id', $companyId)->find($this->selectedPartnerId);
             } else {
-                $this->selectedPartner = User::where('company_id', $companyId)->find($this->selectedPartnerId);
+                $this->selectedPartner = $this->getPartnerUsersQuery($companyId)->find($this->selectedPartnerId);
             }
         }
 
@@ -385,7 +408,7 @@ class SettlementManager extends Component
         $stats = [
             'total_pending' => 0,
             'settled_today' => Settlement::where('company_id', $companyId)
-                ->when($myBranchId, function($q) use ($myBranchId) {
+                ->when($myBranchId, function ($q) use ($myBranchId) {
                     $q->whereHas('user', fn($u) => $u->where('branch_id', $myBranchId));
                 })
                 ->where('type', $this->partnerType === 'Collection Center' ? 'CollectionCenter' : $this->partnerType)
@@ -408,33 +431,32 @@ class SettlementManager extends Component
 
         if ($myBranchId && !$shareFlag && $this->partnerType !== 'Collection Center') {
             $relation = ($this->partnerType === 'Doctor') ? 'doctor' : 'agent';
-            $pendingBase->whereHas($relation, function($q) use ($myBranchId) {
+            $pendingBase->whereHas($relation, function ($q) use ($myBranchId) {
                 $q->where('branch_id', $myBranchId);
             });
         }
 
         $stats['total_pending'] = (clone $pendingBase)->sum($commField);
-        
+
         if ($this->partnerType === 'Collection Center') {
             $stats['partners_with_pending'] = CollectionCenter::where('company_id', $companyId)
                 ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
-                ->whereHas('invoices', function($q) use ($settledField, $myBranchId) {
+                ->whereHas('invoices', function ($q) use ($settledField, $myBranchId) {
                     $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
                         ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
                 })
                 ->count();
         } else {
-            $statsQuery = User::role(strtolower($this->partnerType))
-                ->where('company_id', $companyId);
+            $statsQuery = $this->getPartnerUsersQuery($companyId);
 
             if ($myBranchId && !$shareFlag) {
                 $statsQuery->where('branch_id', $myBranchId);
             }
 
-            $stats['partners_with_pending'] = $statsQuery->whereHas('invoicesAs'.$this->partnerType, function($q) use ($settledField, $myBranchId) {
-                    $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
-                        ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
-                })
+            $stats['partners_with_pending'] = $statsQuery->whereHas('invoicesAs' . $this->partnerType, function ($q) use ($settledField, $myBranchId) {
+                $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
+                    ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+            })
                 ->count();
         }
 
@@ -443,43 +465,50 @@ class SettlementManager extends Component
             $partners = CollectionCenter::where('company_id', $companyId)
                 ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
                 ->with(['user']) // Bring along the user for settlement later
-                ->withSum(['invoices as pending_amount' => function($q) use ($settledField, $myBranchId) {
-                    $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
-                      ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
-                }], $commField)
-                ->withCount(['invoices as invoice_count' => function($q) use ($settledField, $myBranchId) {
-                    $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
-                      ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
-                }])
-                ->when($this->searchPartner, function($q) {
+                ->withSum([
+                    'invoices as pending_amount' => function ($q) use ($settledField, $myBranchId) {
+                        $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
+                            ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+                    }
+                ], $commField)
+                ->withCount([
+                    'invoices as invoice_count' => function ($q) use ($settledField, $myBranchId) {
+                        $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
+                            ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+                    }
+                ])
+                ->when($this->searchPartner, function ($q) {
                     $q->where(fn($q2) => $q2->where('name', 'ilike', "%{$this->searchPartner}%")->orWhere('center_code', 'ilike', "%{$this->searchPartner}%"));
                 })
                 ->orderByRaw('pending_amount DESC NULLS LAST')
                 ->orderBy('name', 'asc')
                 ->paginate(6, ['*'], 'partnersPage');
         } else {
-            $relationName = 'invoicesAs'.$this->partnerType;
+            $relationName = 'invoicesAs' . $this->partnerType;
             $shareDoctors = \App\Models\Configuration::getFor('branch_share_doctors', '1') === '1';
             $shareAgents = \App\Models\Configuration::getFor('branch_share_agents', '1') === '1';
             $shareFlag = ($this->partnerType === 'Doctor') ? $shareDoctors : $shareAgents;
             $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
 
-            $query = User::role(strtolower($this->partnerType))
-                ->where('company_id', $companyId);
+            $query = $this->getPartnerUsersQuery($companyId);
 
             if ($myBranchId && !$shareFlag) {
                 $query->where('branch_id', $myBranchId);
             }
 
-            $partners = $query->withSum([$relationName . ' as pending_amount' => function($q) use ($settledField, $myBranchId) {
+            $partners = $query->withSum([
+                $relationName . ' as pending_amount' => function ($q) use ($settledField, $myBranchId) {
                     $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
-                      ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
-                }], $commField)
-                ->withCount([$relationName . ' as invoice_count' => function($q) use ($settledField, $myBranchId) {
-                    $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
-                      ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
-                }])
-                ->when($this->searchPartner, function($q) {
+                        ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+                }
+            ], $commField)
+                ->withCount([
+                    $relationName . ' as invoice_count' => function ($q) use ($settledField, $myBranchId) {
+                        $q->when($myBranchId, fn($q2) => $q2->where('branch_id', $myBranchId))
+                            ->where($settledField, false)->where('payment_status', 'Paid')->where('status', '!=', 'Cancelled');
+                    }
+                ])
+                ->when($this->searchPartner, function ($q) {
                     $q->where(fn($q2) => $q2->where('name', 'ilike', "%{$this->searchPartner}%")->orWhere('phone', 'like', "%{$this->searchPartner}%"));
                 })
                 ->orderByRaw('pending_amount DESC NULLS LAST')
