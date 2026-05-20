@@ -2,32 +2,45 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class SupportManager extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $view = 'list'; // list, view, create_system
+
     public $tab = 'partners'; // partners, system
+
     public $selectedTicket;
-    
+
     // Filters
     public $filterStatus = '';
+
     public $filterPriority = '';
+
     public $search = '';
 
     // Reply Form
-    public $message, $replyAttachment;
+    public $message;
+
+    public $replyAttachment;
 
     // Create System Ticket Form
-    public $subject, $category, $priority = 'Medium', $description, $attachment;
+    public $subject;
+
+    public $category;
+
+    public $priority = 'Medium';
+
+    public $description;
+
+    public $attachment;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -66,7 +79,7 @@ class SupportManager extends Component
             'description' => 'required|string',
         ]);
 
-        $ticketId = 'SYS-' . strtoupper(bin2hex(random_bytes(3)));
+        $ticketId = 'SYS-'.strtoupper(bin2hex(random_bytes(3)));
 
         $path = null;
         if ($this->attachment) {
@@ -100,7 +113,7 @@ class SupportManager extends Component
         }
 
         // Logic depends on if we are responding to a partner OR responding to superadmin
-        $isAdminReply = ($this->tab === 'partners'); 
+        $isAdminReply = ($this->tab === 'partners');
 
         TicketMessage::create([
             'support_ticket_id' => $this->selectedTicket->id,
@@ -138,13 +151,13 @@ class SupportManager extends Component
         }
         if ($this->search) {
             $s = $this->search;
-            $query->where(function($q) use ($s) {
+            $query->where(function ($q) use ($s) {
                 $q->where('ticket_id', 'like', "%{$s}%")->orWhere('subject', 'like', "%{$s}%");
             });
         }
 
         return view('livewire.lab.support-manager', [
-            'tickets' => $query->latest()->paginate(15)
+            'tickets' => $query->latest()->paginate(15),
         ])->layout('layouts.app', ['title' => 'Support Tickets']);
     }
 }

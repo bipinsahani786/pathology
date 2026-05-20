@@ -46,7 +46,8 @@ class PlanService
     public function togglePlanStatus($id)
     {
         $plan = $this->getPlanById($id);
-        $plan->update(['is_active' => !$plan->is_active]);
+        $plan->update(['is_active' => ! $plan->is_active]);
+
         return $plan;
     }
 
@@ -57,6 +58,7 @@ class PlanService
     {
         $plan = $this->getPlanById($id);
         $plan->delete();
+
         return true;
     }
 
@@ -67,10 +69,11 @@ class PlanService
     {
         $formattedFeatures = [];
         foreach ($features as $feature) {
-            if (!empty($feature['key'])) {
+            if (! empty($feature['key'])) {
                 $formattedFeatures[$feature['key']] = $feature['value'];
             }
         }
+
         return $formattedFeatures;
     }
 
@@ -80,11 +83,12 @@ class PlanService
     public function formatFeaturesForUi(?array $features): array
     {
         $formatted = [];
-        if (!empty($features)) {
+        if (! empty($features)) {
             foreach ($features as $key => $value) {
                 $formatted[] = ['key' => $key, 'value' => $value];
             }
         }
+
         return $formatted;
     }
 }

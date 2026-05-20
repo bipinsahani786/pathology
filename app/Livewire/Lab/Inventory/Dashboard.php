@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Lab\Inventory;
 
+use App\Models\InventoryBatch;
 use App\Models\InventoryItem;
 use App\Models\InventoryStock;
-use App\Models\InventoryBatch;
 use App\Models\InventoryTransaction;
-use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class Dashboard extends Component
 {
@@ -20,26 +20,26 @@ class Dashboard extends Component
         $stats = [
             'total_items' => InventoryItem::where('company_id', $companyId)->count(),
             'low_stock_count' => InventoryStock::where('branch_id', $branchId)
-                ->whereHas('item', function($q) {
+                ->whereHas('item', function ($q) {
                     $q->whereColumn('inventory_stocks.quantity', '<=', 'inventory_items.min_stock_level');
                 })->count(),
-            'near_expiry_count' => InventoryBatch::whereHas('stock', function($q) use ($branchId) {
+            'near_expiry_count' => InventoryBatch::whereHas('stock', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             })->where('quantity', '>', 0)
-              ->where('expiry_date', '<=', now()->addDays(30))
-              ->where('expiry_date', '>', now())
-              ->count(),
-            'expired_count' => InventoryBatch::whereHas('stock', function($q) use ($branchId) {
+                ->where('expiry_date', '<=', now()->addDays(30))
+                ->where('expiry_date', '>', now())
+                ->count(),
+            'expired_count' => InventoryBatch::whereHas('stock', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             })->where('quantity', '>', 0)
-              ->where('expiry_date', '<=', now())
-              ->count(),
+                ->where('expiry_date', '<=', now())
+                ->count(),
         ];
 
         // 2. Low Stock Items
         $lowStockItems = InventoryStock::with('item')
             ->where('branch_id', $branchId)
-            ->whereHas('item', function($q) {
+            ->whereHas('item', function ($q) {
                 $q->whereColumn('inventory_stocks.quantity', '<=', 'inventory_items.min_stock_level');
             })
             ->take(10)
@@ -47,7 +47,7 @@ class Dashboard extends Component
 
         // 3. Near Expiry Batches
         $nearExpiryBatches = InventoryBatch::with(['stock.item'])
-            ->whereHas('stock', function($q) use ($branchId) {
+            ->whereHas('stock', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             })
             ->where('quantity', '>', 0)

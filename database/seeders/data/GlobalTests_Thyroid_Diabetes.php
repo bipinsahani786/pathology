@@ -1,4 +1,5 @@
 <?php
+
 // Thyroid & Diabetes Tests
 return [
     [
@@ -27,19 +28,19 @@ return [
                 'name' => 'Total T3', 'unit' => 'ng/dL', 'short_code' => 'T3', 'input_type' => 'numeric',
                 'method' => 'CLIA (Chemiluminescence Immunoassay)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '60', 'max_val' => '200', 'display_range' => '60 - 200']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '60', 'max_val' => '200', 'display_range' => '60 - 200']],
             ],
             [
                 'name' => 'Total T4', 'unit' => 'µg/dL', 'short_code' => 'T4', 'input_type' => 'numeric',
                 'method' => 'CLIA (Chemiluminescence Immunoassay)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.5', 'max_val' => '12.5', 'display_range' => '4.5 - 12.5']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '4.5', 'max_val' => '12.5', 'display_range' => '4.5 - 12.5']],
             ],
             [
                 'name' => 'TSH', 'unit' => 'µIU/mL', 'short_code' => 'TSH', 'input_type' => 'numeric',
                 'method' => 'CLIA (Chemiluminescence Immunoassay)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.3', 'max_val' => '5.5', 'display_range' => '0.3 - 5.5']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.3', 'max_val' => '5.5', 'display_range' => '0.3 - 5.5']],
             ],
         ],
     ],
@@ -55,7 +56,7 @@ return [
                 'name' => 'Free T3', 'unit' => 'pg/mL', 'short_code' => 'FT3', 'input_type' => 'numeric',
                 'method' => 'ECLIA (Electrochemiluminescence)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.0', 'max_val' => '4.4', 'display_range' => '2.0 - 4.4']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.0', 'max_val' => '4.4', 'display_range' => '2.0 - 4.4']],
             ],
         ],
     ],
@@ -71,7 +72,7 @@ return [
                 'name' => 'Free T4', 'unit' => 'ng/dL', 'short_code' => 'FT4', 'input_type' => 'numeric',
                 'method' => 'ECLIA (Electrochemiluminescence)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.93', 'max_val' => '1.70', 'display_range' => '0.93 - 1.70']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0.93', 'max_val' => '1.70', 'display_range' => '0.93 - 1.70']],
             ],
         ],
     ],
@@ -87,19 +88,19 @@ return [
                 'name' => 'Fasting Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTTF', 'input_type' => 'numeric',
                 'method' => 'GOD-POD (Enzymatic)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '92', 'display_range' => '70 - 92']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '92', 'display_range' => '70 - 92']],
             ],
             [
                 'name' => '1 Hour Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTT1', 'input_type' => 'numeric',
                 'method' => 'GOD-POD (Enzymatic)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '180', 'display_range' => '< 180']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '180', 'display_range' => '< 180']],
             ],
             [
                 'name' => '2 Hour Glucose', 'unit' => 'mg/dL', 'short_code' => 'GTT2', 'input_type' => 'numeric',
                 'method' => 'GOD-POD (Enzymatic)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '153', 'display_range' => '< 153']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '153', 'display_range' => '< 153']],
             ],
         ],
     ],
@@ -115,19 +116,19 @@ return [
                 'name' => 'Fasting Glucose (for HOMA)', 'unit' => 'mg/dL', 'short_code' => 'GHOMA', 'input_type' => 'numeric',
                 'method' => 'GOD-POD (Enzymatic)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '100', 'display_range' => '70 - 100']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '100', 'display_range' => '70 - 100']],
             ],
             [
                 'name' => 'Fasting Insulin', 'unit' => 'µIU/mL', 'short_code' => 'INSF', 'input_type' => 'numeric',
                 'method' => 'CLIA (Chemiluminescence Immunoassay)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.6', 'max_val' => '24.9', 'display_range' => '2.6 - 24.9']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '2.6', 'max_val' => '24.9', 'display_range' => '2.6 - 24.9']],
             ],
             [
                 'name' => 'HOMA-IR (Insulin Resistance)', 'unit' => 'index', 'short_code' => 'HOMAIR', 'input_type' => 'calculated',
                 'method' => 'Calculated',
                 'range_type' => 'flexible', 'formula' => '({INSF} * {GHOMA}) / 405',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '2.5', 'display_range' => '< 2.5']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '2.5', 'display_range' => '< 2.5']],
             ],
         ],
     ],
@@ -151,7 +152,7 @@ return [
                 'name' => 'CRP (Quantitative)', 'unit' => 'mg/L', 'short_code' => 'CRP', 'input_type' => 'numeric',
                 'method' => 'Immunoturbidimetry',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '5.0', 'display_range' => '0 - 5.0']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '0', 'max_val' => '5.0', 'display_range' => '0 - 5.0']],
             ],
         ],
     ],
@@ -167,31 +168,31 @@ return [
                 'name' => 'Sodium (Na)', 'unit' => 'mEq/L', 'short_code' => 'NA', 'input_type' => 'numeric',
                 'method' => 'ISE (Ion Selective Electrode)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '136', 'max_val' => '146', 'display_range' => '136 - 146']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '136', 'max_val' => '146', 'display_range' => '136 - 146']],
             ],
             [
                 'name' => 'Potassium (K)', 'unit' => 'mEq/L', 'short_code' => 'K', 'input_type' => 'numeric',
                 'method' => 'ISE (Ion Selective Electrode)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.5', 'max_val' => '5.1', 'display_range' => '3.5 - 5.1']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '3.5', 'max_val' => '5.1', 'display_range' => '3.5 - 5.1']],
             ],
             [
                 'name' => 'Chloride (Cl)', 'unit' => 'mEq/L', 'short_code' => 'CL', 'input_type' => 'numeric',
                 'method' => 'ISE (Ion Selective Electrode)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '98', 'max_val' => '106', 'display_range' => '98 - 106']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '98', 'max_val' => '106', 'display_range' => '98 - 106']],
             ],
             [
                 'name' => 'Bicarbonate (HCO3)', 'unit' => 'mEq/L', 'short_code' => 'HCO3', 'input_type' => 'numeric',
                 'method' => 'ISE (Ion Selective Electrode)',
                 'range_type' => 'flexible', 'formula' => '',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '22', 'max_val' => '28', 'display_range' => '22 - 28']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '22', 'max_val' => '28', 'display_range' => '22 - 28']],
             ],
             [
                 'name' => 'Anion Gap', 'unit' => 'mEq/L', 'short_code' => 'AGAP', 'input_type' => 'calculated',
                 'method' => 'Calculated',
                 'range_type' => 'flexible', 'formula' => '{NA} - ({CL} + {HCO3})',
-                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '8', 'max_val' => '14', 'display_range' => '8 - 14']]
+                'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '8', 'max_val' => '14', 'display_range' => '8 - 14']],
             ],
         ],
     ],

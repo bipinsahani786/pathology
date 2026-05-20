@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Carbon\Carbon;
 
 class CheckTenantSubscription
 {
@@ -26,7 +26,7 @@ class CheckTenantSubscription
         if ($user && $user->company_id) {
             $company = $user->company;
 
-            if (!$company) {
+            if (! $company) {
                 abort(403, 'Workspace not found.');
             }
 
@@ -36,11 +36,11 @@ class CheckTenantSubscription
 
             // Check if the subscription period has expired
             if ($company->trial_ends_at && Carbon::now()->greaterThan($company->trial_ends_at)) {
-                
+
                 $currentRoute = $request->route()->getName();
                 $allowedRoutes = ['lab.subscription.expired', 'lab.billing.upgrade', 'logout'];
 
-                if (!in_array($currentRoute, $allowedRoutes)) {
+                if (! in_array($currentRoute, $allowedRoutes)) {
                     return redirect()->route('lab.subscription.expired')
                         ->with('error', 'Your subscription has expired. Please renew to continue.');
                 }

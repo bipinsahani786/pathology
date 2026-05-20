@@ -2,19 +2,19 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\CollectionCenter;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Cache;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class CollectionCenterManager extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -24,19 +24,27 @@ class CollectionCenterManager extends Component
 
     // State variables
     public $searchTerm = '';
-    public $center_id = null; 
+
+    public $center_id = null;
+
     public $user_id = null;
-    
+
     // Center Fields
     public $name;
+
     public $center_code;
+
     public $address;
+
     public $branch_id;
+
     public $is_active = true;
 
     // User Fields
     public $phone;
+
     public $email;
+
     public $password;
 
     public $isModalOpen = false;
@@ -67,7 +75,7 @@ class CollectionCenterManager extends Component
         $this->authorize('edit collection_centers');
         $this->resetFields();
         $center = CollectionCenter::with('user')->findOrFail($id);
-        
+
         $this->center_id = $center->id;
         $this->name = $center->name;
         $this->center_code = $center->center_code;
@@ -114,12 +122,13 @@ class CollectionCenterManager extends Component
             $companyId = $company->id;
 
             // SaaS Plan Enforcement for Collection Centers
-            if (!$this->center_id) {
+            if (! $this->center_id) {
                 $maxCenters = $company->plan->features['collection_centers'] ?? -1;
                 if ($maxCenters != -1) {
                     $currentCentersCount = CollectionCenter::where('company_id', $companyId)->count();
                     if ($currentCentersCount >= $maxCenters) {
                         $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxCenters} collection center(s). Upgrade your plan to add more.");
+
                         return;
                     }
                 }
@@ -154,13 +163,13 @@ class CollectionCenterManager extends Component
                 $ccRole = \Spatie\Permission\Models\Role::where('name', 'collection_center')
                     ->orWhere('name', 'like', '%collection%')
                     ->first();
-                
+
                 if ($ccRole) {
                     $user->assignRole($ccRole->name);
                 } else {
                     $user->assignRole('collection_center'); // Fallback
                 }
-                
+
                 $this->user_id = $user->id;
             }
 
@@ -197,16 +206,16 @@ class CollectionCenterManager extends Component
             }
 
             DB::commit();
-            
+
             // Clear cache for POS
-            Cache::forget("centers_" . auth()->user()->company_id . "_" . $this->branch_id);
-            Cache::forget("centers_" . auth()->user()->company_id . "_all");
-            Cache::forget("centers_" . auth()->user()->company_id . "_");
+            Cache::forget('centers_'.auth()->user()->company_id.'_'.$this->branch_id);
+            Cache::forget('centers_'.auth()->user()->company_id.'_all');
+            Cache::forget('centers_'.auth()->user()->company_id.'_');
 
             $this->closeModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error: '.$e->getMessage());
         }
     }
 
@@ -217,9 +226,9 @@ class CollectionCenterManager extends Component
     {
         $this->authorize('edit collection_centers');
         $center = CollectionCenter::findOrFail($id);
-        $center->update(['is_active' => !$center->is_active]);
-        Cache::forget("centers_" . auth()->user()->company_id . "_" . $center->branch_id);
-        Cache::forget("centers_" . auth()->user()->company_id . "_all");
+        $center->update(['is_active' => ! $center->is_active]);
+        Cache::forget('centers_'.auth()->user()->company_id.'_'.$center->branch_id);
+        Cache::forget('centers_'.auth()->user()->company_id.'_all');
         session()->flash('message', 'Status updated successfully.');
     }
 
@@ -233,8 +242,8 @@ class CollectionCenterManager extends Component
         $companyId = $center->company_id;
         $branchId = $center->branch_id;
         $center->delete();
-        Cache::forget("centers_" . $companyId . "_" . $branchId);
-        Cache::forget("centers_" . $companyId . "_all");
+        Cache::forget('centers_'.$companyId.'_'.$branchId);
+        Cache::forget('centers_'.$companyId.'_all');
         session()->flash('message', 'Collection Center deleted successfully.');
     }
 
@@ -259,22 +268,22 @@ class CollectionCenterManager extends Component
         $user = auth()->user();
         $companyId = $user->company_id;
         $activeBranchId = session('active_branch_id', 'all');
-        
+
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'))) && !$user->hasRole('branch_admin');
-        
-        $myBranchId = $isGlobalAdmin 
-            ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin'))) && ! $user->hasRole('branch_admin');
+
+        $myBranchId = $isGlobalAdmin
+            ? ($activeBranchId === 'all' ? null : $activeBranchId)
             : $user->branch_id;
 
         $centers = CollectionCenter::with('user')->where('company_id', $companyId)
-            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
-            ->where(function($q) {
-                $q->where('name', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhere('center_code', 'ilike', '%' . $this->searchTerm . '%')
-                  ->orWhereHas('user', function($qu) {
-                      $qu->where('phone', 'ilike', '%' . $this->searchTerm . '%');
-                  });
+            ->when($myBranchId, fn ($q) => $q->where('branch_id', $myBranchId))
+            ->where(function ($q) {
+                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhere('center_code', 'ilike', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('user', function ($qu) {
+                        $qu->where('phone', 'ilike', '%'.$this->searchTerm.'%');
+                    });
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
@@ -282,8 +291,8 @@ class CollectionCenterManager extends Component
         return view('livewire.lab.collection-center-manager', [
             'centers' => $centers,
             'branches' => \App\Models\Branch::where('company_id', $companyId)
-                ->when($myBranchId, fn($q) => $q->where('id', $myBranchId))
-                ->get()
+                ->when($myBranchId, fn ($q) => $q->where('id', $myBranchId))
+                ->get(),
         ])->layout('layouts.app', ['title' => 'Manage Collection Centers']);
     }
 }

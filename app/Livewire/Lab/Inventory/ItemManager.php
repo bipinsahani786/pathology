@@ -10,25 +10,44 @@ use Livewire\WithPagination;
 class ItemManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     // Item fields
-    public $name, $category_id, $unit = 'pcs', $min_stock_level = 0, $description, $barcode, $item_id;
+    public $name;
+
+    public $category_id;
+
+    public $unit = 'pcs';
+
+    public $min_stock_level = 0;
+
+    public $description;
+
+    public $barcode;
+
+    public $item_id;
+
     public $is_active = true;
-    
+
     // Category fields
-    public $category_name, $edit_category_id;
-    
+    public $category_name;
+
+    public $edit_category_id;
+
     public $searchTerm = '';
+
     public $isModalOpen = false;
+
     public $isCategoryModalOpen = false;
+
     public $activeTab = 'items'; // items, categories
 
     public function render()
     {
         $items = InventoryItem::with('category')
             ->where('company_id', auth()->user()->company_id)
-            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
+            ->where('name', 'ilike', '%'.$this->searchTerm.'%')
             ->orderBy('name')
             ->paginate(15);
 
@@ -38,7 +57,7 @@ class ItemManager extends Component
 
         return view('livewire.lab.inventory.item-manager', [
             'items' => $items,
-            'categories' => $categories
+            'categories' => $categories,
         ])->layout('layouts.app');
     }
 
@@ -52,7 +71,7 @@ class ItemManager extends Component
     public function edit($id)
     {
         $item = InventoryItem::where('company_id', auth()->user()->company_id)->findOrFail($id);
-        
+
         $this->item_id = $id;
         $this->name = $item->name;
         $this->category_id = $item->category_id;
@@ -136,7 +155,7 @@ class ItemManager extends Component
         $this->reset(['category_name', 'edit_category_id']);
         $this->resetValidation();
     }
-    
+
     public function closeModal()
     {
         $this->isModalOpen = false;

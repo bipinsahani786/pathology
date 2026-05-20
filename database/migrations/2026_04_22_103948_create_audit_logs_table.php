@@ -15,21 +15,21 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            
+
             $table->string('event'); // created, updated, deleted, login, etc.
             $table->string('auditable_type')->nullable();
             $table->unsignedBigInteger('auditable_id')->nullable();
-            
+
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
-            
+
             $table->string('url')->nullable();
             $table->ipAddress('ip_address')->nullable();
             $table->string('user_agent')->nullable();
             $table->text('tags')->nullable(); // e.g. "important", "security"
-            
+
             $table->timestamps();
-            
+
             $table->index(['auditable_type', 'auditable_id']);
         });
     }

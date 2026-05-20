@@ -2,41 +2,48 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use App\Models\User;
 use App\Models\PatientProfile;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule; // Required for Postgres-safe unique validation
+use Illuminate\Validation\Rule;
+use Livewire\Component;
+use Livewire\WithPagination; // Required for Postgres-safe unique validation
 
 class PatientManager extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
-    
+
     public function mount()
     {
-        if (!auth()->user()->can('view patients') && !auth()->user()->collection_center_id) {
+        if (! auth()->user()->can('view patients') && ! auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
     }
 
     // State variables
     public $searchTerm = '';
+
     public $user_id = null; // We track the User ID for editing
-    
+
     // User Table Fields
     public $name;
+
     public $phone;
+
     public $email;
-    
+
     // Patient Profile Fields
     public $age;
+
     public $age_type = 'Years';
+
     public $gender = 'Male';
+
     public $blood_group;
+
     public $address;
 
     public $isModalOpen = false;
@@ -54,7 +61,7 @@ class PatientManager extends Component
      */
     public function create()
     {
-        if (!auth()->user()->can('create patients') && !auth()->user()->collection_center_id) {
+        if (! auth()->user()->can('create patients') && ! auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->resetFields();
@@ -66,19 +73,19 @@ class PatientManager extends Component
      */
     public function edit($id)
     {
-        if (!auth()->user()->can('edit patients') && !auth()->user()->collection_center_id) {
+        if (! auth()->user()->can('edit patients') && ! auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->resetFields();
-        
+
         // Eager load the profile to avoid N+1 query issues
-        $user = User::with('patientProfile')->findOrFail($id);
-        
+        $user = User::where('company_id', auth()->user()->company_id)->with('patientProfile')->findOrFail($id);
+
         $this->user_id = $user->id;
         $this->name = $user->name;
         $this->phone = $user->phone;
         $this->email = $user->email;
-        
+
         if ($user->patientProfile) {
             $this->age = $user->patientProfile->age;
             $this->age_type = $user->patientProfile->age_type;
@@ -118,11 +125,11 @@ class PatientManager extends Component
         DB::beginTransaction();
         try {
             if ($this->user_id) {
-                if (!auth()->user()->can('edit patients') && !auth()->user()->collection_center_id) {
+                if (! auth()->user()->can('edit patients') && ! auth()->user()->collection_center_id) {
                     abort(403, 'Unauthorized.');
                 }
             } else {
-                if (!auth()->user()->can('create patients') && !auth()->user()->collection_center_id) {
+                if (! auth()->user()->can('create patients') && ! auth()->user()->collection_center_id) {
                     abort(403, 'Unauthorized.');
                 }
             }
@@ -131,7 +138,7 @@ class PatientManager extends Component
 
             if ($this->user_id) {
                 // UPDATE EXISTING PATIENT
-                $user = User::findOrFail($this->user_id);
+                $user = User::where('company_id', auth()->user()->company_id)->findOrFail($this->user_id);
                 $user->update([
                     'name' => $this->name,
                     'phone' => $this->phone,
@@ -149,18 +156,18 @@ class PatientManager extends Component
                 session()->flash('message', 'Patient details updated successfully.');
             } else {
                 // CREATE NEW PATIENT
-                
+
                 // 1. Create the User record (Allows them to log in later)
                 $activeBranchId = session('active_branch_id', 'all');
-                $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin') 
-                    ? ($activeBranchId === 'all' ? null : $activeBranchId) 
+                $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin')
+                    ? ($activeBranchId === 'all' ? null : $activeBranchId)
                     : auth()->user()->branch_id;
 
                 $user = User::create([
                     'name' => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email ?: null, 
-                    'password' => Hash::make($this->phone ?? '12345678'), 
+                    'email' => $this->email ?: null,
+                    'password' => Hash::make($this->phone ?? '12345678'),
                     'is_active' => true,
                     'company_id' => $companyId,
                     'branch_id' => $myBranchId,
@@ -169,17 +176,17 @@ class PatientManager extends Component
                 // 2. Generate a unique Patient ID from settings
                 $pPrefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
                 $pDigits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
-                
+
                 // Use MAX ID to avoid collisions on deletion
                 $lastPatient = \App\Models\PatientProfile::where('company_id', $companyId)->latest('id')->first();
                 $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
-                
-                $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
-                
+
+                $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+
                 // Loop until unique (safety valve)
-                while(\App\Models\PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
+                while (\App\Models\PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
                     $nextPId++;
-                    $patientIdString = $pPrefix . '-' . date('ym') . '-' . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                    $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
                 }
 
                 // 3. Create the Patient Profile record
@@ -202,10 +209,10 @@ class PatientManager extends Component
 
             DB::commit();
             $this->closeModal();
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error saving patient: ' . $e->getMessage());
+            session()->flash('error', 'Error saving patient: '.$e->getMessage());
         }
     }
 
@@ -216,7 +223,7 @@ class PatientManager extends Component
     {
         $this->authorize('delete patients');
         // Because of 'cascadeOnDelete' in migration, deleting the user deletes the profile too.
-        User::findOrFail($id)->delete();
+        User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Patient deleted successfully.');
     }
 
@@ -243,54 +250,54 @@ class PatientManager extends Component
         $companyId = $user->company_id;
         $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
         $activeBranchId = session('active_branch_id', 'all');
-        
+
         $roles = $user->roles->pluck('name')->toArray();
-        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) || 
-                         collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && !$user->hasRole('branch_admin');
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! $user->hasRole('branch_admin');
 
         $myBranchId = null;
         if ($isGlobalAdmin) {
-             $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
         } else {
-             $myBranchId = $user->branch_id;
+            $myBranchId = $user->branch_id;
         }
 
         // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
-        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+        if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
             $myBranchId = $user->branch_id;
         }
-        
+
         $sharePatients = \App\Models\Configuration::getFor('branch_share_patients', '1') === '1';
 
         // Fetch only users who have a PatientProfile attached to the current company
-        $query = User::whereHas('patientProfile', function($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            });
+        $query = User::whereHas('patientProfile', function ($query) use ($companyId) {
+            $query->where('company_id', $companyId);
+        });
 
         // Strict isolation: Even if sharePatients is true, the browse list might be restricted
         // Usually: restrictAccess means you only see YOUR branch data.
         // sharePatients means you can find patients from other branches via Search (but not list them).
-        
-        if ($myBranchId && !$sharePatients) {
+
+        if ($myBranchId && ! $sharePatients) {
             $query->where('branch_id', $myBranchId);
         } elseif ($myBranchId && $restrictAccess) {
             $query->where('branch_id', $myBranchId);
         }
 
         $patients = $query->with(['patientProfile', 'activeMembership.membership']) // Eager load to prevent slow queries
-            ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('phone', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhereHas('patientProfile', function($query2) {
-                      $query2->where('patient_id_string', 'like', '%' . $this->searchTerm . '%');
-                  });
+            ->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('phone', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhereHas('patientProfile', function ($query2) {
+                        $query2->where('patient_id_string', 'like', '%'.$this->searchTerm.'%');
+                    });
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.lab.patient-manager', [
-            'patients' => $patients
+            'patients' => $patients,
         ])->layout('layouts.app', ['title' => 'Patient Master']);
     }
 }

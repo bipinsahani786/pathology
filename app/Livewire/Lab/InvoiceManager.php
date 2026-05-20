@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\Invoice;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Invoice;
 
 class InvoiceManager extends Component
 {
@@ -12,23 +12,34 @@ class InvoiceManager extends Component
 
     // Search & Filters
     public $search = '';
+
     public $filterStatus = '';        // Paid, Unpaid, Partial
+
     public $filterPaymentStatus = ''; // alias
+
     public $filterDateFrom = '';
+
     public $filterDateTo = '';
+
     public $filterCollectionType = '';
+
     public $filterCC = '';
+
     public $filterDoctor = '';
+
     public $filterAgent = '';
+
     public $filterInvoiceStatus = ''; // Active, Cancelled
+
     public $filterSampleStatus = '';  // Pending, Collected, etc.
+
     public $perPage = 15;
 
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
-        if (!auth()->user()->can('view invoices') && !auth()->user()->collection_center_id) {
+        if (! auth()->user()->can('view invoices') && ! auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
     }
@@ -38,42 +49,52 @@ class InvoiceManager extends Component
     {
         $this->resetPage();
     }
+
     public function updatingFilterStatus()
     {
         $this->resetPage();
     }
+
     public function updatingFilterDateFrom()
     {
         $this->resetPage();
     }
+
     public function updatingFilterDateTo()
     {
         $this->resetPage();
     }
+
     public function updatingFilterCollectionType()
     {
         $this->resetPage();
     }
+
     public function updatingFilterCC()
     {
         $this->resetPage();
     }
+
     public function updatingFilterDoctor()
     {
         $this->resetPage();
     }
+
     public function updatingFilterAgent()
     {
         $this->resetPage();
     }
+
     public function updatingFilterInvoiceStatus()
     {
         $this->resetPage();
     }
+
     public function updatingFilterSampleStatus()
     {
         $this->resetPage();
     }
+
     public function updatingPerPage()
     {
         $this->resetPage();
@@ -94,8 +115,8 @@ class InvoiceManager extends Component
 
         $roles = $user->roles->pluck('name')->toArray();
         $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
-            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-            && !$user->hasRole('branch_admin');
+            collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && ! $user->hasRole('branch_admin');
 
         $myBranchId = null;
         if ($isGlobalAdmin) {
@@ -105,14 +126,14 @@ class InvoiceManager extends Component
         }
 
         // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
-        if ($restrictAccess && !$myBranchId && !$isGlobalAdmin) {
+        if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
             $myBranchId = $user->branch_id;
         }
 
         $companyId = $user->company_id;
         $query = Invoice::where('company_id', $companyId)
-            ->when($myBranchId, fn($q) => $q->where('branch_id', $myBranchId))
-            ->when($user->collection_center_id, fn($q) => $q->where('collection_center_id', $user->collection_center_id))
+            ->when($myBranchId, fn ($q) => $q->where('branch_id', $myBranchId))
+            ->when($user->collection_center_id, fn ($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->with(['patient', 'doctor', 'collectionCenter', 'items', 'creator'])
             ->latest('invoice_date');
 
@@ -175,10 +196,12 @@ class InvoiceManager extends Component
 
         // Stats calculations with strict scoping
         $statsBase = Invoice::where('company_id', $companyId)->where('status', '!=', 'Cancelled');
-        if ($myBranchId)
+        if ($myBranchId) {
             $statsBase->where('branch_id', $myBranchId);
-        if ($user->collection_center_id)
+        }
+        if ($user->collection_center_id) {
             $statsBase->where('collection_center_id', $user->collection_center_id);
+        }
 
         $stats = [
             'total' => (clone $statsBase)->count(),
@@ -205,7 +228,7 @@ class InvoiceManager extends Component
 
     public function updateSampleStatus($invoiceId, $status)
     {
-        if (!auth()->user()->can('edit invoices') && !auth()->user()->collection_center_id) {
+        if (! auth()->user()->can('edit invoices') && ! auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $invoice = Invoice::findOrFail($invoiceId);
@@ -215,16 +238,16 @@ class InvoiceManager extends Component
 
         $invoice->update([
             'sample_status' => $status,
-            'sample_collected_at' => ($status === 'Collected' && !$invoice->sample_collected_at) ? now() : $invoice->sample_collected_at
+            'sample_collected_at' => ($status === 'Collected' && ! $invoice->sample_collected_at) ? now() : $invoice->sample_collected_at,
         ]);
 
-        session()->flash('message', 'Sample status updated to ' . $status);
+        session()->flash('message', 'Sample status updated to '.$status);
     }
 
     public function cancelInvoice($invoiceId)
     {
         try {
-            if (!auth()->user()->can('delete invoices') && !auth()->user()->collection_center_id) {
+            if (! auth()->user()->can('delete invoices') && ! auth()->user()->collection_center_id) {
                 abort(403, 'Unauthorized.');
             }
             $invoice = Invoice::findOrFail($invoiceId);
@@ -240,7 +263,7 @@ class InvoiceManager extends Component
                 session()->flash('error', $result['message']);
             }
         } catch (\Throwable $th) {
-            session()->flash('error', 'Critical Error: ' . $th->getMessage());
+            session()->flash('error', 'Critical Error: '.$th->getMessage());
         }
     }
 
@@ -248,8 +271,9 @@ class InvoiceManager extends Component
     {
         if ($withHeader) {
             $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (!$header) {
+            if (! $header) {
                 $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+
                 return;
             }
         }

@@ -2,27 +2,37 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
 use App\Models\Invoice;
-use App\Models\TestReport;
 use App\Models\ReportResult;
+use App\Models\TestReport;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 class ResultEntryManager extends Component
 {
     public $invoice;
+
     public $testReport;
+
     public $comments;
 
     public $results = [];
+
     public $highlights = [];
+
     public $flags = [];
+
     public $parametersList = [];
+
     public $selectedTests = []; // For selective printing from here
+
     public $testComments = []; // Comments per invoice item (test)
+
     public $report_date; // Custom report date for PDF
+
     public $report_time; // Custom report time for PDF
+
     public $manualOverrides = []; // Track calculated fields that were manually edited
 
     public function mount($id)
@@ -88,7 +98,7 @@ class ResultEntryManager extends Component
         if ($this->testReport && $this->testReport->results) {
             foreach ($this->testReport->results as $r) {
                 // Key format: invoice_item_id _ lab_test_id _ param_name_md5
-                $key = ($r->invoice_item_id ?? '0') . '_' . $r->lab_test_id . '_' . md5($r->parameter_name);
+                $key = ($r->invoice_item_id ?? '0').'_'.$r->lab_test_id.'_'.md5($r->parameter_name);
                 $existingResultsMap[$key] = $r;
             }
         }
@@ -102,7 +112,7 @@ class ResultEntryManager extends Component
             // Handle Packages vs Single Tests
             $testsToProcess = [];
             if ($item->labTest) {
-                if ($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                if ($item->labTest->is_package && ! empty($item->labTest->linked_test_ids)) {
                     $testsToProcess = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
                 } else {
                     $testsToProcess = collect([$item->labTest]);
@@ -111,7 +121,7 @@ class ResultEntryManager extends Component
 
             foreach ($testsToProcess as $test) {
                 // Load specific comment for this test in this invoice item
-                $commentKey = $item->id . '_' . $test->id;
+                $commentKey = $item->id.'_'.$test->id;
                 if ($isJson) {
                     $this->testComments[$commentKey] = $decodedComments[$test->id] ?? '';
                 } else {
@@ -122,7 +132,7 @@ class ResultEntryManager extends Component
                 if ($test->parameters) {
                     foreach ($test->parameters as $param) {
                         $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
-                        $key = $item->id . '_' . $test->id . '_' . md5($paramName);
+                        $key = $item->id.'_'.$test->id.'_'.md5($paramName);
 
                         // NEW: Smart Range Matching
                         $matchedRange = $this->findMatchingRange($param, $gender, $ageDays, $ageMonths, $ageYears);
@@ -130,10 +140,11 @@ class ResultEntryManager extends Component
 
                         // Fallback for old data structure if needed
                         if (empty($refText)) {
-                            if ($gender === 'female')
+                            if ($gender === 'female') {
                                 $refText = $param['female_range'] ?? $param['general_range'] ?? '';
-                            else
+                            } else {
                                 $refText = $param['male_range'] ?? $param['general_range'] ?? '';
+                            }
                         }
 
                         $this->results[$key] = isset($existingResultsMap[$key]) ? $existingResultsMap[$key]->result_value : '';
@@ -168,14 +179,16 @@ class ResultEntryManager extends Component
 
     private function findMatchingRange($param, $patientGender, $days, $months, $years)
     {
-        if (!isset($param['ranges']) || !is_array($param['ranges']))
+        if (! isset($param['ranges']) || ! is_array($param['ranges'])) {
             return null;
+        }
 
         // 1. Try exact match (Gender + Age)
         foreach ($param['ranges'] as $range) {
             $rGender = strtolower($range['gender'] ?? 'both');
-            if ($rGender !== 'both' && $rGender !== $patientGender)
+            if ($rGender !== 'both' && $rGender !== $patientGender) {
                 continue;
+            }
 
             $unit = $range['age_unit'] ?? 'Years';
             $val = ($unit === 'Days') ? $days : (($unit === 'Months') ? $months : $years);
@@ -188,14 +201,16 @@ class ResultEntryManager extends Component
         // 2. Fallback 1: Try matching Gender only (widening age range)
         foreach ($param['ranges'] as $range) {
             $rGender = strtolower($range['gender'] ?? 'both');
-            if ($rGender === $patientGender)
+            if ($rGender === $patientGender) {
                 return $range;
+            }
         }
 
         // 3. Fallback 2: Try matching 'Both' gender
         foreach ($param['ranges'] as $range) {
-            if (strtolower($range['gender'] ?? '') === 'both')
+            if (strtolower($range['gender'] ?? '') === 'both') {
                 return $range;
+            }
         }
 
         // 4. Fallback 3: Return the first range available if any
@@ -206,42 +221,43 @@ class ResultEntryManager extends Component
     {
         // Make a copy of results to test calculations
         $tempResults = $this->results;
-        
+
         $groupedParams = [];
         foreach ($this->parametersList as $k => $p) {
             $itemId = $p['invoice_item_id'];
             $groupedParams[$itemId][$k] = $p;
         }
 
-        $expressionLanguage = new ExpressionLanguage();
+        $expressionLanguage = new ExpressionLanguage;
 
         foreach ($groupedParams as $itemId => $params) {
             $localCodeMap = [];
             foreach ($params as $k => $p) {
-                if (!empty($p['short_code'])) {
+                if (! empty($p['short_code'])) {
                     $localCodeMap[strtoupper($p['short_code'])] = (float) ($tempResults[$k] ?: 0);
                 }
             }
 
             foreach ($params as $k => $p) {
-                if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
+                if ($p['input_type'] === 'calculated' && ! empty($p['formula'])) {
                     $formula = strtoupper($p['formula']);
                     $formula = preg_replace('/\{([A-Z0-9_]+)\}/', '$1', $formula);
 
                     try {
-                        if (!empty(trim($formula))) {
+                        if (! empty(trim($formula))) {
                             $result = $expressionLanguage->evaluate($formula, $localCodeMap);
-                            if ($result !== false && is_numeric($result) && !is_infinite($result) && !is_nan($result)) {
+                            if ($result !== false && is_numeric($result) && ! is_infinite($result) && ! is_nan($result)) {
                                 $calcValue = round($result, 2);
                                 $actualValue = isset($this->results[$k]) && $this->results[$k] !== '' ? (float) $this->results[$k] : null;
-                                
+
                                 // If the DB value doesn't match what the formula says it should be, it was manually overridden
-                                if ($actualValue !== null && $actualValue !== (float)$calcValue) {
+                                if ($actualValue !== null && $actualValue !== (float) $calcValue) {
                                     $this->manualOverrides[$k] = true;
                                 }
                             }
                         }
-                    } catch (\Throwable $e) {}
+                    } catch (\Throwable $e) {
+                    }
                 }
             }
         }
@@ -271,21 +287,21 @@ class ResultEntryManager extends Component
             $groupedParams[$itemId][$k] = $p;
         }
 
-        $expressionLanguage = new ExpressionLanguage();
+        $expressionLanguage = new ExpressionLanguage;
 
         foreach ($groupedParams as $itemId => $params) {
             // 1. Build a local code-to-value map for this test
             $localCodeMap = [];
             foreach ($params as $k => $p) {
-                if (!empty($p['short_code'])) {
+                if (! empty($p['short_code'])) {
                     $localCodeMap[strtoupper($p['short_code'])] = (float) ($this->results[$k] ?: 0);
                 }
             }
 
             // 2. Process all calculated parameters for this test
             foreach ($params as $k => $p) {
-                if ($p['input_type'] === 'calculated' && !empty($p['formula'])) {
-                    if (!empty($this->manualOverrides[$k])) {
+                if ($p['input_type'] === 'calculated' && ! empty($p['formula'])) {
+                    if (! empty($this->manualOverrides[$k])) {
                         continue; // Skip calculating if manually overridden
                     }
 
@@ -296,24 +312,24 @@ class ResultEntryManager extends Component
 
                     try {
                         // Ensure formula is not empty
-                        if (!empty(trim($formula))) {
+                        if (! empty(trim($formula))) {
                             // The expression language handles Division by Zero internally (throws exception)
                             $result = $expressionLanguage->evaluate($formula, $localCodeMap);
 
                             if ($result !== false && is_numeric($result)) {
                                 // Prevent saving INF or NAN
-                                if (!is_infinite($result) && !is_nan($result)) {
+                                if (! is_infinite($result) && ! is_nan($result)) {
                                     $this->results[$k] = round($result, 2);
                                 }
                             }
                         }
                     } catch (\Throwable $e) {
-                        Log::warning("Formula error for {$p['name']}: " . $e->getMessage());
+                        Log::warning("Formula error for {$p['name']}: ".$e->getMessage());
                     }
+                }
             }
         }
     }
-}
 
     public function validateDlcSum()
     {
@@ -331,7 +347,7 @@ class ResultEntryManager extends Component
             $sum = 0;
             $hasDlc = false;
             $testName = '';
-            
+
             foreach ($params as $k => $p) {
                 $code = strtoupper($p['short_code'] ?? '');
                 $testName = $p['test_name'] ?? 'CBC';
@@ -342,7 +358,7 @@ class ResultEntryManager extends Component
             }
 
             if ($hasDlc && abs($sum - 100) > 0.01) {
-                return "Cannot approve report. The sum of DLC parameters (Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils) in '{$testName}' is " . round($sum, 2) . "%. It must be exactly 100%.";
+                return "Cannot approve report. The sum of DLC parameters (Neutrophils, Lymphocytes, Monocytes, Eosinophils, Basophils) in '{$testName}' is ".round($sum, 2).'%. It must be exactly 100%.';
             }
         }
 
@@ -354,10 +370,11 @@ class ResultEntryManager extends Component
         foreach ($this->results as $key => $val) {
             if ($val === '') {
                 $this->flags[$key] = '';
+
                 continue;
             }
 
-            if (!isset($this->parametersList[$key])) {
+            if (! isset($this->parametersList[$key])) {
                 continue;
             }
 
@@ -384,7 +401,7 @@ class ResultEntryManager extends Component
                 }
             } elseif ($inputType === 'text' || $inputType === 'selection') {
                 // Qualitative check
-                if ($range && !empty($range['normal_value'])) {
+                if ($range && ! empty($range['normal_value'])) {
                     if (strtolower(trim($val)) !== strtolower(trim($range['normal_value']))) {
                         $isAbnormal = true;
                         $flag = 'Abn';
@@ -399,7 +416,7 @@ class ResultEntryManager extends Component
 
     public function toggleHighlight($key)
     {
-        $this->highlights[$key] = !($this->highlights[$key] ?? false);
+        $this->highlights[$key] = ! ($this->highlights[$key] ?? false);
     }
 
     public function saveReport($status = 'Draft')
@@ -410,13 +427,14 @@ class ResultEntryManager extends Component
         if ($status === 'Approved') {
             $items = $this->invoice->items;
             // Only check items that are actually tests (have lab_test_id)
-            $tests = $items->filter(fn($i) => !empty($i->lab_test_id));
-            $incompleteTests = $tests->filter(fn($i) => $i->status !== 'Completed');
+            $tests = $items->filter(fn ($i) => ! empty($i->lab_test_id));
+            $incompleteTests = $tests->filter(fn ($i) => $i->status !== 'Completed');
 
             if ($incompleteTests->count() > 0) {
-                $msg = "Cannot approve report. All tests must be marked as 'Completed' first. (" . $incompleteTests->pluck('test_name')->implode(', ') . " are still pending)";
+                $msg = "Cannot approve report. All tests must be marked as 'Completed' first. (".$incompleteTests->pluck('test_name')->implode(', ').' are still pending)';
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
+
                 return;
             }
 
@@ -429,10 +447,11 @@ class ResultEntryManager extends Component
                 }
             }
 
-            if (!$hasAnyResult && $tests->count() > 0) {
-                $msg = "Cannot approve report. No results have been entered for any test.";
+            if (! $hasAnyResult && $tests->count() > 0) {
+                $msg = 'Cannot approve report. No results have been entered for any test.';
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
+
                 return;
             }
 
@@ -441,11 +460,12 @@ class ResultEntryManager extends Component
             if ($dlcValidation !== true) {
                 $this->dispatch('notify', ['type' => 'error', 'message' => $dlcValidation]);
                 session()->flash('error', $dlcValidation);
+
                 return;
             }
         }
 
-        if (!$this->testReport) {
+        if (! $this->testReport) {
             $this->testReport = TestReport::create([
                 'company_id' => $this->invoice->company_id,
                 'invoice_id' => $this->invoice->id,
@@ -455,7 +475,7 @@ class ResultEntryManager extends Component
                 'approved_by' => $status === 'Approved' ? auth()->id() : null,
                 'approved_at' => $status === 'Approved' ? now() : null,
                 'report_date' => ($this->report_date && $this->report_time)
-                    ? $this->report_date . ' ' . $this->report_time
+                    ? $this->report_date.' '.$this->report_time
                     : ($status === 'Approved' ? now() : null),
             ]);
         } else {
@@ -465,7 +485,7 @@ class ResultEntryManager extends Component
                 'approved_by' => $status === 'Approved' ? auth()->id() : $this->testReport->approved_by,
                 'approved_at' => $status === 'Approved' ? now() : $this->testReport->approved_at,
                 'report_date' => ($this->report_date && $this->report_time)
-                    ? $this->report_date . ' ' . $this->report_time
+                    ? $this->report_date.' '.$this->report_time
                     : $this->testReport->report_date,
             ]);
         }
@@ -483,10 +503,12 @@ class ResultEntryManager extends Component
             // Determine textual status based on flags
             $flag = $this->flags[$key] ?? '';
             $stat = 'Normal';
-            if ($flag === 'H')
+            if ($flag === 'H') {
                 $stat = 'High';
-            if ($flag === 'L')
+            }
+            if ($flag === 'L') {
                 $stat = 'Low';
+            }
 
             ReportResult::updateOrCreate(
                 [
@@ -514,8 +536,8 @@ class ResultEntryManager extends Component
 
             // Collect all comments belonging to this item
             foreach ($this->testComments as $key => $comment) {
-                if (str_starts_with($key, $item->id . '_')) {
-                    $testId = substr($key, strlen($item->id . '_'));
+                if (str_starts_with($key, $item->id.'_')) {
+                    $testId = substr($key, strlen($item->id.'_'));
                     $itemComments[$testId] = $comment;
                     $hasGranular = true;
                 }
@@ -523,7 +545,7 @@ class ResultEntryManager extends Component
 
             if ($hasGranular) {
                 // If it's a single test (not package) AND only one comment exists, store as plain text for backward compatibility
-                if (!$item->labTest->is_package && count($itemComments) === 1) {
+                if (! $item->labTest->is_package && count($itemComments) === 1) {
                     $item->update(['report_comments' => reset($itemComments)]);
                 } else {
                     // Store as JSON for packages or multiple entries
@@ -540,10 +562,10 @@ class ResultEntryManager extends Component
 
             // Pre-generate PDF for R2 offloading
             try {
-                $pdfService = new \App\Services\PdfStorageService();
+                $pdfService = new \App\Services\PdfStorageService;
                 $pdfService->storeReportPdf($this->testReport);
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to pre-generate PDF: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Failed to pre-generate PDF: '.$e->getMessage());
             }
 
             return redirect()->route('lab.reports');
@@ -564,7 +586,7 @@ class ResultEntryManager extends Component
             $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
             $sum = 0;
             $hasDlc = false;
-            
+
             foreach ($this->parametersList as $k => $p) {
                 if (($p['invoice_item_id'] ?? null) == $itemId) {
                     $code = strtoupper($p['short_code'] ?? '');
@@ -574,11 +596,12 @@ class ResultEntryManager extends Component
                     }
                 }
             }
-            
+
             if ($hasDlc && abs($sum - 100) > 0.01) {
-                $msg = "Cannot mark test as complete. The sum of DLC parameters must be exactly 100% (Current sum: " . round($sum, 2) . "%).";
+                $msg = 'Cannot mark test as complete. The sum of DLC parameters must be exactly 100% (Current sum: '.round($sum, 2).'%).';
                 $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
                 session()->flash('error', $msg);
+
                 return;
             }
         }
@@ -598,14 +621,15 @@ class ResultEntryManager extends Component
         if (empty($this->selectedTests)) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'Please select at least one test to print.']);
             session()->flash('error', 'Please select at least one test to print.');
+
             return;
         }
 
         // Printing proceeds regardless of image presence to allow for physical letterhead space
         $testIds = is_array($this->selectedTests) ? implode(',', $this->selectedTests) : $this->selectedTests;
         $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
-            . '?tests=' . $testIds
-            . '&header=' . ($withHeader ? '1' : '0');
+            .'?tests='.$testIds
+            .'&header='.($withHeader ? '1' : '0');
 
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
@@ -620,7 +644,7 @@ class ResultEntryManager extends Component
         });
 
         return view('livewire.lab.result-entry-manager', [
-            'groupedParams' => $groupedParams
+            'groupedParams' => $groupedParams,
         ])->layout('layouts.app');
     }
 }

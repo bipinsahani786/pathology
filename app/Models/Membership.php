@@ -10,8 +10,8 @@ class Membership extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'company_id', 'name', 'price', 'discount_percentage', 
-        'validity_days', 'color_code', 'description', 'is_active'
+        'company_id', 'name', 'price', 'discount_percentage',
+        'validity_days', 'color_code', 'description', 'is_active',
     ];
 
     protected $casts = [

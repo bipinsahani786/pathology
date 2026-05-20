@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
 use App\Models\Company;
 use App\Models\GlobalTest;
 use App\Models\Plan;
+use Livewire\Component;
 
 class AdminDashboard extends Component
 {
@@ -26,7 +26,7 @@ class AdminDashboard extends Component
                 return [
                     'agent' => $agent->name,
                     'total_labs' => $agent->companies->count(),
-                    'total_revenue' => $agent->companies->sum(fn($l) => $l->plan ? $l->plan->price : 0)
+                    'total_revenue' => $agent->companies->sum(fn ($l) => $l->plan ? $l->plan->price : 0),
                 ];
             })
             ->sortByDesc('total_labs');
@@ -35,14 +35,14 @@ class AdminDashboard extends Component
         $legacyStats = Company::whereNull('sales_agent_id')
             ->with('plan')
             ->get()
-            ->groupBy(function($company) {
+            ->groupBy(function ($company) {
                 return $company->referred_by ?: 'Direct / Website';
             })
             ->map(function ($labs, $source) {
                 return [
-                    'agent' => $source . ' (Direct)',
+                    'agent' => $source.' (Direct)',
                     'total_labs' => $labs->count(),
-                    'total_revenue' => $labs->sum(fn($l) => $l->plan ? $l->plan->price : 0)
+                    'total_revenue' => $labs->sum(fn ($l) => $l->plan ? $l->plan->price : 0),
                 ];
             });
 

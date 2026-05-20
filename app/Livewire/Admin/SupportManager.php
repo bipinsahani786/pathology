@@ -2,26 +2,30 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 class SupportManager extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     public $view = 'list';
+
     public $selectedTicket;
-    
+
     public $filterStatus = '';
+
     public $filterPriority = '';
+
     public $search = '';
 
-    public $message, $replyAttachment;
+    public $message;
+
+    public $replyAttachment;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -85,18 +89,18 @@ class SupportManager extends Component
         }
         if ($this->search) {
             $s = $this->search;
-            $query->where(function($q) use ($s) {
+            $query->where(function ($q) use ($s) {
                 $q->where('ticket_id', 'like', "%{$s}%")
-                  ->orWhere('subject', 'like', "%{$s}%")
-                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$s}%"))
-                  ->orWhereHas('company', fn($c) => $c->where('name', 'like', "%{$s}%"));
+                    ->orWhere('subject', 'like', "%{$s}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$s}%"))
+                    ->orWhereHas('company', fn ($c) => $c->where('name', 'like', "%{$s}%"));
             });
         }
 
         $tickets = $query->latest()->paginate(15);
 
         return view('livewire.admin.support-manager', [
-            'tickets' => $tickets
+            'tickets' => $tickets,
         ])->layout('layouts.app', ['title' => 'System Support Tickets']);
     }
 }

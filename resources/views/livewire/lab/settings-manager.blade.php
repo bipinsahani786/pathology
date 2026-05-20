@@ -201,9 +201,22 @@
                             <i class="feather-info me-2"></i> Use these toggles to hide or show modules in the left sidebar. Hiding a module removes it from the menu for all staff members in your lab.
                         </div>
 
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold fs-13"><i class="feather-log-in me-1"></i> Default Login Page</label>
+                                <select class="form-select" wire:model="default_login_page">
+                                    <option value="lab.dashboard">Dashboard</option>
+                                    <option value="lab.pos">New Bill (POS)</option>
+                                    <option value="lab.invoices">All Invoices</option>
+                                </select>
+                                <div class="form-text fs-11">Select which page should open immediately after a successful login.</div>
+                            </div>
+                        </div>
+
                         <div class="row g-4">
                             @php
                                 $modulesList = [
+                                    ['key' => 'show_dashboard_stats', 'label' => 'Dashboard Stats & Charts', 'icon' => 'feather-pie-chart'],
                                     ['key' => 'module_pos', 'label' => 'New Bill (POS)', 'icon' => 'feather-plus-circle'],
                                     ['key' => 'module_invoices', 'label' => 'All Invoices', 'icon' => 'feather-file-text'],
                                     ['key' => 'module_departments', 'label' => 'Departments', 'icon' => 'feather-grid'],
@@ -874,6 +887,43 @@
                             </div>
                             
                             <hr class="my-3">
+                            <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Result Flag Colors</div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">High Flag Color (H)</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" wire:model="report_flag_high_color" style="width: 50px;">
+                                        <input type="text" class="form-control" wire:model="report_flag_high_color">
+                                    </div>
+                                    <div class="fs-10 text-muted mt-1">Preview: <span style="color: {{ $report_flag_high_color }}; font-weight: bold;">H</span></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Low Flag Color (L)</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" wire:model="report_flag_low_color" style="width: 50px;">
+                                        <input type="text" class="form-control" wire:model="report_flag_low_color">
+                                    </div>
+                                    <div class="fs-10 text-muted mt-1">Preview: <span style="color: {{ $report_flag_low_color }}; font-weight: bold;">L</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Abnormal Indicator</label>
+                                    <input type="text" class="form-control form-control-sm" wire:model="report_abnormal_indicator" placeholder="e.g. *, (Abnormal), etc.">
+                                    <div class="fs-10 text-muted mt-1">Shown when status is missing but result is highlighted.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold fs-11">Abnormal Indicator Color</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="color" class="form-control form-control-color" wire:model="report_abnormal_color" style="width: 50px;">
+                                        <input type="text" class="form-control" wire:model="report_abnormal_color">
+                                    </div>
+                                    <div class="fs-10 text-muted mt-1">Preview: <span style="color: {{ $report_abnormal_color }}; font-weight: bold;">{{ $report_abnormal_indicator }}</span></div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-3">
                             <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Page Spacing (pixels)</div>
                             
                             <div class="row g-3 mb-3">
@@ -1031,8 +1081,22 @@
                                     <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="authorized_signatory_name" placeholder="Name">
                                     </div>
-                                    <div>
+                                    <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="authorized_signatory_designation" placeholder="Designation">
+                                    </div>
+                                    <div class="row g-2 align-items-center bg-light p-2 rounded-3 border">
+                                        <div class="col-7">
+                                            <select class="form-select form-select-sm fs-11 border-0 bg-transparent" wire:model="sig_1_position">
+                                                <option value="left">Left</option>
+                                                <option value="center">Center</option>
+                                                <option value="right">Right</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-5 text-end">
+                                            <div class="form-check form-switch d-inline-block m-0">
+                                                <input class="form-check-input" type="checkbox" wire:model="sig_1_enabled" title="Enable/Disable Signature">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1055,8 +1119,22 @@
                                     <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="global_sig_2_name" placeholder="Name">
                                     </div>
-                                    <div>
+                                    <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="global_sig_2_desig" placeholder="Designation">
+                                    </div>
+                                    <div class="row g-2 align-items-center bg-light p-2 rounded-3 border">
+                                        <div class="col-7">
+                                            <select class="form-select form-select-sm fs-11 border-0 bg-transparent" wire:model="sig_2_position">
+                                                <option value="left">Left</option>
+                                                <option value="center">Center</option>
+                                                <option value="right">Right</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-5 text-end">
+                                            <div class="form-check form-switch d-inline-block m-0">
+                                                <input class="form-check-input" type="checkbox" wire:model="sig_2_enabled" title="Enable/Disable Signature">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1079,8 +1157,22 @@
                                     <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 fw-bold text-center fs-13" wire:model="global_sig_3_name" placeholder="Name">
                                     </div>
-                                    <div>
+                                    <div class="mb-3">
                                         <input type="text" class="form-control form-control-sm border-0 border-bottom rounded-0 px-0 text-center fs-11 text-muted" wire:model="global_sig_3_desig" placeholder="Designation">
+                                    </div>
+                                    <div class="row g-2 align-items-center bg-light p-2 rounded-3 border">
+                                        <div class="col-7">
+                                            <select class="form-select form-select-sm fs-11 border-0 bg-transparent" wire:model="sig_3_position">
+                                                <option value="left">Left</option>
+                                                <option value="center">Center</option>
+                                                <option value="right">Right</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-5 text-end">
+                                            <div class="form-check form-switch d-inline-block m-0">
+                                                <input class="form-check-input" type="checkbox" wire:model="sig_3_enabled" title="Enable/Disable Signature">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -1,4 +1,5 @@
 <?php
+
 // Serology Extra 3: More infectious disease tests
 return [
     ['test_code' => 'HBEAG', 'name' => 'HBeAg (Hepatitis B e Antigen)', 'category' => 'Serology & Immunology', 'description' => 'Marker of active HBV replication and high infectivity.', 'interpretation' => 'Positive: Active viral replication, High infectivity, Guides antiviral therapy. Seroconversion (HBeAg → Anti-HBe) = Treatment response.', 'suggested_price' => 600, 'method' => 'CLIA / ELISA', 'sample_type' => 'Clotted Blood', 'tat_hours' => 24, 'default_parameters' => [['name' => 'HBeAg', 'unit' => '', 'short_code' => 'HBEA', 'input_type' => 'selection', 'method' => 'CLIA', 'options' => ['Non-Reactive', 'Reactive'], 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Non-Reactive', 'display_range' => 'Non-Reactive']]]]],

@@ -4,21 +4,25 @@ namespace App\Livewire\Patient;
 
 use App\Models\Invoice;
 use App\Models\PatientMembership as MembershipRecord;
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class PatientMembership extends Component
 {
     public $patient;
+
     public $activeMembership;
+
     public $membershipHistory;
+
     public $totalSavings = 0;
+
     public $testsBenefitedCount = 0;
 
     public function mount()
     {
         $this->patient = Auth::user();
-        
+
         $this->activeMembership = $this->patient->activeMembership ? $this->patient->activeMembership->load('membership') : null;
 
         $this->membershipHistory = MembershipRecord::where('patient_id', $this->patient->id)
@@ -28,8 +32,8 @@ class PatientMembership extends Component
             ->get();
 
         $invoicesWithSavings = Invoice::where('patient_id', $this->patient->id)
-                                      ->where('discount_amount', '>', 0);
-        
+            ->where('discount_amount', '>', 0);
+
         $this->totalSavings = $invoicesWithSavings->sum('discount_amount');
         $this->testsBenefitedCount = $invoicesWithSavings->count();
     }

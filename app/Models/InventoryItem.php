@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryItem extends Model
 {
-    use \App\Traits\BelongsToCompany, \App\Traits\Auditable;
+    use \App\Traits\Auditable, \App\Traits\BelongsToCompany;
 
     protected $table = 'inventory_items';
 

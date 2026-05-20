@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\SiteSetting;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\SiteSetting;
 
 class SiteSettingsManager extends Component
 {
@@ -14,122 +14,203 @@ class SiteSettingsManager extends Component
 
     // Branding
     public ?string $site_name = '';
+
     public ?string $site_tagline = '';
+
     public ?string $primary_color = '';
+
     public $site_logo;
+
     public $site_logo_dark;
+
     public $site_logo_sm;
+
     public $site_favicon;
 
     // Home
     public ?string $hero_title = '';
+
     public ?string $hero_subtitle = '';
+
     public ?string $hero_cta_text = '';
+
     public ?string $hero_cta_url = '';
+
     public $hero_image;
-    
+
     // Home Extra Text
     public ?string $home_stats_title = '';
+
     public ?string $home_friction_title = '';
+
     public ?string $home_friction_desc = '';
+
     public ?string $home_features_title = '';
+
     public ?string $home_features_desc = '';
+
     public ?string $home_steps_title = '';
+
     public ?string $home_connect_title = '';
+
     public ?string $home_testimonial_title = '';
+
     public ?string $home_pricing_title = '';
+
     public ?string $home_pricing_desc = '';
+
     public ?string $home_faq_title = '';
+
     public ?string $home_contact_title = '';
+
     public ?string $home_contact_desc = '';
+
     public ?string $home_cta_title = '';
+
     public ?string $home_cta_desc = '';
+
     public ?string $home_stats_logos = '';
+
     public ?string $home_steps_list = '';
+
     public ?string $home_connect_list = '';
 
     public ?string $home_hero_stat_1_val = '';
+
     public ?string $home_hero_stat_1_label = '';
+
     public ?string $home_hero_stat_2_val = '';
+
     public ?string $home_hero_stat_2_label = '';
+
     public ?string $home_hero_stat_3_val = '';
+
     public ?string $home_hero_stat_3_label = '';
+
     public ?string $home_hero_stat_4_val = '';
+
     public ?string $home_hero_stat_4_label = '';
 
     public ?string $home_friction_old_1 = '';
+
     public ?string $home_friction_new_1 = '';
+
     public ?string $home_friction_old_2 = '';
+
     public ?string $home_friction_new_2 = '';
+
     public ?string $home_friction_old_3 = '';
+
     public ?string $home_friction_new_3 = '';
 
     // About
     public ?string $about_title = '';
+
     public ?string $about_description = '';
+
     public ?string $about_stat_labs = '';
+
     public ?string $about_stat_labs_label = '';
+
     public ?string $about_stat_uptime = '';
+
     public ?string $about_stat_uptime_label = '';
+
     public ?string $about_stat_reports = '';
+
     public ?string $about_stat_reports_label = '';
+
     public $about_image;
 
     // About Extra Text
     public ?string $about_story_title = '';
+
     public ?string $about_story_desc = '';
+
     public ?string $about_heritage_subtitle = '';
+
     public ?string $about_heritage_title = '';
+
     public ?string $about_values_subtitle = '';
+
     public ?string $about_values_title = '';
+
     public ?string $about_roadmap_title = '';
+
     public ?string $about_cta_title = '';
+
     public ?string $about_cta_desc = '';
 
     public ?string $about_milestone_date_1 = '';
+
     public ?string $about_milestone_title_1 = '';
+
     public ?string $about_milestone_desc_1 = '';
+
     public ?string $about_milestone_date_2 = '';
+
     public ?string $about_milestone_title_2 = '';
+
     public ?string $about_milestone_desc_2 = '';
+
     public ?string $about_milestone_date_3 = '';
+
     public ?string $about_milestone_title_3 = '';
+
     public ?string $about_milestone_desc_3 = '';
+
     public ?string $about_milestone_date_4 = '';
+
     public ?string $about_milestone_title_4 = '';
+
     public ?string $about_milestone_desc_4 = '';
 
     // Features
     public ?string $features_hero_title = '';
+
     public ?string $features_hero_desc = '';
 
     // How It Works
     public ?string $how_hero_title = '';
+
     public ?string $how_hero_desc = '';
 
     // Pricing
     public ?string $pricing_hero_subtitle = '';
+
     public ?string $pricing_hero_title = '';
+
     public ?string $pricing_hero_desc = '';
+
     public ?string $pricing_faq_title = '';
+
     public ?string $pricing_cta_title = '';
+
     public ?string $pricing_cta_desc = '';
 
     // Contact
     public ?string $contact_email = '';
+
     public ?string $contact_phone = '';
+
     public ?string $contact_address = '';
+
     public ?string $contact_whatsapp = '';
 
     // Social
     public ?string $social_twitter = '';
+
     public ?string $social_facebook = '';
+
     public ?string $social_linkedin = '';
+
     public ?string $social_instagram = '';
 
     // SEO
     public array $seoSettings = [];
+
     public array $seoImages = []; // Temporarily hold uploaded images
+
     public array $pages = [
         'home' => 'Home Page',
         'about' => 'About Us',
@@ -140,7 +221,7 @@ class SiteSettingsManager extends Component
         'enquiry' => 'Enquiry',
         'faq' => 'FAQ',
         'terms' => 'Terms of Service',
-        'privacy' => 'Privacy Policy'
+        'privacy' => 'Privacy Policy',
     ];
 
     public function mount()
@@ -228,7 +309,7 @@ class SiteSettingsManager extends Component
         // Handle file uploads
         $fileFields = ['site_logo', 'site_logo_dark', 'site_logo_sm', 'site_favicon', 'hero_image', 'about_image'];
         foreach ($fileFields as $field) {
-            if ($this->$field && !is_string($this->$field)) {
+            if ($this->$field && ! is_string($this->$field)) {
                 $path = $this->$field->store('site');
                 SiteSetting::set($field, $path, $this->getGroupForField($field));
                 $this->$field = null;
@@ -244,9 +325,9 @@ class SiteSettingsManager extends Component
         }
 
         // Save SEO Images
-        if (!empty($this->seoImages)) {
+        if (! empty($this->seoImages)) {
             foreach ($this->seoImages as $pageKey => $image) {
-                if ($image && !is_string($image)) {
+                if ($image && ! is_string($image)) {
                     $path = $image->store('site');
                     SiteSetting::set("seo_{$pageKey}_og_image", $path, 'seo');
                     $this->seoSettings[$pageKey]['og_image'] = $path; // Update local array to reflect new image immediately
@@ -260,7 +341,7 @@ class SiteSettingsManager extends Component
 
     protected function getGroupForField(string $field): string
     {
-        return match(true) {
+        return match (true) {
             str_starts_with($field, 'site_') => 'branding',
             str_starts_with($field, 'hero_') => 'home',
             str_starts_with($field, 'home_') => 'home',

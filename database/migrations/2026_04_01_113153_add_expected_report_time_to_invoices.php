@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('invoices', 'expected_report_time')) {
+        if (! Schema::hasColumn('invoices', 'expected_report_time')) {
             Schema::table('invoices', function (Blueprint $table) {
                 $table->dateTime('expected_report_time')->nullable()->after('sample_received_at');
             });

@@ -1,8 +1,9 @@
 <?php
+
 require 'vendor/autoload.php';
 
-$options = new \chillerlan\QRCode\QROptions();
+$options = new \chillerlan\QRCode\QROptions;
 $ref = new ReflectionClass($options);
 foreach ($ref->getProperties() as $prop) {
-    echo $prop->getName() . "\n";
+    echo $prop->getName()."\n";
 }

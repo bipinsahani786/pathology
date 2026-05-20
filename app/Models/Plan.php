@@ -32,7 +32,7 @@ class Plan extends Model
     public function scopeLanding($query)
     {
         return $query->where('is_active', true)
-                     ->where('show_on_landing', true)
-                     ->orderBy('landing_sort_order');
+            ->where('show_on_landing', true)
+            ->orderBy('landing_sort_order');
     }
 }

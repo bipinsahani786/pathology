@@ -2,15 +2,26 @@
 
 namespace App\Livewire\Auth;
 
-use Livewire\Component;
 use App\Services\CompanyRegistrationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Title('Create Workspace | Pathology Lab Management Software')]
 class RegisterCompany extends Component
 {
-    public $lab_name, $owner_name, $email, $phone, $password, $password_confirmation;
+    public $lab_name;
+
+    public $owner_name;
+
+    public $email;
+
+    public $phone;
+
+    public $password;
+
+    public $password_confirmation;
+
     public $agree_terms = false;
 
     protected function rules()
@@ -19,7 +30,7 @@ class RegisterCompany extends Component
             'lab_name' => 'required|string|max:255',
             'owner_name' => 'required|string|max:255',
             // Ensure email is unique across both users and companies tables
-            'email' => 'required|email|unique:users,email|unique:companies,email', 
+            'email' => 'required|email|unique:users,email|unique:companies,email',
             'phone' => 'required|numeric|digits:10',
             'password' => 'required|min:8|same:password_confirmation',
             'agree_terms' => 'accepted',
@@ -31,7 +42,7 @@ class RegisterCompany extends Component
      */
     public function register()
     {
-        $registrationService = new CompanyRegistrationService();
+        $registrationService = new CompanyRegistrationService;
         $validatedData = $this->validate();
 
         // Trigger the service to setup the database architecture for the new tenant
@@ -42,7 +53,7 @@ class RegisterCompany extends Component
 
         // Redirect to the tenant's main dashboard
         // Note: Make sure the route name matches your actual dashboard route
-        return redirect()->route('lab.dashboard'); 
+        return redirect()->route('lab.dashboard');
     }
 
     public function render()

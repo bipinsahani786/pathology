@@ -141,7 +141,7 @@
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
                                             @foreach($invoice->items as $item)
-                                                @if($item->lab_test_id)
+                                                @if($item->lab_test_id && $item->labTest)
                                                     @php
                                                         $isComplete = $item->status === 'Completed';
                                                     @endphp

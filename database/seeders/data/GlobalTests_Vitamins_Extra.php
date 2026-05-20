@@ -1,4 +1,5 @@
 <?php
+
 // Extended Vitamins & Minerals
 return [
     ['test_code' => 'VITB1', 'name' => 'Vitamin B1 (Thiamine)', 'category' => 'Biochemistry', 'description' => 'Essential B vitamin. Deficiency causes Beriberi and Wernicke encephalopathy.', 'interpretation' => 'Low: Beriberi (wet = cardiac, dry = neurological), Wernicke encephalopathy (Confusion + Ataxia + Ophthalmoplegia). Risk: Alcoholism, Malnutrition, Chronic dialysis.', 'suggested_price' => 1500, 'method' => 'HPLC / LC-MS/MS', 'sample_type' => 'EDTA Blood (Protected from light)', 'tat_hours' => 72, 'default_parameters' => [['name' => 'Vitamin B1', 'unit' => 'nmol/L', 'short_code' => 'VB1', 'input_type' => 'numeric', 'method' => 'HPLC', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'min_val' => '70', 'max_val' => '180', 'display_range' => '70 - 180']]]]],

@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Storage;
 trait HasSecureStorage
 {
     /**
-     * Get a secure URL for a file. 
+     * Get a secure URL for a file.
      * Uses temporary (signed) URLs if on cloud storage, otherwise standard URLs.
      */
     public function getSecureUrl(?string $path, int $minutes = 60): ?string
     {
-        if (!$path) return null;
+        if (! $path) {
+            return null;
+        }
 
         $disk = config('filesystems.default');
 
@@ -32,13 +34,16 @@ trait HasSecureStorage
      */
     public function getBase64Data(?string $path): ?string
     {
-        if (!$path) return null;
+        if (! $path) {
+            return null;
+        }
 
         try {
             if (Storage::exists($path)) {
                 $content = Storage::get($path);
                 $mime = Storage::mimeType($path);
-                return 'data:' . $mime . ';base64,' . base64_encode($content);
+
+                return 'data:'.$mime.';base64,'.base64_encode($content);
             }
         } catch (\Exception $e) {
             // Log error or ignore

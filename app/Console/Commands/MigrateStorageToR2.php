@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 
 class MigrateStorageToR2 extends Command
 {
@@ -37,6 +36,7 @@ class MigrateStorageToR2 extends Command
 
         if ($total === 0) {
             $this->warn("No files found on 'public' disk.");
+
             return;
         }
 
@@ -47,12 +47,12 @@ class MigrateStorageToR2 extends Command
 
         foreach ($files as $file) {
             try {
-                if ($force || !Storage::disk($destDisk)->exists($file)) {
+                if ($force || ! Storage::disk($destDisk)->exists($file)) {
                     $content = Storage::disk('public')->get($file);
                     Storage::disk($destDisk)->put($file, $content);
                 }
             } catch (\Exception $e) {
-                $this->error("\nFailed to migrate: {$file}. Error: " . $e->getMessage());
+                $this->error("\nFailed to migrate: {$file}. Error: ".$e->getMessage());
             }
             $bar->advance();
         }

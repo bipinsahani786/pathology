@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class PatientProfile extends Model
 {
-    use BelongsToCompany, \App\Traits\Auditable;
+    use \App\Traits\Auditable, BelongsToCompany;
+
     protected $guarded = [];
 
     /**
      * The main user account associated with this medical profile.
      */
-    public function user() 
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

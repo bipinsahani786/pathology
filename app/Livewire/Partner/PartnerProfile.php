@@ -2,24 +2,29 @@
 
 namespace App\Livewire\Partner;
 
+use App\Models\UserDetail;
+use App\Traits\HasSecureStorage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\{User, UserDetail};
-use Illuminate\Support\Facades\{Auth, Hash, Storage};
-use App\Traits\HasSecureStorage;
-use Illuminate\Validation\Rules\Password;
 
 class PartnerProfile extends Component
 {
-    use WithFileUploads, HasSecureStorage;
+    use HasSecureStorage, WithFileUploads;
 
     public $name;
+
     public $email;
+
     public $phone;
+
     public $password;
+
     public $password_confirmation;
-    
+
     public $new_photo;
+
     public $profile_photo_url;
 
     public function mount()
@@ -28,7 +33,7 @@ class PartnerProfile extends Component
         $this->name = $user->name;
         $this->email = $user->email;
         $this->phone = $user->phone;
-        
+
         // Load profile photo from details
         if ($user->details && $user->details->profile_photo) {
             $this->profile_photo_url = $this->getSecureUrl($user->details->profile_photo);
@@ -38,11 +43,11 @@ class PartnerProfile extends Component
     public function updateProfile()
     {
         $user = Auth::user();
-        
+
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:15|unique:users,phone,' . $user->id,
+            'email' => 'nullable|email|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:15|unique:users,phone,'.$user->id,
             'new_photo' => 'nullable|image|max:1024',
         ]);
 
@@ -55,18 +60,18 @@ class PartnerProfile extends Component
         // Handle Photo Upload
         if ($this->new_photo) {
             $path = $this->new_photo->store('profile-photos');
-            
+
             $details = UserDetail::updateOrCreate(
                 ['user_id' => $user->id],
                 [
                     'company_id' => $user->company_id,
-                    'profile_photo' => $path
+                    'profile_photo' => $path,
                 ]
             );
 
             $this->profile_photo_url = $this->getSecureUrl($path);
             $this->new_photo = null;
-            
+
             $this->dispatch('profile-updated');
         }
 
@@ -80,7 +85,7 @@ class PartnerProfile extends Component
         ]);
 
         Auth::user()->update([
-            'password' => $this->password
+            'password' => $this->password,
         ]);
 
         $this->reset(['password', 'password_confirmation']);

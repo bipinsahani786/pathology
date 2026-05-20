@@ -17,11 +17,13 @@ class Configuration extends Model
     public static function getFor(string $key, $default = null, $companyId = null)
     {
         $companyId = $companyId ?: (auth()->user()->company_id ?? null);
-        if (!$companyId) return $default;
+        if (! $companyId) {
+            return $default;
+        }
 
         $cacheKey = "config_{$companyId}_{$key}";
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function() use ($companyId, $key, $default) {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($companyId, $key, $default) {
             $config = static::where('company_id', $companyId)
                 ->where('config_key', $key)
                 ->first();

@@ -2,19 +2,27 @@
 
 namespace App\Livewire\Landing;
 
-use Livewire\Component;
 use App\Models\Enquiry;
+use Livewire\Component;
 
 class EnquiryPage extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $lab_name = '';
+
     public string $lab_city = '';
+
     public string $tests_per_month = '';
+
     public string $branches = '';
+
     public string $message = '';
+
     public bool $submitted = false;
 
     protected $rules = [
@@ -50,6 +58,6 @@ class EnquiryPage extends Component
     public function render()
     {
         return view('livewire.landing.enquiry-page')
-            ->layout('components.landing-layout', ['title' => 'Request Demo - ' . \App\Models\SiteSetting::get('site_name', 'SWS Pathology')]);
+            ->layout('components.landing-layout', ['title' => 'Request Demo - '.\App\Models\SiteSetting::get('site_name', 'SWS Pathology')]);
     }
 }

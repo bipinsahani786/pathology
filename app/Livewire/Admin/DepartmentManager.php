@@ -9,11 +9,17 @@ use Livewire\WithPagination;
 class DepartmentManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
-    public $name, $department_id;
+    public $name;
+
+    public $department_id;
+
     public $is_active = true;
+
     public $searchTerm = '';
+
     public $isModalOpen = false;
 
     public function render()
@@ -21,12 +27,12 @@ class DepartmentManager extends Component
         // System departments only for super admin
         $departments = Department::system()
             ->withCount('globalTests as globalTestsCount')
-            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
+            ->where('name', 'ilike', '%'.$this->searchTerm.'%')
             ->orderBy('name', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.department-manager', [
-            'departments' => $departments
+            'departments' => $departments,
         ])->layout('layouts.app');
     }
 
@@ -69,7 +75,7 @@ class DepartmentManager extends Component
                 'name' => $this->name,
                 'is_active' => $this->is_active,
                 'is_system' => true,
-                'company_id' => null
+                'company_id' => null,
             ]
         );
 
@@ -80,9 +86,9 @@ class DepartmentManager extends Component
     public function toggleStatus($id)
     {
         $department = Department::findOrFail($id);
-        $department->update(['is_active' => !$department->is_active]);
+        $department->update(['is_active' => ! $department->is_active]);
     }
-    
+
     public function delete($id)
     {
         Department::destroy($id);

@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Lab;
 
-use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 class BranchManager extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -20,14 +20,23 @@ class BranchManager extends Component
 
     // State variables
     public $searchTerm = '';
+
     public $branch_id = null; // Explicitly null to prevent PostgreSQL errors
+
     public $name;
+
     public $type = 'main_lab';
+
     public $contact_number;
+
     public $address;
+
     public $is_active = true;
+
     public $email;
+
     public $password;
+
     public $isModalOpen = false;
 
     /**
@@ -56,7 +65,7 @@ class BranchManager extends Component
         $this->authorize('edit branches');
         $this->resetFields();
         $branch = Branch::findOrFail($id);
-        
+
         $this->branch_id = $branch->id;
         $this->name = $branch->name;
         $this->type = $branch->type;
@@ -66,9 +75,9 @@ class BranchManager extends Component
 
         // Try to fetch existing branch admin user
         $branchUser = \App\Models\User::where('branch_id', $this->branch_id)
-            ->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))
+            ->whereHas('roles', fn ($q) => $q->where('name', 'branch_admin'))
             ->first();
-            
+
         if ($branchUser) {
             $this->email = $branchUser->email;
         }
@@ -91,9 +100,9 @@ class BranchManager extends Component
 
         if ($this->branch_id) {
             // Edit: email uniqueness except for the existing user for this branch
-            $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))->first();
+            $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn ($q) => $q->where('name', 'branch_admin'))->first();
             if ($branchUser) {
-                $rules['email'] .= '|unique:users,email,' . $branchUser->id;
+                $rules['email'] .= '|unique:users,email,'.$branchUser->id;
             } else {
                 $rules['email'] .= '|unique:users,email';
             }
@@ -108,6 +117,7 @@ class BranchManager extends Component
                 $currentBranchCount = \App\Models\Branch::where('company_id', $company->id)->count();
                 if ($currentBranchCount >= $maxBranches) {
                     $this->addError('name', "Plan Limit Reached! Your plan allows only {$maxBranches} branch(es). Upgrade your plan to add more.");
+
                     return;
                 }
             }
@@ -121,10 +131,10 @@ class BranchManager extends Component
 
         \Illuminate\Support\Facades\DB::transaction(function () {
             // SaaS Plan Enforcement for Branches
-            if (!$this->branch_id) {
+            if (! $this->branch_id) {
                 $company = auth()->user()->company;
                 $maxBranches = $company->plan->features['branches'] ?? -1;
-                
+
                 if ($maxBranches != -1) {
                     $currentBranchCount = \App\Models\Branch::where('company_id', $company->id)->count();
                     if ($currentBranchCount >= $maxBranches) {
@@ -144,16 +154,16 @@ class BranchManager extends Component
                     'is_active' => $this->is_active,
                 ]);
 
-                $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn($q) => $q->where('name', 'branch_admin'))->first();
+                $branchUser = \App\Models\User::where('branch_id', $this->branch_id)->whereHas('roles', fn ($q) => $q->where('name', 'branch_admin'))->first();
                 if ($branchUser) {
-                    $branchUser->update(['email' => $this->email, 'name' => $this->name . ' Admin']);
+                    $branchUser->update(['email' => $this->email, 'name' => $this->name.' Admin']);
                     if ($this->password) {
                         $branchUser->update(['password' => bcrypt($this->password)]);
                     }
                 } else {
                     // Create if missing
                     $user = \App\Models\User::create([
-                        'name' => $this->name . ' Admin',
+                        'name' => $this->name.' Admin',
                         'email' => $this->email,
                         'password' => bcrypt($this->password ?: 'password123'),
                         'company_id' => auth()->user()->company_id,
@@ -179,22 +189,22 @@ class BranchManager extends Component
 
                 // Create branch admin user
                 $user = \App\Models\User::create([
-                    'name' => $this->name . ' Admin',
+                    'name' => $this->name.' Admin',
                     'email' => $this->email,
                     'password' => bcrypt($this->password),
                     'company_id' => auth()->user()->company_id,
                     'branch_id' => $branch->id,
                     'is_active' => true,
                 ]);
-                
+
                 // Ensure branch_admin role exists and assign it
                 $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'branch_admin']);
                 $user->assignRole($role);
 
                 session()->flash('message', 'Branch and Admin account created successfully.');
             }
-            Cache::forget("branches_" . auth()->user()->company_id);
-            Cache::forget("centers_" . auth()->user()->company_id . "_all");
+            Cache::forget('branches_'.auth()->user()->company_id);
+            Cache::forget('centers_'.auth()->user()->company_id.'_all');
         });
 
         $this->closeModal();
@@ -207,9 +217,9 @@ class BranchManager extends Component
     {
         $this->authorize('edit branches');
         $branch = Branch::findOrFail($id);
-        $branch->update(['is_active' => !$branch->is_active]);
-        Cache::forget("branches_" . auth()->user()->company_id);
-        Cache::forget("centers_" . auth()->user()->company_id . "_all");
+        $branch->update(['is_active' => ! $branch->is_active]);
+        Cache::forget('branches_'.auth()->user()->company_id);
+        Cache::forget('centers_'.auth()->user()->company_id.'_all');
         session()->flash('message', 'Branch status updated successfully.');
     }
 
@@ -220,12 +230,13 @@ class BranchManager extends Component
     {
         $this->authorize('delete branches');
         $branch = Branch::findOrFail($id);
-        
+
         $companyId = auth()->user()->company_id;
 
         // Safeguard 1: Cannot delete the branch the currently logged-in user belongs to
         if (auth()->user()->branch_id === $branch->id) {
             session()->flash('error', 'You cannot delete the branch you are currently assigned to.');
+
             return;
         }
 
@@ -233,14 +244,17 @@ class BranchManager extends Component
         $branchCount = Branch::where('company_id', $companyId)->count();
         if ($branchCount <= 1) {
             session()->flash('error', 'You must keep at least one branch for your laboratory.');
+
             return;
         }
 
-        // Also delete the branch admin accounts
-        \App\Models\User::where('branch_id', $branch->id)->delete();
+        // Also delete the branch admin accounts (only branch admins, not all users)
+        \App\Models\User::where('branch_id', $branch->id)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'branch_admin'))
+            ->delete();
         $branch->delete();
-        Cache::forget("branches_" . $companyId);
-        Cache::forget("centers_" . $companyId . "_all");
+        Cache::forget('branches_'.$companyId);
+        Cache::forget('centers_'.$companyId.'_all');
         session()->flash('message', 'Branch and its accounts deleted successfully.');
     }
 
@@ -264,15 +278,15 @@ class BranchManager extends Component
     public function render()
     {
         $branches = Branch::where('company_id', auth()->user()->company_id)
-            ->where(function($q) {
-                $q->where('name', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('contact_number', 'like', '%' . $this->searchTerm . '%');
+            ->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('contact_number', 'like', '%'.$this->searchTerm.'%');
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('livewire.lab.branch-manager', [
-            'branches' => $branches
+            'branches' => $branches,
         ])->layout('layouts.app', ['title' => 'Manage Branches']);
     }
 }

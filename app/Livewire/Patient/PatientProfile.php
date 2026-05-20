@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Patient;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
+use Livewire\Component;
 
 class PatientProfile extends Component
 {
-
     public $name;
+
     public $email;
+
     public $phone;
+
     public $password;
+
     public $password_confirmation;
 
     public function mount()
@@ -27,10 +28,10 @@ class PatientProfile extends Component
     public function updateProfile()
     {
         $user = Auth::user();
-        
+
         $this->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -50,12 +51,12 @@ class PatientProfile extends Component
         ]);
 
         Auth::user()->update([
-            'password' => $this->password
+            'password' => $this->password,
         ]);
 
         $this->password = '';
         $this->password_confirmation = '';
-        
+
         session()->flash('success', 'Password updated successfully!');
     }
 

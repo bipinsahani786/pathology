@@ -11,8 +11,9 @@ class AuditLogManager extends Component
     use WithPagination;
 
     public $searchTerm = '';
+
     public $eventFilter = '';
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function updatingSearchTerm()
@@ -23,7 +24,7 @@ class AuditLogManager extends Component
     public function render()
     {
         $companyId = auth()->user()->company_id;
-        
+
         $query = AuditLog::with(['user', 'company'])
             ->where('company_id', $companyId);
 
@@ -32,18 +33,18 @@ class AuditLogManager extends Component
         }
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->whereHas('user', function($u) {
-                    $u->where('name', 'like', '%' . $this->searchTerm . '%');
-                })->orWhere('auditable_type', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('event', 'like', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->whereHas('user', function ($u) {
+                    $u->where('name', 'like', '%'.$this->searchTerm.'%');
+                })->orWhere('auditable_type', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('event', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
         $logs = $query->latest()->paginate(20);
 
         return view('livewire.lab.audit-log-manager', [
-            'logs' => $logs
+            'logs' => $logs,
         ])->layout('layouts.app', ['title' => 'Audit Logs']);
     }
 }

@@ -38,10 +38,14 @@ trait Auditable
         // Hide sensitive fields from logs
         $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'otp', 'token'];
         if ($oldValues) {
-            foreach ($hidden as $field) unset($oldValues[$field]);
+            foreach ($hidden as $field) {
+                unset($oldValues[$field]);
+            }
         }
         if ($newValues) {
-            foreach ($hidden as $field) unset($newValues[$field]);
+            foreach ($hidden as $field) {
+                unset($newValues[$field]);
+            }
         }
 
         AuditLog::create([

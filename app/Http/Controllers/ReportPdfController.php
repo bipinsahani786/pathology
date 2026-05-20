@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TestReport;
 use App\Models\Configuration;
+use App\Models\TestReport;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use chillerlan\QRCode\Common\EccLevel;
 use chillerlan\QRCode\Output\QRGdImagePNG;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use Illuminate\Http\Request;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class ReportPdfController extends Controller
@@ -34,6 +34,7 @@ class ReportPdfController extends Controller
         if ($report && $report->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($report->pdf_path)) {
             // Get public URL from R2
             $url = \Illuminate\Support\Facades\Storage::disk('r2')->url($report->pdf_path);
+
             return redirect($url);
         }
 
@@ -47,7 +48,7 @@ class ReportPdfController extends Controller
         }
 
         $template = Configuration::getFor('report_template', 'new', $companyId);
-        
+
         return $this->generateReport(new Request(['header' => '1']), $id, $template, true);
     }
 
@@ -74,11 +75,11 @@ class ReportPdfController extends Controller
             'invoice.collectionCenter',
             'invoice.doctor',
             'invoice.items.labTest',
-            'results.labTest.dept'
+            'results.labTest.dept',
         ])->where('invoice_id', $invoiceId)->firstOrFail();
 
         // Auth & Isolation check for non-public access
-        if (!$isPublic) {
+        if (! $isPublic) {
             $user = auth()->user();
 
             // 1. Company Isolation
@@ -91,7 +92,7 @@ class ReportPdfController extends Controller
                 if ($report->invoice->patient_id !== $user->id) {
                     abort(403, 'You are not authorized to view this report.');
                 }
-                
+
                 $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $report->invoice->company_id) === '1';
                 if ($restrict && strtolower($report->invoice->payment_status) !== 'paid') {
                     abort(403, 'Payment Pending. Please clear your dues to view this report.');
@@ -103,12 +104,12 @@ class ReportPdfController extends Controller
             $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
             $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
 
-            if ($restrictBranch && !$isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
+            if ($restrictBranch && ! $isGlobalAdmin && $report->invoice->branch_id !== $user->branch_id) {
                 abort(403, 'You do not have access to reports from this branch.');
             }
 
             // 4. Partner Isolation: Doctors/Agents/CCs only see their referrals
-            if (!$isGlobalAdmin && !$user->hasRole('patient')) {
+            if (! $isGlobalAdmin && ! $user->hasRole('patient')) {
                 $isDoctor = $user->hasRole('doctor') || $user->doctorProfile;
                 $isAgent = $user->hasRole('agent') || $user->agentProfile;
                 $isCC = $user->hasRole('collection_center') || $user->collection_center_id;
@@ -148,6 +149,20 @@ class ReportPdfController extends Controller
             'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
             'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
             'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
+
+            'sig_1_position' => Configuration::getFor('sig_1_position', 'right', $companyId) ?: 'right',
+            'sig_1_enabled' => Configuration::getFor('sig_1_enabled', '1', $companyId) !== '0',
+            'sig_2_position' => Configuration::getFor('sig_2_position', 'left', $companyId) ?: 'left',
+            'sig_2_enabled' => Configuration::getFor('sig_2_enabled', '1', $companyId) !== '0',
+            'sig_3_position' => Configuration::getFor('sig_3_position', 'center', $companyId) ?: 'center',
+            'sig_3_enabled' => Configuration::getFor('sig_3_enabled', '1', $companyId) !== '0',
+            
+            'report_flag_high_color' => Configuration::getFor('report_flag_high_color', '#cc0000', $companyId) ?: '#cc0000',
+            'report_flag_low_color' => Configuration::getFor('report_flag_low_color', '#0055aa', $companyId) ?: '#0055aa',
+            
+            'report_abnormal_indicator' => Configuration::getFor('report_abnormal_indicator', '*', $companyId) ?: '*',
+            'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId) ?: '#d32f2f',
+            
             'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
 
@@ -166,7 +181,7 @@ class ReportPdfController extends Controller
             'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId) !== '0',
             'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId) !== '0',
             'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId) !== '0',
-            
+
             'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
@@ -191,20 +206,36 @@ class ReportPdfController extends Controller
         $qrCodeUri = (new QRCode($options))->render($publicUrl);
 
         // ── Barcode Generation ──────────────────────────────────────────────
-        $generator = new BarcodeGeneratorPNG();
+        $generator = new BarcodeGeneratorPNG;
         $barcodeBase64 = base64_encode($generator->getBarcode($report->invoice->invoice_number, $generator::TYPE_CODE_128, 2, 40));
-        $barcodeUri = 'data:image/png;base64,' . $barcodeBase64;
+        $barcodeUri = 'data:image/png;base64,'.$barcodeBase64;
 
         // ── Group Results ───────────────────────────────────────────────────
         $results = $report->results;
-        
+
         // Safety: Filter out results for items that are no longer in the invoice
         $activeItemIds = $report->invoice->items->pluck('id')->toArray();
         $results = $results->whereIn('invoice_item_id', $activeItemIds);
 
         if ($request->has('tests')) {
             $testIds = explode(',', $request->tests);
-            $results = $results->whereIn('invoice_item_id', $testIds);
+            
+            $selectedItemIds = [];
+            $selectedItemTestIds = [];
+            
+            foreach ($testIds as $t) {
+                if (str_contains($t, '_')) {
+                    $selectedItemTestIds[] = $t;
+                } else {
+                    $selectedItemIds[] = $t;
+                }
+            }
+
+            $results = $results->filter(function($r) use ($selectedItemIds, $selectedItemTestIds) {
+                $matchItem = in_array((string)$r->invoice_item_id, $selectedItemIds);
+                $matchItemTest = in_array($r->invoice_item_id . '_' . $r->lab_test_id, $selectedItemTestIds);
+                return $matchItem || $matchItemTest;
+            });
         }
 
         $groupedResults = $results->groupBy(function ($result) {
@@ -213,7 +244,7 @@ class ReportPdfController extends Controller
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function ($r) {
-                    return $r->invoice_item_id . '_' . $r->lab_test_id;
+                    return $r->invoice_item_id.'_'.$r->lab_test_id;
                 })->map(function ($testGroup) use ($report) {
                     $first = $testGroup->first();
                     $itemId = $first->invoice_item_id;
@@ -229,9 +260,9 @@ class ReportPdfController extends Controller
                             // New granular format (JSON keyed by test_id)
                             $remark = $decoded[$testId] ?? '';
                         } else {
-                            // Legacy format (String). 
-                            // If it's a package, we don't know which test it belongs to, 
-                            // but usually it was intended for the whole item, so we show it for all 
+                            // Legacy format (String).
+                            // If it's a package, we don't know which test it belongs to,
+                            // but usually it was intended for the whole item, so we show it for all
                             // or maybe just the last one? Showing for all is safer for not losing data.
                             $remark = $raw;
                         }
@@ -247,8 +278,8 @@ class ReportPdfController extends Controller
             ];
         });
 
-        $viewName = 'pdf.report-' . $template;
-        if (!view()->exists($viewName)) {
+        $viewName = 'pdf.report-'.$template;
+        if (! view()->exists($viewName)) {
             $viewName = 'pdf.report-new';
         }
 
@@ -266,8 +297,8 @@ class ReportPdfController extends Controller
             'barcodeUri' => $barcodeUri,
         ])->setPaper('A4', 'portrait');
 
-        $filename = 'Report_' . str_replace(' ', '_', $report->invoice->patient->name)
-            . '_' . $report->invoice->invoice_number . '.pdf';
+        $filename = 'Report_'.str_replace(' ', '_', $report->invoice->patient->name)
+            .'_'.$report->invoice->invoice_number.'.pdf';
 
         return $pdf->stream($filename);
     }

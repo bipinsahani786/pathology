@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_modes', function (Blueprint $table) {
-           $table->id();
+            $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->string('name'); // Cash, UPI, Card, Razorpay
             $table->boolean('is_active')->default(true);

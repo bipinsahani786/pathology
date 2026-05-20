@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\SiteSetting;
-use App\Models\LandingFeature;
-use App\Models\LandingTestimonial;
 use App\Models\LandingFaq;
+use App\Models\LandingFeature;
 use App\Models\LandingPlan;
+use App\Models\LandingTestimonial;
+use App\Models\SiteSetting;
 use Illuminate\Database\Seeder;
 
 class LandingPageSeeder extends Seeder
@@ -118,7 +118,7 @@ class LandingPageSeeder extends Seeder
                 'features' => ['Up to 100 Reports', 'Basic WhatsApp Sync', 'Email Support'],
                 'cta_text' => 'Start Free Trial',
                 'cta_link' => '/register',
-                'sort_order' => 1
+                'sort_order' => 1,
             ],
             [
                 'name' => 'Professional',
@@ -127,7 +127,7 @@ class LandingPageSeeder extends Seeder
                 'features' => ['Unlimited Reports', 'Partner Portal', 'Machine Interfacing', 'Priority Phone Support'],
                 'cta_text' => 'Get Professional',
                 'cta_link' => '/register',
-                'sort_order' => 2
+                'sort_order' => 2,
             ],
             [
                 'name' => 'Enterprise',
@@ -136,7 +136,7 @@ class LandingPageSeeder extends Seeder
                 'features' => ['All Pro Features', 'Multi-Branch Sync', 'Custom Branding', 'Dedicated Account Manager'],
                 'cta_text' => 'Contact Sales',
                 'cta_link' => '/contact',
-                'sort_order' => 3
+                'sort_order' => 3,
             ],
         ];
 

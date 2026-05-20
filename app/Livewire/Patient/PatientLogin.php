@@ -2,15 +2,17 @@
 
 namespace App\Livewire\Patient;
 
-use App\Models\User;
 use App\Models\PatientProfile;
-use Livewire\Component;
+use App\Models\User;
 use Illuminate\Support\Facades\Session;
+use Livewire\Component;
 
 class PatientLogin extends Component
 {
     public $patient_id = '';
+
     public $mobile = '';
+
     public $errorMessage = '';
 
     protected $rules = [
@@ -55,7 +57,7 @@ class PatientLogin extends Component
 
                 // Also check by PatientProfile patient_id_string
                 $query->orWhereHas('patientProfile', function ($q) use ($inputId) {
-                    $q->where('patient_id_string', 'like', '%' . $inputId . '%');
+                    $q->where('patient_id_string', 'like', '%'.$inputId.'%');
                 });
             })
             ->first();
@@ -69,7 +71,7 @@ class PatientLogin extends Component
             return redirect()->route('portal.dashboard');
         }
 
-        $this->errorMessage = "Patient details not found. Please verify your ID and Mobile Number.";
+        $this->errorMessage = 'Patient details not found. Please verify your ID and Mobile Number.';
     }
 
     public function render()

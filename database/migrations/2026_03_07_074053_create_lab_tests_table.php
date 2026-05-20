@@ -12,32 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('lab_tests', function (Blueprint $table) {
-           $table->id();
-            
+            $table->id();
+
             // Link to the specific Lab (Tenant)
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            
+
             // Link to Global Test (null means it's a custom test made by the lab)
             $table->foreignId('global_test_id')->nullable()->constrained('global_tests')->nullOnDelete();
 
             $table->string('test_code', 50)->nullable(); // e.g., LIPID-01
             $table->string('name');
-            $table->string('department')->nullable(); 
+            $table->string('department')->nullable();
 
-            // Pricing 
-            $table->decimal('mrp', 10, 2)->default(0); 
-            $table->decimal('b2b_price', 10, 2)->default(0); 
+            // Pricing
+            $table->decimal('mrp', 10, 2)->default(0);
+            $table->decimal('b2b_price', 10, 2)->default(0);
 
             // Requirements
-            $table->string('sample_type')->nullable(); 
-            $table->integer('tat_hours')->default(24); 
-            
+            $table->string('sample_type')->nullable();
+            $table->integer('tat_hours')->default(24);
+
             // The JSON array containing parameters & formulas
-            $table->jsonb('parameters')->nullable(); 
+            $table->jsonb('parameters')->nullable();
 
             $table->boolean('is_active')->default(true);
 
-            $table->text('description')->nullable(); 
+            $table->text('description')->nullable();
             $table->timestamps();
 
             $table->index(['company_id', 'is_active']);

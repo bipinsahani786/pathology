@@ -2,23 +2,44 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
-use App\Services\GlobalTestService;
 use App\Models\Department;
+use App\Services\GlobalTestService;
 use Illuminate\Validation\Rule;
+use Livewire\Component;
 
 class GlobalTestEditor extends Component
 {
-    public $test_id, $test_code, $name, $method, $department_id, $mrp, $b2b_price, $sample_type;
+    public $test_id;
+
+    public $test_code;
+
+    public $name;
+
+    public $method;
+
+    public $department_id;
+
+    public $mrp;
+
+    public $b2b_price;
+
+    public $sample_type;
+
     public $tat_hours = 24;
-    public $description, $interpretation;
+
+    public $description;
+
+    public $interpretation;
+
     public array $parameters = [];
+
     public $editingParamIndex = null;
+
     public $isRangeModalOpen = false;
 
     public function mount($id = null)
     {
-        $testService = new GlobalTestService();
+        $testService = new GlobalTestService;
         if ($id) {
             $test = $testService->getTestById($id);
             $this->test_id = $test->id;
@@ -59,10 +80,10 @@ class GlobalTestEditor extends Component
                     'max_val' => '',
                     'display_range' => '',
                     'normal_value' => '', // For qualitative
-                    'is_critical' => false
-                ]
+                    'is_critical' => false,
+                ],
             ],
-            'formula' => ''
+            'formula' => '',
         ];
     }
 
@@ -70,7 +91,7 @@ class GlobalTestEditor extends Component
     {
         $this->editingParamIndex = $index;
         // Ensure ranges array exists
-        if (!isset($this->parameters[$index]['ranges'])) {
+        if (! isset($this->parameters[$index]['ranges'])) {
             $this->parameters[$index]['ranges'] = [];
         }
         if (empty($this->parameters[$index]['ranges'])) {
@@ -91,7 +112,7 @@ class GlobalTestEditor extends Component
                 'max_val' => '',
                 'display_range' => '',
                 'normal_value' => '',
-                'is_critical' => false
+                'is_critical' => false,
             ];
         }
     }
@@ -133,7 +154,7 @@ class GlobalTestEditor extends Component
 
     public function save()
     {
-        $testService = new GlobalTestService();
+        $testService = new GlobalTestService;
         $validatedData = $this->validate([
             'test_code' => ['required', 'string', 'max:50', Rule::unique('global_tests', 'test_code')->ignore($this->test_id)],
             'name' => 'required|string|max:255',
@@ -178,14 +199,16 @@ class GlobalTestEditor extends Component
         $testService->saveTest($saveData, $this->test_id);
 
         session()->flash('message', $this->test_id ? 'Global Test updated successfully.' : 'Global Test created successfully.');
+
         return redirect()->route('admin.global-tests');
     }
 
     public function render()
     {
         $departments = Department::where('is_system', true)->get();
+
         return view('livewire.admin.global-test-editor', [
-            'departments' => $departments
+            'departments' => $departments,
         ])->layout('layouts.app', ['title' => $this->test_id ? 'Edit Master Test' : 'New Master Test']);
     }
 }

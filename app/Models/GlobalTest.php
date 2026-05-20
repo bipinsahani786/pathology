@@ -7,11 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class GlobalTest extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
-    protected $guarded = []; 
+    protected $guarded = [];
 
-  
     protected $casts = [
         'default_parameters' => 'array',
         'is_active' => 'boolean',

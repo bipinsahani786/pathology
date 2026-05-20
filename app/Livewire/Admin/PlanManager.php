@@ -2,23 +2,35 @@
 
 namespace App\Livewire\Admin;
 
-use Livewire\Component;
 use App\Services\PlanService;
+use Livewire\Component;
 
 class PlanManager extends Component
 {
     // Form fields
-    public $plan_id, $name, $price;
+    public $plan_id;
+
+    public $name;
+
+    public $price;
+
     public $duration_in_days = 30;
+
     public $is_active = true;
 
     // Fixed SaaS Features & Limits
     public $max_branches = 1;
+
     public $max_staff = 3;
+
     public $max_doctors = 5;
+
     public $max_agents = 2;
+
     public $max_collection_centers = 1;
+
     public $has_inventory = false;
+
     public $has_custom_invoice = false;
 
     public $isModalOpen = false;
@@ -136,7 +148,7 @@ class PlanManager extends Component
         $plans = $this->planService()->getAllPlans();
 
         return view('livewire.admin.plan-manager', [
-            'plans' => $plans
+            'plans' => $plans,
         ])->layout('layouts.app', ['title' => 'Manage Plans']);
     }
 }

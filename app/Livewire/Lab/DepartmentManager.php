@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 class DepartmentManager extends Component
 {
     use WithPagination;
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -16,22 +17,27 @@ class DepartmentManager extends Component
         $this->authorize('view departments');
     }
 
-    public $name, $department_id;
+    public $name;
+
+    public $department_id;
+
     public $is_active = true;
+
     public $searchTerm = '';
+
     public $isModalOpen = false;
 
     public function render()
     {
         // Fetch both system departments and lab-specific departments
         $departments = Department::forCompany(auth()->user()->company_id)
-            ->where('name', 'ilike', '%' . $this->searchTerm . '%')
+            ->where('name', 'ilike', '%'.$this->searchTerm.'%')
             ->orderBy('is_system', 'desc')
             ->orderBy('name')
             ->paginate(15);
 
         return view('livewire.lab.department-manager', [
-            'departments' => $departments
+            'departments' => $departments,
         ])->layout('layouts.app');
     }
 
@@ -46,10 +52,11 @@ class DepartmentManager extends Component
     {
         $this->authorize('edit departments');
         $department = Department::findOrFail($id);
-        
+
         // Prevent editing system departments
         if ($department->is_system) {
             session()->flash('error', 'System departments cannot be modified.');
+
             return;
         }
 
@@ -84,7 +91,7 @@ class DepartmentManager extends Component
                 'company_id' => auth()->user()->company_id,
                 'name' => $this->name,
                 'is_active' => $this->is_active,
-                'is_system' => false
+                'is_system' => false,
             ]
         );
 
@@ -96,9 +103,11 @@ class DepartmentManager extends Component
     {
         $this->authorize('edit departments');
         $department = Department::findOrFail($id);
-        if ($department->is_system) return; // Protect system depts
-        
-        $department->update(['is_active' => !$department->is_active]);
+        if ($department->is_system) {
+            return;
+        } // Protect system depts
+
+        $department->update(['is_active' => ! $department->is_active]);
     }
 
     public function delete($id)
@@ -107,9 +116,10 @@ class DepartmentManager extends Component
         $department = Department::findOrFail($id);
         if ($department->is_system) {
             session()->flash('error', 'System departments cannot be deleted.');
+
             return;
         }
-        
+
         $department->delete();
         session()->flash('success', 'Department deleted.');
     }

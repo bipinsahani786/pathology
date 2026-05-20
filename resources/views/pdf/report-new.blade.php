@@ -331,12 +331,17 @@
 
         /* ── Flag & Abnormal Colors ── */
         .flag-H {
-            color: #cc0000;
+            color: {{ $settings['report_flag_high_color'] ?? '#cc0000' }};
             font-weight: 700;
         }
 
         .flag-L {
-            color: #0055aa;
+            color: {{ $settings['report_flag_low_color'] ?? '#0055aa' }};
+            font-weight: 700;
+        }
+
+        .flag-abnormal {
+            color: {{ $settings['report_abnormal_color'] ?? '#d32f2f' }};
             font-weight: 700;
         }
 
@@ -600,41 +605,59 @@
                     </table>
                 @else
                     {{-- Multi Signatory Layout --}}
-                    <table class="multi-sig-table">
+                    @php
+                        $activeSigs = [];
+                        if($settings['sig_1_enabled'] ?? true) {
+                            $activeSigs[] = [
+                                'name' => $settings['global_sig_1_name'],
+                                'desig' => $settings['global_sig_1_desig'],
+                                'img' => $sigImgSrc,
+                                'pos' => $settings['sig_1_position'] ?? 'right',
+                                'order' => ($settings['sig_1_position'] ?? 'right') == 'left' ? 1 : (($settings['sig_1_position'] ?? 'right') == 'center' ? 2 : 3)
+                            ];
+                        }
+                        if(($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
+                            $activeSigs[] = [
+                                'name' => $settings['global_sig_2_name'],
+                                'desig' => $settings['global_sig_2_desig'],
+                                'img' => $settings['global_sig_2_path'],
+                                'pos' => $settings['sig_2_position'] ?? 'left',
+                                'order' => ($settings['sig_2_position'] ?? 'left') == 'left' ? 1 : (($settings['sig_2_position'] ?? 'left') == 'center' ? 2 : 3)
+                            ];
+                        }
+                        if(($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
+                            $activeSigs[] = [
+                                'name' => $settings['global_sig_3_name'],
+                                'desig' => $settings['global_sig_3_desig'],
+                                'img' => $settings['global_sig_3_path'],
+                                'pos' => $settings['sig_3_position'] ?? 'center',
+                                'order' => ($settings['sig_3_position'] ?? 'center') == 'left' ? 1 : (($settings['sig_3_position'] ?? 'center') == 'center' ? 2 : 3)
+                            ];
+                        }
+                        
+                        // Sort by order (Left -> Center -> Right)
+                        usort($activeSigs, function($a, $b) {
+                            return $a['order'] <=> $b['order'];
+                        });
+                    @endphp
+                    <table class="multi-sig-table" style="table-layout: fixed;">
                         <tr>
-                            <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
-                                <!-- CHECKED BY -->
-                            </td>
-                            @if($settings['global_sig_2_name'])
-                                <td>
-                                    @if($settings['global_sig_2_path'])
-                                        <img class="sign-img" src="{{ $settings['global_sig_2_path'] }}"><br>
-                                    @else
-                                        <div style="height: 50px;"></div>
-                                    @endif
-                                    <span class="doc-name">{{ $settings['global_sig_2_name'] }}</span>
-                                    <span class="doc-desig">{{ $settings['global_sig_2_desig'] }}</span>
+                            @if(count($activeSigs) === 0)
+                                <td style="text-align:center; padding-left:35px; font-weight:700; font-size:11px;">
+                                    <!-- No signatures enabled -->
                                 </td>
-                            @endif
-                            <td>
-                                @if($sigImgSrc)
-                                    <img class="sign-img" src="{{ $sigImgSrc }}"><br>
-                                @else
-                                    <div style="height: 50px;"></div>
-                                @endif
-                                <span class="doc-name">{{ $settings['global_sig_1_name'] }}</span>
-                                <span class="doc-desig">{{ $settings['global_sig_1_desig'] }}</span>
-                            </td>
-                            @if($settings['global_sig_3_path'])
-                                <td>
-                                    @if($settings['global_sig_3_path'])
-                                        <img class="sign-img" src="{{ $settings['global_sig_3_path'] }}"><br>
-                                    @else
-                                        <div style="height: 50px;"></div>
-                                    @endif
-                                    <span class="doc-name">{{ $settings['global_sig_3_name'] }}</span>
-                                    <span class="doc-desig">{{ $settings['global_sig_3_desig'] }}</span>
-                                </td>
+                            @else
+                                @foreach($activeSigs as $sig)
+                                    <td style="text-align: {{ $sig['pos'] === 'left' ? 'left' : ($sig['pos'] === 'right' ? 'right' : 'center') }}; padding: 0 {{ count($activeSigs) == 1 ? '0' : '35px' }} 5px;">
+                                        @if($sig['img'])
+                                            <img class="sign-img" src="{{ $sig['img'] }}"><br>
+                                        @else
+                                            <div style="height: 50px;"></div>
+                                        @endif
+                                        <span class="doc-name">{{ $sig['name'] }}</span>
+                                        <span class="doc-desig">{{ $sig['desig'] }}</span>
+                                    </td>
+                                @endforeach
                             @endif
                         </tr>
                     </table>
@@ -721,7 +744,7 @@
                                     } elseif (in_array($rawFlag, ['L', 'LOW'])) {
                                         $flag = 'L';
                                     } else {
-                                        $flag = '*'; // Default abnormal flag when status is missing
+                                        $flag = $settings['report_abnormal_indicator'] ?? '*';
                                     }
                                 }
                                 $isAbnormal = $r->is_highlighted;
@@ -746,10 +769,10 @@
                                         @endif
                                     </td>
                                     <td
-                                        class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'result-bold')) : 'result-bold' }}">
+                                        class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'flag-abnormal')) : 'result-bold' }}">
                                         {{ $r->result_value }}
                                     </td>
-                                    <td class="{{ $flag ? 'flag-' . $flag : '' }}">
+                                    <td class="{{ $isAbnormal && !in_array($flag, ['H', 'L']) ? 'flag-abnormal' : ($flag ? 'flag-' . $flag : '') }}">
                                         {{ $flag }}
                                     </td>
                                     <td class="{{ $isAbnormal ? 'result-bold' : '' }}"

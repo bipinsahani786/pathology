@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\GlobalTest;
 use App\Models\Department;
+use App\Models\GlobalTest;
+use Illuminate\Database\Seeder;
 
 class VaishnaviTestSeeder extends Seeder
 {
@@ -184,7 +184,7 @@ class VaishnaviTestSeeder extends Seeder
 
         foreach ($tests as $test) {
             $department = Department::where('name', $test['category'])->first();
-            
+
             GlobalTest::updateOrCreate(
                 ['test_code' => $test['test_code']],
                 [

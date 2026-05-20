@@ -12,9 +12,11 @@ class AuditLogManager extends Component
     use WithPagination;
 
     public $searchTerm = '';
+
     public $eventFilter = '';
+
     public $companyFilter = '';
-    
+
     protected $paginationTheme = 'bootstrap';
 
     public function updatingSearchTerm()
@@ -35,11 +37,11 @@ class AuditLogManager extends Component
         }
 
         if ($this->searchTerm) {
-            $query->where(function($q) {
-                $q->whereHas('user', function($u) {
-                    $u->where('name', 'like', '%' . $this->searchTerm . '%');
-                })->orWhere('auditable_type', 'like', '%' . $this->searchTerm . '%')
-                  ->orWhere('event', 'like', '%' . $this->searchTerm . '%');
+            $query->where(function ($q) {
+                $q->whereHas('user', function ($u) {
+                    $u->where('name', 'like', '%'.$this->searchTerm.'%');
+                })->orWhere('auditable_type', 'like', '%'.$this->searchTerm.'%')
+                    ->orWhere('event', 'like', '%'.$this->searchTerm.'%');
             });
         }
 
@@ -48,7 +50,7 @@ class AuditLogManager extends Component
 
         return view('livewire.admin.audit-log-manager', [
             'logs' => $logs,
-            'companies' => $companies
+            'companies' => $companies,
         ])->layout('layouts.app', ['title' => 'Global Audit Logs']);
     }
 }
