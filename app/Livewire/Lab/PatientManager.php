@@ -79,7 +79,7 @@ class PatientManager extends Component
         $this->resetFields();
 
         // Eager load the profile to avoid N+1 query issues
-        $user = User::with('patientProfile')->findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->with('patientProfile')->findOrFail($id);
 
         $this->user_id = $user->id;
         $this->name = $user->name;
@@ -138,7 +138,7 @@ class PatientManager extends Component
 
             if ($this->user_id) {
                 // UPDATE EXISTING PATIENT
-                $user = User::findOrFail($this->user_id);
+                $user = User::where('company_id', auth()->user()->company_id)->findOrFail($this->user_id);
                 $user->update([
                     'name' => $this->name,
                     'phone' => $this->phone,
@@ -223,7 +223,7 @@ class PatientManager extends Component
     {
         $this->authorize('delete patients');
         // Because of 'cascadeOnDelete' in migration, deleting the user deletes the profile too.
-        User::findOrFail($id)->delete();
+        User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Patient deleted successfully.');
     }
 

@@ -62,7 +62,7 @@ class StaffRoleManager extends Component
     {
         $this->authorize('edit staff_roles');
         $this->resetStaffFields();
-        $user = User::findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
         $this->staff_id = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
@@ -157,7 +157,7 @@ class StaffRoleManager extends Component
 
             return;
         }
-        User::findOrFail($id)->delete();
+        User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Staff member deleted.');
     }
 

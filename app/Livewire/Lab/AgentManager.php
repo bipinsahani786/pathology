@@ -69,7 +69,7 @@ class AgentManager extends Component
         $this->resetFields();
 
         // Eager load the profile to avoid N+1 query issues
-        $user = User::with('agentProfile')->findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->with('agentProfile')->findOrFail($id);
 
         $this->user_id = $user->id;
         $this->name = $user->name;
@@ -112,7 +112,7 @@ class AgentManager extends Component
             if ($this->user_id) {
                 $this->authorize('edit agents');
                 // UPDATE EXISTING AGENT
-                $user = User::findOrFail($this->user_id);
+                $user = User::where('company_id', auth()->user()->company_id)->findOrFail($this->user_id);
                 $updateData = [
                     'name' => $this->name,
                     'phone' => $this->phone,
@@ -199,7 +199,7 @@ class AgentManager extends Component
     public function toggleStatus($id)
     {
         $this->authorize('edit agents');
-        $user = User::findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -209,7 +209,7 @@ class AgentManager extends Component
     public function delete($id)
     {
         $this->authorize('delete agents');
-        User::findOrFail($id)->delete();
+        User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Agent deleted successfully.');
     }
 

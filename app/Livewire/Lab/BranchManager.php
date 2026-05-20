@@ -248,8 +248,10 @@ class BranchManager extends Component
             return;
         }
 
-        // Also delete the branch admin accounts
-        \App\Models\User::where('branch_id', $branch->id)->delete();
+        // Also delete the branch admin accounts (only branch admins, not all users)
+        \App\Models\User::where('branch_id', $branch->id)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'branch_admin'))
+            ->delete();
         $branch->delete();
         Cache::forget('branches_'.$companyId);
         Cache::forget('centers_'.$companyId.'_all');

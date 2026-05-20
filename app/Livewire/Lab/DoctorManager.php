@@ -71,7 +71,7 @@ class DoctorManager extends Component
         $this->resetFields();
 
         // Eager load the profile to avoid N+1 query issues
-        $user = User::with('doctorProfile')->findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->with('doctorProfile')->findOrFail($id);
 
         $this->user_id = $user->id;
         $this->name = $user->name;
@@ -116,7 +116,7 @@ class DoctorManager extends Component
             if ($this->user_id) {
                 $this->authorize('edit doctors');
                 // UPDATE EXISTING DOCTOR
-                $user = User::findOrFail($this->user_id);
+                $user = User::where('company_id', auth()->user()->company_id)->findOrFail($this->user_id);
                 $updateData = [
                     'name' => $this->name,
                     'phone' => $this->phone,
@@ -207,7 +207,7 @@ class DoctorManager extends Component
     public function toggleStatus($id)
     {
         $this->authorize('edit doctors');
-        $user = User::findOrFail($id);
+        $user = User::where('company_id', auth()->user()->company_id)->findOrFail($id);
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -220,7 +220,7 @@ class DoctorManager extends Component
     public function delete($id)
     {
         $this->authorize('delete doctors');
-        User::findOrFail($id)->delete();
+        User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Doctor deleted successfully.');
     }
 
