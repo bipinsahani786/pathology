@@ -297,8 +297,8 @@ class ReportPdfController extends Controller
             'barcodeUri' => $barcodeUri,
         ])->setPaper('A4', 'portrait');
 
-        $filename = 'Report_'.str_replace(' ', '_', $report->invoice->patient->name)
-            .'_'.$report->invoice->invoice_number.'.pdf';
+        $patientName = str_replace([' ', '/', '\\'], '_', $report->invoice->patient->name);
+        $filename = 'Report_'.$patientName.'_'.$report->invoice->invoice_number.'.pdf';
 
         return $pdf->stream($filename);
     }
