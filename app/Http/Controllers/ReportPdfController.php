@@ -31,12 +31,9 @@ class ReportPdfController extends Controller
             ->where('invoice_id', $id)
             ->latest()
             ->first();
-        if ($report && $report->pdf_path && \Illuminate\Support\Facades\Storage::disk('r2')->exists($report->pdf_path)) {
-            // Get public URL from R2
-            $url = \Illuminate\Support\Facades\Storage::disk('r2')->url($report->pdf_path);
 
-            return redirect($url);
-        }
+        // Always generate fresh PDF so latest settings (page breaks, font size, etc.) are applied.
+        // Previously, a stale R2-cached PDF was served which didn't reflect settings changes.
 
         // If not pre-generated, generate now using company's preferred template
         $companyId = $report ? $report->invoice->company_id : null;
