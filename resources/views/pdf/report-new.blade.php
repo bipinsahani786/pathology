@@ -19,8 +19,23 @@
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
 
-        $fontSize = ($settings['pdf_font_size'] ?? 13) . 'px';
+        $baseFontSize = (int) ($settings['pdf_font_size'] ?? 13);
+        $fontSize = $baseFontSize . 'px';
         $fontFamily = $settings['pdf_font_family'] ?? 'Helvetica, Arial, sans-serif';
+
+        // Scale factor: all child font-sizes scale proportionally to the user's chosen size
+        // Default base is 13px, so if user picks 16px, scale = 16/13 ≈ 1.23
+        $scale = $baseFontSize / 13;
+
+        // Pre-compute scaled sizes for CSS (rounded to 1 decimal)
+        $sz8   = round(8   * $scale, 1) . 'px';
+        $sz8_5 = round(8.5 * $scale, 1) . 'px';
+        $sz9   = round(9   * $scale, 1) . 'px';
+        $sz10  = round(10  * $scale, 1) . 'px';
+        $sz10_5= round(10.5* $scale, 1) . 'px';
+        $sz11  = round(11  * $scale, 1) . 'px';
+        $sz11_5= round(11.5* $scale, 1) . 'px';
+        $sz12  = round(12  * $scale, 1) . 'px';
     @endphp
 
     <style>
@@ -88,7 +103,7 @@
             border: 1px solid #1a1a1a !important;
             margin: 0 25px 0;
             padding: 8px 10px;
-            font-size: 10.5px;
+            font-size: {{ $sz10_5 }};
             display: block;
             border-radius: 2px;
         }
@@ -164,7 +179,7 @@
             text-align: left;
             vertical-align: bottom;
             font-weight: 700;
-            font-size: 11px;
+            font-size: {{ $sz11 }};
             padding-left: 35px;
             padding-bottom: 8px;
         }
@@ -186,13 +201,13 @@
 
         .doc-name {
             font-weight: 700;
-            font-size: 11px;
+            font-size: {{ $sz11 }};
             display: block;
             margin-bottom: 0px;
         }
 
         .doc-desig {
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             color: #333;
             display: block;
             margin-top: 0px;
@@ -225,7 +240,7 @@
         .multi-sig-table td {
             text-align: center;
             vertical-align: bottom;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             padding: 0 15px 5px;
         }
 
@@ -235,7 +250,7 @@
         .dept-title {
             text-align: center;
             font-weight: 700;
-            font-size: 12px;
+            font-size: {{ $sz12 }};
             letter-spacing: 0.8px;
             text-transform: uppercase;
             margin: 10px 0 2px;
@@ -245,7 +260,7 @@
         .test-title {
             text-align: center;
             font-weight: 700;
-            font-size: 11px;
+            font-size: {{ $sz11 }};
             text-transform: uppercase;
             margin-bottom: 2px;
             color: #1a1a1a;
@@ -253,7 +268,7 @@
 
         .method-line {
             text-align: center;
-            font-size: 9px;
+            font-size: {{ $sz9 }};
             color: #555;
             font-style: italic;
             margin-bottom: 5px;
@@ -277,7 +292,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 8px;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .result-table tr {
@@ -290,7 +305,7 @@
             padding: 6px 6px;
             text-align: left;
             font-weight: 700;
-            font-size: 10.5px;
+            font-size: {{ $sz10_5 }};
             text-transform: uppercase;
             color: #000;
             background: #fbfbfb;
@@ -317,7 +332,7 @@
         /* Sub-header rows (section dividers like "TOTAL COUNT") */
         .result-table .sub-hdr td {
             font-weight: 700;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             text-transform: uppercase;
             padding: 3px 6px 1px;
             color: #1a1a1a;
@@ -355,14 +370,14 @@
         .interp-block {
             margin: 15px 0 10px;
             padding: 4px 0;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             line-height: 1.5;
             page-break-inside: avoid;
         }
 
         .interp-label {
             font-weight: 700;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             margin-bottom: 3px;
             color: #1a1a1a;
         }
@@ -377,7 +392,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .interp-content table th {
@@ -386,13 +401,13 @@
             padding: 3px 6px;
             font-weight: 700;
             text-align: left;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .interp-content table td {
             border: 1px solid #bbb;
             padding: 3px 6px;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .interp-content table tr {
@@ -405,14 +420,14 @@
 
         .interp-content p {
             margin: 3px 0;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             color: #444;
         }
 
         .interp-content ul,
         .interp-content ol {
             margin: 3px 0 3px 15px;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .interp-content li {
@@ -427,7 +442,7 @@
         .remarks-block {
             margin: 20px 0 10px;
             padding: 10px 0;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             line-height: 1.5;
             border-top: 1px dashed #ccc;
             page-break-inside: avoid;
@@ -437,7 +452,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
 
         .remarks-block table th {
@@ -481,7 +496,7 @@
         .end-of-report {
             text-align: center;
             font-weight: 700;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
             margin-top: 20px;
             padding-top: 8px;
             border-top: 1px dashed #333;
@@ -496,7 +511,7 @@
             margin-top: 15px;
             padding: 6px 0;
             border-top: 1px dashed #ccc;
-            font-size: 10px;
+            font-size: {{ $sz10 }};
         }
     </style>
 </head>
@@ -542,7 +557,7 @@
                         @if(isset($barcodeUri))
                             <div class="barcode">
                                 <img src="{{ $barcodeUri }}" class="barcode-img">
-                                <div style="font-size: 8px; margin-top: 1px; font-weight: bold;">
+                                <div style="font-size: {{ $sz8 }}; margin-top: 1px; font-weight: bold;">
                                     {{ $invoice->invoice_number }}
                                 </div>
                             </div>
@@ -643,7 +658,7 @@
                     <table class="multi-sig-table" style="table-layout: fixed;">
                         <tr>
                             @if(count($activeSigs) === 0)
-                                <td style="text-align:center; padding-left:35px; font-weight:700; font-size:11px;">
+                                <td style="text-align:center; padding-left:35px; font-weight:700; font-size:{{ $sz11 }};">
                                     <!-- No signatures enabled -->
                                 </td>
                             @else
@@ -706,7 +721,7 @@
                 @if($showDeptAlways || $isFirstInDept)
                     <div class="dept-title">{{ strtoupper($deptName) }}</div>
                 @endif
-                <div class="test-title" style="margin-bottom: 12px; font-size: 11.5px;">{{ strtoupper($testName) }}</div>
+                <div class="test-title" style="margin-bottom: 12px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
 
                 {{-- ── Method (from LabTest master) ── --}}
                 @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
@@ -763,7 +778,7 @@
                                         {{ strtoupper($r->parameter_name) }}
                                         @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
                                             <div
-                                                style="font-size: 8px; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
+                                                style="font-size: {{ $sz8 }}; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
                                                 (Method: {{ $r->method }})
                                             </div>
                                         @endif
@@ -776,7 +791,7 @@
                                         {{ $flag }}
                                     </td>
                                     <td class="{{ $isAbnormal ? 'result-bold' : '' }}"
-                                        style="width: 22%; font-size: 8.5px; line-height: 1.2; vertical-align: middle;">
+                                        style="width: 22%; font-size: {{ $sz8_5 }}; line-height: 1.2; vertical-align: middle;">
                                         @php
                                             $displayRange = $r->reference_range;
 
@@ -820,7 +835,7 @@
 
                 {{-- ── Method (per-result level, if different from test master) ── --}}
                 @if(($settings['pdf_show_test_method'] ?? true) && $results->first()->method && $results->first()->method !== $labTest->method)
-                    <p style="font-size:9px; color:#555; font-style:italic; margin-bottom:5px;">
+                    <p style="font-size:{{ $sz9 }}; color:#555; font-style:italic; margin-bottom:5px;">
                         <strong>Method:</strong> {{ $results->first()->method }}
                     </p>
                 @endif
@@ -860,7 +875,7 @@
                     @if(isset($dept->sig_1_path) && $dept->sig_1_path)
                         <table class="multi-sig-table" style="margin-top:12px;">
                             <tr>
-                                <td style="text-align:left; padding-left:35px; font-weight:700; font-size:11px;">
+                                <td style="text-align:left; padding-left:35px; font-weight:700; font-size:{{ $sz11 }};">
 
                                 </td>
                                 @if(isset($dept->sig_1_path) && $dept->sig_1_path)

@@ -57,14 +57,34 @@ class PdfStorageService
         $results = $report->results;
         $groupedResults = $results->groupBy(function ($result) {
             return $result->labTest->department_id ?? 0;
-        })->map(function ($deptGroup) {
+        })->map(function ($deptGroup) use ($report) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
-                'tests' => $deptGroup->groupBy('invoice_item_id')->map(function ($testGroup) {
+                'tests' => $deptGroup->groupBy(function ($r) {
+                    return $r->invoice_item_id.'_'.$r->lab_test_id;
+                })->map(function ($testGroup) use ($report) {
+                    $first = $testGroup->first();
+                    $itemId = $first->invoice_item_id;
+                    $testId = $first->lab_test_id;
+
+                    // Find the invoice item to get comments
+                    $item = $report->invoice->items->where('id', $itemId)->first();
+                    $remark = '';
+                    if ($item) {
+                        $raw = $item->report_comments;
+                        $decoded = json_decode($raw, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $remark = $decoded[$testId] ?? '';
+                        } else {
+                            $remark = $raw;
+                        }
+                    }
+
                     return [
-                        'name' => $testGroup->first()->labTest->name,
-                        'labTest' => $testGroup->first()->labTest,
+                        'name' => $first->labTest->name,
+                        'labTest' => $first->labTest,
                         'results' => $testGroup,
+                        'remark' => $remark,
                     ];
                 }),
             ];
@@ -170,6 +190,19 @@ class PdfStorageService
             'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
             'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
 
+            'sig_1_position' => Configuration::getFor('sig_1_position', 'right', $companyId) ?: 'right',
+            'sig_1_enabled' => Configuration::getFor('sig_1_enabled', '1', $companyId) !== '0',
+            'sig_2_position' => Configuration::getFor('sig_2_position', 'left', $companyId) ?: 'left',
+            'sig_2_enabled' => Configuration::getFor('sig_2_enabled', '1', $companyId) !== '0',
+            'sig_3_position' => Configuration::getFor('sig_3_position', 'center', $companyId) ?: 'center',
+            'sig_3_enabled' => Configuration::getFor('sig_3_enabled', '1', $companyId) !== '0',
+
+            'report_flag_high_color' => Configuration::getFor('report_flag_high_color', '#cc0000', $companyId) ?: '#cc0000',
+            'report_flag_low_color' => Configuration::getFor('report_flag_low_color', '#0055aa', $companyId) ?: '#0055aa',
+
+            'report_abnormal_indicator' => Configuration::getFor('report_abnormal_indicator', '*', $companyId) ?: '*',
+            'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId) ?: '#d32f2f',
+
             'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
             'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 310,
@@ -181,6 +214,12 @@ class PdfStorageService
             'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
             'pdf_show_footer' => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
             'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId) !== '0',
+            'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId) !== '0',
+            'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId) !== '0',
+
+            'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
+            'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
+            'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
         ];
     }
 }
