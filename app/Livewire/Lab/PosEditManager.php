@@ -988,6 +988,7 @@ class PosEditManager extends Component
 
             // 2 & 3. B2B & Profit Calculation
             $totalB2bAmount = 0;
+            $cartItemTotal = 0;
             $cartIds = collect($this->cart)->pluck('id');
             $testPrices = LabTest::whereIn('id', $cartIds)->get()->keyBy('id');
 
