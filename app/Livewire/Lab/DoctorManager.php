@@ -98,7 +98,6 @@ class DoctorManager extends Component
                 'nullable',
                 'numeric',
                 'digits:10',
-                Rule::unique('users', 'phone')->ignore($this->user_id),
             ],
             'email' => [
                 'nullable',
@@ -220,6 +219,12 @@ class DoctorManager extends Component
     public function delete($id)
     {
         $this->authorize('delete doctors');
+
+        if (\App\Models\Invoice::where('referred_by_doctor_id', $id)->exists()) {
+            session()->flash('error', 'Cannot delete doctor as they are referred on existing invoices.');
+            return;
+        }
+
         User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Doctor deleted successfully.');
     }

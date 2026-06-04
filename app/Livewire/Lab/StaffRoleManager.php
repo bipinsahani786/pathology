@@ -81,7 +81,6 @@ class StaffRoleManager extends Component
             ],
             'phone' => [
                 'required', 'numeric', 'digits:10',
-                Rule::unique('users')->ignore($this->staff_id),
             ],
             'password' => $this->staff_id ? 'nullable|min:6' : 'required|min:6',
             'role_id' => 'required|exists:roles,id',

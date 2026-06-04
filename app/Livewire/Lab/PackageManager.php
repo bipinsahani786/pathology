@@ -27,9 +27,13 @@ class PackageManager extends Component
     public function delete($id)
     {
         $this->authorize('delete test_packages');
-        $labTestService = new LabTestService;
-        $labTestService->deleteTest($id);
-        session()->flash('message', 'Package deleted successfully.');
+        try {
+            $labTestService = new LabTestService;
+            $labTestService->deleteTest($id);
+            session()->flash('message', 'Package deleted successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
     }
 
     public function toggleStatus($id)

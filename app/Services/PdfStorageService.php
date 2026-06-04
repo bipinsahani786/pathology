@@ -20,7 +20,7 @@ class PdfStorageService
      */
     public function storeReportPdf(TestReport $report, $template = null)
     {
-        if (! $template) {
+        if (!$template) {
             $template = Configuration::getFor('report_template', 'new', $report->invoice->company_id);
         }
         $report->load([
@@ -51,7 +51,7 @@ class PdfStorageService
         // ── Barcode ─────────────────────────────────────────────────────────
         $generator = new BarcodeGeneratorPNG;
         $barcodeBase64 = base64_encode($generator->getBarcode($report->invoice->invoice_number, $generator::TYPE_CODE_128, 2, 40));
-        $barcodeUri = 'data:image/png;base64,'.$barcodeBase64;
+        $barcodeUri = 'data:image/png;base64,' . $barcodeBase64;
 
         // ── Group Results ───────────────────────────────────────────────────
         $results = $report->results;
@@ -61,7 +61,7 @@ class PdfStorageService
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function ($r) {
-                    return $r->invoice_item_id.'_'.$r->lab_test_id;
+                    return $r->invoice_item_id . '_' . $r->lab_test_id;
                 })->map(function ($testGroup) use ($report) {
                     $first = $testGroup->first();
                     $itemId = $first->invoice_item_id;
@@ -90,8 +90,8 @@ class PdfStorageService
             ];
         });
 
-        $viewName = 'pdf.report-'.$template;
-        if (! view()->exists($viewName)) {
+        $viewName = 'pdf.report-' . $template;
+        if (!view()->exists($viewName)) {
             $viewName = 'pdf.report-new';
         }
 
@@ -109,7 +109,7 @@ class PdfStorageService
             'barcodeUri' => $barcodeUri,
         ])->setPaper('A4', 'portrait');
 
-        $path = "reports/{$companyId}/".md5($report->invoice_id).'.pdf';
+        $path = "reports/{$companyId}/" . md5($report->invoice_id) . '.pdf';
         Storage::disk('r2')->put($path, $pdf->output());
 
         $report->update(['pdf_path' => $path]);
@@ -126,7 +126,7 @@ class PdfStorageService
         $companyId = $invoice->company_id;
         $settings = $this->getSettings($companyId);
 
-        if (! $template) {
+        if (!$template) {
             $template = Configuration::getFor('bill_template', 'classic', $companyId);
         }
 
@@ -144,10 +144,10 @@ class PdfStorageService
         // ── Barcode ─────────────────────────────────────────────────────────
         $generator = new BarcodeGeneratorPNG;
         $barcodeBase64 = base64_encode($generator->getBarcode($invoice->invoice_number, $generator::TYPE_CODE_128, 2, 40));
-        $barcodeUri = 'data:image/png;base64,'.$barcodeBase64;
+        $barcodeUri = 'data:image/png;base64,' . $barcodeBase64;
 
-        $viewName = 'pdf.invoice-'.$template;
-        if (! view()->exists($viewName)) {
+        $viewName = 'pdf.invoice-' . $template;
+        if (!view()->exists($viewName)) {
             $viewName = 'pdf.invoice-classic';
         }
 
@@ -163,7 +163,7 @@ class PdfStorageService
             'barcodeUri' => $barcodeUri,
         ])->setPaper('A4', 'portrait');
 
-        $path = "invoices/{$companyId}/".md5($invoice->id).'.pdf';
+        $path = "invoices/{$companyId}/" . md5($invoice->id) . '.pdf';
         Storage::disk('r2')->put($path, $pdf->output());
 
         $invoice->update(['pdf_path' => $path]);
@@ -220,6 +220,7 @@ class PdfStorageService
             'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
+            'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId) === '1',
         ];
     }
 }

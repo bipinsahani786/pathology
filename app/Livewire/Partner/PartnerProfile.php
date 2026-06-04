@@ -47,7 +47,7 @@ class PartnerProfile extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email,'.$user->id,
-            'phone' => 'nullable|string|max:15|unique:users,phone,'.$user->id,
+            'phone' => 'nullable|string|max:15',
             'new_photo' => 'nullable|image|max:1024',
         ]);
 

@@ -109,7 +109,6 @@ class PatientManager extends Component
                 'nullable',
                 'numeric',
                 'digits:10',
-                Rule::unique('users', 'phone')->ignore($this->user_id),
             ],
             'email' => [
                 'nullable',
@@ -222,6 +221,12 @@ class PatientManager extends Component
     public function delete($id)
     {
         $this->authorize('delete patients');
+
+        if (\App\Models\Invoice::where('patient_id', $id)->exists()) {
+            session()->flash('error', 'Cannot delete patient as they have associated billing records.');
+            return;
+        }
+
         // Because of 'cascadeOnDelete' in migration, deleting the user deletes the profile too.
         User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Patient deleted successfully.');

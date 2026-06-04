@@ -155,6 +155,8 @@ class SettingsManager extends Component
 
     public $report_show_interpretation = true;
 
+    public $report_show_note = true;
+
     public $report_flag_high_color = '#cc0000';
 
     public $report_flag_low_color = '#0055aa';
@@ -214,6 +216,19 @@ class SettingsManager extends Component
     public $module_inventory = true;
 
     public $modulesSaved = false;
+
+    // ==========================================
+    // WHATSAPP SETTINGS
+    // ==========================================
+    public $whatsapp_share_mode = 'pdf';
+
+    public $whatsapp_invoice_message = '';
+
+    public $whatsapp_report_message = '';
+
+    public $whatsappSaved = false;
+
+    public $previewType = 'invoice';
 
     // Report Signatory (Global 1)
     public $authorized_signatory_name;
@@ -343,6 +358,7 @@ class SettingsManager extends Component
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous');
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1') === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1') === '1';
+        $this->report_show_note = Configuration::getFor('report_show_note', '1') === '1';
 
         $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000');
         $this->report_flag_low_color = Configuration::getFor('report_flag_low_color', '#0055aa');
@@ -402,6 +418,11 @@ class SettingsManager extends Component
 
         // UI Scaling
         $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100);
+
+        // WhatsApp Settings
+        $this->whatsapp_share_mode = Configuration::getFor('whatsapp_share_mode', 'pdf');
+        $this->whatsapp_invoice_message = Configuration::getFor('whatsapp_invoice_message', '');
+        $this->whatsapp_report_message = Configuration::getFor('whatsapp_report_message', '');
 
         // Branch Admin Restriction: Force default tab to staff
         if (auth()->user()->hasRole('branch_admin')) {
@@ -655,6 +676,7 @@ class SettingsManager extends Component
         Configuration::setFor('report_page_break_style', $this->report_page_break_style);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0');
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0');
+        Configuration::setFor('report_show_note', $this->report_show_note ? '1' : '0');
 
         Configuration::setFor('report_flag_high_color', $this->report_flag_high_color);
         Configuration::setFor('report_flag_low_color', $this->report_flag_low_color);
@@ -812,6 +834,34 @@ class SettingsManager extends Component
         $this->branchControlsSaved = true;
     }
 
+    // ==========================================
+    // SAVE WHATSAPP SETTINGS
+    // ==========================================
+    public function saveWhatsappSettings()
+    {
+        $this->authorize('edit settings');
+
+        // SaaS Plan Enforcement
+        $hasWhatsappCustom = auth()->user()->company->plan?->features['whatsapp_custom'] ?? false;
+        if (! $hasWhatsappCustom) {
+            session()->flash('error', 'Plan Restriction: WhatsApp message customization is not available on your current plan.');
+
+            return;
+        }
+
+        $this->validate([
+            'whatsapp_share_mode' => 'required|string|in:link,pdf',
+            'whatsapp_invoice_message' => 'nullable|string|max:1000',
+            'whatsapp_report_message' => 'nullable|string|max:1000',
+        ]);
+
+        Configuration::setFor('whatsapp_share_mode', $this->whatsapp_share_mode);
+        Configuration::setFor('whatsapp_invoice_message', $this->whatsapp_invoice_message);
+        Configuration::setFor('whatsapp_report_message', $this->whatsapp_report_message);
+
+        $this->whatsappSaved = true;
+    }
+
     public function removeHeaderImage()
     {
         $this->pdf_header_image = null;
@@ -886,6 +936,41 @@ class SettingsManager extends Component
             'Times-Roman' => 'Times New Roman (Serif)',
             'Courier' => 'Courier (Monospace)',
         ];
+    }
+
+    public function getWhatsappInvoicePreviewProperty()
+    {
+        $text = $this->whatsapp_invoice_message ?: "Hi *{patient_name}*, your invoice *#{invoice_no}* from *{lab_name}* is ready. \n\nYou can download it here: {url}";
+        $url = ($this->whatsapp_share_mode === 'link')
+            ? 'https://yourlab.com/portal/login'
+            : 'https://yourlab.com/bill/aF82j';
+
+        return $this->formatPreviewMessage($text, $url);
+    }
+
+    public function getWhatsappReportPreviewProperty()
+    {
+        $text = $this->whatsapp_report_message ?: "Hi *{patient_name}*, your test report for invoice *#{invoice_no}* from *{lab_name}* is ready. \n\nYou can view it here: {url}";
+        $url = ($this->whatsapp_share_mode === 'link')
+            ? 'https://yourlab.com/portal/login'
+            : 'https://yourlab.com/v/aF82j';
+
+        return $this->formatPreviewMessage($text, $url);
+    }
+
+    private function formatPreviewMessage($text, $url)
+    {
+        $safeText = e($text);
+
+        $processed = str_replace(
+            ['{patient_name}', '{invoice_no}', '{lab_name}', '{url}'],
+            ['John Doe', 'INV-2026-0001', e($this->lab_name ?? 'My Pathology Lab'), e($url)],
+            $safeText
+        );
+
+        $processed = preg_replace('/\*(.*?)\*/', '<strong>$1</strong>', $processed);
+        
+        return nl2br($processed, false);
     }
 
     public function render()

@@ -33,6 +33,8 @@ class PlanManager extends Component
 
     public $has_custom_invoice = false;
 
+    public $has_whatsapp_custom = false;
+
     public $isModalOpen = false;
 
     /**
@@ -59,6 +61,7 @@ class PlanManager extends Component
         $this->max_collection_centers = 1;
         $this->has_inventory = false;
         $this->has_custom_invoice = false;
+        $this->has_whatsapp_custom = false;
     }
 
     public function resetFields()
@@ -88,6 +91,7 @@ class PlanManager extends Component
             'max_collection_centers' => 'required|integer',
             'has_inventory' => 'boolean',
             'has_custom_invoice' => 'boolean',
+            'has_whatsapp_custom' => 'boolean',
         ]);
 
         // Pack fixed features into the JSON format for the service
@@ -99,6 +103,7 @@ class PlanManager extends Component
             ['key' => 'collection_centers', 'value' => $this->max_collection_centers],
             ['key' => 'inventory', 'value' => $this->has_inventory],
             ['key' => 'custom_invoice', 'value' => $this->has_custom_invoice],
+            ['key' => 'whatsapp_custom', 'value' => $this->has_whatsapp_custom],
         ];
 
         // Use the service to handle the business logic
@@ -127,6 +132,7 @@ class PlanManager extends Component
         $this->max_collection_centers = $f['collection_centers'] ?? 1;
         $this->has_inventory = $f['inventory'] ?? false;
         $this->has_custom_invoice = $f['custom_invoice'] ?? false;
+        $this->has_whatsapp_custom = $f['whatsapp_custom'] ?? false;
 
         $this->isModalOpen = true;
     }

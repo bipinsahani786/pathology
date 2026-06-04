@@ -182,6 +182,7 @@ class ReportPdfController extends Controller
             'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
+            'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId) === '1',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)

@@ -5,6 +5,126 @@
         .opacity-50 { opacity: 0.5; }
         .btn-status { border-bottom: 2px solid transparent; }
         .dropdown-item:hover { background-color: #f8f9fa; }
+
+        .action-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-btn {
+            width: 35px !important;
+            height: 35px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease-in-out !important;
+            border: 1.5px solid transparent !important;
+            background-color: #f8f9fa !important;
+        }
+        .action-btn i, .action-btn span {
+            font-size: 18px !important;
+            line-height: 1 !important;
+            display: inline-block !important;
+        }
+        .action-btn-warning {
+            color: #d97706 !important;
+            background-color: #fef3c7 !important;
+            border-color: #fde68a !important;
+        }
+        .action-btn-warning:hover {
+            color: #ffffff !important;
+            background-color: #d97706 !important;
+            border-color: #d97706 !important;
+        }
+        .action-btn-info {
+            color: #0891b2 !important;
+            background-color: #ecfeff !important;
+            border-color: #cffafe !important;
+        }
+        .action-btn-info:hover {
+            color: #ffffff !important;
+            background-color: #0891b2 !important;
+            border-color: #0891b2 !important;
+        }
+        .action-btn-success {
+            color: #16a34a !important;
+            background-color: #f0fdf4 !important;
+            border-color: #bbf7d0 !important;
+        }
+        .action-btn-success:hover {
+            color: #ffffff !important;
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .action-btn-whatsapp {
+            color: #25d366 !important;
+            background-color: #e8f9ee !important;
+            border-color: #c3f2d2 !important;
+        }
+        .action-btn-whatsapp:hover {
+            color: #ffffff !important;
+            background-color: #25d366 !important;
+            border-color: #25d366 !important;
+        }
+        .action-btn-primary {
+            color: #2563eb !important;
+            background-color: #eff6ff !important;
+            border-color: #bfdbfe !important;
+        }
+        .action-btn-primary:hover {
+            color: #ffffff !important;
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+        }
+        .action-btn-danger {
+            color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            border-color: #fee2e2 !important;
+        }
+        .action-btn-danger:hover {
+            color: #ffffff !important;
+            background-color: #dc2626 !important;
+            border-color: #dc2626 !important;
+        }
+        .action-btn.dropdown-toggle::after {
+            display: none !important;
+        }
+        .action-btn-muted {
+            color: #6b7280 !important;
+            background-color: #f3f4f6 !important;
+            border-color: #e5e7eb !important;
+        }
+        .action-btn-muted:hover {
+            color: #ffffff !important;
+            background-color: #6b7280 !important;
+            border-color: #6b7280 !important;
+        }
+
+        .action-btn-text {
+            height: 35px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 14px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease-in-out !important;
+            border: 1.5px solid #bbf7d0 !important;
+            color: #16a34a !important;
+            background-color: #f0fdf4 !important;
+        }
+        .action-btn-text:hover {
+            color: #ffffff !important;
+            background-color: #16a34a !important;
+            border-color: #16a34a !important;
+        }
+        .action-btn-text i {
+            font-size: 16px !important;
+            margin-right: 5px !important;
+        }
     </style>
     {{-- ======================== PAGE HEADER ======================== --}}
     <div class="page-header">
@@ -180,51 +300,67 @@
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive shadow-sm">
-                    <table class="table table-hover mb-0 align-middle" style="min-width: 1250px;">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead class="bg-light">
                             <tr class="fs-11 fw-bold text-uppercase text-muted">
-                                <th class="ps-3" style="width:50px;">#</th>
-                                <th style="width:140px;">Invoice #</th>
-                                <th style="width:180px;">Patient</th>
-                                <th>Tests</th>
-                                <th class="text-end" style="width:100px;">Amount</th>
-                                <th class="text-end" style="width:100px;">Paid</th>
-                                <th class="text-end" style="width:100px;">Due</th>
-                                <th class="text-center" style="width:110px;">Status</th>
-                                <th style="width:110px;">Date</th>
-                                <th class="text-center" style="width:130px;">Sample Status</th>
-                                <th class="text-center" style="width:160px;">Actions</th>
+                                <th class="ps-3" style="width:130px;">Invoice #</th>
+                                <th style="width:150px;">Patient</th>
+                                <th style="width:180px;">Tests</th>
+                                <th class="text-center" style="width:90px;">Billing</th>
+                                <th class="text-center" style="width:95px;">Payment</th>
+                                <th class="text-center" style="width:100px;">Sample</th>
+                                <th class="text-center" style="width:220px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($invoices as $i => $inv)
                                 <tr class="fs-12 {{ $inv->status === 'Cancelled' ? 'opacity-50 grayscale' : '' }}">
-                                    <td class="ps-3 text-muted">{{ $invoices->firstItem() + $i }}</td>
-                                    <td>
+                                    <td class="ps-3">
                                         <span class="fw-bold text-primary">{{ $inv->invoice_number }}</span>
                                         @if($inv->status === 'Cancelled')
                                             <span class="badge bg-danger fs-9 ms-1">CANCELLED</span>
                                         @endif
-                                        <div class="fs-11 fw-bold text-dark"><i
-                                                class="feather-hash me-1 text-muted fs-10"></i>{{ $inv->barcode }}</div>
+                                        <div class="fs-10 text-muted mt-1"><i class="feather-hash me-1"></i>{{ $inv->barcode }}</div>
+                                        <div class="fs-10 text-muted"><i class="feather-clock me-1"></i>{{ $inv->invoice_date->format('d M y, h:i A') }}</div>
                                     </td>
                                     <td>
                                         <div class="fw-bold text-dark">{{ $inv->patient->name }}</div>
                                         <div class="badge bg-soft-info text-info fs-9 fw-bold p-1">{{ $inv->patient->formatted_id }}</div>
                                         <div class="fs-11 text-muted"><i class="feather-phone me-1 fs-10"></i>{{ $inv->patient->phone }}</div>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark rounded-pill fs-10">{{ $inv->items->count() }}
-                                            tests</span>
-                                        <div class="fs-10 text-muted">
-                                            {{ $inv->items->pluck('test_name')->take(2)->implode(', ') }}{{ $inv->items->count() > 2 ? '...' : '' }}
+                                    <td style="padding: 10px 8px;">
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach($inv->items->take(4) as $item)
+                                                <div style="
+                                                    font-size: 11.5px;
+                                                    font-weight: 600;
+                                                    color: #1e3a5f;
+                                                    background: #eef4ff;
+                                                    border-radius: 4px;
+                                                    padding: 3px 8px;
+                                                    white-space: normal;
+                                                    line-height: 1.4;
+                                                    max-width: 190px;
+                                                ">
+                                                    {{ $item->test_name }}
+                                                </div>
+                                            @endforeach
+                                            @if($inv->items->count() > 4)
+                                                <div style="font-size: 11px; color: #6c757d; font-weight: 600; padding-left: 3px;">
+                                                    +{{ $inv->items->count() - 4 }} more tests
+                                                </div>
+                                            @endif
                                         </div>
                                     </td>
-                                    <td class="text-end fw-bold">₹{{ number_format($inv->total_amount, 0) }}</td>
-                                    <td class="text-end fw-bold" style="color:#198754;">
-                                        ₹{{ number_format($inv->paid_amount, 0) }}</td>
-                                    <td class="text-end fw-bold {{ $inv->due_amount > 0 ? 'text-danger' : '' }}">
-                                        {{ $inv->due_amount > 0 ? '₹' . number_format($inv->due_amount, 0) : '—' }}
+
+                                    <td class="text-center">
+                                        <div class="fw-bold text-dark fs-13">₹{{ number_format($inv->total_amount, 0) }}</div>
+                                        <div class="fs-10 text-success fw-bold">↑ ₹{{ number_format($inv->paid_amount, 0) }}</div>
+                                        @if($inv->due_amount > 0)
+                                            <div class="fs-10 text-danger fw-bold">↓ ₹{{ number_format($inv->due_amount, 0) }}</div>
+                                        @else
+                                            <div class="fs-10 text-muted">—</div>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         @php
@@ -235,13 +371,10 @@
                                             ];
                                             $s = $statusMap[$inv->payment_status] ?? ['bg' => 'bg-secondary', 'icon' => ''];
                                         @endphp
-                                        <span class="badge {{ $s['bg'] }} rounded-pill fs-10 px-2">{{ $s['icon'] }}
-                                            {{ $inv->payment_status }}</span>
-                                        <div class="fs-9 text-muted">{{ $inv->collection_type ?? '' }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="fs-11">{{ $inv->invoice_date->format('d M Y') }}</div>
-                                        <div class="fs-10 text-muted">{{ $inv->invoice_date->format('h:i A') }}</div>
+                                        <span class="badge {{ $s['bg'] }} rounded-pill fs-10 px-2">{{ $s['icon'] }} {{ $inv->payment_status }}</span>
+                                        @if($inv->collection_type)
+                                            <div class="fs-9 text-muted mt-1">{{ $inv->collection_type }}</div>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <div class="dropdown">
@@ -280,24 +413,25 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center gap-1">
+                                        <div class="d-flex justify-content-center gap-2">
                                             @if(auth()->user()->can('edit invoices') || auth()->user()->collection_center_id)
                                                 <a href="{{ route('lab.invoice.edit', $inv->id) }}" wire:navigate
-                                                    class="btn btn-sm btn-outline-warning px-2" title="Edit Invoice">
-                                                    <i class="feather-edit-2 fs-12"></i>
+                                                    class="action-btn action-btn-warning" title="Edit Invoice">
+                                                    <i class="feather-edit-2"></i>
                                                 </a>
                                                 <a href="{{ route('lab.pos.summary', $inv->id) }}" wire:navigate
-                                                    class="btn btn-sm btn-outline-info px-2" title="View Summary">
-                                                    <i class="feather-eye fs-12"></i>
+                                                    class="action-btn action-btn-info" title="View Summary">
+                                                    <i class="feather-eye"></i>
                                                 </a>
                                                 <a href="{{ route('lab.reports.entry', $inv->id) }}" wire:navigate
-                                                    class="btn btn-sm btn-outline-success px-2" title="Enter Results">
-                                                    <i class="feather-edit-3 fs-12"></i>
+                                                    class="action-btn action-btn-success" title="Enter Results">
+                                                    <i class="feather-edit-3"></i>
                                                 </a>
                                             @endif
-                                                <button class="btn btn-sm btn-outline-success dropdown-toggle px-2"
+                                            <div class="dropdown">
+                                                <button class="action-btn action-btn-whatsapp dropdown-toggle"
                                                     type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" @if(!$inv->patient->phone) disabled title="Phone missing" @endif>
-                                                    <i class="bi bi-whatsapp fs-12"></i>
+                                                    <i class="bi bi-whatsapp"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                     <li><a class="dropdown-item fs-11" href="{{ $inv->getWhatsappLink('invoice') }}" target="_blank"><i class="feather-file-text me-2 text-success"></i>Share Invoice</a></li>
@@ -307,9 +441,9 @@
                                                 </ul>
                                             </div>
                                             <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle px-2"
+                                                <button class="action-btn action-btn-primary dropdown-toggle"
                                                     type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
-                                                    <i class="feather-printer fs-12"></i>
+                                                    <i class="feather-printer"></i>
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
                                                     <li>
@@ -331,15 +465,14 @@
                                                         </a>
                                                     </li>
                                                 </ul>
-
                                             </div>
                                             @if($inv->status !== 'Cancelled' && !in_array($inv->sample_status, ['Processing', 'Ready']))
                                                 @if(auth()->user()->can('delete invoices') || auth()->user()->collection_center_id)
                                                     <button 
                                                         onclick="confirm('Are you sure you want to CANCEL this invoice? This action will VOID the invoice and REVERSE all credited commissions in Doctor/Agent wallets.') || event.stopImmediatePropagation()"
                                                         wire:click="cancelInvoice({{ $inv->id }})"
-                                                        class="btn btn-sm btn-outline-danger px-2" title="Cancel Invoice">
-                                                        <i class="feather-x-circle fs-12"></i>
+                                                        class="action-btn action-btn-danger" title="Cancel Invoice">
+                                                        <i class="feather-x-circle"></i>
                                                     </button>
                                                 @endif
                                             @endif
@@ -348,7 +481,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center py-5">
+                                    <td colspan="7" class="text-center py-5">
                                         <i class="feather-inbox text-muted" style="font-size:48px;"></i>
                                         <div class="text-muted fs-13 mt-2">No invoices found</div>
                                         <a href="{{ route('lab.pos') }}" wire:navigate

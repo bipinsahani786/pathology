@@ -95,7 +95,6 @@ class AgentManager extends Component
                 'nullable',
                 'numeric',
                 'digits:10',
-                Rule::unique('users', 'phone')->ignore($this->user_id),
             ],
             'email' => [
                 'nullable',
@@ -209,6 +208,12 @@ class AgentManager extends Component
     public function delete($id)
     {
         $this->authorize('delete agents');
+
+        if (\App\Models\Invoice::where('referred_by_agent_id', $id)->exists()) {
+            session()->flash('error', 'Cannot delete agent as they are linked to existing invoices.');
+            return;
+        }
+
         User::where('company_id', auth()->user()->company_id)->findOrFail($id)->delete();
         session()->flash('message', 'Agent deleted successfully.');
     }
