@@ -122,9 +122,13 @@ class LabTestManager extends Component
     public function delete($id)
     {
         $this->authorize('delete lab_tests');
-        $labTestService = new LabTestService;
-        $labTestService->deleteTest($id);
-        session()->flash('message', 'Lab test deleted successfully.');
+        try {
+            $labTestService = new LabTestService;
+            $labTestService->deleteTest($id);
+            session()->flash('message', 'Lab test deleted successfully.');
+        } catch (\Exception $e) {
+            session()->flash('error', $e->getMessage());
+        }
     }
 
     public function toggleStatus($id)

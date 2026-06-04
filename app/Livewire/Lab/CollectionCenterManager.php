@@ -106,7 +106,6 @@ class CollectionCenterManager extends Component
                 'nullable',
                 'numeric',
                 'digits:10',
-                Rule::unique('users', 'phone')->ignore($this->user_id),
             ],
             'email' => [
                 'nullable',

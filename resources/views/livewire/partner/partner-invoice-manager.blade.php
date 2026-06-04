@@ -129,30 +129,8 @@
                                     $patientPhone = $inv->patient->phone ?? $inv->patient_phone ?? $inv->phone ?? null;
 
                                     // Robust WhatsApp Sharing Links
-                                    $whatsappInvoiceLink = '';
-                                    $whatsappReportLink = '';
-                                    
-                                    if ($inv instanceof \App\Models\Invoice) {
-                                        $whatsappInvoiceLink = $inv->getWhatsappLink('invoice');
-                                        $whatsappReportLink = $inv->getWhatsappLink('report');
-                                    } else {
-                                        if ($patientPhone) {
-                                            $cleanPhone = preg_replace('/[^0-9]/', '', $patientPhone);
-                                            if (strlen($cleanPhone) == 10) {
-                                                $cleanPhone = '91' . $cleanPhone;
-                                            }
-                                            
-                                            $labName = auth()->user()->company->name ?? 'Lab';
-                                            $invoiceNo = $inv->invoice_number;
-                                            $hash = base64_encode($inv->id);
-                                            
-                                            $invoiceUrl = route('public.bill.download', ['hash' => $hash]);
-                                            $reportUrl = route('public.report.download', ['hash' => $hash]);
-                                            
-                                            $whatsappInvoiceLink = "https://wa.me/{$cleanPhone}?text=" . urlencode("Hi *{$patientName}*, your invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can download it here: {$invoiceUrl}");
-                                            $whatsappReportLink = "https://wa.me/{$cleanPhone}?text=" . urlencode("Hi *{$patientName}*, your test report for invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can view it here: {$reportUrl}");
-                                        }
-                                    }
+                                    $whatsappInvoiceLink = $inv->getWhatsappLink('invoice');
+                                    $whatsappReportLink = $inv->getWhatsappLink('report');
                                 @endphp
                                 <tr class="border-bottom border-light">
                                     <td class="ps-4">

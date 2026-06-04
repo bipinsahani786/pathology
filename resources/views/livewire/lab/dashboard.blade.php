@@ -332,6 +332,19 @@
         @endif
         
         @if($showStats)
+        {{-- Hidden container to pass reactive data to ChartJS without script re-evaluation issues --}}
+        <div id="dashboard-chart-data" class="d-none"
+             data-revenue-labels="{{ json_encode($chartLabels) }}"
+             data-revenue-values="{{ json_encode($revenueValues) }}"
+             data-profit-values="{{ json_encode($profitValues) }}"
+             data-dept-labels="{{ json_encode($deptLabels) }}"
+             data-dept-counts="{{ json_encode($deptCounts) }}"
+             data-pay-labels="{{ json_encode($payLabels) }}"
+             data-pay-values="{{ json_encode($payValues) }}"
+             data-channel-labels="{{ json_encode($channelLabels) }}"
+             data-channel-values="{{ json_encode($channelValues) }}">
+        </div>
+
         {{-- Header & Filters --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-4">
             <div>
@@ -721,6 +734,37 @@
                 const isDark = root.classList.contains('app-skin-dark');
                 const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
 
+                const dataEl = document.getElementById('dashboard-chart-data');
+                if (!dataEl) {
+                    console.warn('Dashboard chart data element not found.');
+                    return;
+                }
+
+                // Read values dynamically from the data attributes
+                let chartLabels = [];
+                let revenueValues = [];
+                let profitValues = [];
+                let deptLabels = [];
+                let deptCounts = [];
+                let payLabels = [];
+                let payValues = [];
+                let channelLabels = [];
+                let channelValues = [];
+
+                try {
+                    chartLabels = JSON.parse(dataEl.getAttribute('data-revenue-labels') || '[]');
+                    revenueValues = JSON.parse(dataEl.getAttribute('data-revenue-values') || '[]');
+                    profitValues = JSON.parse(dataEl.getAttribute('data-profit-values') || '[]');
+                    deptLabels = JSON.parse(dataEl.getAttribute('data-dept-labels') || '[]');
+                    deptCounts = JSON.parse(dataEl.getAttribute('data-dept-counts') || '[]');
+                    payLabels = JSON.parse(dataEl.getAttribute('data-pay-labels') || '[]');
+                    payValues = JSON.parse(dataEl.getAttribute('data-pay-values') || '[]');
+                    channelLabels = JSON.parse(dataEl.getAttribute('data-channel-labels') || '[]');
+                    channelValues = JSON.parse(dataEl.getAttribute('data-channel-values') || '[]');
+                } catch (e) {
+                    console.error('Error parsing chart data attributes:', e);
+                }
+
                 // Helper to safe-destroy existing charts
                 const destroyIfExists = (id) => {
                     const chart = Chart.getChart(id);
@@ -739,18 +783,18 @@
                     new Chart(mainCtx, {
                         type: 'line',
                         data: {
-                            labels: @json($chartLabels),
+                            labels: chartLabels,
                             datasets: [
                                 {
                                     label: 'Revenue',
-                                    data: @json($revenueValues),
+                                    data: revenueValues,
                                     borderColor: primaryColor,
                                     backgroundColor: isDark ? 'rgba(67, 97, 238, 0.1)' : 'rgba(67, 97, 238, 0.05)',
                                     fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#fff'
                                 },
                                 {
                                     label: 'Profit',
-                                    data: @json($profitValues),
+                                    data: profitValues,
                                     borderColor: successColor,
                                     backgroundColor: 'transparent',
                                     fill: false, tension: 0.4, borderWidth: 3, borderDash: [5, 5], pointRadius: 0
@@ -789,9 +833,9 @@
                     new Chart(deptCtx, {
                         type: 'doughnut',
                         data: {
-                            labels: @json($deptLabels),
+                            labels: deptLabels,
                             datasets: [{
-                                data: @json($deptCounts),
+                                data: deptCounts,
                                 backgroundColor: ['#4361ee', '#7209b7', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6'],
                                 borderWidth: isDark ? 4 : 2,
                                 borderColor: isDark ? '#1a1a2e' : '#fff',
@@ -818,9 +862,9 @@
                     new Chart(payCtx, {
                         type: 'doughnut',
                         data: {
-                            labels: @json($payLabels),
+                            labels: payLabels,
                             datasets: [{
-                                data: @json($payValues),
+                                data: payValues,
                                 backgroundColor: ['#4361ee', '#3b82f6', '#8b5cf6', '#ec4899', '#f97316'],
                                 borderWidth: isDark ? 4 : 2,
                                 borderColor: isDark ? '#1a1a2e' : '#fff',
@@ -846,10 +890,10 @@
                     new Chart(channelCtx, {
                         type: 'bar',
                         data: {
-                            labels: @json($channelLabels),
+                            labels: channelLabels,
                             datasets: [{
                                 label: 'Invoices',
-                                data: @json($channelValues),
+                                data: channelValues,
                                 backgroundColor: primaryColor,
                                 borderRadius: 12, barThickness: 20
                             }]

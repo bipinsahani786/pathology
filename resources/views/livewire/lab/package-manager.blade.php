@@ -26,6 +26,14 @@
             </div>
         @endif
 
+        @if (session()->has('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
+                <i class="feather-alert-triangle fs-4 text-danger me-2"></i>
+                <strong>{{ session('error') }}</strong>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4 overflow-hidden">
             
             <div class="card-header bg-white py-3 border-bottom-0">

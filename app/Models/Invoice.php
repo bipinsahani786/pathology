@@ -138,17 +138,50 @@ class Invoice extends Model
             $phone = '91'.$phone; // Default to India prefix if 10 digits
         }
 
+        $companyId = $this->company_id;
         $labName = $this->company->name ?? 'Lab';
         $patientName = $this->patient->name;
         $invoiceNo = $this->invoice_number;
         $hash = base64_encode($this->id);
 
-        if ($type === 'invoice') {
-            $url = route('public.bill.download', ['hash' => $hash]);
-            $message = "Hi *{$patientName}*, your invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can download it here: {$url}";
+        // Check if plan enables customization
+        $hasWhatsappCustom = $this->company->plan?->features['whatsapp_custom'] ?? false;
+
+        $shareMode = 'pdf'; // Default to direct PDF for guest download
+        $customTemplate = '';
+
+        if ($hasWhatsappCustom) {
+            $shareMode = Configuration::getFor('whatsapp_share_mode', 'pdf', $companyId);
+            if ($type === 'invoice') {
+                $customTemplate = Configuration::getFor('whatsapp_invoice_message', '', $companyId);
+            } else {
+                $customTemplate = Configuration::getFor('whatsapp_report_message', '', $companyId);
+            }
+        }
+
+        // Generate appropriate URL (both must be guest-accessible unless choosing secure portal link)
+        if ($shareMode === 'link') {
+            $url = route('portal.login');
         } else {
-            $url = route('public.report.download', ['hash' => $hash]);
-            $message = "Hi *{$patientName}*, your test report for invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can view it here: {$url}";
+            $url = ($type === 'invoice')
+                ? route('public.bill.download', ['hash' => $hash])
+                : route('public.report.download', ['hash' => $hash]);
+        }
+
+        if ($type === 'invoice') {
+            $defaultMsg = "Hi *{$patientName}*, your invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can download it here: {$url}";
+        } else {
+            $defaultMsg = "Hi *{$patientName}*, your test report for invoice *#{$invoiceNo}* from *{$labName}* is ready. \n\nYou can view it here: {$url}";
+        }
+
+        if (!empty($customTemplate)) {
+            $message = str_replace(
+                ['{patient_name}', '{invoice_no}', '{lab_name}', '{url}'],
+                [$patientName, $invoiceNo, $labName, $url],
+                $customTemplate
+            );
+        } else {
+            $message = $defaultMsg;
         }
 
         return "https://wa.me/{$phone}?text=".urlencode($message);

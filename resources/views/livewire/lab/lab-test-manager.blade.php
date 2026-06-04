@@ -34,6 +34,14 @@
             </div>
         @endif
 
+        @if (session()->has('error'))
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center py-3 mb-4">
+                <i class="feather-alert-triangle fs-4 text-danger me-3"></i>
+                <div class="fw-bold">{{ session('error') }}</div>
+                <button type="button" class="btn-close ms-auto shadow-none" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <!-- Filter Card -->
         <div class="card stretch stretch-full border-0 shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white py-3 border-bottom-0">

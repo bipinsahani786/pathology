@@ -669,7 +669,7 @@ class PosManager extends Component
         $this->modalError = '';
         $this->validate([
             'new_name' => 'required|string|max:255',
-            'new_phone' => 'nullable|numeric|digits:10|unique:users,phone,'.($this->editingPatientId ?? 'NULL'),
+            'new_phone' => 'nullable|numeric|digits:10',
             'new_age' => 'required|numeric|min:1|max:150',
             'new_age_type' => 'required|in:Years,Months,Days',
         ]);
@@ -782,7 +782,7 @@ class PosManager extends Component
         $this->modalError = '';
         $this->validate([
             'new_doc_name' => 'required|string|max:255',
-            'new_doc_phone' => 'nullable|numeric|digits:10|unique:users,phone,'.($this->editingDoctorId ?? 'NULL'),
+            'new_doc_phone' => 'nullable|numeric|digits:10',
         ]);
 
         DB::beginTransaction();
@@ -861,7 +861,7 @@ class PosManager extends Component
         $this->modalError = '';
         $this->validate([
             'new_agent_name' => 'required|string|max:255',
-            'new_agent_phone' => 'nullable|numeric|digits:10|unique:users,phone,'.($this->editingAgentId ?? 'NULL'),
+            'new_agent_phone' => 'nullable|numeric|digits:10',
         ]);
 
         DB::beginTransaction();
@@ -1054,7 +1054,11 @@ class PosManager extends Component
             $totalB2bForComm = 0;
             $cartItemTotal = 0;
             foreach ($this->cart as $item) {
-                $totalB2bForComm += (float) data_get($testPrices->get($item['id']), 'b2b_price', 0);
+                $b2bVal = (float) data_get($testPrices->get($item['id']), 'b2b_price', 0);
+                if ($b2bVal <= 0) {
+                    $b2bVal = (float) ($item['price'] ?? 0);
+                }
+                $totalB2bForComm += $b2bVal;
                 $cartItemTotal += (float) ($item['price'] ?? 0);
             }
 
@@ -1077,6 +1081,9 @@ class PosManager extends Component
                 foreach ($this->cart as $item) {
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
+                    if ($itemB2b <= 0) {
+                        $itemB2b = (float) ($item['price'] ?? 0);
+                    }
 
                     // Apportion the net_payable across items based on cart price ratio to account for discounts fairly
                     $itemRatio = $cartItemTotal > 0 ? ((float) $item['price'] / $cartItemTotal) : 0;
@@ -1116,6 +1123,9 @@ class PosManager extends Component
                 foreach ($this->cart as $item) {
                     $testId = $item['id'];
                     $itemB2b = (float) data_get($testPrices->get($testId), 'b2b_price', 0);
+                    if ($itemB2b <= 0) {
+                        $itemB2b = (float) ($item['price'] ?? 0);
+                    }
 
                     $itemRatio = $cartItemTotal > 0 ? ((float) $item['price'] / $cartItemTotal) : 0;
                     $effectivePrice = $this->net_payable * $itemRatio;

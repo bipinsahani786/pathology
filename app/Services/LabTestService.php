@@ -124,12 +124,22 @@ class LabTestService
         return $test->is_active;
     }
 
-    /**
-     * Delete a test
-     */
     public function deleteTest($id)
     {
         $test = LabTest::findOrFail($id);
+
+        if (\App\Models\InvoiceItem::where('lab_test_id', $id)->exists()) {
+            throw new \Exception("Cannot delete test because it is linked to existing invoices.");
+        }
+
+        if (!$test->is_package) {
+            $isLinkedToPackage = LabTest::where('is_package', true)
+                ->whereJsonContains('linked_test_ids', (int)$id)
+                ->exists();
+            if ($isLinkedToPackage) {
+                throw new \Exception("Cannot delete test because it is included in existing test packages.");
+            }
+        }
 
         return $test->delete();
     }

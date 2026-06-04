@@ -3,9 +3,20 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Lab Report - {{ $invoice->invoice_number }}</title>
+    @php
+        $sigMode = $settings['report_signature_mode'] ?? 'global_bottom';
+        $showSignaturesEveryPage = ($settings['pdf_show_signatures'] ?? true) && ($sigMode === 'every_page');
+        
+        $footerMargin = '30px';
+        if ($settings['pdf_show_footer']) {
+            $footerMargin = $showSignaturesEveryPage ? '190px' : '100px';
+        } elseif ($showSignaturesEveryPage) {
+            $footerMargin = '130px';
+        }
+    @endphp
     <style>
         @page {
-            margin: {{ $settings['pdf_show_header'] ? '130px' : '30px' }} 30px {{ $settings['pdf_show_footer'] ? '100px' : '30px' }} 30px;
+            margin: {{ $settings['pdf_show_header'] ? '130px' : '30px' }} 30px {{ $footerMargin }} 30px;
         }
 
         body {
@@ -47,10 +58,10 @@
         /* Footer logic */
         footer {
             position: fixed;
-            bottom: -80px;
+            bottom: -{{ $showSignaturesEveryPage ? ($settings['pdf_show_footer'] ? '170px' : '110px') : '80px' }};
             left: 0;
             right: 0;
-            height: 60px;
+            height: {{ $showSignaturesEveryPage ? ($settings['pdf_show_footer'] ? '150px' : '90px') : '60px' }};
             font-size: 9px;
             color: #555;
             border-top: 1px solid #ddd;
@@ -236,6 +247,10 @@
             clear: both;
             display: table;
         }
+
+        .page-num:before {
+            content: counter(page);
+        }
     </style>
 </head>
 <body>
@@ -273,15 +288,85 @@
     @endif
 
     {{-- FOOTER --}}
-    @if($settings['pdf_show_footer'])
+    @if($settings['pdf_show_footer'] || $showSignaturesEveryPage)
         <footer>
-            @if($settings['pdf_footer_image'])
-                <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
-            @else
-                <div style="text-align: center;">
-                    <strong>{{ $company->name }}</strong> - {{ $company->tagline }}<br>
-                    <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>
+            @if($showSignaturesEveryPage)
+                @php
+                    $leftSig = null;
+                    $centerSig = null;
+                    $rightSig = null;
+
+                    if ($settings['sig_1_enabled'] ?? true) {
+                        $pos = $settings['sig_1_position'] ?? 'right';
+                        $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $settings['global_sig_1_path']];
+                        if ($pos === 'left') $leftSig = $sigData;
+                        elseif ($pos === 'center') $centerSig = $sigData;
+                        else $rightSig = $sigData;
+                    }
+                    if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
+                        $pos = $settings['sig_2_position'] ?? 'left';
+                        $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
+                        if ($pos === 'left') $leftSig = $sigData;
+                        elseif ($pos === 'center') $centerSig = $sigData;
+                        else $rightSig = $sigData;
+                    }
+                    if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
+                        $pos = $settings['sig_3_position'] ?? 'center';
+                        $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
+                        if ($pos === 'left') $leftSig = $sigData;
+                        elseif ($pos === 'center') $centerSig = $sigData;
+                        else $rightSig = $sigData;
+                    }
+                @endphp
+                <div class="signature-row" style="margin-top: 0px; margin-bottom: 5px;">
+                    <!-- Left -->
+                    <div class="signature-col" style="text-align: left; padding-left: 20px;">
+                        @if($leftSig)
+                            @if($leftSig['img'])
+                                <img src="{{ $leftSig['img'] }}" class="signature-img" style="max-height: 35px;"><br>
+                            @else
+                                <div style="height: 35px;"></div>
+                            @endif
+                            <strong>{!! nl2br(e($leftSig['name'])) !!}</strong><br>
+                            <span style="font-size: 8px; color: #555;">{!! nl2br(e($leftSig['desig'])) !!}</span>
+                        @endif
+                    </div>
+                    <!-- Center -->
+                    <div class="signature-col" style="text-align: center;">
+                        @if($centerSig)
+                            @if($centerSig['img'])
+                                <img src="{{ $centerSig['img'] }}" class="signature-img" style="max-height: 35px;"><br>
+                            @else
+                                <div style="height: 35px;"></div>
+                            @endif
+                            <strong>{!! nl2br(e($centerSig['name'])) !!}</strong><br>
+                            <span style="font-size: 8px; color: #555;">{!! nl2br(e($centerSig['desig'])) !!}</span>
+                        @endif
+                    </div>
+                    <!-- Right -->
+                    <div class="signature-col" style="text-align: right; padding-right: 20px;">
+                        @if($rightSig)
+                            @if($rightSig['img'])
+                                <img src="{{ $rightSig['img'] }}" class="signature-img" style="max-height: 35px;"><br>
+                            @else
+                                <div style="height: 35px;"></div>
+                            @endif
+                            <strong>{!! nl2br(e($rightSig['name'])) !!}</strong><br>
+                            <span style="font-size: 8px; color: #555;">{!! nl2br(e($rightSig['desig'])) !!}</span>
+                        @endif
+                    </div>
                 </div>
+            @endif
+
+            @if($settings['pdf_show_footer'])
+                @if($settings['pdf_footer_image'])
+                    <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
+                @else
+                    <div style="text-align: center;">
+                        <strong>{{ $company->name }}</strong> - {{ $company->tagline }}<br>
+                        <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>
+                    </div>
+                @endif
             @endif
         </footer>
     @endif
@@ -386,7 +471,7 @@
                             <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
                         </tr>
                     @endforeach
-                    @if($labTest->description)
+                    @if(($settings['report_show_note'] ?? true) && $labTest->description)
                         <tr style="page-break-inside: avoid;">
                             <td colspan="4" style="padding-left: 15px; padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: #555;">
                                 <strong>Note:</strong> <br>
@@ -426,8 +511,8 @@
                         @else
                             <div style="height: 50px;"></div>
                         @endif
-                        <strong>{{ $dept->sig_1_name }}</strong><br>
-                        {{ $dept->sig_1_desig }}
+                        <strong>{!! nl2br(e($dept->sig_1_name)) !!}</strong><br>
+                        {!! nl2br(e($dept->sig_1_desig)) !!}
                     </div>
                 @endif
                 @if($dept->sig_2_name || $dept->sig_2_path)
@@ -437,8 +522,8 @@
                         @else
                             <div style="height: 50px;"></div>
                         @endif
-                        <strong>{{ $dept->sig_2_name }}</strong><br>
-                        {{ $dept->sig_2_desig }}
+                        <strong>{!! nl2br(e($dept->sig_2_name)) !!}</strong><br>
+                        {!! nl2br(e($dept->sig_2_desig)) !!}
                     </div>
                 @endif
                 @if($dept->sig_3_name || $dept->sig_3_path)
@@ -448,8 +533,8 @@
                         @else
                             <div style="height: 50px;"></div>
                         @endif
-                        <strong>{{ $dept->sig_3_name }}</strong><br>
-                        {{ $dept->sig_3_desig }}
+                        <strong>{!! nl2br(e($dept->sig_3_name)) !!}</strong><br>
+                        {!! nl2br(e($dept->sig_3_desig)) !!}
                     </div>
                 @endif
             </div>
@@ -464,50 +549,82 @@
         </div>
     @endif
 
-    {{-- SIGNATURE BLOCK (Global Bottom) --}}
-    @if($settings['report_signature_mode'] == 'global_bottom')
-        <div class="signature-row">
-            @if($settings['global_sig_1_name'] || $settings['global_sig_1_path'])
-                <div class="signature-col">
-                    @if($settings['global_sig_1_path'])
-                        <img src="{{ $settings['global_sig_1_path'] }}" class="signature-img"><br>
-                    @else
-                        <div style="height: 50px;"></div>
-                    @endif
-                    <strong>{{ $settings['global_sig_1_name'] }}</strong><br>
-                    {{ $settings['global_sig_1_desig'] }}
-                </div>
-            @endif
+    {{-- SIGNATURE BLOCK (Global Bottom / Last Page Only) --}}
+    @if($sigMode == 'last_page' || $sigMode == 'global_bottom')
+        @php
+            $leftSig = null;
+            $centerSig = null;
+            $rightSig = null;
 
-            @if($settings['global_sig_2_name'] || $settings['global_sig_2_path'])
-                <div class="signature-col">
-                    @if($settings['global_sig_2_path'])
-                        <img src="{{ $settings['global_sig_2_path'] }}" class="signature-img"><br>
+            if ($settings['sig_1_enabled'] ?? true) {
+                $pos = $settings['sig_1_position'] ?? 'right';
+                $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $settings['global_sig_1_path']];
+                if ($pos === 'left') $leftSig = $sigData;
+                elseif ($pos === 'center') $centerSig = $sigData;
+                else $rightSig = $sigData;
+            }
+            if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
+                $pos = $settings['sig_2_position'] ?? 'left';
+                $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
+                if ($pos === 'left') $leftSig = $sigData;
+                elseif ($pos === 'center') $centerSig = $sigData;
+                else $rightSig = $sigData;
+            }
+            if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
+                $pos = $settings['sig_3_position'] ?? 'center';
+                $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
+                if ($pos === 'left') $leftSig = $sigData;
+                elseif ($pos === 'center') $centerSig = $sigData;
+                else $rightSig = $sigData;
+            }
+        @endphp
+        <div class="signature-row" style="page-break-inside: avoid;">
+            <!-- Left -->
+            <div class="signature-col" style="text-align: left; padding-left: 20px;">
+                @if($leftSig)
+                    @if($leftSig['img'])
+                        <img src="{{ $leftSig['img'] }}" class="signature-img"><br>
                     @else
                         <div style="height: 50px;"></div>
                     @endif
-                    <strong>{{ $settings['global_sig_2_name'] }}</strong><br>
-                    {{ $settings['global_sig_2_desig'] }}
-                </div>
-            @endif
-
-            @if($settings['global_sig_3_name'] || $settings['global_sig_3_path'])
-                <div class="signature-col">
-                    @if($settings['global_sig_3_path'])
-                        <img src="{{ $settings['global_sig_3_path'] }}" class="signature-img"><br>
+                    <strong>{!! nl2br(e($leftSig['name'])) !!}</strong><br>
+                    {!! nl2br(e($leftSig['desig'])) !!}
+                @endif
+            </div>
+            <!-- Center -->
+            <div class="signature-col" style="text-align: center;">
+                @if($centerSig)
+                    @if($centerSig['img'])
+                        <img src="{{ $centerSig['img'] }}" class="signature-img"><br>
                     @else
                         <div style="height: 50px;"></div>
                     @endif
-                    <strong>{{ $settings['global_sig_3_name'] }}</strong><br>
-                    {{ $settings['global_sig_3_desig'] }}
-                </div>
-            @endif
+                    <strong>{!! nl2br(e($centerSig['name'])) !!}</strong><br>
+                    {!! nl2br(e($centerSig['desig'])) !!}
+                @endif
+            </div>
+            <!-- Right -->
+            <div class="signature-col" style="text-align: right; padding-right: 20px;">
+                @if($rightSig)
+                    @if($rightSig['img'])
+                        <img src="{{ $rightSig['img'] }}" class="signature-img"><br>
+                    @else
+                        <div style="height: 50px;"></div>
+                    @endif
+                    <strong>{!! nl2br(e($rightSig['name'])) !!}</strong><br>
+                    {!! nl2br(e($rightSig['desig'])) !!}
+                @endif
+            </div>
         </div>
     @endif
 
     {{-- END OF REPORT --}}
     <div class="end-of-report">
         *** End Of Report ***
+    </div>
+
+    <div style="position: fixed; bottom: -70px; right: 0px; font-size: 9px; color: #555; font-family: sans-serif; font-weight: bold; z-index: 10000;">
+        Page <span class="page-num"></span>
     </div>
 
 </body>

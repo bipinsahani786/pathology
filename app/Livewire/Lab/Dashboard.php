@@ -75,7 +75,10 @@ class Dashboard extends Component
      */
     public static function flushCache($companyId = null)
     {
-        $companyId = $companyId ?? auth()->user()->company_id;
+        $companyId = $companyId ?? (auth()->check() ? auth()->user()->company_id : null);
+        if (!$companyId) {
+            return;
+        }
         // Clear all dashboard cache keys for this company using pattern
         $cachePrefix = "dashboard_stats_{$companyId}_";
         // Since we can't wildcard-delete with all cache drivers,
@@ -254,7 +257,8 @@ class Dashboard extends Component
             $paymentData = Payment::where('payments.company_id', $companyId)
                 ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
                 ->when($branchId, fn ($q) => $q->where('invoices.branch_id', $branchId))
-                ->whereBetween('payments.created_at', [$start, $end])
+                ->where('invoices.status', '!=', 'Cancelled')
+                ->whereBetween('invoices.invoice_date', [$start, $end])
                 ->join('payment_modes', 'payments.payment_mode_id', '=', 'payment_modes.id')
                 ->select('payment_modes.name as mode_name', DB::raw('SUM(payments.amount) as total_collected'))
                 ->groupBy('mode_name')
