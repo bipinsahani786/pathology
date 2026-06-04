@@ -341,6 +341,14 @@
                         </a>
                     </li>
                     @endcan
+                    @can('view audit_logs')
+                    <li class="nxl-item {{ request()->routeIs('lab.audit-logs') ? 'active' : '' }}">
+                        <a href="{{ route('lab.audit-logs') }}" wire:navigate class="nxl-link">
+                            <span class="nxl-micon"><i class="feather-shield"></i></span>
+                            <span class="nxl-mtext">Audit Logs</span>
+                        </a>
+                    </li>
+                    @endcan
                     @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('lab.support') ? 'active' : '' }}">
                         <a href="{{ route('lab.support') }}" wire:navigate class="nxl-link">
