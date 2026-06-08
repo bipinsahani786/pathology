@@ -93,6 +93,15 @@ class User extends Authenticatable
      */
     public function getFormattedIdAttribute()
     {
+        if ($this->hasRole('patient') && $this->relationLoaded('patientProfile') && $this->patientProfile?->patient_id_string) {
+            return $this->patientProfile->patient_id_string;
+        } elseif ($this->hasRole('patient')) {
+            $profile = \App\Models\PatientProfile::where('user_id', $this->id)->first();
+            if ($profile && $profile->patient_id_string) {
+                return $profile->patient_id_string;
+            }
+        }
+
         $prefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
         $digits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
 

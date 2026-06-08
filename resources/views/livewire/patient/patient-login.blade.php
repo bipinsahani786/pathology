@@ -102,6 +102,29 @@
                     securely download your reports.</p>
             </div>
 
+            @if($conflictingUsers)
+                <div class="space-y-4 animate__animated animate__fadeIn">
+                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white">Multiple Labs Found</h3>
+                    <p class="text-zinc-500 font-medium text-sm">We found your records in multiple laboratories. Please select the lab you visited to view your reports:</p>
+                    <div class="space-y-3 mt-4">
+                        @foreach($conflictingUsers as $user)
+                            <button type="button" wire:click="loginAsUser({{ $user->id }})" class="w-full text-left p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-all flex items-center justify-between group">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-full bg-brand-100 dark:bg-zinc-800 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                                        <i class="feather-activity"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-zinc-900 dark:text-white">{{ $user->company->name ?? 'Laboratory' }}</div>
+                                        <div class="text-xs text-zinc-500">{{ $user->patientProfile->patient_id_string ?? 'Access your reports' }}</div>
+                                    </div>
+                                </div>
+                                <i class="feather-chevron-right text-zinc-400 group-hover:text-brand-500 transition-colors"></i>
+                            </button>
+                        @endforeach
+                    </div>
+                    <button type="button" wire:click="$set('conflictingUsers', null)" class="w-full mt-4 py-3 text-sm font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-colors">Cancel</button>
+                </div>
+            @else
             <form wire:submit.prevent="login" class="space-y-6">
                 <!-- Patient ID -->
                 <div class="space-y-2">
@@ -154,6 +177,7 @@
                     <span wire:loading>Verifying details...</span>
                 </button>
             </form>
+            @endif
 
             <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-sm">
                 <a href="tel:{{ \App\Models\SiteSetting::get('contact_phone', '#') }}"

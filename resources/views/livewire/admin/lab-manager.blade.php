@@ -193,7 +193,7 @@
                                 <input type="text" class="form-control" wire:model.defer="labPhone" placeholder="10-digit number">
                                 @error('labPhone') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-{{ $editingLabId ? '4' : '6' }}">
                                 <label class="form-label fw-semibold">Subscription Plan <span class="text-danger">*</span></label>
                                 <select class="form-select" wire:model.defer="planId">
                                     <option value="">Select Plan</option>
@@ -203,6 +203,13 @@
                                 </select>
                                 @error('planId') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
                             </div>
+                            @if($editingLabId)
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Plan Validity Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" wire:model.defer="trialEndsAt">
+                                @error('trialEndsAt') <span class="text-danger fs-11 mt-1 d-block">{{ $message }}</span> @enderror
+                            </div>
+                            @endif
                             <div class="col-md-12">
                                 <label class="form-label fw-semibold">Lab Full Address <span class="text-danger">*</span></label>
                                 <textarea class="form-control" wire:model.defer="labAddress" rows="2" placeholder="Street, City, ZIP"></textarea>

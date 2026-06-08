@@ -711,11 +711,25 @@ class PosManager extends Component
                 $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
                 $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
 
-                // Use MAX of ID to avoid collisions on deletion
-                $lastPatient = PatientProfile::where('company_id', $companyId)->latest('id')->first();
-                $nextPId = $lastPatient ? ($lastPatient->id + 1) : 1;
+                $maxLocalId = PatientProfile::where('company_id', $companyId)->max('company_patient_number') ?? 0;
 
-                // To be absolutely sure, check if this specific string exists (though unlikely with max ID)
+                if ($maxLocalId == 0) {
+                    // Fallback to parsing the latest patient_id_string for smooth transition
+                    $lastProfile = PatientProfile::where('company_id', $companyId)
+                                    ->whereNotNull('patient_id_string')
+                                    ->orderBy('id', 'desc')
+                                    ->first();
+                    if ($lastProfile && strpos($lastProfile->patient_id_string, '-') !== false) {
+                        $parsed = (int) preg_replace('/[^0-9]/', '', substr($lastProfile->patient_id_string, strrpos($lastProfile->patient_id_string, '-')));
+                        if ($parsed > 0) {
+                            $maxLocalId = $parsed;
+                        }
+                    }
+                }
+
+                $nextPId = $maxLocalId + 1;
+
+                // To be absolutely sure, check if this specific string exists
                 $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
 
                 // Loop until unique (safety valve)
@@ -728,6 +742,7 @@ class PosManager extends Component
                     'company_id' => $companyId,
                     'user_id' => $user->id,
                     'patient_id_string' => $patientIdString,
+                    'company_patient_number' => $nextPId,
                     'age' => $this->new_age,
                     'age_type' => $this->new_age_type,
                     'gender' => $this->new_gender,

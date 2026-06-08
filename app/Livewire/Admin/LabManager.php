@@ -39,6 +39,8 @@ class LabManager extends Component
 
     public $salesAgentId; // Professional system
 
+    public $trialEndsAt; // To allow editing plan validity
+
     // UI State
     public $editingLabId = null;
 
@@ -112,7 +114,7 @@ class LabManager extends Component
     public function openRegistrationModal()
     {
         $this->resetValidation();
-        $this->reset(['editingLabId', 'labName', 'labEmail', 'labPhone', 'labAddress', 'planId', 'adminName', 'adminEmail', 'adminPassword', 'referredBy', 'salesAgentId']);
+        $this->reset(['editingLabId', 'labName', 'labEmail', 'labPhone', 'labAddress', 'planId', 'adminName', 'adminEmail', 'adminPassword', 'referredBy', 'salesAgentId', 'trialEndsAt']);
         $this->isRegistrationModalOpen = true;
     }
 
@@ -129,6 +131,7 @@ class LabManager extends Component
         $this->planId = $lab->plan_id;
         $this->referredBy = $lab->referred_by;
         $this->salesAgentId = $lab->sales_agent_id;
+        $this->trialEndsAt = $lab->trial_ends_at ? \Carbon\Carbon::parse($lab->trial_ends_at)->format('Y-m-d') : null;
 
         // Find the lab admin user
         $admin = \App\Models\User::where('company_id', $id)
@@ -221,6 +224,7 @@ class LabManager extends Component
             'adminName' => 'required|string|max:255',
             'adminEmail' => 'required|email|unique:users,email,'.(\App\Models\User::where('company_id', $this->editingLabId)->role('lab_admin')->first()->id ?? 0),
             'adminPassword' => 'nullable|min:6',
+            'trialEndsAt' => 'nullable|date',
         ]);
 
         \Illuminate\Support\Facades\DB::transaction(function () {
@@ -237,8 +241,11 @@ class LabManager extends Component
                 'referred_by' => $this->referredBy,
             ]);
 
-            // If plan changed, maybe extend trial?
-            if ($oldPlanId != $this->planId) {
+            // If an explicit date is provided, update it. This allows reducing or explicitly setting validity.
+            if ($this->trialEndsAt) {
+                $company->update(['trial_ends_at' => $this->trialEndsAt]);
+            } elseif ($oldPlanId != $this->planId) {
+                // If plan changed and no explicit date was provided, extend trial automatically
                 $plan = \App\Models\Plan::find($this->planId);
                 $company->update([
                     'trial_ends_at' => now()->addDays($plan->duration_in_days ?? 30),

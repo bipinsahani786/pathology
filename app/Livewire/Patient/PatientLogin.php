@@ -32,6 +32,8 @@ class PatientLogin extends Component
         }
     }
 
+    public $conflictingUsers = null;
+
     public function login()
     {
         $this->validate();
@@ -48,7 +50,8 @@ class PatientLogin extends Component
         // We explicitly avoid checking Spatie's role('patient') just in case
         // demo seeders or manual entries didn't assign the exact role string.
         // Checking for the existence of `patientProfile` is mathematically secure.
-        $user = User::where('phone', $inputMobile)
+        $users = User::with('company')
+            ->where('phone', $inputMobile)
             ->whereHas('patientProfile') // Ensure they actually are a patient
             ->where(function ($query) use ($inputId, $numericId) {
                 if ($numericId > 0) {
@@ -60,8 +63,21 @@ class PatientLogin extends Component
                     $q->where('patient_id_string', 'like', '%'.$inputId.'%');
                 });
             })
-            ->first();
+            ->get();
 
+        if ($users->count() === 1) {
+            $this->loginAsUser($users->first()->id);
+        } elseif ($users->count() > 1) {
+            // Conflict! Multiple patients with same Mobile + Patient ID across different labs
+            $this->conflictingUsers = $users;
+        } else {
+            $this->errorMessage = 'Patient details not found. Please verify your ID and Mobile Number.';
+        }
+    }
+
+    public function loginAsUser($userId)
+    {
+        $user = User::find($userId);
         if ($user) {
             \Illuminate\Support\Facades\Auth::login($user, true); // Log in using standard auth
 
@@ -70,8 +86,6 @@ class PatientLogin extends Component
 
             return redirect()->route('portal.dashboard');
         }
-
-        $this->errorMessage = 'Patient details not found. Please verify your ID and Mobile Number.';
     }
 
     public function render()
