@@ -194,6 +194,16 @@
                                                         <i class="feather-printer"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm p-1" style="min-width: 180px;">
+                                                        @php
+                                                            $billTemplate = \App\Models\Configuration::getFor('bill_template', 'classic');
+                                                        @endphp
+                                                        @if(in_array($billTemplate, ['halfpage', 'thermal']))
+                                                        <li>
+                                                            <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=1">
+                                                                <i class="feather-file-text me-2 text-primary"></i> Print Receipt
+                                                            </a>
+                                                        </li>
+                                                        @else
                                                         <li>
                                                             <a class="dropdown-item fs-12 py-1 text-nowrap" target="_blank" href="{{ route('partner.invoice.print', $inv->id) }}?header=1">
                                                                 <i class="feather-file-text me-2 text-primary"></i> With Header
@@ -204,6 +214,7 @@
                                                                 <i class="feather-file me-2 text-warning"></i> Without Header
                                                             </a>
                                                         </li>
+                                                        @endif
                                                         <li><hr class="dropdown-divider my-1"></li>
                                                         <li>
                                                             <a class="dropdown-item fs-12 py-1 fw-bold text-primary text-nowrap"

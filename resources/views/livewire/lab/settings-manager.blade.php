@@ -778,6 +778,7 @@
                             $templates = [
                                 'classic' => ['name' => 'Classic', 'icon' => 'feather-file-text', 'color' => '#3b71ca', 'desc' => 'Traditional layout with header, table, and footer. Best for formal medical reports.'],
                                 'pro' => ['name' => 'Professional', 'icon' => 'feather-shield', 'color' => '#1e293b', 'desc' => 'High-end Black & White design with clean borders, QR & Barcodes.'],
+                                'halfpage' => ['name' => 'Half Page', 'icon' => 'feather-columns', 'color' => '#059669', 'desc' => 'Compact layout printed on upper half of A4 page. Efficient and paper-saving.'],
                                 'thermal' => ['name' => 'Thermal', 'icon' => 'feather-printer', 'color' => '#6366f1', 'desc' => 'Optimized for 80mm thermal printers. Narrow receipt format.'],
                             ];
                         @endphp
