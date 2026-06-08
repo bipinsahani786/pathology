@@ -26,8 +26,15 @@
                     <i class="feather-printer me-2"></i>Print Options
                 </button>
                 <ul class="dropdown-menu shadow-sm border-0">
-                    <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf', $invoice->id) }}" target="_blank"><i class="feather-file-text me-2 text-primary"></i>Receipt (With Letterhead)</a></li>
-                    <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf.plain', $invoice->id) }}" target="_blank"><i class="feather-file me-2 text-primary"></i>Receipt (Without Letterhead)</a></li>
+                    @php
+                        $template = \App\Models\Configuration::getFor('bill_template', 'classic');
+                    @endphp
+                    @if(in_array($template, ['halfpage', 'thermal']))
+                        <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf', $invoice->id) }}" target="_blank"><i class="feather-file-text me-2 text-primary"></i>Print Receipt</a></li>
+                    @else
+                        <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf', $invoice->id) }}" target="_blank"><i class="feather-file-text me-2 text-primary"></i>Receipt (With Letterhead)</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('lab.invoice.pdf.plain', $invoice->id) }}" target="_blank"><i class="feather-file me-2 text-primary"></i>Receipt (Without Letterhead)</a></li>
+                    @endif
                     @if($invoice->patientMembership)
                         <li><a class="dropdown-item py-2 fw-bold text-success" href="{{ route('lab.membership.card.print', $invoice->patientMembership->id) }}" target="_blank"><i class="feather-credit-card me-2"></i>Print Membership Card</a></li>
                     @endif

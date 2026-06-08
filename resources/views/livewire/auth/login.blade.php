@@ -192,7 +192,11 @@
             </form>
 
             <div class="pt-8 border-t border-zinc-200 dark:border-zinc-800 text-center">
-                <p class="text-zinc-500 font-medium">Please contact administration for access.</p>
+                <a href="{{ route('portal.login') }}" wire:navigate class="inline-flex items-center justify-center gap-2 w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold py-4 rounded-2xl transition-colors mb-6 border border-zinc-200 dark:border-zinc-700 group">
+                    <i class="feather-user-check text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform"></i>
+                    Patient Login / Download Report
+                </a>
+                <p class="text-zinc-500 font-medium text-sm">Staff login requires pre-authorized access. Please contact administration for support.</p>
             </div>
         </div>
     </div>

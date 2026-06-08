@@ -270,11 +270,14 @@ class InvoiceManager extends Component
     public function printInvoice($id, $withHeader)
     {
         if ($withHeader) {
-            $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (! $header) {
-                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+            $template = \App\Models\Configuration::getFor('bill_template', 'classic');
+            if (!in_array($template, ['halfpage', 'thermal'])) {
+                $header = \App\Models\Configuration::getFor('pdf_header_image');
+                if (! $header) {
+                    $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
 
-                return;
+                    return;
+                }
             }
         }
 
