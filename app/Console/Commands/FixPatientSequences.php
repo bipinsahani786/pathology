@@ -41,28 +41,37 @@ class FixPatientSequences extends Command
                     ->orderBy('id', 'asc')
                     ->get();
 
-                $counter = 1;
                 $updated = 0;
+                $highestId = 0;
+
+                // Load config defaults per company
+                $pPrefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT', $company->id);
+                $pDigits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4, $company->id);
 
                 foreach ($profiles as $profile) {
-                    // Try to extract existing number from string if it exists to preserve current highest
-                    if ($profile->patient_id_string) {
-                        $parsed = (int) preg_replace('/[^0-9]/', '', substr($profile->patient_id_string, strrpos($profile->patient_id_string, '-')));
-                        if ($parsed > 0) {
-                            $counter = max($counter, $parsed);
-                        }
+                    // CRITICAL FIX: To match the printed reports given to the first 1000 patients,
+                    // we MUST set the company_patient_number equal to their global users.id
+                    // because the old code was printing `User::id` on their invoices!
+                    $targetNumber = $profile->user_id;
+                    $highestId = max($highestId, $targetNumber);
+
+                    if ($profile->company_patient_number !== $targetNumber) {
+                        $profile->company_patient_number = $targetNumber;
                     }
 
-                    if (is_null($profile->company_patient_number)) {
-                        $profile->company_patient_number = $counter;
+                    // Force regenerate patient_id_string to match what was printed on the report
+                    $expectedString = $pPrefix . str_pad($targetNumber, $pDigits, '0', STR_PAD_LEFT);
+                    
+                    if ($profile->patient_id_string !== $expectedString || $profile->isDirty('company_patient_number')) {
+                        $profile->patient_id_string = $expectedString;
                         $profile->save();
                         $updated++;
                     }
-                    
-                    $counter++;
                 }
+                
+                $nextSequence = $highestId + 1;
 
-                $this->info("  -> Updated $updated records. Sequence next up: $counter");
+                $this->info("  -> Updated $updated records. Sequence next up: $nextSequence");
             });
         }
 

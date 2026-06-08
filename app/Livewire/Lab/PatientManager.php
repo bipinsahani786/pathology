@@ -194,12 +194,12 @@ class PatientManager extends Component
 
                 $nextPId = $maxLocalId + 1;
 
-                $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                $patientIdString = $pPrefix . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
 
                 // Loop until unique (safety valve)
                 while (\App\Models\PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
                     $nextPId++;
-                    $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                    $patientIdString = $pPrefix . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
                 }
 
                 // 3. Create the Patient Profile record

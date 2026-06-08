@@ -180,7 +180,7 @@ class PosManager extends Component
         $user = auth()->user();
 
         // Authorization: Allow specific granular permission to access POS
-        if (! $user->can('create pos') && ! $user->collection_center_id) {
+        if (!$user->can('create pos') && !$user->collection_center_id) {
             abort(403, 'Unauthorized access to POS.');
         }
 
@@ -190,12 +190,12 @@ class PosManager extends Component
 
         $roles = $user->roles->pluck('name')->toArray();
         $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
-                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && ! $user->hasRole('branch_admin');
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && !$user->hasRole('branch_admin');
 
-        if (! $isGlobalAdmin) {
+        if (!$isGlobalAdmin) {
             $this->branch_id = $user->branch_id;
-            if (collect($roles)->contains(fn ($r) => str_contains(strtolower($r), 'collection'))) {
+            if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'))) {
                 $this->collection_center_id = $user->collection_center_id;
                 $cc = CollectionCenter::find($this->collection_center_id);
                 $this->branch_id = $cc->branch_id ?? $this->branch_id;
@@ -333,7 +333,7 @@ class PosManager extends Component
     public function addTestToCart($testId)
     {
         $test = LabTest::findOrFail($testId);
-        if (! collect($this->cart)->contains('id', $test->id)) {
+        if (!collect($this->cart)->contains('id', $test->id)) {
             $cartItem = [
                 'id' => $test->id,
                 'name' => $test->name,
@@ -346,9 +346,9 @@ class PosManager extends Component
                 'linked_tests' => [],
             ];
 
-            if ($test->is_package && ! empty($test->linked_test_ids)) {
+            if ($test->is_package && !empty($test->linked_test_ids)) {
                 $linkedTests = LabTest::whereIn('id', $test->linked_test_ids)->get();
-                $cartItem['linked_tests'] = $linkedTests->map(fn ($lt) => [
+                $cartItem['linked_tests'] = $linkedTests->map(fn($lt) => [
                     'id' => $lt->id,
                     'name' => $lt->name,
                     'test_code' => $lt->test_code,
@@ -387,23 +387,23 @@ class PosManager extends Component
     // ==========================================
     public function purchaseMembership()
     {
-        if (! auth()->user()->can('create marketing') && ! auth()->user()->collection_center_id) {
+        if (!auth()->user()->can('create marketing') && !auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->modalError = '';
-        if (! $this->selectedPatient) {
+        if (!$this->selectedPatient) {
             $this->modalError = 'Select a patient first.';
 
             return;
         }
-        if (! $this->selectedMembershipId) {
+        if (!$this->selectedMembershipId) {
             $this->modalError = 'Select a plan.';
 
             return;
         }
 
         $membership = Membership::find($this->selectedMembershipId);
-        if (! $membership) {
+        if (!$membership) {
             $this->modalError = 'Invalid membership.';
 
             return;
@@ -430,11 +430,11 @@ class PosManager extends Component
             $this->selectedMembershipId = null;
             $this->modalError = '';
             $this->calculateTotals();
-            session()->flash('success', '🎉 '.$membership->name.' activated! '.$membership->discount_percentage.'% discount applied.');
+            session()->flash('success', '🎉 ' . $membership->name . ' activated! ' . $membership->discount_percentage . '% discount applied.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Membership Purchase Error: '.$e->getMessage());
-            $this->modalError = 'Error: '.$e->getMessage();
+            Log::error('Membership Purchase Error: ' . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
 
@@ -483,7 +483,7 @@ class PosManager extends Component
             $this->modalError = '';
             session()->flash('success', 'Payment mode added!');
         } catch (\Exception $e) {
-            Log::error('Payment Mode Error: '.$e->getMessage());
+            Log::error('Payment Mode Error: ' . $e->getMessage());
             $this->modalError = 'Error adding payment mode.';
         }
     }
@@ -503,16 +503,16 @@ class PosManager extends Component
         $voucher = Voucher::where('company_id', auth()->user()->company_id)
             ->where('code', strtoupper($this->voucher_code))
             ->where('is_active', true)
-            ->where(fn ($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()))
+            ->where(fn($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()))
             ->first();
 
-        if (! $voucher) {
+        if (!$voucher) {
             $this->addError('voucher_code', 'Invalid or expired voucher.');
 
             return;
         }
         if ($this->subtotal < $voucher->min_bill_amount) {
-            $this->addError('voucher_code', 'Min ₹'.$voucher->min_bill_amount);
+            $this->addError('voucher_code', 'Min ₹' . $voucher->min_bill_amount);
 
             return;
         }
@@ -554,10 +554,10 @@ class PosManager extends Component
     public function calculateTotals()
     {
         // 1. Recalculate Subtotal from MRP
-        $this->subtotal = collect($this->cart)->sum(fn ($item) => (float) ($item['mrp'] ?? 0));
+        $this->subtotal = collect($this->cart)->sum(fn($item) => (float) ($item['mrp'] ?? 0));
 
         // 2. Initial Running Total is the sum of current item prices
-        $itemTotal = collect($this->cart)->sum(fn ($item) => (float) ($item['price'] ?? 0));
+        $itemTotal = collect($this->cart)->sum(fn($item) => (float) ($item['price'] ?? 0));
 
         // 3. Implicit Item Discount (e.g. if price was manually reduced per line)
         $itemDiscount = $this->subtotal - $itemTotal;
@@ -603,7 +603,7 @@ class PosManager extends Component
         $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
 
         // 9. Due calculation
-        $totalCollected = collect($this->payments)->sum(fn ($p) => (float) ($p['amount'] ?? 0));
+        $totalCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
         $this->due_amount = max($this->net_payable - $totalCollected, 0);
         $this->overpaymentError = $totalCollected > $this->net_payable;
     }
@@ -614,7 +614,7 @@ class PosManager extends Component
     public function addPaymentRow()
     {
         // Auto-fill the remaining due if possible
-        $currentCollected = collect($this->payments)->sum(fn ($p) => (float) ($p['amount'] ?? 0));
+        $currentCollected = collect($this->payments)->sum(fn($p) => (float) ($p['amount'] ?? 0));
         $remaining = max(0, $this->net_payable - $currentCollected);
 
         // Find default Cash mode or fallback to first available mode
@@ -623,13 +623,13 @@ class PosManager extends Component
             ->where('name', 'Cash')
             ->where('is_active', true)
             ->first();
-            
+
         if (!$cashMode) {
             $cashMode = PaymentMode::where('company_id', $companyId)
                 ->where('is_active', true)
                 ->first();
         }
-            
+
         $defaultModeId = $cashMode ? $cashMode->id : '';
 
         $this->payments[] = ['mode_id' => $defaultModeId, 'amount' => $remaining > 0 ? $remaining : null, 'transaction_id' => ''];
@@ -647,7 +647,7 @@ class PosManager extends Component
     // ==========================================
     public function openEditPatientModal()
     {
-        if (! $this->selectedPatient) {
+        if (!$this->selectedPatient) {
             return;
         }
         $this->editingPatientId = $this->selectedPatient['id'];
@@ -663,7 +663,7 @@ class PosManager extends Component
 
     public function quickAddPatient()
     {
-        if (! auth()->user()->can($this->editingPatientId ? 'edit patients' : 'create patients') && ! auth()->user()->collection_center_id) {
+        if (!auth()->user()->can($this->editingPatientId ? 'edit patients' : 'create patients') && !auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->modalError = '';
@@ -716,9 +716,9 @@ class PosManager extends Component
                 if ($maxLocalId == 0) {
                     // Fallback to parsing the latest patient_id_string for smooth transition
                     $lastProfile = PatientProfile::where('company_id', $companyId)
-                                    ->whereNotNull('patient_id_string')
-                                    ->orderBy('id', 'desc')
-                                    ->first();
+                        ->whereNotNull('patient_id_string')
+                        ->orderBy('id', 'desc')
+                        ->first();
                     if ($lastProfile && strpos($lastProfile->patient_id_string, '-') !== false) {
                         $parsed = (int) preg_replace('/[^0-9]/', '', substr($lastProfile->patient_id_string, strrpos($lastProfile->patient_id_string, '-')));
                         if ($parsed > 0) {
@@ -730,12 +730,12 @@ class PosManager extends Component
                 $nextPId = $maxLocalId + 1;
 
                 // To be absolutely sure, check if this specific string exists
-                $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                $patientIdString = $pPrefix . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
 
                 // Loop until unique (safety valve)
                 while (PatientProfile::where('company_id', $companyId)->where('patient_id_string', $patientIdString)->exists()) {
                     $nextPId++;
-                    $patientIdString = $pPrefix.'-'.date('ym').'-'.str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
+                    $patientIdString = $pPrefix . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
                 }
 
                 PatientProfile::create([
@@ -760,8 +760,8 @@ class PosManager extends Component
             session()->flash('message', $this->editingPatientId ? 'Patient updated!' : 'Patient registered!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Quick Add/Edit Patient: '.$e->getMessage());
-            $this->modalError = 'Error: '.$e->getMessage();
+            Log::error('Quick Add/Edit Patient: ' . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
 
@@ -770,7 +770,7 @@ class PosManager extends Component
     // ==========================================
     public function openEditDoctorModal()
     {
-        if (! $this->selectedDoctor) {
+        if (!$this->selectedDoctor) {
             return;
         }
         $this->editingDoctorId = $this->selectedDoctor['id'];
@@ -791,7 +791,7 @@ class PosManager extends Component
 
     public function quickAddDoctor()
     {
-        if (! auth()->user()->can($this->editingDoctorId ? 'edit doctors' : 'create doctors') && ! auth()->user()->collection_center_id) {
+        if (!auth()->user()->can($this->editingDoctorId ? 'edit doctors' : 'create doctors') && !auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->modalError = '';
@@ -803,7 +803,7 @@ class PosManager extends Component
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
-            $finalName = str_starts_with(strtolower($this->new_doc_name), 'dr') ? $this->new_doc_name : 'Dr. '.$this->new_doc_name;
+            $finalName = str_starts_with(strtolower($this->new_doc_name), 'dr') ? $this->new_doc_name : 'Dr. ' . $this->new_doc_name;
 
             if ($this->editingDoctorId) {
                 $user = User::findOrFail($this->editingDoctorId);
@@ -819,11 +819,11 @@ class PosManager extends Component
                     ]);
                 }
             } else {
-                $phone = $this->new_doc_phone ?: 'DOC'.time().rand(10, 99);
+                $phone = $this->new_doc_phone ?: 'DOC' . time() . rand(10, 99);
                 $user = User::create([
                     'name' => $finalName,
                     'phone' => $phone,
-                    'email' => 'doctor_'.$phone.'@noemail.local',
+                    'email' => 'doctor_' . $phone . '@noemail.local',
                     'password' => $phone,
                     'is_active' => true,
                     'company_id' => $companyId,
@@ -845,8 +845,8 @@ class PosManager extends Component
             session()->flash('message', $this->editingDoctorId ? 'Doctor updated!' : 'Doctor added!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Quick Add/Edit Doctor: '.$e->getMessage());
-            $this->modalError = 'Error: '.$e->getMessage();
+            Log::error('Quick Add/Edit Doctor: ' . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
 
@@ -855,7 +855,7 @@ class PosManager extends Component
     // ==========================================
     public function openEditAgentModal()
     {
-        if (! $this->selectedAgent) {
+        if (!$this->selectedAgent) {
             return;
         }
         $this->editingAgentId = $this->selectedAgent['id'];
@@ -870,7 +870,7 @@ class PosManager extends Component
 
     public function quickAddAgent()
     {
-        if (! auth()->user()->can($this->editingAgentId ? 'edit agents' : 'create agents') && ! auth()->user()->collection_center_id) {
+        if (!auth()->user()->can($this->editingAgentId ? 'edit agents' : 'create agents') && !auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
         $this->modalError = '';
@@ -898,11 +898,11 @@ class PosManager extends Component
                     ]);
                 }
             } else {
-                $phone = $this->new_agent_phone ?: 'AGT'.time().rand(10, 99);
+                $phone = $this->new_agent_phone ?: 'AGT' . time() . rand(10, 99);
                 $user = User::create([
                     'name' => $this->new_agent_name,
                     'phone' => $phone,
-                    'email' => 'agent_'.$phone.'@noemail.local',
+                    'email' => 'agent_' . $phone . '@noemail.local',
                     'password' => $phone,
                     'is_active' => true,
                     'company_id' => $companyId,
@@ -925,8 +925,8 @@ class PosManager extends Component
             session()->flash('message', $this->editingAgentId ? 'Agent updated!' : 'Agent added!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Quick Add/Edit Agent: '.$e->getMessage());
-            $this->modalError = 'Error: '.$e->getMessage();
+            Log::error('Quick Add/Edit Agent: ' . $e->getMessage());
+            $this->modalError = 'Error: ' . $e->getMessage();
         }
     }
 
@@ -935,10 +935,10 @@ class PosManager extends Component
     // ==========================================
     public function generateBill()
     {
-        if (! auth()->user()->can('create pos') && ! auth()->user()->collection_center_id) {
+        if (!auth()->user()->can('create pos') && !auth()->user()->collection_center_id) {
             abort(403, 'Unauthorized.');
         }
-        if (! $this->selectedPatient) {
+        if (!$this->selectedPatient) {
             session()->flash('error', 'Select a patient.');
 
             return;
@@ -962,7 +962,7 @@ class PosManager extends Component
             if ($amt > 0) {
                 $hasPayment = true;
                 if (empty($pay['mode_id'])) {
-                    session()->flash('error', 'Please select a Payment Mode for Payment row #'.($index + 1));
+                    session()->flash('error', 'Please select a Payment Mode for Payment row #' . ($index + 1));
 
                     return;
                 }
@@ -970,7 +970,7 @@ class PosManager extends Component
         }
 
         // If the bill is marked as fully paid but no payment mode was selected (shouldn't happen with above check, but safe)
-        if ($this->due_amount <= 0 && ! $hasPayment && $this->net_payable > 0) {
+        if ($this->due_amount <= 0 && !$hasPayment && $this->net_payable > 0) {
             session()->flash('error', 'Please add at least one payment method for a fully paid bill.');
 
             return;
@@ -1014,7 +1014,7 @@ class PosManager extends Component
                 case 'yearly':
                     $counterQuery->whereYear('created_at', now()->year);
                     break;
-                    // 'never' — no filter, continuous count
+                // 'never' — no filter, continuous count
             }
             $nextId = $counterQuery->count() + 1;
             $invoiceNumber = '';
@@ -1042,7 +1042,7 @@ class PosManager extends Component
                     'none' => '',
                 ];
                 $bcDatePart = $bcDateMap[$bcDateFormat] ?? date('ymd');
-                $barcode = $bcPrefix.$bcDatePart.str_pad($nextId, $bcCounterDigits, '0', STR_PAD_LEFT);
+                $barcode = $bcPrefix . $bcDatePart . str_pad($nextId, $bcCounterDigits, '0', STR_PAD_LEFT);
 
                 $exists = Invoice::where('company_id', $companyId)
                     ->where(function ($q) use ($invoiceNumber, $barcode) {
@@ -1173,7 +1173,7 @@ class PosManager extends Component
                 // Enforcement of B2B Price Floor
                 $restrictBilling = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
                 if ($restrictBilling && $this->net_payable < $totalB2bAmount) {
-                    session()->flash('error', 'Action Blocked: Net Payable (₹'.number_format($this->net_payable, 2).') cannot be less than the total B2B cost (₹'.number_format($totalB2bAmount, 2).'). Please reduce discount or adjust tests.');
+                    session()->flash('error', 'Action Blocked: Net Payable (₹' . number_format($this->net_payable, 2) . ') cannot be less than the total B2B cost (₹' . number_format($totalB2bAmount, 2) . '). Please reduce discount or adjust tests.');
 
                     return;
                 }
@@ -1195,7 +1195,7 @@ class PosManager extends Component
                 'invoice_date' => now(),
                 'sample_received_at' => $this->sample_received_at,
                 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
-                    ? $this->expected_report_date.' '.$this->expected_report_time
+                    ? $this->expected_report_date . ' ' . $this->expected_report_time
                     : null,
                 'subtotal' => $this->subtotal,
                 'membership_discount_amount' => $this->membership_discount_amt,
@@ -1218,7 +1218,7 @@ class PosManager extends Component
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'lab_test_id' => null, // Not a test
-                    'test_name' => 'Membership: '.($this->active_membership['name'] ?? 'Plan'),
+                    'test_name' => 'Membership: ' . ($this->active_membership['name'] ?? 'Plan'),
                     'is_package' => false,
                     'mrp' => $this->membership_fee,
                     'price' => $this->membership_fee,
@@ -1239,7 +1239,7 @@ class PosManager extends Component
             }
 
             foreach ($this->payments as $payment) {
-                if (! empty($payment['mode_id']) && $payment['amount'] > 0) {
+                if (!empty($payment['mode_id']) && $payment['amount'] > 0) {
                     Payment::create([
                         'company_id' => $companyId,
                         'invoice_id' => $invoice->id,
@@ -1272,10 +1272,10 @@ class PosManager extends Component
                 $pdfService = new \App\Services\PdfStorageService;
                 $pdfService->storeInvoicePdf($invoice);
             } catch (\Exception $e) {
-                Log::error('Failed to pre-generate Invoice PDF: '.$e->getMessage());
+                Log::error('Failed to pre-generate Invoice PDF: ' . $e->getMessage());
             }
 
-            session()->flash('success', '✅ Bill Generated! Invoice: '.$invoiceNumber);
+            session()->flash('success', '✅ Bill Generated! Invoice: ' . $invoiceNumber);
             Dashboard::flushCache();
 
             $this->cart = [];
@@ -1300,13 +1300,13 @@ class PosManager extends Component
             throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Invoice Generation Error: '.$e->getMessage(), [
+            Log::error('Invoice Generation Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'user_id' => auth()->id(),
                 'patient_id' => data_get($this->selectedPatient, 'id'),
                 'cart_count' => count($this->cart),
             ]);
-            session()->flash('error', 'Failed to generate bill: '.$e->getMessage());
+            session()->flash('error', 'Failed to generate bill: ' . $e->getMessage());
         }
     }
 
@@ -1317,10 +1317,10 @@ class PosManager extends Component
         $restrictAccess = Configuration::getFor('restrict_branch_access', '1') === '1';
         $roles = auth()->user()->roles->pluck('name')->toArray();
         $isGlobalAdmin = (auth()->user()->hasAnyRole(['lab_admin', 'super_admin']) ||
-                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
-                         && ! auth()->user()->hasRole('branch_admin');
+            collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && !auth()->user()->hasRole('branch_admin');
 
-        $myBranchId = ($isGlobalAdmin || ! $restrictAccess)
+        $myBranchId = ($isGlobalAdmin || !$restrictAccess)
             ? ($activeBranchId === 'all' ? null : $activeBranchId)
             : auth()->user()->branch_id;
 
@@ -1334,19 +1334,19 @@ class PosManager extends Component
         $patients = [];
         if ($this->activeSearchField === 'patient') {
             $s = $this->patientSearch;
-            $query = User::whereHas('patientProfile', fn ($q) => $q->where('company_id', $companyId))
-                ->when($myBranchId && ! $sharePatients, fn ($q) => $q->where('branch_id', $myBranchId));
-            $query->where(fn ($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"));
+            $query = User::whereHas('patientProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$sharePatients, fn($q) => $q->where('branch_id', $myBranchId));
+            $query->where(fn($q) => $q->where('phone', 'ilike', "%{$s}%")->orWhere('name', 'ilike', "%{$s}%"));
             $patients = $query->with('patientProfile')->orderBy('id', 'desc')->take(15)->get();
         }
 
         $doctors = [];
         if ($this->activeSearchField === 'doctor') {
             $s = $this->doctorSearch;
-            $query = User::whereHas('doctorProfile', fn ($q) => $q->where('company_id', $companyId))
-                ->when($myBranchId && ! $shareDoctors, fn ($q) => $q->where('branch_id', $myBranchId));
-            if (! empty($s)) {
-                $query->where(fn ($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            $query = User::whereHas('doctorProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareDoctors, fn($q) => $q->where('branch_id', $myBranchId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
             $doctors = $query->with('doctorProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -1354,10 +1354,10 @@ class PosManager extends Component
         $agents = [];
         if ($this->activeSearchField === 'agent') {
             $s = $this->agentSearch;
-            $query = User::whereHas('agentProfile', fn ($q) => $q->where('company_id', $companyId))
-                ->when($myBranchId && ! $shareAgents, fn ($q) => $q->where('branch_id', $myBranchId));
-            if (! empty($s)) {
-                $query->where(fn ($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
+            $query = User::whereHas('agentProfile', fn($q) => $q->where('company_id', $companyId))
+                ->when($myBranchId && !$shareAgents, fn($q) => $q->where('branch_id', $myBranchId));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('phone', 'ilike', "%{$s}%"));
             }
             $agents = $query->with('agentProfile')->orderBy('id', 'desc')->take(15)->get();
         }
@@ -1373,8 +1373,8 @@ class PosManager extends Component
             // Since we don't have branch_id on tests, we won't strictly enforce test siloing at db level for now,
             // or we just show them anyway if there's no way to create branch tests.
             $query = LabTest::where('company_id', $companyId)->where('is_active', true);
-            if (! empty($s)) {
-                $query->where(fn ($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
+            if (!empty($s)) {
+                $query->where(fn($q) => $q->where('name', 'ilike', "%{$s}%")->orWhere('test_code', 'ilike', "%{$s}%"));
             }
             $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }
@@ -1390,7 +1390,7 @@ class PosManager extends Component
 
         $centers = \Illuminate\Support\Facades\Cache::remember("centers_{$companyId}_{$this->branch_id}", 3600, function () use ($companyId, $isGlobalAdmin, $restrictAccess, $myBranchId) {
             $query = CollectionCenter::where('company_id', $companyId)->where('is_active', true);
-            if (! $isGlobalAdmin && $restrictAccess && $myBranchId) {
+            if (!$isGlobalAdmin && $restrictAccess && $myBranchId) {
                 $query->where('branch_id', $myBranchId);
             } elseif ($this->branch_id) {
                 // If a branch is explicitly selected by global admin
@@ -1404,7 +1404,7 @@ class PosManager extends Component
             return Branch::where('company_id', $companyId)->where('is_active', true)->get();
         });
 
-        if (! $isGlobalAdmin && $restrictAccess && $myBranchId) {
+        if (!$isGlobalAdmin && $restrictAccess && $myBranchId) {
             $branches = $branches->where('id', $myBranchId);
         }
 
