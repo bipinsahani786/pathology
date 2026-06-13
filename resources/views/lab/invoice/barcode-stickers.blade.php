@@ -199,13 +199,23 @@
     </div>
 
     <div class="sticker-container">
-        @foreach($invoice->items as $item)
+        @php
+            $groupedItems = $invoice->items->groupBy(function($item) {
+                return $item->labTest->sample_type ?? 'Serum';
+            });
+        @endphp
+
+        @foreach($groupedItems as $sampleType => $items)
             @php
                 $profile = $invoice->patient->patientProfile;
                 $genderShort = $profile ? substr($profile->gender ?? 'M', 0, 1) : 'M';
                 $age = $profile ? $profile->age : '0';
                 $ageType = $profile ? $profile->age_type : 'Y';
                 $ageStr = $age . substr($ageType, 0, 1);
+                
+                $testNames = $items->map(function($i) { 
+                    return $i->labTest->short_name ?: $i->labTest->name; 
+                })->implode(', ');
             @endphp
             <div class="barcode-sticker">
                 <div class="sticker-header">
@@ -213,15 +223,15 @@
                     <span>{{ $invoice->invoice_number }}</span>
                 </div>
                 
-                <svg class="barcode-svg" id="barcode-{{ $item->id }}"></svg>
+                <svg class="barcode-svg" id="barcode-{{ $loop->index }}"></svg>
                 
                 <div class="sticker-footer">
-                    <span class="test-info">{{ $item->labTest->name }} ({{ $item->labTest->sample_type ?? 'Serum' }})</span>
+                    <span class="test-info" title="{{ $testNames }}">{{ str()->limit($testNames, 30) }} ({{ $sampleType }})</span>
                     <span class="date-time text-uppercase">{{ $invoice->invoice_date->format('d/m/y H:i') }}</span>
                 </div>
 
                 <script>
-                    JsBarcode("#barcode-{{ $item->id }}", "{{ $invoice->barcode }}", {
+                    JsBarcode("#barcode-{{ $loop->index }}", "{{ $invoice->barcode ?? $invoice->invoice_number }}", {
                         format: "CODE128",
                         width: 1.2,
                         height: 40,
