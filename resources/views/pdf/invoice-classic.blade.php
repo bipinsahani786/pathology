@@ -265,7 +265,7 @@
                     <td class="lbl">Contact No</td>
                     <td class="val">: {{ $invoice->patient->phone ?? 'N/A' }}</td>
                     <td class="lbl">Center</td>
-                    <td class="val">: {{ $invoice->collectionCenter ? $invoice->collectionCenter->name : ($company->name ?? 'Main Center') }}</td>
+                    <td class="val">: {{ $invoice->collectionCenter ? $invoice->collectionCenter->name : (($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : ($company->name ?? 'Main Center')) }}</td>
                 </tr>
             </table>
         </div>
@@ -353,7 +353,7 @@
 
     <div class="end-note">
         This is a computer-generated receipt and does not require a physical signature.
-        <br>Thank you for choosing {{ $company->name }}.
+        <br>Thank you for choosing {{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}.
     </div>
 
 </body>

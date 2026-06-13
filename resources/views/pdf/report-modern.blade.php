@@ -273,14 +273,19 @@
             @if($settings['pdf_header_image'])
                 <img src="{{ $settings['pdf_header_image'] }}" class="custom-header-img" alt="Header">
             @else
+                @php
+                    $displayLabName = ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name;
+                    $displayAddress = ($invoice->branch && $invoice->branch->address) ? $invoice->branch->address : ($company->address ?? '');
+                    $displayPhone = ($invoice->branch && $invoice->branch->contact_number) ? $invoice->branch->contact_number : ($company->phone ?? '');
+                @endphp
                 <div class="header-content">
                     <div class="header-logo">
-                        <h2>{{ $company->name }}</h2>
+                        <h2>{{ $displayLabName }}</h2>
                     </div>
                     <div class="header-text">
                         <h3 style="margin: 0; color: #14b8a6;">LABORATORY REPORT</h3>
-                        <div>{{ $company->address }}</div>
-                        <div>Phone: {{ $company->phone }} | Email: {{ $company->email }}</div>
+                        <div>{{ $displayAddress }}</div>
+                        <div>Phone: {{ $displayPhone }} | Email: {{ $company->email }}</div>
                     </div>
                 </div>
             @endif
@@ -363,7 +368,7 @@
                     <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
                 @else
                     <div style="text-align: center;">
-                        <strong>{{ $company->name }}</strong> - {{ $company->tagline }}<br>
+                        <strong>{{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}</strong> - {{ $company->tagline }}<br>
                         <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>
                     </div>
                 @endif

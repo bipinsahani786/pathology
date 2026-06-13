@@ -16,6 +16,61 @@
     {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
 
+        {{-- Branch Context Selector --}}
+        @if(!auth()->user()->hasRole('branch_admin') && count($branches) > 0)
+            <div class="card mb-4 border-primary" style="background: rgba(59, 113, 202, 0.03);">
+                <div class="card-body py-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-text avatar-sm bg-primary text-white rounded">
+                            <i class="feather-git-merge"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-13 text-dark">Settings Context</div>
+                            <div class="fs-11 text-muted">Choose whether to customize settings for the entire company or a specific branch.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-group mb-0" style="min-width: 250px;">
+                            <select wire:model.live="selectedBranchId" class="form-select form-select-sm fw-semibold">
+                                <option value="global">🏢 Company Wide (Global Default)</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">📍 Branch: {{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            @if($selectedBranchId === 'global')
+                                <span class="badge bg-soft-primary text-primary fw-bold py-2 px-3 border border-primary-subtle fs-11">
+                                    Editing Global Defaults
+                                </span>
+                            @else
+                                <span class="badge bg-soft-success text-success fw-bold py-2 px-3 border border-success-subtle fs-11">
+                                    Editing Branch Settings
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif(auth()->user()->hasRole('branch_admin'))
+            <div class="card mb-4 border-success" style="background: rgba(40, 167, 69, 0.03);">
+                <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-text avatar-sm bg-success text-white rounded">
+                            <i class="feather-home"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-13 text-dark">Branch Settings Context</div>
+                            <div class="fs-11 text-muted">You are managing settings for your assigned branch: <strong>{{ auth()->user()->branch?->name }}</strong>.</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-soft-success text-success fw-bold py-2 px-3 border border-success-subtle fs-11">
+                        Branch Admin Mode
+                    </span>
+                </div>
+            </div>
+        @endif
+
         {{-- Tab Navigation --}}
         <ul class="nav nav-tabs mb-4" role="tablist">
             @can('view settings')

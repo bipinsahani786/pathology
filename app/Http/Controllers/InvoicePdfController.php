@@ -58,7 +58,7 @@ class InvoicePdfController extends Controller
         }
         */
 
-        $invoice = Invoice::with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator', 'company'])
+        $invoice = Invoice::with(['items', 'payments.paymentMode', 'patient.patientProfile', 'doctor.doctorProfile', 'collectionCenter', 'creator', 'company', 'branch'])
             ->findOrFail($id);
 
         if (! $isPublic) {
@@ -87,10 +87,11 @@ class InvoicePdfController extends Controller
         }
 
         $company = $invoice->company;
-        $template = Configuration::getFor('bill_template', 'classic', $companyId);
+        $branchId = $invoice->branch_id;
+        $template = Configuration::getFor('bill_template', 'classic', $companyId, $branchId);
 
-        $headerImage = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null, $companyId), $companyId);
-        $footerImage = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null, $companyId), $companyId);
+        $headerImage = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null, $companyId, $branchId), $companyId, $branchId);
+        $footerImage = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null, $companyId, $branchId), $companyId, $branchId);
 
         $view = 'pdf.invoice-'.$template;
         if (! view()->exists($view)) {
@@ -98,19 +99,19 @@ class InvoicePdfController extends Controller
         }
 
         // Visibility Fallbacks
-        $invoiceShowHeader = Configuration::getFor('invoice_show_header', Configuration::getFor('pdf_show_header', '1', $companyId), $companyId) === '1';
-        $invoiceShowFooter = Configuration::getFor('invoice_show_footer', Configuration::getFor('pdf_show_footer', '1', $companyId), $companyId) === '1';
+        $invoiceShowHeader = Configuration::getFor('invoice_show_header', Configuration::getFor('pdf_show_header', '1', $companyId, $branchId), $companyId, $branchId) === '1';
+        $invoiceShowFooter = Configuration::getFor('invoice_show_footer', Configuration::getFor('pdf_show_footer', '1', $companyId, $branchId), $companyId, $branchId) === '1';
 
         $finalShowHeader = $showHeader && $invoiceShowHeader;
         $finalShowFooter = $showFooter && $invoiceShowFooter;
 
         $pdfSettings = [
-            'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
-            'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
-            'pdf_margin_top' => Configuration::getFor('invoice_margin_top', Configuration::getFor('pdf_margin_top', null, $companyId), $companyId) ?: 310,
-            'pdf_margin_bottom' => Configuration::getFor('invoice_margin_bottom', Configuration::getFor('pdf_margin_bottom', null, $companyId), $companyId) ?: 255,
-            'pdf_header_height' => Configuration::getFor('invoice_header_height', Configuration::getFor('pdf_header_height', null, $companyId), $companyId) ?: 200,
-            'pdf_footer_height' => Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', null, $companyId), $companyId) ?: 180,
+            'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId, $branchId) ?: 13,
+            'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId, $branchId) ?: 'Helvetica',
+            'pdf_margin_top' => Configuration::getFor('invoice_margin_top', Configuration::getFor('pdf_margin_top', null, $companyId, $branchId), $companyId, $branchId) ?: 310,
+            'pdf_margin_bottom' => Configuration::getFor('invoice_margin_bottom', Configuration::getFor('pdf_margin_bottom', null, $companyId, $branchId), $companyId, $branchId) ?: 255,
+            'pdf_header_height' => Configuration::getFor('invoice_header_height', Configuration::getFor('pdf_header_height', null, $companyId, $branchId), $companyId, $branchId) ?: 200,
+            'pdf_footer_height' => Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', null, $companyId, $branchId), $companyId, $branchId) ?: 180,
             'pdf_header_image' => ($finalShowHeader && $headerImage) ? storage_base64($headerImage) : null,
             'pdf_footer_image' => ($finalShowFooter && $footerImage) ? storage_base64($footerImage) : null,
         ];
