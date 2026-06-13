@@ -27,7 +27,7 @@ class ReportPdfController extends Controller
      */
     public function streamPublicLink($id)
     {
-        $report = TestReport::with('invoice.company')
+        $report = TestReport::with(['invoice.company', 'invoice.branch'])
             ->where('invoice_id', $id)
             ->latest()
             ->first();
@@ -37,14 +37,15 @@ class ReportPdfController extends Controller
 
         // If not pre-generated, generate now using company's preferred template
         $companyId = $report ? $report->invoice->company_id : null;
+        $branchId = $report ? $report->invoice->branch_id : null;
 
         // Restriction Check for Unpaid Reports
-        $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $companyId) === '1';
+        $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $companyId, $branchId) === '1';
         if ($restrict && $report && strtolower($report->invoice->payment_status) !== 'paid') {
             return response()->view('public.restricted-report', ['invoice' => $report->invoice]);
         }
 
-        $template = Configuration::getFor('report_template', 'new', $companyId);
+        $template = Configuration::getFor('report_template', 'new', $companyId, $branchId);
 
         return $this->generateReport(new Request(['header' => '1']), $id, $template, true);
     }
@@ -73,6 +74,7 @@ class ReportPdfController extends Controller
             'invoice.doctor',
             'invoice.items.labTest',
             'results.labTest.dept',
+            'invoice.branch',
         ])->where('invoice_id', $invoiceId)->firstOrFail();
 
         // Auth & Isolation check for non-public access
@@ -90,7 +92,7 @@ class ReportPdfController extends Controller
                     abort(403, 'You are not authorized to view this report.');
                 }
 
-                $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $report->invoice->company_id) === '1';
+                $restrict = Configuration::getFor('restrict_unpaid_reports', '0', $report->invoice->company_id, $report->invoice->branch_id) === '1';
                 if ($restrict && strtolower($report->invoice->payment_status) !== 'paid') {
                     abort(403, 'Payment Pending. Please clear your dues to view this report.');
                 }
@@ -124,65 +126,66 @@ class ReportPdfController extends Controller
         }
 
         $companyId = $report->invoice->company_id;
+        $branchId = $report->invoice->branch_id;
         $showHeader = $request->get('header', '1') === '1';
 
-        $headerImage = Configuration::getFor('pdf_header_image', null, $companyId);
-        $footerImage = Configuration::getFor('pdf_footer_image', null, $companyId);
+        $headerImage = Configuration::getFor('pdf_header_image', null, $companyId, $branchId);
+        $footerImage = Configuration::getFor('pdf_footer_image', null, $companyId, $branchId);
 
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
             'pdf_header_image' => storage_base64($headerImage),
             'pdf_footer_image' => storage_base64($footerImage),
-            'report_signature_mode' => Configuration::getFor('report_signature_mode', null, $companyId) ?: 'global_bottom',
+            'report_signature_mode' => Configuration::getFor('report_signature_mode', null, $companyId, $branchId) ?: 'global_bottom',
 
-            'global_sig_1_name' => Configuration::getFor('authorized_signatory_name', null, $companyId) ?: 'Authorized Signatory',
-            'global_sig_1_desig' => Configuration::getFor('authorized_signatory_designation', null, $companyId) ?: '',
-            'global_sig_1_path' => storage_base64(Configuration::getFor('signature_image', null, $companyId)),
+            'global_sig_1_name' => Configuration::getFor('authorized_signatory_name', null, $companyId, $branchId) ?: 'Authorized Signatory',
+            'global_sig_1_desig' => Configuration::getFor('authorized_signatory_designation', null, $companyId, $branchId) ?: '',
+            'global_sig_1_path' => storage_base64(Configuration::getFor('signature_image', null, $companyId, $branchId)),
 
-            'global_sig_2_name' => Configuration::getFor('global_sig_2_name', '', $companyId) ?: '',
-            'global_sig_2_desig' => Configuration::getFor('global_sig_2_desig', '', $companyId) ?: '',
-            'global_sig_2_path' => storage_base64(Configuration::getFor('global_sig_2_path', null, $companyId)),
+            'global_sig_2_name' => Configuration::getFor('global_sig_2_name', '', $companyId, $branchId) ?: '',
+            'global_sig_2_desig' => Configuration::getFor('global_sig_2_desig', '', $companyId, $branchId) ?: '',
+            'global_sig_2_path' => storage_base64(Configuration::getFor('global_sig_2_path', null, $companyId, $branchId)),
 
-            'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId) ?: '',
-            'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId) ?: '',
-            'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId)),
+            'global_sig_3_name' => Configuration::getFor('global_sig_3_name', '', $companyId, $branchId) ?: '',
+            'global_sig_3_desig' => Configuration::getFor('global_sig_3_desig', '', $companyId, $branchId) ?: '',
+            'global_sig_3_path' => storage_base64(Configuration::getFor('global_sig_3_path', null, $companyId, $branchId)),
 
-            'sig_1_position' => Configuration::getFor('sig_1_position', 'right', $companyId) ?: 'right',
-            'sig_1_enabled' => Configuration::getFor('sig_1_enabled', '1', $companyId) !== '0',
-            'sig_2_position' => Configuration::getFor('sig_2_position', 'left', $companyId) ?: 'left',
-            'sig_2_enabled' => Configuration::getFor('sig_2_enabled', '1', $companyId) !== '0',
-            'sig_3_position' => Configuration::getFor('sig_3_position', 'center', $companyId) ?: 'center',
-            'sig_3_enabled' => Configuration::getFor('sig_3_enabled', '1', $companyId) !== '0',
+            'sig_1_position' => Configuration::getFor('sig_1_position', 'right', $companyId, $branchId) ?: 'right',
+            'sig_1_enabled' => Configuration::getFor('sig_1_enabled', '1', $companyId, $branchId) !== '0',
+            'sig_2_position' => Configuration::getFor('sig_2_position', 'left', $companyId, $branchId) ?: 'left',
+            'sig_2_enabled' => Configuration::getFor('sig_2_enabled', '1', $companyId, $branchId) !== '0',
+            'sig_3_position' => Configuration::getFor('sig_3_position', 'center', $companyId, $branchId) ?: 'center',
+            'sig_3_enabled' => Configuration::getFor('sig_3_enabled', '1', $companyId, $branchId) !== '0',
             
-            'report_flag_high_color' => Configuration::getFor('report_flag_high_color', '#cc0000', $companyId) ?: '#cc0000',
-            'report_flag_low_color' => Configuration::getFor('report_flag_low_color', '#0055aa', $companyId) ?: '#0055aa',
+            'report_flag_high_color' => Configuration::getFor('report_flag_high_color', '#cc0000', $companyId, $branchId) ?: '#cc0000',
+            'report_flag_low_color' => Configuration::getFor('report_flag_low_color', '#0055aa', $companyId, $branchId) ?: '#0055aa',
             
-            'report_abnormal_indicator' => Configuration::getFor('report_abnormal_indicator', '*', $companyId) ?: '*',
-            'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId) ?: '#d32f2f',
+            'report_abnormal_indicator' => Configuration::getFor('report_abnormal_indicator', '*', $companyId, $branchId) ?: '*',
+            'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId, $branchId) ?: '#d32f2f',
             
-            'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId) ?: 13,
-            'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId) ?: 'Helvetica',
+            'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId, $branchId) ?: 13,
+            'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId, $branchId) ?: 'Helvetica',
 
             // ALWAYS reserve space for physical letterhead (1 inch = ~96px minimum, but user wants settings-driven)
-            'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId) ?: 320,
-            'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId) ?: 280,
+            'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId, $branchId) ?: 320,
+            'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId, $branchId) ?: 280,
 
-            'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId) ?: 200,
-            'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId) ?: 180,
+            'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId, $branchId) ?: 200,
+            'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId, $branchId) ?: 180,
             'pdf_header_image' => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
-            'pdf_footer_image' => (Configuration::getFor('pdf_show_footer', '1', $companyId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_footer_image' => (Configuration::getFor('pdf_show_footer', '1', $companyId, $branchId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
 
             // Visibility
-            'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId) !== '0',
-            'pdf_show_footer' => Configuration::getFor('pdf_show_footer', null, $companyId) !== '0',
-            'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId) !== '0',
-            'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId) !== '0',
-            'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId) !== '0',
+            'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId, $branchId) !== '0',
+            'pdf_show_footer' => Configuration::getFor('pdf_show_footer', null, $companyId, $branchId) !== '0',
+            'pdf_show_signatures' => Configuration::getFor('pdf_show_signatures', null, $companyId, $branchId) !== '0',
+            'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId, $branchId) !== '0',
+            'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId, $branchId) !== '0',
 
-            'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId),
-            'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId) === '1',
-            'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId) === '1',
-            'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId) === '1',
+            'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId, $branchId),
+            'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId, $branchId) === '1',
+            'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId, $branchId) === '1',
+            'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId, $branchId) === '1',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)

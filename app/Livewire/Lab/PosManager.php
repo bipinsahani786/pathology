@@ -204,8 +204,15 @@ class PosManager extends Component
             }
         } else {
             // Global/Main Admin - Use session context or default
-            $this->branch_id = ($activeBranchId === 'all') ? (Branch::where('company_id', $companyId)->first()->id ?? null) : $activeBranchId;
+            $this->branch_id = (empty($activeBranchId) || $activeBranchId === 'all') ? (Branch::where('company_id', $companyId)->first()->id ?? null) : $activeBranchId;
             $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
+
+            if ($this->collection_center_id) {
+                $cc = CollectionCenter::find($this->collection_center_id);
+                if ($cc && $cc->branch_id) {
+                    $this->branch_id = $cc->branch_id;
+                }
+            }
         }
 
         $this->expected_report_date = date('Y-m-d');
@@ -227,6 +234,16 @@ class PosManager extends Component
                 ->first()->id ?? null;
         } else {
             $this->collection_center_id = null;
+        }
+    }
+
+    public function updatedCollectionCenterId($value)
+    {
+        if ($value) {
+            $cc = CollectionCenter::find($value);
+            if ($cc && $cc->branch_id) {
+                $this->branch_id = $cc->branch_id;
+            }
         }
     }
 

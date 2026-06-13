@@ -77,6 +77,7 @@
                                 <th>Department</th>
                                 <th>Parameters</th>
                                 <th style="width: 150px;">Sugg. Price</th>
+                                <th style="width: 120px;">Default?</th>
                                 <th class="text-end pe-4" style="width: 120px;">Actions</th>
                             </tr>
                         </thead>
@@ -101,6 +102,14 @@
                                     </td>
                                     <td>
                                         <div class="fw-bold text-dark fs-14">₹{{ number_format($test->mrp ?? 0, 2) }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                wire:click="toggleDefault({{ $test->id }})" 
+                                                {{ $test->is_default ? 'checked' : '' }}
+                                                style="cursor: pointer; width: 2.2em; height: 1.1em;">
+                                        </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="hstack gap-2 justify-content-end">

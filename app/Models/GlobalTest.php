@@ -14,6 +14,7 @@ class GlobalTest extends Model
     protected $casts = [
         'default_parameters' => 'array',
         'is_active' => 'boolean',
+        'is_default' => 'boolean',
         'department_id' => 'integer',
     ];
 

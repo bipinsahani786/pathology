@@ -107,10 +107,15 @@
         <div style="text-align: center; margin-bottom: 8px;">
             <div
                 style="font-size: 18px; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px;">
-                {{ $company->name }}</div>
+                @php
+                    $displayLabName = ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name;
+                    $displayAddress = ($invoice->branch && $invoice->branch->address) ? $invoice->branch->address : ($company->address ?? '');
+                    $displayPhone = ($invoice->branch && $invoice->branch->contact_number) ? $invoice->branch->contact_number : ($company->phone ?? '');
+                @endphp
+                {{ $displayLabName }}</div>
             <div style="font-size: 10.5px; color: #000; margin-top: 2px; line-height: 1.35;">
-                {{ $company->address ?? '' }}<br>
-                Phone: {{ $company->phone ?? '' }} @if($company->email) | Email: {{ $company->email }} @endif
+                {{ $displayAddress }}<br>
+                Phone: {{ $displayPhone }} @if($company->email) | Email: {{ $company->email }} @endif
                 @if($company->gst_number) | GSTIN: {{ $company->gst_number }} @endif
             </div>
         </div>
@@ -247,7 +252,7 @@
         <!-- ── FOOTER DISCLAIMER ── -->
         <div style="text-align: center; font-size: 9px; color: #000; margin-top: 15px; border-top: 1px solid #000; padding-top: 5px;">
             This is a computer-generated billing receipt and does not require a physical signature.<br>
-            Thank you for choosing {{ $company->name }}.
+            Thank you for choosing {{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}.
         </div>
     </div>
 

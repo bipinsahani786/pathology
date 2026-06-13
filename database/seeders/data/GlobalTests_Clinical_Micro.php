@@ -13,9 +13,7 @@ return [
         'sample_type' => 'Blood (Aerobic Bottle)',
         'tat_hours' => 120,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'BCR', 'input_type' => 'text', 'method' => 'Automated Culture System', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'BORG', 'input_type' => 'text', 'method' => 'Biochemical / VITEK-2', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'BSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer / MIC', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'BCR', 'input_type' => 'culture_sensitivity', 'method' => 'Automated / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [
@@ -29,10 +27,7 @@ return [
         'sample_type' => 'Mid-stream Clean-Catch Urine',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'UCR', 'input_type' => 'text', 'method' => 'Culture (CLED / MacConkey)', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Colony Count', 'unit' => 'CFU/mL', 'short_code' => 'UCOL', 'input_type' => 'text', 'method' => 'Semi-Quantitative', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'UORG', 'input_type' => 'text', 'method' => 'Biochemical / VITEK-2', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'USEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer / MIC', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'UCR', 'input_type' => 'culture_sensitivity', 'method' => 'Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [
@@ -46,9 +41,7 @@ return [
         'sample_type' => 'Sputum (Early Morning)',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'SPCR', 'input_type' => 'text', 'method' => 'Conventional Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Flora', 'display_range' => 'Normal Flora']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'SPORG', 'input_type' => 'text', 'method' => 'Biochemical Tests', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'SPSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer Disc Diffusion', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'SPCR', 'input_type' => 'culture_sensitivity', 'method' => 'Conventional Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Flora', 'display_range' => 'Normal Flora']]],
         ],
     ],
     [
@@ -62,9 +55,7 @@ return [
         'sample_type' => 'Wound Swab / Pus Aspirate',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'WCR', 'input_type' => 'text', 'method' => 'Conventional Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'WORG', 'input_type' => 'text', 'method' => 'Biochemical Tests', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'WSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer / MIC', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'WCR', 'input_type' => 'culture_sensitivity', 'method' => 'Conventional Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [
@@ -78,9 +69,7 @@ return [
         'sample_type' => 'Throat Swab',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'TCR', 'input_type' => 'text', 'method' => 'Blood Agar Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Flora', 'display_range' => 'Normal Flora']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'TORG', 'input_type' => 'text', 'method' => 'Biochemical Tests', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'TSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'TCR', 'input_type' => 'culture_sensitivity', 'method' => 'Blood Agar Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Flora', 'display_range' => 'Normal Flora']]],
         ],
     ],
 ];

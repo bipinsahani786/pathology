@@ -37,6 +37,8 @@ class GlobalTestEditor extends Component
 
     public $isRangeModalOpen = false;
 
+    public $is_default = false;
+
     public function mount($id = null)
     {
         $testService = new GlobalTestService;
@@ -54,6 +56,7 @@ class GlobalTestEditor extends Component
             $this->description = $test->description;
             $this->interpretation = $test->interpretation;
             $this->parameters = $test->default_parameters ?? [];
+            $this->is_default = (bool) ($test->is_default ?? false);
         } else {
             // Initial parameter for new test
             $this->addParameter();
@@ -169,10 +172,11 @@ class GlobalTestEditor extends Component
             'parameters' => 'nullable|array',
             'parameters.*.name' => 'required|string|max:255',
             'parameters.*.short_code' => 'nullable|string|max:50',
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity',
             'parameters.*.range_type' => 'required|in:general,gender,value,flexible',
             'parameters.*.unit' => 'nullable|string|max:50',
             'parameters.*.method' => 'nullable|string|max:100',
+            'is_default' => 'nullable|boolean',
         ]);
 
         // Basic cleanup for non-calculated types
@@ -194,6 +198,7 @@ class GlobalTestEditor extends Component
             'description' => $this->description,
             'interpretation' => $this->interpretation,
             'default_parameters' => $this->parameters,
+            'is_default' => (bool) $this->is_default,
         ];
 
         $testService->saveTest($saveData, $this->test_id);

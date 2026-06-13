@@ -72,10 +72,11 @@ class LabManager extends Component
 
     public function render()
     {
+        $likeOperator = \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'sqlite' ? 'like' : 'ilike';
         $query = Company::with('plan')
-            ->where(function ($q) {
-                $q->where('name', 'ilike', '%'.$this->searchTerm.'%')
-                    ->orWhere('email', 'ilike', '%'.$this->searchTerm.'%');
+            ->where(function ($q) use ($likeOperator) {
+                $q->where('name', $likeOperator, '%'.$this->searchTerm.'%')
+                    ->orWhere('email', $likeOperator, '%'.$this->searchTerm.'%');
             });
 
         // Apply Subscription Filters
@@ -207,6 +208,16 @@ class LabManager extends Component
             // Assign Role
             $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'lab_admin']);
             $user->assignRole($role);
+
+            // 4. Import Default Global Tests
+            $defaultGlobalTests = \App\Models\GlobalTest::where('is_active', true)
+                ->where('is_default', true)
+                ->get();
+
+            $labTestService = new \App\Services\LabTestService;
+            foreach ($defaultGlobalTests as $globalTest) {
+                $labTestService->importFromGlobal($globalTest->id, $company->id);
+            }
         });
 
         session()->flash('success', 'Lab created successfully with Admin credentials!');

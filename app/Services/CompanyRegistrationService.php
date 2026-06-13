@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Configuration;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\UserDetail;
@@ -73,6 +74,16 @@ class CompanyRegistrationService
                 'user_id' => $user->id,
                 'phone' => $data['phone'],
             ]);
+
+            // 6. Import Default Global Tests
+            $defaultGlobalTests = \App\Models\GlobalTest::where('is_active', true)
+                ->where('is_default', true)
+                ->get();
+
+            $labTestService = new \App\Services\LabTestService;
+            foreach ($defaultGlobalTests as $globalTest) {
+                $labTestService->importFromGlobal($globalTest->id, $company->id);
+            }
 
             return $user;
         });

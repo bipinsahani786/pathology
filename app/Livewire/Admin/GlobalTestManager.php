@@ -35,6 +35,16 @@ class GlobalTestManager extends Component
         session()->flash('message', 'Test Deleted Successfully.');
     }
 
+    public function toggleDefault($id)
+    {
+        $testService = new GlobalTestService;
+        $test = $testService->getTestById($id);
+        $testService->saveTest([
+            'is_default' => !$test->is_default
+        ], $id);
+        session()->flash('message', 'Default status updated successfully.');
+    }
+
     public function render()
     {
         $testService = new GlobalTestService;

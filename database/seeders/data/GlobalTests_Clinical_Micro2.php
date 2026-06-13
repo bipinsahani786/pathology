@@ -13,9 +13,7 @@ return [
         'sample_type' => 'Fresh Stool',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'STCR', 'input_type' => 'text', 'method' => 'Selective Media Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Pathogen Isolated', 'display_range' => 'No Pathogen Isolated']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'STORG', 'input_type' => 'text', 'method' => 'Biochemical / Serotyping', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'STSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'STCR', 'input_type' => 'culture_sensitivity', 'method' => 'Selective Media Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Pathogen Isolated', 'display_range' => 'No Pathogen Isolated']]],
         ],
     ],
     [

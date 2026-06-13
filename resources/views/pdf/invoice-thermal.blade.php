@@ -152,10 +152,15 @@
 <body>
 
     <div class="header-section center">
-        <div class="lab-name">{{ strtoupper($company->name) }}</div>
+        @php
+            $displayLabName = ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name;
+            $displayAddress = ($invoice->branch && $invoice->branch->address) ? $invoice->branch->address : ($company->address ?? '');
+            $displayPhone = ($invoice->branch && $invoice->branch->contact_number) ? $invoice->branch->contact_number : ($company->phone ?? '');
+        @endphp
+        <div class="lab-name">{{ strtoupper($displayLabName) }}</div>
         <div class="lab-info">
-            {{ $company->address ?? '' }}<br>
-            📞 {{ $company->phone ?? '' }} @if($company->gst_number) | GST: {{ $company->gst_number }} @endif
+            {{ $displayAddress }}<br>
+            📞 {{ $displayPhone }} @if($company->gst_number) | GST: {{ $company->gst_number }} @endif
         </div>
     </div>
 
@@ -231,7 +236,7 @@
 
     <div class="footer-note center">
         *** THANK YOU FOR VISITING ***
-        <br>{{ $company->name }}
+        <br>{{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}
         <br>{{ $invoice->barcode }}
     </div>
 

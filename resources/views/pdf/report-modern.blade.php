@@ -273,14 +273,19 @@
             @if($settings['pdf_header_image'])
                 <img src="{{ $settings['pdf_header_image'] }}" class="custom-header-img" alt="Header">
             @else
+                @php
+                    $displayLabName = ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name;
+                    $displayAddress = ($invoice->branch && $invoice->branch->address) ? $invoice->branch->address : ($company->address ?? '');
+                    $displayPhone = ($invoice->branch && $invoice->branch->contact_number) ? $invoice->branch->contact_number : ($company->phone ?? '');
+                @endphp
                 <div class="header-content">
                     <div class="header-logo">
-                        <h2>{{ $company->name }}</h2>
+                        <h2>{{ $displayLabName }}</h2>
                     </div>
                     <div class="header-text">
                         <h3 style="margin: 0; color: #14b8a6;">LABORATORY REPORT</h3>
-                        <div>{{ $company->address }}</div>
-                        <div>Phone: {{ $company->phone }} | Email: {{ $company->email }}</div>
+                        <div>{{ $displayAddress }}</div>
+                        <div>Phone: {{ $displayPhone }} | Email: {{ $company->email }}</div>
                     </div>
                 </div>
             @endif
@@ -363,7 +368,7 @@
                     <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
                 @else
                     <div style="text-align: center;">
-                        <strong>{{ $company->name }}</strong> - {{ $company->tagline }}<br>
+                        <strong>{{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}</strong> - {{ $company->tagline }}<br>
                         <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>
                     </div>
                 @endif
@@ -429,14 +434,21 @@
                 @endif
             
             <table class="results-table">
-                <thead>
-                    <tr>
-                        <th style="width: 35%">Investigation</th>
-                        <th style="width: 20%">Result</th>
-                        <th style="width: 15%">Unit</th>
-                        <th style="width: 30%">Reference Value</th>
-                    </tr>
-                </thead>
+                @php
+                    $isCultureOnly = $results->every(function ($r) {
+                        return !empty($r->culture_data);
+                    });
+                @endphp
+                @if(!$isCultureOnly)
+                    <thead>
+                        <tr>
+                            <th style="width: 35%">Investigation</th>
+                            <th style="width: 20%">Result</th>
+                            <th style="width: 15%">Unit</th>
+                            <th style="width: 30%">Reference Value</th>
+                        </tr>
+                    </thead>
+                @endif
                 <tbody>
                     <tr>
                         <td colspan="4" class="test-title">
@@ -447,29 +459,109 @@
                         </td>
                     </tr>
                     @foreach($results as $r)
-                        <tr>
-                            <td style="padding-left: 15px;">
-                                <div>{{ $r->parameter_name }}</div>
-                                @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
-                                    <div style="font-size: 8px; color: #777; font-style: italic;">Method: {{ $r->method }}</div>
-                                @endif
-                            </td>
-                            <td>
-                                @if($r->is_highlighted)
-                                    @php 
-                                        $flag = strtoupper(trim(substr($r->status ?? '', 0, 1)));
-                                        $flagText = in_array($flag, ['H', 'L']) ? $flag : ($settings['report_abnormal_indicator'] ?? '*');
-                                        $flagColor = $flag === 'H' ? ($settings['report_flag_high_color'] ?? '#cc0000') : ($flag === 'L' ? ($settings['report_flag_low_color'] ?? '#0055aa') : ($settings['report_abnormal_color'] ?? '#d32f2f'));
-                                    @endphp
-                                    <span class="bg-abnormal" style="color: {{ $flagColor }}; font-weight: bold;">{{ $r->result_value }}</span>
-                                    <span style="color: {{ $flagColor }}; font-weight: bold; font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
-                                @else
-                                    <span style="font-weight:bold;">{{ $r->result_value }}</span>
-                                @endif
-                            </td>
-                            <td>{{ $r->unit }}</td>
-                            <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
-                        </tr>
+                        @if(!empty($r->culture_data))
+                            {{-- ── Culture & Sensitivity Spanned Row ── --}}
+                            <tr>
+                                <td colspan="4" style="padding: 12px 8px; border-bottom: 1px dashed #eee;">
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 12px; color: #000; margin-bottom: 8px; text-transform: uppercase;">
+                                            {{ $r->parameter_name }}
+                                        </div>
+                                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px;">
+                                            <tr>
+                                                <td style="width: 30%; font-weight: bold; border: none; padding: 3px 0; color: #555;">Growth Status:</td>
+                                                <td style="width: 70%; border: none; padding: 3px 0; color: #000; font-weight: bold;">
+                                                    @if(($r->culture_data['growth_status'] ?? '') === 'No Growth')
+                                                        No Growth Isolated
+                                                    @elseif(($r->culture_data['growth_status'] ?? '') === 'Contamination')
+                                                        Mixed Growth (Contamination)
+                                                    @else
+                                                        Significant Growth Isolated
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth')
+                                                <tr>
+                                                    <td style="font-weight: bold; border: none; padding: 3px 0; color: #555;">Organism Isolated:</td>
+                                                    <td style="color: #000; font-weight: bold; font-style: italic; border: none; padding: 3px 0;">
+                                                        {{ $r->culture_data['organism_name'] ?? 'Not Specified' }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="font-weight: bold; border: none; padding: 3px 0; color: #555;">Colony Count:</td>
+                                                    <td style="border: none; padding: 3px 0; color: #000;">
+                                                        {{ $r->culture_data['colony_count'] ?? 'Not Specified' }}
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                        </table>
+
+                                        @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth' && !empty($r->culture_data['antibiotics']))
+                                            <div style="margin-top: 15px;">
+                                                <div style="font-weight: bold; font-size: 11px; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; color: #000;">
+                                                    Antibiotic Susceptibility Profile
+                                                </div>
+                                                <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: left;">
+                                                    <thead>
+                                                        <tr style="border-bottom: 1.5px solid #000; font-weight: bold; color: #000;">
+                                                            <th style="padding: 6px 4px; width: 45%; border: none;">Antibiotic Name</th>
+                                                            <th style="padding: 6px 4px; width: 35%; text-align: center; border: none;">Susceptibility</th>
+                                                            <th style="padding: 6px 4px; width: 20%; text-align: center; border: none;">MIC Value</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($r->culture_data['antibiotics'] as $ab)
+                                                            @php
+                                                                $sens = strtoupper($ab['sensitivity'] ?? 'S');
+                                                                $text = 'Sensitive';
+                                                                if ($sens === 'R') {
+                                                                    $text = 'Resistant';
+                                                                } elseif ($sens === 'I') {
+                                                                    $text = 'Intermediate';
+                                                                }
+                                                            @endphp
+                                                            <tr style="border-bottom: 0.5px solid #eee;">
+                                                                <td style="padding: 6px 4px; font-weight: bold; border: none; color: #000;">{{ $ab['name'] }}</td>
+                                                                <td style="padding: 6px 4px; text-align: center; font-weight: bold; border: none; color: #000;">
+                                                                    {{ $text }}
+                                                                </td>
+                                                                <td style="padding: 6px 4px; text-align: center; font-family: monospace; border: none; color: #000;">
+                                                                    {{ $ab['mic'] ?: '--' }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td style="padding-left: 15px;">
+                                    <div>{{ $r->parameter_name }}</div>
+                                    @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
+                                        <div style="font-size: 8px; color: #777; font-style: italic;">Method: {{ $r->method }}</div>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($r->is_highlighted)
+                                        @php 
+                                            $flag = strtoupper(trim(substr($r->status ?? '', 0, 1)));
+                                            $flagText = in_array($flag, ['H', 'L']) ? $flag : ($settings['report_abnormal_indicator'] ?? '*');
+                                            $flagColor = $flag === 'H' ? ($settings['report_flag_high_color'] ?? '#cc0000') : ($flag === 'L' ? ($settings['report_flag_low_color'] ?? '#0055aa') : ($settings['report_abnormal_color'] ?? '#d32f2f'));
+                                        @endphp
+                                        <span class="bg-abnormal" style="color: {{ $flagColor }}; font-weight: bold;">{{ $r->result_value }}</span>
+                                        <span style="color: {{ $flagColor }}; font-weight: bold; font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
+                                    @else
+                                        <span style="font-weight:bold;">{{ $r->result_value }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ $r->unit }}</td>
+                                <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
+                            </tr>
+                        @endif
                     @endforeach
                     @if(($settings['report_show_note'] ?? true) && $labTest->description)
                         <tr style="page-break-inside: avoid;">

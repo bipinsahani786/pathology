@@ -85,6 +85,12 @@
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">TAT (Hours)</label>
                                     <input type="number" class="form-control" wire:model="tat_hours">
                                 </div>
+                                <div class="col-6 col-md-4 d-flex align-items-center">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" id="is_default" wire:model="is_default">
+                                        <label class="form-check-label fw-bold fs-11 text-muted text-uppercase mb-0 ms-2" for="is_default">Import by Default</label>
+                                    </div>
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-1">Master Internal Description</label>
                                     <input type="text" class="form-control" wire:model="description" placeholder="Notes for administrators...">
@@ -139,6 +145,7 @@
                                                         <option value="text">Text/Qualitative</option>
                                                         <option value="selection">Dropdown List</option>
                                                         <option value="calculated">Formula</option>
+                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
                                                     </select>
                                                 </td>
                                                 <td>
@@ -186,6 +193,7 @@
                                                         <option value="text">Text</option>
                                                         <option value="selection">Dropdown</option>
                                                         <option value="calculated">Formula</option>
+                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -262,6 +270,7 @@
                                     <option value="text">Free Text / Qualitative</option>
                                     <option value="selection">Dropdown Options</option>
                                     <option value="calculated">Calculated Formula</option>
+                                    <option value="culture_sensitivity">Culture Sensitivity Susceptibility Grid</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

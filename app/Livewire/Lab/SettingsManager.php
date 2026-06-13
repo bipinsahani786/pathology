@@ -14,6 +14,11 @@ class SettingsManager extends Component
     // Active Tab
     public $activeTab = 'profile'; // profile, invoice, template, pdf, signatures, staff
 
+    // Branch Scoping
+    public $branches = [];
+
+    public $selectedBranchId = 'global';
+
     // ==========================================
     // LAB PROFILE
     // ==========================================
@@ -299,8 +304,56 @@ class SettingsManager extends Component
     public function mount()
     {
         $this->authorize('view settings');
+        $this->branches = \App\Models\Branch::where('company_id', auth()->user()->company_id)->get();
+
+        if (auth()->user()->hasRole('branch_admin')) {
+            $this->selectedBranchId = auth()->user()->branch_id;
+        } else {
+            $this->selectedBranchId = session('settings_branch_id', 'global');
+        }
+
+        $this->loadSettings();
+
+        // Branch Admin Restriction: Force default tab to staff
+        if (auth()->user()->hasRole('branch_admin')) {
+            $this->activeTab = 'staff';
+        }
+    }
+
+    public function updatedSelectedBranchId($value)
+    {
+        session(['settings_branch_id' => $value]);
+        $this->loadSettings();
+    }
+
+    public function loadSettings()
+    {
         $company = Company::find(auth()->user()->company_id);
-        if ($company) {
+        if (!$company) {
+            return;
+        }
+
+        $branchId = $this->selectedBranchId;
+
+        // Profile Tab Loading
+        if ($branchId !== 'global') {
+            $branch = \App\Models\Branch::where('company_id', $company->id)->where('id', $branchId)->first();
+            if ($branch) {
+                $this->lab_name = $branch->name;
+                $this->lab_phone = $branch->contact_number;
+                $this->lab_address = $branch->address;
+            } else {
+                $this->lab_name = '';
+                $this->lab_phone = '';
+                $this->lab_address = '';
+            }
+            $this->lab_email = Configuration::getFor('lab_email', $company->email, $company->id, $branchId);
+            $this->lab_website = Configuration::getFor('lab_website', $company->website, $company->id, $branchId);
+            $this->lab_gst_number = Configuration::getFor('lab_gst_number', $company->gst_number, $company->id, $branchId);
+            $this->lab_tagline = Configuration::getFor('lab_tagline', $company->tagline, $company->id, $branchId);
+            $this->lab_logo = Configuration::getFor('lab_logo', $company->logo, $company->id, $branchId);
+            $this->lab_favicon = Configuration::getFor('lab_favicon', null, $company->id, $branchId);
+        } else {
             $this->lab_name = $company->name;
             $this->lab_email = $company->email;
             $this->lab_phone = $company->phone;
@@ -309,124 +362,123 @@ class SettingsManager extends Component
             $this->lab_gst_number = $company->gst_number;
             $this->lab_tagline = $company->tagline;
             $this->lab_logo = $company->logo;
-            $this->lab_favicon = Configuration::getFor('lab_favicon');
+            $this->lab_favicon = Configuration::getFor('lab_favicon', null, $company->id, 'global');
         }
 
         // Load invoice settings from configurations table
-        $this->invoice_prefix = Configuration::getFor('invoice_prefix', 'INV');
-        $this->invoice_separator = Configuration::getFor('invoice_separator', '-');
-        $this->invoice_date_format = Configuration::getFor('invoice_date_format', 'ym');
-        $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4);
-        $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly');
-        $this->restrict_billing_below_b2b = Configuration::getFor('restrict_billing_below_b2b', '0') === '1';
-        $this->restrict_unpaid_reports = Configuration::getFor('restrict_unpaid_reports', '0') === '1';
-        $this->commission_basis_doctor = Configuration::getFor('commission_basis_doctor', 'gross');
-        $this->commission_basis_agent = Configuration::getFor('commission_basis_agent', 'gross');
-        $this->bill_template = Configuration::getFor('bill_template', 'classic');
+        $this->invoice_prefix = Configuration::getFor('invoice_prefix', 'INV', $company->id, $branchId);
+        $this->invoice_separator = Configuration::getFor('invoice_separator', '-', $company->id, $branchId);
+        $this->invoice_date_format = Configuration::getFor('invoice_date_format', 'ym', $company->id, $branchId);
+        $this->invoice_counter_digits = (int) Configuration::getFor('invoice_counter_digits', 4, $company->id, $branchId);
+        $this->invoice_counter_reset = Configuration::getFor('invoice_counter_reset', 'monthly', $company->id, $branchId);
+        $this->restrict_billing_below_b2b = Configuration::getFor('restrict_billing_below_b2b', '0', $company->id, $branchId) === '1';
+        $this->restrict_unpaid_reports = Configuration::getFor('restrict_unpaid_reports', '0', $company->id, $branchId) === '1';
+        $this->commission_basis_doctor = Configuration::getFor('commission_basis_doctor', 'gross', $company->id, $branchId);
+        $this->commission_basis_agent = Configuration::getFor('commission_basis_agent', 'gross', $company->id, $branchId);
+        $this->bill_template = Configuration::getFor('bill_template', 'classic', $company->id, $branchId);
 
         // Invoice Print Layout (with fallback to pdf_ report equivalents for backward compatibility)
-        $this->invoice_show_header = Configuration::getFor('invoice_show_header', Configuration::getFor('pdf_show_header', '1')) === '1';
-        $this->invoice_show_footer = Configuration::getFor('invoice_show_footer', Configuration::getFor('pdf_show_footer', '1')) === '1';
-        $this->invoice_header_image = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null));
-        $this->invoice_footer_image = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null));
-        $this->invoice_margin_top = (int) Configuration::getFor('invoice_margin_top', Configuration::getFor('pdf_margin_top', 310));
-        $this->invoice_margin_bottom = (int) Configuration::getFor('invoice_margin_bottom', Configuration::getFor('pdf_margin_bottom', 255));
-        $this->invoice_header_height = (int) Configuration::getFor('invoice_header_height', Configuration::getFor('pdf_header_height', 200));
-        $this->invoice_footer_height = (int) Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', 180));
+        $this->invoice_show_header = Configuration::getFor('invoice_show_header', Configuration::getFor('pdf_show_header', '1', $company->id, $branchId), $company->id, $branchId) === '1';
+        $this->invoice_show_footer = Configuration::getFor('invoice_show_footer', Configuration::getFor('pdf_show_footer', '1', $company->id, $branchId), $company->id, $branchId) === '1';
+        $this->invoice_header_image = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null, $company->id, $branchId), $company->id, $branchId);
+        $this->invoice_footer_image = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null, $company->id, $branchId), $company->id, $branchId);
+        $this->invoice_margin_top = (int) Configuration::getFor('invoice_margin_top', Configuration::getFor('pdf_margin_top', 310, $company->id, $branchId), $company->id, $branchId);
+        $this->invoice_margin_bottom = (int) Configuration::getFor('invoice_margin_bottom', Configuration::getFor('pdf_margin_bottom', 255, $company->id, $branchId), $company->id, $branchId);
+        $this->invoice_header_height = (int) Configuration::getFor('invoice_header_height', Configuration::getFor('pdf_header_height', 200, $company->id, $branchId), $company->id, $branchId);
+        $this->invoice_footer_height = (int) Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', 180, $company->id, $branchId), $company->id, $branchId);
 
         // Patient ID settings
-        $this->patient_id_prefix = Configuration::getFor('patient_id_prefix', 'PAT');
-        $this->patient_id_digits = (int) Configuration::getFor('patient_id_digits', 4);
+        $this->patient_id_prefix = Configuration::getFor('patient_id_prefix', 'PAT', $company->id, $branchId);
+        $this->patient_id_digits = (int) Configuration::getFor('patient_id_digits', 4, $company->id, $branchId);
 
         // PDF header/footer
-        $this->pdf_show_header = Configuration::getFor('pdf_show_header', '1') === '1';
-        $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1') === '1';
-        $this->pdf_show_signatures = Configuration::getFor('pdf_show_signatures', '1') === '1';
-        $this->pdf_show_test_method = Configuration::getFor('pdf_show_test_method', '1') === '1';
-        $this->pdf_show_watermark = Configuration::getFor('pdf_show_watermark', '1') === '1';
-        $this->pdf_header_image = Configuration::getFor('pdf_header_image', null);
-        $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null);
+        $this->pdf_show_header = Configuration::getFor('pdf_show_header', '1', $company->id, $branchId) === '1';
+        $this->pdf_show_footer = Configuration::getFor('pdf_show_footer', '1', $company->id, $branchId) === '1';
+        $this->pdf_show_signatures = Configuration::getFor('pdf_show_signatures', '1', $company->id, $branchId) === '1';
+        $this->pdf_show_test_method = Configuration::getFor('pdf_show_test_method', '1', $company->id, $branchId) === '1';
+        $this->pdf_show_watermark = Configuration::getFor('pdf_show_watermark', '1', $company->id, $branchId) === '1';
+        $this->pdf_header_image = Configuration::getFor('pdf_header_image', null, $company->id, $branchId);
+        $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null, $company->id, $branchId);
 
         // PDF Typography & Layout
-        $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 13);
-        $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica');
-        $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 310);
-        $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255);
-        $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200);
-        $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180);
+        $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 13, $company->id, $branchId);
+        $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica', $company->id, $branchId);
+        $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 310, $company->id, $branchId);
+        $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255, $company->id, $branchId);
+        $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200, $company->id, $branchId);
+        $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180, $company->id, $branchId);
 
-        $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous');
-        $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1') === '1';
-        $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1') === '1';
-        $this->report_show_note = Configuration::getFor('report_show_note', '1') === '1';
+        $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
+        $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
+        $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1', $company->id, $branchId) === '1';
+        $this->report_show_note = Configuration::getFor('report_show_note', '1', $company->id, $branchId) === '1';
 
-        $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000');
-        $this->report_flag_low_color = Configuration::getFor('report_flag_low_color', '#0055aa');
+        $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000', $company->id, $branchId);
+        $this->report_flag_low_color = Configuration::getFor('report_flag_low_color', '#0055aa', $company->id, $branchId);
         
-        $this->report_abnormal_indicator = Configuration::getFor('report_abnormal_indicator', '*');
-        $this->report_abnormal_color = Configuration::getFor('report_abnormal_color', '#d32f2f');
+        $this->report_abnormal_indicator = Configuration::getFor('report_abnormal_indicator', '*', $company->id, $branchId);
+        $this->report_abnormal_color = Configuration::getFor('report_abnormal_color', '#d32f2f', $company->id, $branchId);
 
-        $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist');
-        $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist');
-        $this->signature_image = Configuration::getFor('signature_image', null);
+        $this->authorized_signatory_name = Configuration::getFor('authorized_signatory_name', 'Dr. Authorized Pathologist', $company->id, $branchId);
+        $this->authorized_signatory_designation = Configuration::getFor('authorized_signatory_designation', 'Consultant Pathologist', $company->id, $branchId);
+        $this->signature_image = Configuration::getFor('signature_image', null, $company->id, $branchId);
 
         // Global 2 & 3
-        $this->global_sig_2_name = Configuration::getFor('global_sig_2_name', '');
-        $this->global_sig_2_desig = Configuration::getFor('global_sig_2_desig', '');
-        $this->global_sig_2_path = Configuration::getFor('global_sig_2_path', null);
-        $this->global_sig_3_name = Configuration::getFor('global_sig_3_name', '');
-        $this->global_sig_3_desig = Configuration::getFor('global_sig_3_desig', '');
-        $this->global_sig_3_path = Configuration::getFor('global_sig_3_path', null);
+        $this->global_sig_2_name = Configuration::getFor('global_sig_2_name', '', $company->id, $branchId);
+        $this->global_sig_2_desig = Configuration::getFor('global_sig_2_desig', '', $company->id, $branchId);
+        $this->global_sig_2_path = Configuration::getFor('global_sig_2_path', null, $company->id, $branchId);
+        $this->global_sig_3_name = Configuration::getFor('global_sig_3_name', '', $company->id, $branchId);
+        $this->global_sig_3_desig = Configuration::getFor('global_sig_3_desig', '', $company->id, $branchId);
+        $this->global_sig_3_path = Configuration::getFor('global_sig_3_path', null, $company->id, $branchId);
 
-        $this->sig_1_position = Configuration::getFor('sig_1_position', 'right');
-        $this->sig_1_enabled = Configuration::getFor('sig_1_enabled', '1') === '1';
-        $this->sig_2_position = Configuration::getFor('sig_2_position', 'left');
-        $this->sig_2_enabled = Configuration::getFor('sig_2_enabled', '1') === '1';
-        $this->sig_3_position = Configuration::getFor('sig_3_position', 'center');
-        $this->sig_3_enabled = Configuration::getFor('sig_3_enabled', '1') === '1';
+        $this->sig_1_position = Configuration::getFor('sig_1_position', 'right', $company->id, $branchId);
+        $this->sig_1_enabled = Configuration::getFor('sig_1_enabled', '1', $company->id, $branchId) === '1';
+        $this->sig_2_position = Configuration::getFor('sig_2_position', 'left', $company->id, $branchId);
+        $this->sig_2_enabled = Configuration::getFor('sig_2_enabled', '1', $company->id, $branchId) === '1';
+        $this->sig_3_position = Configuration::getFor('sig_3_position', 'center', $company->id, $branchId);
+        $this->sig_3_enabled = Configuration::getFor('sig_3_enabled', '1', $company->id, $branchId) === '1';
 
-        $this->report_signature_mode = Configuration::getFor('report_signature_mode', 'global_bottom');
+        $this->report_signature_mode = Configuration::getFor('report_signature_mode', 'global_bottom', $company->id, $branchId);
 
         // Barcode settings
-        $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB');
-        $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd');
-        $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6);
+        $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB', $company->id, $branchId);
+        $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd', $company->id, $branchId);
+        $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6, $company->id, $branchId);
 
-        // Branch Controls
-        $this->branch_share_patients = Configuration::getFor('branch_share_patients', '1') === '1';
-        $this->branch_share_doctors = Configuration::getFor('branch_share_doctors', '1') === '1';
-        $this->branch_share_agents = Configuration::getFor('branch_share_agents', '1') === '1';
-        $this->branch_share_tests = Configuration::getFor('branch_share_tests', '1') === '1';
-        $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1') === '1';
+        // Branch Controls (Always Global/Company Wide context)
+        $this->branch_share_patients = Configuration::getFor('branch_share_patients', '1', $company->id, 'global') === '1';
+        $this->branch_share_doctors = Configuration::getFor('branch_share_doctors', '1', $company->id, 'global') === '1';
+        $this->branch_share_agents = Configuration::getFor('branch_share_agents', '1', $company->id, 'global') === '1';
+        $this->branch_share_tests = Configuration::getFor('branch_share_tests', '1', $company->id, 'global') === '1';
+        $this->restrict_branch_access = Configuration::getFor('restrict_branch_access', '1', $company->id, 'global') === '1';
 
-        // Module Visibility
-        $this->default_login_page = Configuration::getFor('default_login_page', 'lab.dashboard');
-        $this->show_dashboard_stats = Configuration::getFor('show_dashboard_stats', '1') === '1';
-        $this->module_pos = Configuration::getFor('module_pos', '1') === '1';
-        $this->module_invoices = Configuration::getFor('module_invoices', '1') === '1';
-        $this->module_departments = Configuration::getFor('module_departments', '1') === '1';
-        $this->module_tests = Configuration::getFor('module_tests', '1') === '1';
-        $this->module_packages = Configuration::getFor('module_packages', '1') === '1';
-        $this->module_branches = Configuration::getFor('module_branches', '1') === '1';
-        $this->module_collection_centers = Configuration::getFor('module_collection_centers', '1') === '1';
-        $this->module_patients = Configuration::getFor('module_patients', '1') === '1';
-        $this->module_doctors = Configuration::getFor('module_doctors', '1') === '1';
-        $this->module_agents = Configuration::getFor('module_agents', '1') === '1';
-        $this->module_settlements = Configuration::getFor('module_settlements', '1') === '1';
-        $this->module_marketing = Configuration::getFor('module_marketing', '1') === '1';
-        $this->module_inventory = Configuration::getFor('module_inventory', '1') === '1';
+        // Module Visibility (Always Global/Company Wide context)
+        $this->default_login_page = Configuration::getFor('default_login_page', 'lab.dashboard', $company->id, 'global');
+        $this->show_dashboard_stats = Configuration::getFor('show_dashboard_stats', '1', $company->id, 'global') === '1';
+        $this->module_pos = Configuration::getFor('module_pos', '1', $company->id, 'global') === '1';
+        $this->module_invoices = Configuration::getFor('module_invoices', '1', $company->id, 'global') === '1';
+        $this->module_departments = Configuration::getFor('module_departments', '1', $company->id, 'global') === '1';
+        $this->module_tests = Configuration::getFor('module_tests', '1', $company->id, 'global') === '1';
+        $this->module_packages = Configuration::getFor('module_packages', '1', $company->id, 'global') === '1';
+        $this->module_branches = Configuration::getFor('module_branches', '1', $company->id, 'global') === '1';
+        $this->module_collection_centers = Configuration::getFor('module_collection_centers', '1', $company->id, 'global') === '1';
+        $this->module_patients = Configuration::getFor('module_patients', '1', $company->id, 'global') === '1';
+        $this->module_doctors = Configuration::getFor('module_doctors', '1', $company->id, 'global') === '1';
+        $this->module_agents = Configuration::getFor('module_agents', '1', $company->id, 'global') === '1';
+        $this->module_settlements = Configuration::getFor('module_settlements', '1', $company->id, 'global') === '1';
+        $this->module_marketing = Configuration::getFor('module_marketing', '1', $company->id, 'global') === '1';
+        $this->module_inventory = Configuration::getFor('module_inventory', '1', $company->id, 'global') === '1';
 
-        // UI Scaling
-        $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100);
+        // UI Scaling (Always Global/Company Wide context)
+        $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100, $company->id, 'global');
 
-        // WhatsApp Settings
-        $this->whatsapp_share_mode = Configuration::getFor('whatsapp_share_mode', 'pdf');
-        $this->whatsapp_invoice_message = Configuration::getFor('whatsapp_invoice_message', '');
-        $this->whatsapp_report_message = Configuration::getFor('whatsapp_report_message', '');
+        // WhatsApp Settings (Always Global/Company Wide context)
+        $this->whatsapp_share_mode = Configuration::getFor('whatsapp_share_mode', 'pdf', $company->id, 'global');
+        $this->whatsapp_invoice_message = Configuration::getFor('whatsapp_invoice_message', '', $company->id, 'global');
+        $this->whatsapp_report_message = Configuration::getFor('whatsapp_report_message', '', $company->id, 'global');
 
-        // Branch Admin Restriction: Force default tab to staff
-        if (auth()->user()->hasRole('branch_admin')) {
-            $this->activeTab = 'staff';
+        if ($this->selected_dept_id) {
+            $this->updatedSelectedDeptId($this->selected_dept_id);
         }
     }
 
@@ -449,32 +501,54 @@ class SettingsManager extends Component
         ]);
 
         $company = Company::find(auth()->user()->company_id);
+        $branchId = $this->selectedBranchId;
 
         // Handle logo upload
-        $logoPath = $company->logo;
+        $logoPath = $this->lab_logo;
+        if ($branchId === 'global') {
+            $logoPath = $company->logo;
+        }
         if (is_object($this->new_logo) && method_exists($this->new_logo, 'store')) {
             $logoPath = $this->new_logo->store('logos');
+            if ($branchId !== 'global') {
+                Configuration::setFor('lab_logo', $logoPath, $company->id, $branchId);
+            } else {
+                $company->update(['logo' => $logoPath]);
+            }
         }
 
         // Handle favicon upload
         $faviconPath = $this->lab_favicon;
         if (is_object($this->new_favicon) && method_exists($this->new_favicon, 'store')) {
             $faviconPath = $this->new_favicon->store('favicons');
-            Configuration::setFor('lab_favicon', $faviconPath);
+            Configuration::setFor('lab_favicon', $faviconPath, $company->id, $branchId);
         }
 
-        $company->update([
-            'name' => $this->lab_name,
-            'email' => $this->lab_email,
-            'phone' => $this->lab_phone,
-            'address' => $this->lab_address,
-            'website' => $this->lab_website,
-            'gst_number' => $this->lab_gst_number,
-            'tagline' => $this->lab_tagline,
-            'logo' => $logoPath,
-        ]);
+        if ($branchId !== 'global') {
+            \App\Models\Branch::where('company_id', $company->id)
+                ->where('id', $branchId)
+                ->update([
+                    'name' => $this->lab_name,
+                    'contact_number' => $this->lab_phone,
+                    'address' => $this->lab_address,
+                ]);
+            Configuration::setFor('lab_email', $this->lab_email, $company->id, $branchId);
+            Configuration::setFor('lab_website', $this->lab_website, $company->id, $branchId);
+            Configuration::setFor('lab_gst_number', $this->lab_gst_number, $company->id, $branchId);
+            Configuration::setFor('lab_tagline', $this->lab_tagline, $company->id, $branchId);
+        } else {
+            $company->update([
+                'name' => $this->lab_name,
+                'email' => $this->lab_email,
+                'phone' => $this->lab_phone,
+                'address' => $this->lab_address,
+                'website' => $this->lab_website,
+                'gst_number' => $this->lab_gst_number,
+                'tagline' => $this->lab_tagline,
+            ]);
+        }
 
-        Configuration::setFor('ui_font_scale', $this->ui_font_scale);
+        Configuration::setFor('ui_font_scale', $this->ui_font_scale, $company->id, 'global');
 
         $this->lab_logo = $logoPath;
         $this->lab_favicon = $faviconPath;
@@ -499,15 +573,18 @@ class SettingsManager extends Component
             'invoice_counter_reset' => 'required|string|in:daily,monthly,yearly,never',
         ]);
 
-        Configuration::setFor('invoice_prefix', $this->invoice_prefix);
-        Configuration::setFor('invoice_separator', $this->invoice_separator);
-        Configuration::setFor('invoice_date_format', $this->invoice_date_format);
-        Configuration::setFor('invoice_counter_digits', $this->invoice_counter_digits);
-        Configuration::getFor('invoice_counter_reset', $this->invoice_counter_reset);
-        Configuration::setFor('restrict_billing_below_b2b', $this->restrict_billing_below_b2b ? '1' : '0');
-        Configuration::setFor('restrict_unpaid_reports', $this->restrict_unpaid_reports ? '1' : '0');
-        Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor);
-        Configuration::setFor('commission_basis_agent', $this->commission_basis_agent);
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+
+        Configuration::setFor('invoice_prefix', $this->invoice_prefix, $companyId, $branchId);
+        Configuration::setFor('invoice_separator', $this->invoice_separator, $companyId, $branchId);
+        Configuration::setFor('invoice_date_format', $this->invoice_date_format, $companyId, $branchId);
+        Configuration::setFor('invoice_counter_digits', $this->invoice_counter_digits, $companyId, $branchId);
+        Configuration::setFor('invoice_counter_reset', $this->invoice_counter_reset, $companyId, $branchId);
+        Configuration::setFor('restrict_billing_below_b2b', $this->restrict_billing_below_b2b ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('restrict_unpaid_reports', $this->restrict_unpaid_reports ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor, $companyId, $branchId);
+        Configuration::setFor('commission_basis_agent', $this->commission_basis_agent, $companyId, $branchId);
 
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (! $hasCustomInvoice) {
@@ -530,14 +607,14 @@ class SettingsManager extends Component
             $this->new_invoice_footer_image = null;
         }
 
-        Configuration::setFor('invoice_show_header', $this->invoice_show_header ? '1' : '0');
-        Configuration::setFor('invoice_show_footer', $this->invoice_show_footer ? '1' : '0');
-        Configuration::setFor('invoice_header_image', $this->invoice_header_image);
-        Configuration::setFor('invoice_footer_image', $this->invoice_footer_image);
-        Configuration::setFor('invoice_margin_top', $this->invoice_margin_top);
-        Configuration::setFor('invoice_margin_bottom', $this->invoice_margin_bottom);
-        Configuration::setFor('invoice_header_height', $this->invoice_header_height);
-        Configuration::setFor('invoice_footer_height', $this->invoice_footer_height);
+        Configuration::setFor('invoice_show_header', $this->invoice_show_header ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('invoice_show_footer', $this->invoice_show_footer ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('invoice_header_image', $this->invoice_header_image, $companyId, $branchId);
+        Configuration::setFor('invoice_footer_image', $this->invoice_footer_image, $companyId, $branchId);
+        Configuration::setFor('invoice_margin_top', $this->invoice_margin_top, $companyId, $branchId);
+        Configuration::setFor('invoice_margin_bottom', $this->invoice_margin_bottom, $companyId, $branchId);
+        Configuration::setFor('invoice_header_height', $this->invoice_header_height, $companyId, $branchId);
+        Configuration::setFor('invoice_footer_height', $this->invoice_footer_height, $companyId, $branchId);
 
         $this->invoiceSaved = true;
     }
@@ -546,7 +623,7 @@ class SettingsManager extends Component
     {
         $this->authorize('edit settings');
         if ($this->invoice_header_image) {
-            Configuration::setFor('invoice_header_image', '');
+            Configuration::setFor('invoice_header_image', '', auth()->user()->company_id, $this->selectedBranchId);
             $this->invoice_header_image = null;
         }
     }
@@ -555,7 +632,7 @@ class SettingsManager extends Component
     {
         $this->authorize('edit settings');
         if ($this->invoice_footer_image) {
-            Configuration::setFor('invoice_footer_image', '');
+            Configuration::setFor('invoice_footer_image', '', auth()->user()->company_id, $this->selectedBranchId);
             $this->invoice_footer_image = null;
         }
     }
@@ -571,8 +648,11 @@ class SettingsManager extends Component
             'patient_id_digits' => 'required|integer|min:2|max:10',
         ]);
 
-        Configuration::setFor('patient_id_prefix', $this->patient_id_prefix);
-        Configuration::setFor('patient_id_digits', $this->patient_id_digits);
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+
+        Configuration::setFor('patient_id_prefix', $this->patient_id_prefix, $companyId, $branchId);
+        Configuration::setFor('patient_id_digits', $this->patient_id_digits, $companyId, $branchId);
 
         $this->patientSettingsSaved = true;
     }
@@ -589,9 +669,12 @@ class SettingsManager extends Component
             'barcode_counter_digits' => 'required|integer|min:2|max:12',
         ]);
 
-        Configuration::setFor('barcode_prefix', $this->barcode_prefix);
-        Configuration::setFor('barcode_date_format', $this->barcode_date_format);
-        Configuration::setFor('barcode_counter_digits', $this->barcode_counter_digits);
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+
+        Configuration::setFor('barcode_prefix', $this->barcode_prefix, $companyId, $branchId);
+        Configuration::setFor('barcode_date_format', $this->barcode_date_format, $companyId, $branchId);
+        Configuration::setFor('barcode_counter_digits', $this->barcode_counter_digits, $companyId, $branchId);
 
         $this->barcodeSaved = true;
     }
@@ -612,7 +695,10 @@ class SettingsManager extends Component
             return;
         }
 
-        Configuration::setFor('bill_template', $this->bill_template);
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+
+        Configuration::setFor('bill_template', $this->bill_template, $companyId, $branchId);
         $this->templateSaved = true;
     }
 
@@ -626,6 +712,9 @@ class SettingsManager extends Component
             'new_header_image' => 'nullable|image|max:3072',
             'new_footer_image' => 'nullable|image|max:3072',
         ]);
+
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
 
         // SaaS Plan Enforcement for Custom Branding
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
@@ -657,36 +746,36 @@ class SettingsManager extends Component
             $this->new_signature_image = null;
         }
 
-        Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0');
-        Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0');
-        Configuration::setFor('pdf_show_signatures', $this->pdf_show_signatures ? '1' : '0');
-        Configuration::setFor('pdf_show_test_method', $this->pdf_show_test_method ? '1' : '0');
-        Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0');
-        Configuration::setFor('pdf_header_image', $this->pdf_header_image);
-        Configuration::setFor('pdf_footer_image', $this->pdf_footer_image);
+        Configuration::setFor('pdf_show_header', $this->pdf_show_header ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_show_footer', $this->pdf_show_footer ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_show_signatures', $this->pdf_show_signatures ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_show_test_method', $this->pdf_show_test_method ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_header_image', $this->pdf_header_image, $companyId, $branchId);
+        Configuration::setFor('pdf_footer_image', $this->pdf_footer_image, $companyId, $branchId);
 
         // Layout & Typography
-        Configuration::setFor('pdf_font_size', $this->pdf_font_size);
-        Configuration::setFor('pdf_font_family', $this->pdf_font_family);
-        Configuration::setFor('pdf_margin_top', $this->pdf_margin_top);
-        Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom);
-        Configuration::setFor('pdf_header_height', $this->pdf_header_height);
-        Configuration::setFor('pdf_footer_height', $this->pdf_footer_height);
+        Configuration::setFor('pdf_font_size', $this->pdf_font_size, $companyId, $branchId);
+        Configuration::setFor('pdf_font_family', $this->pdf_font_family, $companyId, $branchId);
+        Configuration::setFor('pdf_margin_top', $this->pdf_margin_top, $companyId, $branchId);
+        Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom, $companyId, $branchId);
+        Configuration::setFor('pdf_header_height', $this->pdf_header_height, $companyId, $branchId);
+        Configuration::setFor('pdf_footer_height', $this->pdf_footer_height, $companyId, $branchId);
 
-        Configuration::setFor('report_page_break_style', $this->report_page_break_style);
-        Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0');
-        Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0');
-        Configuration::setFor('report_show_note', $this->report_show_note ? '1' : '0');
+        Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
+        Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('report_show_note', $this->report_show_note ? '1' : '0', $companyId, $branchId);
 
-        Configuration::setFor('report_flag_high_color', $this->report_flag_high_color);
-        Configuration::setFor('report_flag_low_color', $this->report_flag_low_color);
+        Configuration::setFor('report_flag_high_color', $this->report_flag_high_color, $companyId, $branchId);
+        Configuration::setFor('report_flag_low_color', $this->report_flag_low_color, $companyId, $branchId);
         
-        Configuration::setFor('report_abnormal_indicator', $this->report_abnormal_indicator);
-        Configuration::setFor('report_abnormal_color', $this->report_abnormal_color);
+        Configuration::setFor('report_abnormal_indicator', $this->report_abnormal_indicator, $companyId, $branchId);
+        Configuration::setFor('report_abnormal_color', $this->report_abnormal_color, $companyId, $branchId);
 
-        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
-        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
-        Configuration::setFor('signature_image', $this->signature_image);
+        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name, $companyId, $branchId);
+        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation, $companyId, $branchId);
+        Configuration::setFor('signature_image', $this->signature_image, $companyId, $branchId);
 
         $this->pdfSaved = true;
     }
@@ -722,6 +811,9 @@ class SettingsManager extends Component
     {
         $this->authorize('edit settings');
 
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+
         // 1. Save Global Signatures
         if ($this->new_signature_image) {
             $this->signature_image = $this->new_signature_image->store('signatures');
@@ -736,25 +828,25 @@ class SettingsManager extends Component
             $this->new_global_sig_3 = null;
         }
 
-        Configuration::setFor('report_signature_mode', $this->report_signature_mode);
-        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name);
-        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation);
-        Configuration::setFor('signature_image', $this->signature_image);
+        Configuration::setFor('report_signature_mode', $this->report_signature_mode, $companyId, $branchId);
+        Configuration::setFor('authorized_signatory_name', $this->authorized_signatory_name, $companyId, $branchId);
+        Configuration::setFor('authorized_signatory_designation', $this->authorized_signatory_designation, $companyId, $branchId);
+        Configuration::setFor('signature_image', $this->signature_image, $companyId, $branchId);
 
-        Configuration::setFor('global_sig_2_name', $this->global_sig_2_name);
-        Configuration::setFor('global_sig_2_desig', $this->global_sig_2_desig);
-        Configuration::setFor('global_sig_2_path', $this->global_sig_2_path);
+        Configuration::setFor('global_sig_2_name', $this->global_sig_2_name, $companyId, $branchId);
+        Configuration::setFor('global_sig_2_desig', $this->global_sig_2_desig, $companyId, $branchId);
+        Configuration::setFor('global_sig_2_path', $this->global_sig_2_path, $companyId, $branchId);
 
-        Configuration::setFor('global_sig_3_name', $this->global_sig_3_name);
-        Configuration::setFor('global_sig_3_desig', $this->global_sig_3_desig);
-        Configuration::setFor('global_sig_3_path', $this->global_sig_3_path);
+        Configuration::setFor('global_sig_3_name', $this->global_sig_3_name, $companyId, $branchId);
+        Configuration::setFor('global_sig_3_desig', $this->global_sig_3_desig, $companyId, $branchId);
+        Configuration::setFor('global_sig_3_path', $this->global_sig_3_path, $companyId, $branchId);
 
-        Configuration::setFor('sig_1_position', $this->sig_1_position);
-        Configuration::setFor('sig_1_enabled', $this->sig_1_enabled ? '1' : '0');
-        Configuration::setFor('sig_2_position', $this->sig_2_position);
-        Configuration::setFor('sig_2_enabled', $this->sig_2_enabled ? '1' : '0');
-        Configuration::setFor('sig_3_position', $this->sig_3_position);
-        Configuration::setFor('sig_3_enabled', $this->sig_3_enabled ? '1' : '0');
+        Configuration::setFor('sig_1_position', $this->sig_1_position, $companyId, $branchId);
+        Configuration::setFor('sig_1_enabled', $this->sig_1_enabled ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('sig_2_position', $this->sig_2_position, $companyId, $branchId);
+        Configuration::setFor('sig_2_enabled', $this->sig_2_enabled ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('sig_3_position', $this->sig_3_position, $companyId, $branchId);
+        Configuration::setFor('sig_3_enabled', $this->sig_3_enabled ? '1' : '0', $companyId, $branchId);
 
         // 2. Save Selected Department Signatures
         if ($this->selected_dept_id) {
@@ -798,22 +890,23 @@ class SettingsManager extends Component
     public function saveModules()
     {
         $this->authorize('edit settings');
+        $companyId = auth()->user()->company_id;
 
-        Configuration::setFor('default_login_page', $this->default_login_page);
-        Configuration::setFor('show_dashboard_stats', $this->show_dashboard_stats ? '1' : '0');
-        Configuration::setFor('module_pos', $this->module_pos ? '1' : '0');
-        Configuration::setFor('module_invoices', $this->module_invoices ? '1' : '0');
-        Configuration::setFor('module_departments', $this->module_departments ? '1' : '0');
-        Configuration::setFor('module_tests', $this->module_tests ? '1' : '0');
-        Configuration::setFor('module_packages', $this->module_packages ? '1' : '0');
-        Configuration::setFor('module_branches', $this->module_branches ? '1' : '0');
-        Configuration::setFor('module_collection_centers', $this->module_collection_centers ? '1' : '0');
-        Configuration::setFor('module_patients', $this->module_patients ? '1' : '0');
-        Configuration::setFor('module_doctors', $this->module_doctors ? '1' : '0');
-        Configuration::setFor('module_agents', $this->module_agents ? '1' : '0');
-        Configuration::setFor('module_settlements', $this->module_settlements ? '1' : '0');
-        Configuration::setFor('module_marketing', $this->module_marketing ? '1' : '0');
-        Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0');
+        Configuration::setFor('default_login_page', $this->default_login_page, $companyId, 'global');
+        Configuration::setFor('show_dashboard_stats', $this->show_dashboard_stats ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_pos', $this->module_pos ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_invoices', $this->module_invoices ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_departments', $this->module_departments ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_tests', $this->module_tests ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_packages', $this->module_packages ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_branches', $this->module_branches ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_collection_centers', $this->module_collection_centers ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_patients', $this->module_patients ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_doctors', $this->module_doctors ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_agents', $this->module_agents ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_settlements', $this->module_settlements ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_marketing', $this->module_marketing ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0', $companyId, 'global');
 
         $this->modulesSaved = true;
     }
@@ -824,12 +917,13 @@ class SettingsManager extends Component
     public function saveBranchControls()
     {
         $this->authorize('edit settings');
+        $companyId = auth()->user()->company_id;
 
-        Configuration::setFor('branch_share_patients', $this->branch_share_patients ? '1' : '0');
-        Configuration::setFor('branch_share_doctors', $this->branch_share_doctors ? '1' : '0');
-        Configuration::setFor('branch_share_agents', $this->branch_share_agents ? '1' : '0');
-        Configuration::setFor('branch_share_tests', $this->branch_share_tests ? '1' : '0');
-        Configuration::setFor('restrict_branch_access', $this->restrict_branch_access ? '1' : '0');
+        Configuration::setFor('branch_share_patients', $this->branch_share_patients ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('branch_share_doctors', $this->branch_share_doctors ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('branch_share_agents', $this->branch_share_agents ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('branch_share_tests', $this->branch_share_tests ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('restrict_branch_access', $this->restrict_branch_access ? '1' : '0', $companyId, 'global');
 
         $this->branchControlsSaved = true;
     }
@@ -855,23 +949,29 @@ class SettingsManager extends Component
             'whatsapp_report_message' => 'nullable|string|max:1000',
         ]);
 
-        Configuration::setFor('whatsapp_share_mode', $this->whatsapp_share_mode);
-        Configuration::setFor('whatsapp_invoice_message', $this->whatsapp_invoice_message);
-        Configuration::setFor('whatsapp_report_message', $this->whatsapp_report_message);
+        $companyId = auth()->user()->company_id;
+
+        Configuration::setFor('whatsapp_share_mode', $this->whatsapp_share_mode, $companyId, 'global');
+        Configuration::setFor('whatsapp_invoice_message', $this->whatsapp_invoice_message, $companyId, 'global');
+        Configuration::setFor('whatsapp_report_message', $this->whatsapp_report_message, $companyId, 'global');
 
         $this->whatsappSaved = true;
     }
 
     public function removeHeaderImage()
     {
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
         $this->pdf_header_image = null;
-        Configuration::setFor('pdf_header_image', null);
+        Configuration::setFor('pdf_header_image', null, $companyId, $branchId);
     }
 
     public function removeFooterImage()
     {
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
         $this->pdf_footer_image = null;
-        Configuration::setFor('pdf_footer_image', null);
+        Configuration::setFor('pdf_footer_image', null, $companyId, $branchId);
     }
 
     /**

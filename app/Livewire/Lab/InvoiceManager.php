@@ -203,12 +203,21 @@ class InvoiceManager extends Component
             $statsBase->where('collection_center_id', $user->collection_center_id);
         }
 
+        $todayRevenue = \App\Models\Payment::whereHas('invoice', function ($q) use ($companyId, $myBranchId, $user) {
+            $q->where('company_id', $companyId)
+                ->where('status', '!=', 'Cancelled')
+                ->when($myBranchId, fn ($sub) => $sub->where('branch_id', $myBranchId))
+                ->when($user->collection_center_id, fn ($sub) => $sub->where('collection_center_id', $user->collection_center_id));
+        })
+        ->whereDate('created_at', today())
+        ->sum('amount');
+
         $stats = [
             'total' => (clone $statsBase)->count(),
             'today' => (clone $statsBase)->whereDate('invoice_date', today())->count(),
             'paid' => (clone $statsBase)->where('payment_status', 'Paid')->count(),
             'due' => (clone $statsBase)->where('payment_status', '!=', 'Paid')->sum('due_amount'),
-            'todayRevenue' => (clone $statsBase)->whereDate('invoice_date', today())->sum('paid_amount'),
+            'todayRevenue' => $todayRevenue,
             'totalRevenue' => (clone $statsBase)->sum('paid_amount'),
         ];
 
