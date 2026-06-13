@@ -1237,21 +1237,48 @@ class PosEditManager extends Component
                 $itemsToDeleteQuery->delete();
             }
 
-            // Replace payments
-            Payment::where('invoice_id', $invoice->id)->delete();
+            // Sync payments (preserve original dates/timestamps)
+            $keptPaymentIds = [];
             foreach ($this->payments as $payment) {
                 if (! empty($payment['mode_id']) && $payment['amount'] > 0) {
-                    Payment::create([
-                        'company_id' => $companyId,
-                        'invoice_id' => $invoice->id,
-                        'patient_id' => $this->selectedPatient['id'],
-                        'collected_by' => auth()->id(),
-                        'payment_mode_id' => $payment['mode_id'],
-                        'amount' => $payment['amount'],
-                        'transaction_id' => $payment['transaction_id'] ?? null,
-                    ]);
+                    if (! empty($payment['id'])) {
+                        $existingPmt = Payment::where('invoice_id', $invoice->id)->find($payment['id']);
+                        if ($existingPmt) {
+                            $existingPmt->update([
+                                'patient_id' => $this->selectedPatient['id'],
+                                'payment_mode_id' => $payment['mode_id'],
+                                'amount' => $payment['amount'],
+                                'transaction_id' => $payment['transaction_id'] ?? null,
+                            ]);
+                            $keptPaymentIds[] = $existingPmt->id;
+                        } else {
+                            $newPmt = Payment::create([
+                                'company_id' => $companyId,
+                                'invoice_id' => $invoice->id,
+                                'patient_id' => $this->selectedPatient['id'],
+                                'collected_by' => auth()->id(),
+                                'payment_mode_id' => $payment['mode_id'],
+                                'amount' => $payment['amount'],
+                                'transaction_id' => $payment['transaction_id'] ?? null,
+                            ]);
+                            $keptPaymentIds[] = $newPmt->id;
+                        }
+                    } else {
+                        $newPmt = Payment::create([
+                            'company_id' => $companyId,
+                            'invoice_id' => $invoice->id,
+                            'patient_id' => $this->selectedPatient['id'],
+                            'collected_by' => auth()->id(),
+                            'payment_mode_id' => $payment['mode_id'],
+                            'amount' => $payment['amount'],
+                            'transaction_id' => $payment['transaction_id'] ?? null,
+                        ]);
+                        $keptPaymentIds[] = $newPmt->id;
+                    }
                 }
             }
+            Payment::where('invoice_id', $invoice->id)->whereNotIn('id', $keptPaymentIds)->delete();
+
 
             // 4. Apply new Commissions using service
             $commissionService->applyCommissions($invoice);

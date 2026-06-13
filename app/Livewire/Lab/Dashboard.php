@@ -182,10 +182,21 @@ class Dashboard extends Component
                 ->selectRaw('
                     SUM(total_amount) as revenue, 
                     SUM(total_amount - COALESCE(cc_profit_amount, 0) - COALESCE(doctor_commission_amount, 0) - COALESCE(agent_commission_amount, 0)) as profit, 
-                    SUM(paid_amount) as collections, 
                     SUM(due_amount) as dues
                 ')
                 ->first();
+
+            $collections = Payment::where('payments.company_id', $companyId)
+                ->whereHas('invoice', function ($q) use ($branchId) {
+                    $q->where('status', '!=', 'Cancelled')
+                        ->when($branchId, fn ($sub) => $sub->where('branch_id', $branchId));
+                })
+                ->whereBetween('payments.created_at', [$start, $end])
+                ->sum('amount');
+
+            if ($financials) {
+                $financials->collections = $collections;
+            }
 
             // 4. Rankings
             $topPackages = InvoiceItem::whereHas('invoice', fn ($q) => $q->where('company_id', $companyId)->where('status', '!=', 'Cancelled')->when($branchId, fn ($q2) => $q2->where('branch_id', $branchId))->whereBetween('invoice_date', [$start, $end]))
@@ -258,7 +269,7 @@ class Dashboard extends Component
                 ->join('invoices', 'payments.invoice_id', '=', 'invoices.id')
                 ->when($branchId, fn ($q) => $q->where('invoices.branch_id', $branchId))
                 ->where('invoices.status', '!=', 'Cancelled')
-                ->whereBetween('invoices.invoice_date', [$start, $end])
+                ->whereBetween('payments.created_at', [$start, $end])
                 ->join('payment_modes', 'payments.payment_mode_id', '=', 'payment_modes.id')
                 ->select('payment_modes.name as mode_name', DB::raw('SUM(payments.amount) as total_collected'))
                 ->groupBy('mode_name')
