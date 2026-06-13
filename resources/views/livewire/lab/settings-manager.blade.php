@@ -959,6 +959,16 @@
                                             style="width:3em;height:1.5em;">
                                     </div>
                                 </div>
+                                <div class="d-flex align-items-center justify-content-between mt-3">
+                                    <div>
+                                        <strong class="fs-12">Show Page Number</strong>
+                                        <div class="fs-10 text-muted">Show/hide page numbers at the bottom of the PDF</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_page_number"
+                                            style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="alert alert-info py-2 fs-11 mb-0">
@@ -1093,6 +1103,18 @@
                                             <input class="form-check-input" type="checkbox" wire:model="report_show_note"
                                                 style="width:2.5em;height:1.25em;">
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-1 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold fs-11">Page Number Background Color</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="color" class="form-control form-control-color"
+                                                wire:model="pdf_page_number_bg_color" style="width: 50px;">
+                                            <input type="text" class="form-control" wire:model="pdf_page_number_bg_color">
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Background color for the page number box (e.g. rgba(255,255,255,0.85) or #ffffff)</div>
                                     </div>
                                 </div>
 
