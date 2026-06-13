@@ -35,9 +35,7 @@ return [
         'sample_type' => 'Skin / Nail / Tissue / Body Fluid',
         'tat_hours' => 672,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'FCUR', 'input_type' => 'text', 'method' => 'SDA Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'FORG', 'input_type' => 'text', 'method' => 'LPCB / Biochemical', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antifungal Sensitivity', 'unit' => '', 'short_code' => 'FSEN', 'input_type' => 'text', 'method' => 'MIC / Disc Diffusion', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'FCUR', 'input_type' => 'culture_sensitivity', 'method' => 'SDA Culture / MIC / Disc Diffusion', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [
@@ -67,9 +65,7 @@ return [
         'tat_hours' => 72,
         'default_parameters' => [
             ['name' => 'Wet Mount', 'unit' => '', 'short_code' => 'HVWM', 'input_type' => 'text', 'method' => 'Saline Wet Mount', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Flora', 'display_range' => 'Normal Flora']]],
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'HVCR', 'input_type' => 'text', 'method' => 'Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Vaginal Flora', 'display_range' => 'Normal Flora']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'HVORG', 'input_type' => 'text', 'method' => 'Biochemical', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'HVSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'HVCR', 'input_type' => 'culture_sensitivity', 'method' => 'Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'Normal Vaginal Flora', 'display_range' => 'Normal Flora']]],
         ],
     ],
     [

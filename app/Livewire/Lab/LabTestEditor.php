@@ -188,7 +188,7 @@ class LabTestEditor extends Component
             'mrp' => 'required|numeric|min:0',
             'department_id' => 'required|exists:departments,id',
             'parameters.*.name' => 'required|string|max:255',
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity',
             'parameters.*.method' => 'nullable|string|max:100',
         ], [
             'parameters.*.name.required' => 'Parameter name is required.',

@@ -157,6 +157,7 @@
                                                         <option value="text">Text/Qualitative</option>
                                                         <option value="selection">Dropdown List</option>
                                                         <option value="calculated">Formula</option>
+                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
                                                     </select>
                                                 </td>
                                                 <td>
@@ -231,6 +232,7 @@
                                                         <option value="text">Text</option>
                                                         <option value="selection">Dropdown</option>
                                                         <option value="calculated">Formula</option>
+                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-3">
@@ -328,6 +330,7 @@
                                     <option value="text">Free Text / Qualitative</option>
                                     <option value="selection">Dropdown Options (e.g. Widal Titers)</option>
                                     <option value="calculated">Calculated Formula</option>
+                                    <option value="culture_sensitivity">Culture Sensitivity Susceptibility Grid</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

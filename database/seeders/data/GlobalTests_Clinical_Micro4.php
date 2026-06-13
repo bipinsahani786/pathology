@@ -13,9 +13,7 @@ return [
         'sample_type' => 'Ear Discharge Swab',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'ECUR', 'input_type' => 'text', 'method' => 'Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'EORG', 'input_type' => 'text', 'method' => 'Biochemical', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'ESEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'ECUR', 'input_type' => 'culture_sensitivity', 'method' => 'Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [
@@ -29,9 +27,7 @@ return [
         'sample_type' => 'Conjunctival / Corneal Swab',
         'tat_hours' => 72,
         'default_parameters' => [
-            ['name' => 'Culture Result', 'unit' => '', 'short_code' => 'EYCR', 'input_type' => 'text', 'method' => 'Culture', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
-            ['name' => 'Organism Identified', 'unit' => '', 'short_code' => 'EYORG', 'input_type' => 'text', 'method' => 'Biochemical', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
-            ['name' => 'Antibiotic Sensitivity', 'unit' => '', 'short_code' => 'EYSEN', 'input_type' => 'text', 'method' => 'Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'N/A', 'display_range' => 'N/A']]],
+            ['name' => 'Culture & Sensitivity', 'unit' => '', 'short_code' => 'EYCR', 'input_type' => 'culture_sensitivity', 'method' => 'Culture / Kirby-Bauer', 'range_type' => 'flexible', 'formula' => '', 'ranges' => [['gender' => 'Both', 'age_min' => 0, 'age_max' => 120, 'age_unit' => 'Years', 'normal_value' => 'No Growth', 'display_range' => 'No Growth']]],
         ],
     ],
     [

@@ -19,6 +19,8 @@ class ResultEntryManager extends Component
 
     public $results = [];
 
+    public $cultureResults = [];
+
     public $highlights = [];
 
     public $flags = [];
@@ -152,6 +154,19 @@ class ResultEntryManager extends Component
                         $this->flags[$key] = (isset($existingResultsMap[$key]) && in_array($existingResultsMap[$key]->status, ['High', 'Low']))
                             ? substr($existingResultsMap[$key]->status, 0, 1)
                             : '';
+
+                        if (is_array($param) && ($param['input_type'] ?? 'numeric') === 'culture_sensitivity') {
+                            if (isset($existingResultsMap[$key]) && ! empty($existingResultsMap[$key]->culture_data)) {
+                                $this->cultureResults[$key] = $existingResultsMap[$key]->culture_data;
+                            } else {
+                                $this->cultureResults[$key] = [
+                                    'organism_name' => '',
+                                    'colony_count' => '',
+                                    'growth_status' => 'Growth',
+                                    'antibiotics' => [],
+                                ];
+                            }
+                        }
 
                         $this->parametersList[$key] = [
                             'key' => $key,
@@ -510,6 +525,18 @@ class ResultEntryManager extends Component
                 $stat = 'Low';
             }
 
+            $cultureData = null;
+            if (($details['input_type'] ?? 'numeric') === 'culture_sensitivity') {
+                $cultureData = $this->cultureResults[$key] ?? null;
+                if ($cultureData) {
+                    if (($cultureData['growth_status'] ?? '') === 'No Growth') {
+                        $val = 'No Growth';
+                    } else {
+                        $val = ($cultureData['organism_name'] ?? 'Organism') . ' (' . ($cultureData['colony_count'] ?? '0') . ')';
+                    }
+                }
+            }
+
             ReportResult::updateOrCreate(
                 [
                     'test_report_id' => $this->testReport->id,
@@ -525,6 +552,7 @@ class ResultEntryManager extends Component
                     'reference_range' => $details['ref_range'],
                     'unit' => $details['unit'],
                     'method' => $details['method'] ?? null,
+                    'culture_data' => $cultureData,
                 ]
             );
         }
@@ -632,6 +660,31 @@ class ResultEntryManager extends Component
             .'&header='.($withHeader ? '1' : '0');
 
         $this->dispatch('open-new-tab', ['url' => $url]);
+    }
+
+    public function addAntibioticRow($key)
+    {
+        if (! isset($this->cultureResults[$key])) {
+            $this->cultureResults[$key] = [
+                'organism_name' => '',
+                'colony_count' => '',
+                'growth_status' => 'Growth',
+                'antibiotics' => [],
+            ];
+        }
+        $this->cultureResults[$key]['antibiotics'][] = [
+            'name' => '',
+            'sensitivity' => 'S',
+            'mic' => '',
+        ];
+    }
+
+    public function removeAntibioticRow($key, $index)
+    {
+        if (isset($this->cultureResults[$key]['antibiotics'][$index])) {
+            unset($this->cultureResults[$key]['antibiotics'][$index]);
+            $this->cultureResults[$key]['antibiotics'] = array_values($this->cultureResults[$key]['antibiotics']);
+        }
     }
 
     public function render()

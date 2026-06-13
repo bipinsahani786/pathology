@@ -330,6 +330,29 @@ class PosEditManager extends Component
         $this->calculateTotals();
     }
 
+    public function updatedBranchId($value)
+    {
+        $companyId = auth()->user()->company_id;
+        if ($value) {
+            $this->collection_center_id = CollectionCenter::where('company_id', $companyId)
+                ->where('branch_id', $value)
+                ->where('is_active', true)
+                ->first()->id ?? null;
+        } else {
+            $this->collection_center_id = null;
+        }
+    }
+
+    public function updatedCollectionCenterId($value)
+    {
+        if ($value) {
+            $cc = CollectionCenter::find($value);
+            if ($cc && $cc->branch_id) {
+                $this->branch_id = $cc->branch_id;
+            }
+        }
+    }
+
     // ==========================================
     // SEARCH HELPERS (doctor, agent, tests)
     // ==========================================

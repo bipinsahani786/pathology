@@ -20,10 +20,12 @@ class ReportResult extends Model
         'is_highlighted',
         'reference_range',
         'unit',
+        'culture_data',
     ];
 
     protected $casts = [
         'is_highlighted' => 'boolean',
+        'culture_data' => 'array',
     ];
 
     public function testReport()

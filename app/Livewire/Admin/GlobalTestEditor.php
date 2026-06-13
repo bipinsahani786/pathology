@@ -172,7 +172,7 @@ class GlobalTestEditor extends Component
             'parameters' => 'nullable|array',
             'parameters.*.name' => 'required|string|max:255',
             'parameters.*.short_code' => 'nullable|string|max:50',
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity',
             'parameters.*.range_type' => 'required|in:general,gender,value,flexible',
             'parameters.*.unit' => 'nullable|string|max:50',
             'parameters.*.method' => 'nullable|string|max:100',
