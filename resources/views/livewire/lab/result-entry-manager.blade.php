@@ -244,7 +244,8 @@
                                                                              <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Colony Count</label>
                                                                              <input type="text" class="form-control form-control-sm" 
                                                                                     wire:model.live="cultureResults.{{ $paramKey }}.colony_count"
-                                                                                    placeholder="e.g. 10^5 CFU/mL">
+                                                                                    placeholder="e.g. 10^5 CFU/mL"
+                                                                                    list="colony-counts">
                                                                          </div>
                                                                      @endif
                                                                  </div>
@@ -308,8 +309,12 @@
                                                                                                             placeholder="e.g. <= 2">
                                                                                                  </td>
                                                                                                  <td class="text-end pe-2">
+                                                                                                     <button type="button" class="btn btn-icon btn-soft-secondary btn-xs border-0 me-1"
+                                                                                                             wire:click="clearAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Clear selection">
+                                                                                                         <i class="feather-x fs-12"></i>
+                                                                                                     </button>
                                                                                                      <button type="button" class="btn btn-icon btn-soft-danger btn-xs border-0"
-                                                                                                             wire:click="removeAntibioticRow('{{ $paramKey }}', {{ $aIdx }})">
+                                                                                                             wire:click="removeAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Remove row">
                                                                                                          <i class="feather-trash-2 fs-12"></i>
                                                                                                      </button>
                                                                                                  </td>
@@ -477,6 +482,32 @@
         <option value="Acinetobacter baumannii"></option>
         <option value="Streptococcus pneumoniae"></option>
         <option value="Candida albicans"></option>
+        <option value="Enterobacter cloacae"></option>
+        <option value="Citrobacter koseri"></option>
+        <option value="Citrobacter freundii"></option>
+        <option value="Morganella morganii"></option>
+        <option value="Serratia marcescens"></option>
+        <option value="Salmonella typhi"></option>
+        <option value="Shigella flexneri"></option>
+        <option value="Vibrio cholerae"></option>
+        <option value="Haemophilus influenzae"></option>
+        <option value="Neisseria gonorrhoeae"></option>
+        <option value="Neisseria meningitidis"></option>
+        <option value="Streptococcus pyogenes"></option>
+        <option value="Streptococcus agalactiae"></option>
+        <option value="Enterococcus faecium"></option>
+        <option value="Candida glabrata"></option>
+        <option value="Candida tropicalis"></option>
+        <option value="Aspergillus fumigatus"></option>
+    </datalist>
+
+    <datalist id="colony-counts">
+        <option value="10^3 CFU/mL"></option>
+        <option value="10^4 CFU/mL"></option>
+        <option value="10^5 CFU/mL"></option>
+        <option value="> 10^5 CFU/mL"></option>
+        <option value="< 10^3 CFU/mL"></option>
+        <option value="10^4 - 10^5 CFU/mL"></option>
     </datalist>
 
     <datalist id="common-antibiotics">

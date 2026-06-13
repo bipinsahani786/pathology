@@ -156,14 +156,46 @@ class ResultEntryManager extends Component
                             : '';
 
                         if (is_array($param) && ($param['input_type'] ?? 'numeric') === 'culture_sensitivity') {
+                            $defaultAntibiotics = [
+                                'Amikacin', 'Amoxicillin/Clavulanate', 'Ampicillin', 'Azithromycin', 
+                                'Ceftriaxone', 'Cefotaxime', 'Ceftazidime', 'Cefuroxime', 'Ciprofloxacin', 
+                                'Clindamycin', 'Cotrimoxazole', 'Erythromycin', 'Gentamicin', 'Imipenem', 
+                                'Meropenem', 'Levofloxacin', 'Linezolid', 'Nitrofurantoin', 'Norfloxacin', 
+                                'Ofloxacin', 'Penicillin', 'Piperacillin/Tazobactam', 'Tetracycline', 
+                                'Tobramycin', 'Vancomycin'
+                            ];
+
                             if (isset($existingResultsMap[$key]) && ! empty($existingResultsMap[$key]->culture_data)) {
-                                $this->cultureResults[$key] = $existingResultsMap[$key]->culture_data;
+                                $existingData = $existingResultsMap[$key]->culture_data;
+                                $existingAbs = $existingData['antibiotics'] ?? [];
+                                $existingNames = array_map('strtolower', array_column($existingAbs, 'name'));
+                                
+                                foreach($defaultAntibiotics as $abName) {
+                                    if(!in_array(strtolower($abName), $existingNames)) {
+                                        $existingAbs[] = [
+                                            'name' => $abName,
+                                            'sensitivity' => '',
+                                            'mic' => ''
+                                        ];
+                                    }
+                                }
+                                $existingData['antibiotics'] = $existingAbs;
+                                $this->cultureResults[$key] = $existingData;
                             } else {
+                                $abList = [];
+                                foreach($defaultAntibiotics as $abName) {
+                                    $abList[] = [
+                                        'name' => $abName,
+                                        'sensitivity' => '',
+                                        'mic' => ''
+                                    ];
+                                }
+
                                 $this->cultureResults[$key] = [
                                     'organism_name' => '',
                                     'colony_count' => '',
                                     'growth_status' => 'Growth',
-                                    'antibiotics' => [],
+                                    'antibiotics' => $abList,
                                 ];
                             }
                         }
@@ -455,10 +487,21 @@ class ResultEntryManager extends Component
 
             // Check if ANY results have been entered at all
             $hasAnyResult = false;
-            foreach ($this->results as $val) {
+            foreach ($this->results as $key => $val) {
                 if ($val !== '' && $val !== null) {
                     $hasAnyResult = true;
                     break;
+                }
+                
+                // Also check if it's a culture sensitivity test with a valid result
+                if (isset($this->parametersList[$key]) && ($this->parametersList[$key]['input_type'] ?? '') === 'culture_sensitivity') {
+                    $cData = $this->cultureResults[$key] ?? null;
+                    if ($cData) {
+                        if (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name'])) {
+                            $hasAnyResult = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -531,8 +574,14 @@ class ResultEntryManager extends Component
                 if ($cultureData) {
                     if (($cultureData['growth_status'] ?? '') === 'No Growth') {
                         $val = 'No Growth';
+                        $cultureData['antibiotics'] = [];
                     } else {
                         $val = ($cultureData['organism_name'] ?? 'Organism') . ' (' . ($cultureData['colony_count'] ?? '0') . ')';
+                        if(isset($cultureData['antibiotics'])) {
+                            $cultureData['antibiotics'] = array_values(array_filter($cultureData['antibiotics'], function($ab) {
+                                return !empty($ab['sensitivity']) || !empty($ab['mic']);
+                            }));
+                        }
                     }
                 }
             }
@@ -684,6 +733,14 @@ class ResultEntryManager extends Component
         if (isset($this->cultureResults[$key]['antibiotics'][$index])) {
             unset($this->cultureResults[$key]['antibiotics'][$index]);
             $this->cultureResults[$key]['antibiotics'] = array_values($this->cultureResults[$key]['antibiotics']);
+        }
+    }
+
+    public function clearAntibioticRow($key, $index)
+    {
+        if (isset($this->cultureResults[$key]['antibiotics'][$index])) {
+            $this->cultureResults[$key]['antibiotics'][$index]['sensitivity'] = '';
+            $this->cultureResults[$key]['antibiotics'][$index]['mic'] = '';
         }
     }
 
