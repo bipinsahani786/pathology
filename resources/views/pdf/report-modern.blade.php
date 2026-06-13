@@ -510,7 +510,12 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @foreach($r->culture_data['antibiotics'] as $ab)
+                                                        @php
+                                                            $filledAntibiotics = collect($r->culture_data['antibiotics'] ?? [])->filter(function($ab) {
+                                                                return !empty($ab['sensitivity']) || !empty($ab['mic']);
+                                                            });
+                                                        @endphp
+                                                        @foreach($filledAntibiotics as $ab)
                                                             @php
                                                                 $sens = strtoupper($ab['sensitivity'] ?? 'S');
                                                                 $text = 'Sensitive';
