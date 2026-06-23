@@ -4,7 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: pathology-app
     container_name: pathology_app
     restart: unless-stopped
     working_dir: /var/www
