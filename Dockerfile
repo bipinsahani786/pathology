@@ -12,11 +12,17 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     nodejs \
     npm \
-    postgresql-client
+    postgresql-client \
+    ghostscript \
+    libmagickwand-dev \
+    poppler-utils
 
 # PHP extensions install 
 RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
-RUN pecl install redis && docker-php-ext-enable redis
+RUN pecl install redis imagick && docker-php-ext-enable redis imagick
+
+# Allow Imagick to process PDF files (security policy override)
+RUN sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
 
 # Composer install 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

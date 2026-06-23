@@ -281,6 +281,25 @@ class ReportPdfController extends Controller
             ];
         });
 
+        // ── Process Outsourced Report ────────────────────────────────────────
+        $outsourcedImages = [];
+        $pdfService = app(\App\Services\OutsourcedReportService::class);
+        
+        if ($report->outsourced_pdf_path) {
+            $images = $pdfService->convertAndCrop(
+                $report->outsourced_pdf_path,
+                $report->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18, $report->company_id, $report->invoice->branch_id),
+                $report->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8, $report->company_id, $report->invoice->branch_id)
+            );
+            
+            if (!empty($images)) {
+                $outsourcedImages['report'] = [
+                    'lab_name' => $report->outsourced_lab_name,
+                    'images' => $images,
+                ];
+            }
+        }
+
         $viewName = 'pdf.report-'.$template;
         if (! view()->exists($viewName)) {
             $viewName = 'pdf.report-new';
@@ -292,6 +311,7 @@ class ReportPdfController extends Controller
             'patient' => $report->invoice->patient,
             'profile' => $report->invoice->patient->patientProfile,
             'groupedResults' => $groupedResults,
+            'outsourcedImages' => $outsourcedImages,
             'settings' => $settings,
             'company' => $report->invoice->company,
             'showHeader' => $showHeader,

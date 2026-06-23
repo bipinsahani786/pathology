@@ -8,6 +8,10 @@ class InvoiceItem extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'is_package' => 'boolean',
+    ];
+
     /**
      * The parent invoice this item belongs to.
      */

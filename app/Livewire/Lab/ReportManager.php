@@ -7,10 +7,11 @@ use App\Models\TestReport;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 
 class ReportManager extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
 
@@ -40,6 +41,14 @@ class ReportManager extends Component
 
     // Selective Printing
     public $selectedTests = []; // Array of invoice_item_ids
+
+    // Outsourced Report
+    public $isOutsourcedModalOpen = false;
+    public $outsourcedInvoiceId = null;
+    public $outsourcedPdf; // For the file upload
+    public $outsourcedLabName = '';
+    public $outsourcedCropTop = 18;
+    public $outsourcedCropBottom = 5;
 
     public function updatingSearch()
     {
@@ -100,21 +109,115 @@ class ReportManager extends Component
 
     public function printCompleted($invoiceId, $withHeader = 1)
     {
-        $invoice = Invoice::with('items')->find($invoiceId);
-        $completedItemIds = $invoice->items->where('status', 'Completed')->pluck('id')->toArray();
+        $testIds = \App\Models\InvoiceItem::where('invoice_id', $invoiceId)
+            ->where('status', 'Completed')
+            ->pluck('id')
+            ->implode(',');
 
-        if (empty($completedItemIds)) {
-            $this->dispatch('notify', ['type' => 'error', 'message' => 'No completed tests found to print.']);
+        if (empty($testIds)) {
+            $this->dispatch('notify', ['type' => 'error', 'message' => 'No completed tests found in this invoice.']);
 
             return;
         }
 
-        $testIds = implode(',', $completedItemIds);
         $url = route('lab.reports.print', ['id' => $invoiceId, 'template' => 'new'])
              .'?tests='.$testIds
              .'&header='.($withHeader ? '1' : '0');
 
         $this->dispatch('open-new-tab', ['url' => $url]);
+    }
+
+    public $hasExistingOutsourcedPdf = false;
+
+    public function openOutsourcedModal($invoiceId)
+    {
+        $this->outsourcedInvoiceId = $invoiceId;
+        $this->outsourcedPdf = null;
+        
+        $invoice = Invoice::find($invoiceId);
+        $testReport = $invoice->testReport;
+        
+        if ($testReport && $testReport->outsourced_pdf_path) {
+            $this->outsourcedLabName = $testReport->outsourced_lab_name;
+            $this->outsourcedCropTop = $testReport->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
+            $this->outsourcedCropBottom = $testReport->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
+            $this->hasExistingOutsourcedPdf = true;
+        } else {
+            $this->outsourcedLabName = '';
+            $this->outsourcedCropTop = (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
+            $this->outsourcedCropBottom = (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
+            $this->hasExistingOutsourcedPdf = false;
+        }
+        
+        $this->isOutsourcedModalOpen = true;
+    }
+
+    public function closeOutsourcedModal()
+    {
+        $this->isOutsourcedModalOpen = false;
+        $this->outsourcedInvoiceId = null;
+        $this->outsourcedPdf = null;
+        $this->hasExistingOutsourcedPdf = false;
+    }
+
+    public function saveOutsourcedReport()
+    {
+        $this->authorize('edit reports');
+        
+        $rules = [
+            'outsourcedPdf' => 'required|file|mimes:pdf|max:10240',
+        ];
+        
+        if ($this->hasExistingOutsourcedPdf) {
+            $rules['outsourcedPdf'] = 'nullable|file|mimes:pdf|max:10240';
+        }
+
+        $this->validate($rules);
+
+        $invoice = Invoice::findOrFail($this->outsourcedInvoiceId);
+        $testReport = $invoice->testReport;
+        
+        $path = $testReport ? $testReport->outsourced_pdf_path : null;
+        
+        if ($this->outsourcedPdf) {
+            $path = app(\App\Services\OutsourcedReportService::class)->storePdf($this->outsourcedPdf);
+        }
+
+        // Find or create TestReport
+        $testReport = $invoice->testReport;
+        if (!$testReport) {
+            $testReport = TestReport::create([
+                'company_id' => $invoice->company_id,
+                'invoice_id' => $invoice->id,
+                'patient_id' => $invoice->patient_id,
+                'status' => 'Approved', // Mark approved directly
+                'report_date' => now(),
+            ]);
+        } else {
+            $testReport->update(['status' => 'Approved']);
+        }
+
+        $testReport->update([
+            'outsourced_pdf_path' => $path,
+            'outsourced_lab_name' => $this->outsourcedLabName,
+            'outsourced_crop_top' => $this->outsourcedCropTop,
+            'outsourced_crop_bottom' => $this->outsourcedCropBottom,
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        // Mark all invoice items as completed
+        foreach ($invoice->items as $item) {
+            if ($item->lab_test_id) {
+                $item->update(['status' => 'Completed']);
+            }
+        }
+
+        $this->closeOutsourcedModal();
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Outsourced report generated successfully.']);
+
+        // Auto download/print the generated report
+        $this->printReport($invoice->id, 1);
     }
 
     public function render()
@@ -254,7 +357,7 @@ class ReportManager extends Component
             }
         }
 
-        $url = route('lab.reports.print', [$invoiceId, 'new']).'?header='.($withHeader ? '1' : '0');
+        $url = route('lab.reports.print', [$invoiceId, 'new']).'?header='.($withHeader ? '1' : '0').'&t='.time();
         $this->dispatch('open-new-tab', ['url' => $url]);
     }
 

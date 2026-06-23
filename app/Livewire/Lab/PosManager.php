@@ -1425,6 +1425,8 @@ class PosManager extends Component
             $branches = $branches->where('id', $myBranchId);
         }
 
+        $enableOutsourcing = auth()->user()->company->plan->features['enable_outsourcing'] ?? false;
+
         return view('livewire.lab.pos-manager', [
             'patients' => $patients,
             'doctors' => $doctors,

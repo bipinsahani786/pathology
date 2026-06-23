@@ -306,6 +306,12 @@
                                                          <a href="{{ route('lab.reports.entry', $invoice->id) }}" class="action-btn action-btn-success" title="Enter Results">
                                                              <i class="feather-edit"></i>
                                                          </a>
+                                                         
+                                                         @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
+                                                             <button type="button" wire:click="openOutsourcedModal({{ $invoice->id }})" class="action-btn action-btn-warning" title="Upload Outsourced PDF">
+                                                                 <i class="feather-upload-cloud"></i>
+                                                             </button>
+                                                         @endif
                                                      @endcan
                                                      
                                                       @if($invoice->testReport && $invoice->testReport->status === 'Draft')
@@ -338,6 +344,11 @@
                                                      <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1" style="min-width: 240px; width: max-content !important;">
                                                          @can('edit reports')
                                                              <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
+                                                             @if($invoice->testReport && $invoice->testReport->outsourced_pdf_path)
+                                                                 @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
+                                                                     <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="openOutsourcedModal({{ $invoice->id }})"><i class="feather-crop me-2 text-warning"></i> Edit Outsourced PDF</button></li>
+                                                                 @endif
+                                                             @endif
                                                          @endcan
                                                          @if(auth()->user()->can('edit invoices') || (auth()->user()->collection_center_id && $invoice->collection_center_id === auth()->user()->collection_center_id))
                                                              <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
@@ -462,5 +473,69 @@
             </div>
         </div>
     </div>
-
+    {{-- Outsourced Report Modal --}}
+    @if($isOutsourcedModalOpen)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold fs-16"><i class="feather-upload-cloud text-warning me-2"></i>Upload Outsourced PDF</h5>
+                        <button type="button" class="btn-close" wire:click="closeOutsourcedModal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted text-uppercase fs-11">External Lab Name (Printed on Report)</label>
+                            <input type="text" class="form-control" wire:model.defer="outsourcedLabName" placeholder="e.g. Dr. Lal PathLabs, Thyrocare...">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Top (%)</label>
+                                <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropTop" title="Percentage of the top of the PDF to crop out">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Bottom (%)</label>
+                                <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropBottom" title="Percentage of the bottom of the PDF to crop out">
+                            </div>
+                        </div>
+                        
+                        <div x-data="{ isUploading: false, progress: 0 }"
+                             x-on:livewire-upload-start="isUploading = true"
+                             x-on:livewire-upload-finish="isUploading = false"
+                             x-on:livewire-upload-error="isUploading = false"
+                             x-on:livewire-upload-progress="progress = $event.detail.progress"
+                             class="w-100">
+                            
+                            <label class="btn btn-outline-primary border-dashed w-100 py-4 d-flex flex-column align-items-center justify-content-center mb-0" style="cursor: pointer; border-style: dashed;">
+                                <i class="feather-upload fs-1 mb-2"></i>
+                                <span class="fw-bold fs-14">{{ $hasExistingOutsourcedPdf ? 'Click to Replace PDF (Optional)' : 'Click to Select PDF' }}</span>
+                                <span class="text-muted fs-11 mt-1">(Max 10MB)</span>
+                                <input type="file" class="d-none" wire:model="outsourcedPdf" accept=".pdf">
+                            </label>
+                            
+                            <div x-show="isUploading" class="mt-3">
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" x-bind:style="'width: ' + progress + '%'"></div>
+                                </div>
+                                <span class="text-muted fs-11 mt-1 d-block text-center">Uploading... <span x-text="progress"></span>%</span>
+                            </div>
+                            
+                            @if($outsourcedPdf)
+                                <div class="mt-3 p-2 bg-soft-success text-success rounded-3 fs-12 fw-bold text-center">
+                                    <i class="feather-check-circle me-1"></i> PDF Selected
+                                </div>
+                            @endif
+                            @error('outsourcedPdf') <span class="text-danger fs-11 mt-1 d-block text-center">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light fw-bold" wire:click="closeOutsourcedModal">Cancel</button>
+                        <button type="button" class="btn btn-primary fw-bold" wire:click="saveOutsourcedReport" wire:loading.attr="disabled" {{ (!$outsourcedPdf && !$hasExistingOutsourcedPdf) ? 'disabled' : '' }}>
+                            <span wire:loading.remove wire:target="saveOutsourcedReport"><i class="feather-check me-2"></i>Generate & Download</span>
+                            <span wire:loading wire:target="saveOutsourcedReport"><i class="spinner-border spinner-border-sm me-2"></i>Processing...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

@@ -706,7 +706,8 @@ class ResultEntryManager extends Component
         $testIds = is_array($this->selectedTests) ? implode(',', $this->selectedTests) : $this->selectedTests;
         $url = route('lab.reports.print', ['id' => $this->invoice->id, 'template' => 'new'])
             .'?tests='.$testIds
-            .'&header='.($withHeader ? '1' : '0');
+            .'&header='.($withHeader ? '1' : '0')
+            .'&t='.time();
 
         $this->dispatch('open-new-tab', ['url' => $url]);
     }

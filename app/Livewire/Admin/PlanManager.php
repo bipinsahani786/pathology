@@ -35,6 +35,8 @@ class PlanManager extends Component
 
     public $has_whatsapp_custom = false;
 
+    public $enable_outsourcing = false;
+
     public $isModalOpen = false;
 
     /**
@@ -48,11 +50,10 @@ class PlanManager extends Component
     public function create()
     {
         $this->resetFields();
-        $this->resetFeaturesToDefault();
         $this->isModalOpen = true;
     }
 
-    private function resetFeaturesToDefault()
+    public function resetDefaultFeatures()
     {
         $this->max_branches = 1;
         $this->max_staff = 3;
@@ -62,12 +63,13 @@ class PlanManager extends Component
         $this->has_inventory = false;
         $this->has_custom_invoice = false;
         $this->has_whatsapp_custom = false;
+        $this->enable_outsourcing = false;
     }
 
     public function resetFields()
     {
         $this->reset(['plan_id', 'name', 'price', 'duration_in_days', 'is_active']);
-        $this->resetFeaturesToDefault();
+        $this->resetDefaultFeatures();
         $this->resetValidation();
     }
 
@@ -92,6 +94,7 @@ class PlanManager extends Component
             'has_inventory' => 'boolean',
             'has_custom_invoice' => 'boolean',
             'has_whatsapp_custom' => 'boolean',
+            'enable_outsourcing' => 'boolean',
         ]);
 
         // Pack fixed features into the JSON format for the service
@@ -104,6 +107,7 @@ class PlanManager extends Component
             ['key' => 'inventory', 'value' => $this->has_inventory],
             ['key' => 'custom_invoice', 'value' => $this->has_custom_invoice],
             ['key' => 'whatsapp_custom', 'value' => $this->has_whatsapp_custom],
+            ['key' => 'enable_outsourcing', 'value' => $this->enable_outsourcing],
         ];
 
         // Use the service to handle the business logic
@@ -133,6 +137,7 @@ class PlanManager extends Component
         $this->has_inventory = $f['inventory'] ?? false;
         $this->has_custom_invoice = $f['custom_invoice'] ?? false;
         $this->has_whatsapp_custom = $f['whatsapp_custom'] ?? false;
+        $this->enable_outsourcing = $f['enable_outsourcing'] ?? false;
 
         $this->isModalOpen = true;
     }
