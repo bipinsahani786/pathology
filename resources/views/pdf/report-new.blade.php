@@ -14,10 +14,16 @@
         $sigImgSrc = $settings['global_sig_1_path'] ?? null;
 
         // ── Margins from Settings ──
-        $marginTop = ($settings['pdf_margin_top'] ?? 310) . 'px';
-        $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $marginTopVal = (int) ($settings['pdf_margin_top'] ?? 310);
+        $marginBottomVal = (int) ($settings['pdf_margin_bottom'] ?? 255);
+        $marginTop = $marginTopVal . 'px';
+        $marginBottom = $marginBottomVal . 'px';
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
+
+        // DomPDF A4 page height is ~1122px. Calculate max content height.
+        // Subtract 80px extra buffer to prevent the image from pushing itself to the next page
+        $maxImgHeight = (1122 - $marginTopVal - $marginBottomVal - 80) . 'px';
 
         $baseFontSize = (int) ($settings['pdf_font_size'] ?? 13);
         $fontSize = $baseFontSize . 'px';
@@ -28,14 +34,14 @@
         $scale = $baseFontSize / 13;
 
         // Pre-compute scaled sizes for CSS (rounded to 1 decimal)
-        $sz8   = round(8   * $scale, 1) . 'px';
+        $sz8 = round(8 * $scale, 1) . 'px';
         $sz8_5 = round(8.5 * $scale, 1) . 'px';
-        $sz9   = round(9   * $scale, 1) . 'px';
-        $sz10  = round(10  * $scale, 1) . 'px';
-        $sz10_5= round(10.5* $scale, 1) . 'px';
-        $sz11  = round(11  * $scale, 1) . 'px';
-        $sz11_5= round(11.5* $scale, 1) . 'px';
-        $sz12  = round(12  * $scale, 1) . 'px';
+        $sz9 = round(9 * $scale, 1) . 'px';
+        $sz10 = round(10 * $scale, 1) . 'px';
+        $sz10_5 = round(10.5 * $scale, 1) . 'px';
+        $sz11 = round(11 * $scale, 1) . 'px';
+        $sz11_5 = round(11.5 * $scale, 1) . 'px';
+        $sz12 = round(12 * $scale, 1) . 'px';
     @endphp
 
     <style>
@@ -103,7 +109,9 @@
             border: 1px solid #1a1a1a !important;
             margin: 0 25px 0;
             padding: 8px 10px;
-            font-size: {{ $sz10_5 }};
+            font-size:
+                {{ $sz10_5 }}
+            ;
             display: block;
             border-radius: 2px;
         }
@@ -179,7 +187,9 @@
             text-align: left;
             vertical-align: bottom;
             font-weight: 700;
-            font-size: {{ $sz11 }};
+            font-size:
+                {{ $sz11 }}
+            ;
             padding-left: 35px;
             padding-bottom: 8px;
         }
@@ -201,13 +211,17 @@
 
         .doc-name {
             font-weight: 700;
-            font-size: {{ $sz11 }};
+            font-size:
+                {{ $sz11 }}
+            ;
             display: block;
             margin-bottom: 0px;
         }
 
         .doc-desig {
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             color: #333;
             display: block;
             margin-top: 0px;
@@ -240,7 +254,9 @@
         .multi-sig-table td {
             text-align: center;
             vertical-align: bottom;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             padding: 0 15px 5px;
         }
 
@@ -250,7 +266,9 @@
         .dept-title {
             text-align: center;
             font-weight: 700;
-            font-size: {{ $sz12 }};
+            font-size:
+                {{ $sz12 }}
+            ;
             letter-spacing: 0.8px;
             text-transform: uppercase;
             margin: 10px 0 2px;
@@ -260,7 +278,9 @@
         .test-title {
             text-align: center;
             font-weight: 700;
-            font-size: {{ $sz11 }};
+            font-size:
+                {{ $sz11 }}
+            ;
             text-transform: uppercase;
             margin-bottom: 2px;
             color: #1a1a1a;
@@ -268,7 +288,9 @@
 
         .method-line {
             text-align: center;
-            font-size: {{ $sz9 }};
+            font-size:
+                {{ $sz9 }}
+            ;
             color: #555;
             font-style: italic;
             margin-bottom: 5px;
@@ -292,7 +314,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 8px;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .result-table tr {
@@ -305,7 +329,9 @@
             padding: 6px 6px;
             text-align: left;
             font-weight: 700;
-            font-size: {{ $sz10_5 }};
+            font-size:
+                {{ $sz10_5 }}
+            ;
             text-transform: uppercase;
             color: #000;
             background: #fbfbfb;
@@ -332,7 +358,9 @@
         /* Sub-header rows (section dividers like "TOTAL COUNT") */
         .result-table .sub-hdr td {
             font-weight: 700;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             text-transform: uppercase;
             padding: 3px 6px 1px;
             color: #1a1a1a;
@@ -346,17 +374,23 @@
 
         /* ── Flag & Abnormal Colors ── */
         .flag-H {
-            color: {{ $settings['report_flag_high_color'] ?? '#cc0000' }};
+            color:
+                {{ $settings['report_flag_high_color'] ?? '#cc0000' }}
+            ;
             font-weight: 700;
         }
 
         .flag-L {
-            color: {{ $settings['report_flag_low_color'] ?? '#0055aa' }};
+            color:
+                {{ $settings['report_flag_low_color'] ?? '#0055aa' }}
+            ;
             font-weight: 700;
         }
 
         .flag-abnormal {
-            color: {{ $settings['report_abnormal_color'] ?? '#d32f2f' }};
+            color:
+                {{ $settings['report_abnormal_color'] ?? '#d32f2f' }}
+            ;
             font-weight: 700;
         }
 
@@ -370,14 +404,18 @@
         .interp-block {
             margin: 15px 0 10px;
             padding: 4px 0;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             line-height: 1.5;
             page-break-inside: avoid;
         }
 
         .interp-label {
             font-weight: 700;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             margin-bottom: 3px;
             color: #1a1a1a;
         }
@@ -392,7 +430,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .interp-content table th {
@@ -401,13 +441,17 @@
             padding: 3px 6px;
             font-weight: 700;
             text-align: left;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .interp-content table td {
             border: 1px solid #bbb;
             padding: 3px 6px;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .interp-content table tr {
@@ -420,14 +464,18 @@
 
         .interp-content p {
             margin: 3px 0;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             color: #444;
         }
 
         .interp-content ul,
         .interp-content ol {
             margin: 3px 0 3px 15px;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .interp-content li {
@@ -442,7 +490,9 @@
         .remarks-block {
             margin: 20px 0 10px;
             padding: 10px 0;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             line-height: 1.5;
             border-top: 1px dashed #ccc;
             page-break-inside: avoid;
@@ -452,7 +502,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .remarks-block table th {
@@ -496,7 +548,9 @@
         .end-of-report {
             text-align: center;
             font-weight: 700;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
             margin-top: 20px;
             padding-top: 8px;
             border-top: 1px dashed #333;
@@ -511,7 +565,9 @@
             margin-top: 15px;
             padding: 6px 0;
             border-top: 1px dashed #ccc;
-            font-size: {{ $sz10 }};
+            font-size:
+                {{ $sz10 }}
+            ;
         }
 
         .page-num:before {
@@ -614,23 +670,32 @@
                         if ($settings['sig_1_enabled'] ?? true) {
                             $pos = $settings['sig_1_position'] ?? 'right';
                             $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $sigImgSrc];
-                            if ($pos === 'left') $leftSig = $sigData;
-                            elseif ($pos === 'center') $centerSig = $sigData;
-                            else $rightSig = $sigData;
+                            if ($pos === 'left')
+                                $leftSig = $sigData;
+                            elseif ($pos === 'center')
+                                $centerSig = $sigData;
+                            else
+                                $rightSig = $sigData;
                         }
                         if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
                             $pos = $settings['sig_2_position'] ?? 'left';
                             $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
-                            if ($pos === 'left') $leftSig = $sigData;
-                            elseif ($pos === 'center') $centerSig = $sigData;
-                            else $rightSig = $sigData;
+                            if ($pos === 'left')
+                                $leftSig = $sigData;
+                            elseif ($pos === 'center')
+                                $centerSig = $sigData;
+                            else
+                                $rightSig = $sigData;
                         }
                         if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
                             $pos = $settings['sig_3_position'] ?? 'center';
                             $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
-                            if ($pos === 'left') $leftSig = $sigData;
-                            elseif ($pos === 'center') $centerSig = $sigData;
-                            else $rightSig = $sigData;
+                            if ($pos === 'left')
+                                $leftSig = $sigData;
+                            elseif ($pos === 'center')
+                                $centerSig = $sigData;
+                            else
+                                $rightSig = $sigData;
                         }
                     @endphp
                     <table class="multi-sig-table" style="table-layout: fixed; width: 100%;">
@@ -681,7 +746,8 @@
             style="{{ ($showHeader && ($showFooter ?? true)) ? '' : 'visibility: hidden;' }}">
 
         @if($settings['pdf_show_page_number'] ?? true)
-            <div style="position: absolute; bottom: 8px; right: 35px; font-size: 10px; color: #333; font-family: sans-serif; z-index: 10000; font-weight: bold; background-color: {{ $settings['pdf_page_number_bg_color'] ?? 'rgba(255, 255, 255, 0.85)' }}; padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div
+                style="position: absolute; bottom: 8px; right: 35px; font-size: 10px; color: #333; font-family: sans-serif; z-index: 10000; font-weight: bold; background-color: {{ $settings['pdf_page_number_bg_color'] ?? 'rgba(255, 255, 255, 0.85)' }}; padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 Page <span class="page-num"></span>
             </div>
         @endif
@@ -786,13 +852,18 @@
                                     <tr>
                                         <td colspan="5" style="padding: 12px 6px; border-bottom: 1px solid #333;">
                                             <div style="font-family: {{ $fontFamily }};">
-                                                <div style="font-weight: bold; font-size: {{ $sz11 }}; color: #000; margin-bottom: 8px; text-transform: uppercase;">
+                                                <div
+                                                    style="font-weight: bold; font-size: {{ $sz11 }}; color: #000; margin-bottom: 8px; text-transform: uppercase;">
                                                     {{ $r->parameter_name }}
                                                 </div>
-                                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: {{ $sz10 }};">
+                                                <table
+                                                    style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: {{ $sz10 }};">
                                                     <tr>
-                                                        <td style="width: 30%; font-weight: bold; border: none; padding: 3px 0; color: #333;">Growth Status:</td>
-                                                        <td style="width: 70%; border: none; padding: 3px 0; color: #000; font-weight: bold;">
+                                                        <td
+                                                            style="width: 30%; font-weight: bold; border: none; padding: 3px 0; color: #333;">
+                                                            Growth Status:</td>
+                                                        <td
+                                                            style="width: 70%; border: none; padding: 3px 0; color: #000; font-weight: bold;">
                                                             @if(($r->culture_data['growth_status'] ?? '') === 'No Growth')
                                                                 No Growth Isolated
                                                             @elseif(($r->culture_data['growth_status'] ?? '') === 'Contamination')
@@ -804,13 +875,16 @@
                                                     </tr>
                                                     @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth')
                                                         <tr>
-                                                            <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Organism Isolated:</td>
-                                                            <td style="color: #000; font-weight: bold; font-style: italic; border: none; padding: 3px 0;">
+                                                            <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Organism
+                                                                Isolated:</td>
+                                                            <td
+                                                                style="color: #000; font-weight: bold; font-style: italic; border: none; padding: 3px 0;">
                                                                 {{ $r->culture_data['organism_name'] ?? 'Not Specified' }}
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Colony Count:</td>
+                                                            <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Colony
+                                                                Count:</td>
                                                             <td style="border: none; padding: 3px 0; color: #000;">
                                                                 {{ $r->culture_data['colony_count'] ?? 'Not Specified' }}
                                                             </td>
@@ -820,20 +894,24 @@
 
                                                 @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth' && !empty($r->culture_data['antibiotics']))
                                                     <div style="margin-top: 15px;">
-                                                        <div style="font-weight: bold; font-size: {{ $sz10_5 }}; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; color: #000;">
+                                                        <div
+                                                            style="font-weight: bold; font-size: {{ $sz10_5 }}; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; color: #000;">
                                                             Antibiotic Susceptibility Profile
                                                         </div>
-                                                        <table style="width: 100%; border-collapse: collapse; font-size: {{ $sz10 }}; text-align: left;">
+                                                        <table
+                                                            style="width: 100%; border-collapse: collapse; font-size: {{ $sz10 }}; text-align: left;">
                                                             <thead>
                                                                 <tr style="border-bottom: 1.5px solid #000; font-weight: bold; color: #000;">
                                                                     <th style="padding: 6px 4px; width: 45%; border: none;">Antibiotic Name</th>
-                                                                    <th style="padding: 6px 4px; width: 35%; text-align: center; border: none;">Susceptibility</th>
-                                                                    <th style="padding: 6px 4px; width: 20%; text-align: center; border: none;">MIC Value</th>
+                                                                    <th style="padding: 6px 4px; width: 35%; text-align: center; border: none;">
+                                                                        Susceptibility</th>
+                                                                    <th style="padding: 6px 4px; width: 20%; text-align: center; border: none;">
+                                                                        MIC Value</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 @php
-                                                                    $filledAntibiotics = collect($r->culture_data['antibiotics'] ?? [])->filter(function($ab) {
+                                                                    $filledAntibiotics = collect($r->culture_data['antibiotics'] ?? [])->filter(function ($ab) {
                                                                         return !empty($ab['sensitivity']) || !empty($ab['mic']);
                                                                     });
                                                                 @endphp
@@ -848,11 +926,15 @@
                                                                         }
                                                                     @endphp
                                                                     <tr style="border-bottom: 0.5px solid #eee;">
-                                                                        <td style="padding: 6px 4px; font-weight: bold; border: none; color: #000;">{{ $ab['name'] }}</td>
-                                                                        <td style="padding: 6px 4px; text-align: center; font-weight: bold; border: none; color: #000;">
+                                                                        <td style="padding: 6px 4px; font-weight: bold; border: none; color: #000;">
+                                                                            {{ $ab['name'] }}
+                                                                        </td>
+                                                                        <td
+                                                                            style="padding: 6px 4px; text-align: center; font-weight: bold; border: none; color: #000;">
                                                                             {{ $text }}
                                                                         </td>
-                                                                        <td style="padding: 6px 4px; text-align: center; font-family: monospace; border: none; color: #000;">
+                                                                        <td
+                                                                            style="padding: 6px 4px; text-align: center; font-family: monospace; border: none; color: #000;">
                                                                             {{ $ab['mic'] ?: '--' }}
                                                                         </td>
                                                                     </tr>
@@ -880,7 +962,8 @@
                                             class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'flag-abnormal')) : 'result-bold' }}">
                                             {{ $r->result_value }}
                                         </td>
-                                        <td class="{{ $isAbnormal && !in_array($flag, ['H', 'L']) ? 'flag-abnormal' : ($flag ? 'flag-' . $flag : '') }}">
+                                        <td
+                                            class="{{ $isAbnormal && !in_array($flag, ['H', 'L']) ? 'flag-abnormal' : ($flag ? 'flag-' . $flag : '') }}">
                                             {{ $flag }}
                                         </td>
                                         <td class="{{ $isAbnormal ? 'result-bold' : '' }}"
@@ -997,6 +1080,31 @@
         @endforeach
     @endforeach
 
+    {{-- ── Outsourced Reports ── --}}
+    @if(isset($outsourcedImages) && count($outsourcedImages) > 0)
+        @foreach($outsourcedImages as $itemId => $data)
+            @php
+                $labName = $data['lab_name'];
+                $images = $data['images'];
+                // Always start outsourced report on a new page if not the first item
+                if ($testIndex > 0) {
+                    echo '<div style="page-break-after: always;"></div>';
+                }
+            @endphp
+
+            <div class="test-block-wrapper" style="clear: both; margin: 0; padding: 0;">
+                @foreach($images as $img)
+                    <div
+                        style="text-align: center; width: 100%; margin: 0; padding: 0; page-break-inside: avoid; {{ !$loop->last ? 'page-break-after: always;' : '' }}">
+                        <img src="{{ $img }}"
+                            style="width: 109%; max-width: none; display: block; margin-left: 2%; margin-bottom: -2000px;">
+                    </div>
+                @endforeach
+            </div>
+            @php $testIndex++; @endphp
+        @endforeach
+    @endif
+
     {{-- ── Global Report Comments ── --}}
     @if($report->comments)
         <div class="doctor-comments">
@@ -1018,23 +1126,32 @@
                 if ($settings['sig_1_enabled'] ?? true) {
                     $pos = $settings['sig_1_position'] ?? 'right';
                     $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $sigImgSrc];
-                    if ($pos === 'left') $leftSig = $sigData;
-                    elseif ($pos === 'center') $centerSig = $sigData;
-                    else $rightSig = $sigData;
+                    if ($pos === 'left')
+                        $leftSig = $sigData;
+                    elseif ($pos === 'center')
+                        $centerSig = $sigData;
+                    else
+                        $rightSig = $sigData;
                 }
                 if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
                     $pos = $settings['sig_2_position'] ?? 'left';
                     $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
-                    if ($pos === 'left') $leftSig = $sigData;
-                    elseif ($pos === 'center') $centerSig = $sigData;
-                    else $rightSig = $sigData;
+                    if ($pos === 'left')
+                        $leftSig = $sigData;
+                    elseif ($pos === 'center')
+                        $centerSig = $sigData;
+                    else
+                        $rightSig = $sigData;
                 }
                 if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
                     $pos = $settings['sig_3_position'] ?? 'center';
                     $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
-                    if ($pos === 'left') $leftSig = $sigData;
-                    elseif ($pos === 'center') $centerSig = $sigData;
-                    else $rightSig = $sigData;
+                    if ($pos === 'left')
+                        $leftSig = $sigData;
+                    elseif ($pos === 'center')
+                        $centerSig = $sigData;
+                    else
+                        $rightSig = $sigData;
                 }
             @endphp
             <table class="multi-sig-table" style="table-layout: fixed; width: 100%;">
@@ -1081,8 +1198,9 @@
     @endif
 
     {{-- ── End of Report ── --}}
-    <div class="end-of-report">*** End of Report ***</div>
-
+    @if(!isset($outsourcedImages) || count($outsourcedImages) == 0)
+        <div class="end-of-report">*** End of Report ***</div>
+    @endif
 </body>
 
 </html>

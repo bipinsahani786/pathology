@@ -239,6 +239,17 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-12">Outsourced Reporting</div>
+                                            <div class="text-muted fs-10">Allow lab to attach outsourced PDFs instead of parameters</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="enable_outsourcing">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -1201,6 +1201,25 @@
                                     </div>
                                 </div>
 
+                                @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
+                                    <hr class="my-3">
+                                    <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Outsourced PDF Defaults</div>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold fs-11">Default Crop Top (%)</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                wire:model="outsourced_crop_top">
+                                            <div class="fs-10 text-muted mt-1">Default percentage to crop from top.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold fs-11">Default Crop Bottom (%)</label>
+                                            <input type="number" class="form-control form-control-sm"
+                                                wire:model="outsourced_crop_bottom">
+                                            <div class="fs-10 text-muted mt-1">Default percentage to crop from bottom.</div>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 @can('edit settings')
                                     <div class="text-end border-top pt-3">
                                         <button wire:click="savePdfSettings" class="btn btn-primary fw-bold px-4">
@@ -1719,6 +1738,14 @@
                                             <option value="10">10 digits (0000000001)</option>
                                         </select>
                                         <div class="fs-10 text-muted mt-1">Length of the unique serial number</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-11">Print Mode</label>
+                                        <select class="form-select" wire:model.live="barcode_print_mode">
+                                            <option value="sample">1 Barcode per Sample Type (e.g. Blood, Urine)</option>
+                                            <option value="test">1 Barcode per Test (e.g. CBC, KFT)</option>
+                                        </select>
+                                        <div class="fs-10 text-muted mt-1">Determines how barcodes are grouped when printing</div>
                                     </div>
                                 </div>
 

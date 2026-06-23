@@ -111,6 +111,8 @@ class SettingsManager extends Component
 
     public $barcode_counter_digits = 6;
 
+    public $barcode_print_mode = 'sample'; // 'sample' or 'test'
+
     public $barcodeSaved = false;
 
     // ==========================================
@@ -158,6 +160,10 @@ class SettingsManager extends Component
 
     public $pdf_footer_height = 180;
 
+    // Outsourced PDF Default Crop Settings
+    public $outsourced_crop_top = 33;
+    public $outsourced_crop_bottom = 8;
+
     public $report_page_break_style = 'continuous';
 
     public $report_show_dept_header_always = true;
@@ -195,7 +201,7 @@ class SettingsManager extends Component
     // MODULE VISIBILITY SETTINGS
     // ==========================================
     public $default_login_page = 'lab.dashboard';
-    
+
     public $show_dashboard_stats = true;
 
     public $module_pos = true;
@@ -414,6 +420,9 @@ class SettingsManager extends Component
         $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200, $company->id, $branchId);
         $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180, $company->id, $branchId);
 
+        $this->outsourced_crop_top = (int) Configuration::getFor('outsourced_crop_top', 18, $company->id, $branchId);
+        $this->outsourced_crop_bottom = (int) Configuration::getFor('outsourced_crop_bottom', 8, $company->id, $branchId);
+
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1', $company->id, $branchId) === '1';
@@ -421,7 +430,7 @@ class SettingsManager extends Component
 
         $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000', $company->id, $branchId);
         $this->report_flag_low_color = Configuration::getFor('report_flag_low_color', '#0055aa', $company->id, $branchId);
-        
+
         $this->report_abnormal_indicator = Configuration::getFor('report_abnormal_indicator', '*', $company->id, $branchId);
         $this->report_abnormal_color = Configuration::getFor('report_abnormal_color', '#d32f2f', $company->id, $branchId);
 
@@ -450,6 +459,7 @@ class SettingsManager extends Component
         $this->barcode_prefix = Configuration::getFor('barcode_prefix', 'LAB', $company->id, $branchId);
         $this->barcode_date_format = Configuration::getFor('barcode_date_format', 'ymd', $company->id, $branchId);
         $this->barcode_counter_digits = (int) Configuration::getFor('barcode_counter_digits', 6, $company->id, $branchId);
+        $this->barcode_print_mode = Configuration::getFor('barcode_print_mode', 'sample', $company->id, $branchId);
 
         // Branch Controls (Always Global/Company Wide context)
         $this->branch_share_patients = Configuration::getFor('branch_share_patients', '1', $company->id, 'global') === '1';
@@ -593,7 +603,7 @@ class SettingsManager extends Component
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent, $companyId, $branchId);
 
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (! $hasCustomInvoice) {
+        if (!$hasCustomInvoice) {
             if (is_object($this->new_invoice_header_image) || is_object($this->new_invoice_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
                 $this->new_invoice_header_image = null;
@@ -673,6 +683,7 @@ class SettingsManager extends Component
             'barcode_prefix' => 'required|string|max:10',
             'barcode_date_format' => 'required|string|in:ym,ymd,Ymd,Y,none',
             'barcode_counter_digits' => 'required|integer|min:2|max:12',
+            'barcode_print_mode' => 'required|string|in:sample,test',
         ]);
 
         $companyId = auth()->user()->company_id;
@@ -681,6 +692,7 @@ class SettingsManager extends Component
         Configuration::setFor('barcode_prefix', $this->barcode_prefix, $companyId, $branchId);
         Configuration::setFor('barcode_date_format', $this->barcode_date_format, $companyId, $branchId);
         Configuration::setFor('barcode_counter_digits', $this->barcode_counter_digits, $companyId, $branchId);
+        Configuration::setFor('barcode_print_mode', $this->barcode_print_mode, $companyId, $branchId);
 
         $this->barcodeSaved = true;
     }
@@ -694,7 +706,7 @@ class SettingsManager extends Component
 
         // SaaS Plan Enforcement
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (! $hasCustomInvoice && $this->bill_template !== 'classic') {
+        if (!$hasCustomInvoice && $this->bill_template !== 'classic') {
             session()->flash('error', 'Plan Restriction: Your current plan only supports the Classic invoice template. Upgrade to a premium plan to use Modern or Professional templates.');
             $this->bill_template = 'classic';
 
@@ -724,7 +736,7 @@ class SettingsManager extends Component
 
         // SaaS Plan Enforcement for Custom Branding
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
-        if (! $hasCustomInvoice) {
+        if (!$hasCustomInvoice) {
             if (is_object($this->new_header_image) || is_object($this->new_footer_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
                 $this->new_header_image = null;
@@ -770,6 +782,9 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_header_height', $this->pdf_header_height, $companyId, $branchId);
         Configuration::setFor('pdf_footer_height', $this->pdf_footer_height, $companyId, $branchId);
 
+        Configuration::setFor('outsourced_crop_top', $this->outsourced_crop_top, $companyId, $branchId);
+        Configuration::setFor('outsourced_crop_bottom', $this->outsourced_crop_bottom, $companyId, $branchId);
+
         Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0', $companyId, $branchId);
@@ -777,7 +792,7 @@ class SettingsManager extends Component
 
         Configuration::setFor('report_flag_high_color', $this->report_flag_high_color, $companyId, $branchId);
         Configuration::setFor('report_flag_low_color', $this->report_flag_low_color, $companyId, $branchId);
-        
+
         Configuration::setFor('report_abnormal_indicator', $this->report_abnormal_indicator, $companyId, $branchId);
         Configuration::setFor('report_abnormal_color', $this->report_abnormal_color, $companyId, $branchId);
 
@@ -793,7 +808,7 @@ class SettingsManager extends Component
     // ==========================================
     public function updatedSelectedDeptId($value)
     {
-        if (! $value) {
+        if (!$value) {
             $this->reset(['dept_sig_1_name', 'dept_sig_1_desig', 'dept_sig_1_path', 'dept_sig_2_name', 'dept_sig_2_desig', 'dept_sig_2_path', 'dept_sig_3_name', 'dept_sig_3_desig', 'dept_sig_3_path']);
 
             return;
@@ -945,7 +960,7 @@ class SettingsManager extends Component
 
         // SaaS Plan Enforcement
         $hasWhatsappCustom = auth()->user()->company->plan?->features['whatsapp_custom'] ?? false;
-        if (! $hasWhatsappCustom) {
+        if (!$hasWhatsappCustom) {
             session()->flash('error', 'Plan Restriction: WhatsApp message customization is not available on your current plan.');
 
             return;
@@ -1022,7 +1037,7 @@ class SettingsManager extends Component
         $datePart = $dateMap[$this->barcode_date_format] ?? date('ymd');
         $counter = str_pad(1, max((int) $this->barcode_counter_digits, 2), '0', STR_PAD_LEFT);
 
-        return $prefix.$datePart.$counter;
+        return $prefix . $datePart . $counter;
     }
 
     /**
@@ -1033,7 +1048,7 @@ class SettingsManager extends Component
         $prefix = $this->patient_id_prefix ?: 'PAT';
         $counter = str_pad(1, max((int) $this->patient_id_digits, 2), '0', STR_PAD_LEFT);
 
-        return $prefix.$counter;
+        return $prefix . $counter;
     }
 
     public function getFontFamiliesProperty()
@@ -1077,7 +1092,7 @@ class SettingsManager extends Component
         );
 
         $processed = preg_replace('/\*(.*?)\*/', '<strong>$1</strong>', $processed);
-        
+
         return nl2br($processed, false);
     }
 

@@ -75,5 +75,14 @@ class Configuration extends Model
 
         $branchCacheKey = $branchId ?: 'global';
         \Illuminate\Support\Facades\Cache::forget("config_{$companyId}_{$branchCacheKey}_{$key}");
+        
+        // If it's a global setting, or even if it's a branch setting, clear all branch caches 
+        // to ensure fallbacks are re-evaluated properly.
+        if (!$branchId) {
+            $branches = \App\Models\Branch::where('company_id', $companyId)->pluck('id');
+            foreach ($branches as $bId) {
+                \Illuminate\Support\Facades\Cache::forget("config_{$companyId}_{$bId}_{$key}");
+            }
+        }
     }
 }

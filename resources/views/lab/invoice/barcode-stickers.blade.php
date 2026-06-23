@@ -200,13 +200,20 @@
 
     <div class="sticker-container">
         @php
-            $groupedItems = $invoice->items->groupBy(function($item) {
-                return $item->labTest->sample_type ?? 'Serum';
-            });
+            $printMode = \App\Models\Configuration::getFor('barcode_print_mode', 'sample', $invoice->company_id, $invoice->branch_id);
+
+            if ($printMode === 'test') {
+                $groupedItems = $invoice->items->groupBy('id');
+            } else {
+                $groupedItems = $invoice->items->groupBy(function($item) {
+                    return $item->labTest->sample_type ?? 'Serum';
+                });
+            }
         @endphp
 
-        @foreach($groupedItems as $sampleType => $items)
+        @foreach($groupedItems as $groupKey => $items)
             @php
+                $sampleType = $items->first()->labTest->sample_type ?? 'Serum';
                 $profile = $invoice->patient->patientProfile;
                 $genderShort = $profile ? substr($profile->gender ?? 'M', 0, 1) : 'M';
                 $age = $profile ? $profile->age : '0';
@@ -226,7 +233,11 @@
                 <svg class="barcode-svg" id="barcode-{{ $loop->index }}"></svg>
                 
                 <div class="sticker-footer">
-                    <span class="test-info" title="{{ $testNames }}">{{ str()->limit($testNames, 30) }} ({{ $sampleType }})</span>
+                    @if($printMode === 'sample')
+                        <span class="test-info" title="{{ $sampleType }}">{{ strtoupper($sampleType) }}</span>
+                    @else
+                        <span class="test-info" title="{{ $testNames }}">{{ str()->limit($testNames, 30) }} ({{ $sampleType }})</span>
+                    @endif
                     <span class="date-time text-uppercase">{{ $invoice->invoice_date->format('d/m/y H:i') }}</span>
                 </div>
 

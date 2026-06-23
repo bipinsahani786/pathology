@@ -15,6 +15,10 @@ class TestReport extends Model
         'patient_id',
         'status',
         'pdf_path',
+        'outsourced_pdf_path',
+        'outsourced_lab_name',
+        'outsourced_crop_top',
+        'outsourced_crop_bottom',
         'comments',
         'approved_by',
         'approved_at',
@@ -23,6 +27,8 @@ class TestReport extends Model
 
     protected $casts = [
         'approved_at' => 'datetime',
+        'outsourced_crop_top' => 'integer',
+        'outsourced_crop_bottom' => 'integer',
         'report_date' => 'datetime',
     ];
 
