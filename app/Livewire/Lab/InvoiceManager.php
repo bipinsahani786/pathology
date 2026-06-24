@@ -35,6 +35,20 @@ class InvoiceManager extends Component
 
     public $perPage = 15;
 
+    public $isExportModalOpen = false;
+
+    public $exportColumns = [
+        'invoice_number' => true,
+        'date' => true,
+        'patient_name' => true,
+        'patient_phone' => true,
+        'total_amount' => true,
+        'paid_amount' => true,
+        'due_amount' => true,
+        'payment_status' => true,
+        'collection_center' => true,
+    ];
+
     protected $paginationTheme = 'bootstrap';
 
     public function mount()
@@ -106,7 +120,7 @@ class InvoiceManager extends Component
         $this->resetPage();
     }
 
-    public function render()
+    protected function buildQuery()
     {
         $companyId = auth()->user()->company_id;
         $user = auth()->user();
@@ -125,19 +139,16 @@ class InvoiceManager extends Component
             $myBranchId = $user->branch_id;
         }
 
-        // If strict branch access is enabled, force myBranchId if it was null AND user is NOT a global admin
         if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
             $myBranchId = $user->branch_id;
         }
 
-        $companyId = $user->company_id;
         $query = Invoice::where('company_id', $companyId)
             ->when($myBranchId, fn ($q) => $q->where('branch_id', $myBranchId))
             ->when($user->collection_center_id, fn ($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->with(['patient', 'doctor', 'collectionCenter', 'items', 'creator'])
             ->latest('invoice_date');
 
-        // Search by invoice number, patient name, or phone
         if ($this->search) {
             $s = $this->search;
             $query->where(function ($q) use ($s) {
@@ -150,12 +161,14 @@ class InvoiceManager extends Component
             });
         }
 
-        // Payment Status filter
         if ($this->filterStatus) {
-            $query->where('payment_status', $this->filterStatus);
+            if ($this->filterStatus === 'HasDues') {
+                $query->where('due_amount', '>', 0);
+            } else {
+                $query->where('payment_status', $this->filterStatus);
+            }
         }
 
-        // Invoice Status (Active/Cancelled)
         if ($this->filterInvoiceStatus) {
             if ($this->filterInvoiceStatus === 'Active') {
                 $query->where('status', '!=', 'Cancelled');
@@ -164,35 +177,57 @@ class InvoiceManager extends Component
             }
         }
 
-        // Sample Status
         if ($this->filterSampleStatus) {
             $query->where('sample_status', $this->filterSampleStatus);
         }
 
-        // Date range
         if ($this->filterDateFrom) {
-            $query->whereDate('invoice_date', '>=', $this->filterDateFrom);
+            $query->where('invoice_date', '>=', \Carbon\Carbon::parse($this->filterDateFrom));
         }
         if ($this->filterDateTo) {
-            $query->whereDate('invoice_date', '<=', $this->filterDateTo);
+            $query->where('invoice_date', '<=', \Carbon\Carbon::parse($this->filterDateTo));
         }
 
-        // Collection center
         if ($this->filterCC) {
             $query->where('collection_center_id', $this->filterCC);
         }
 
-        // Doctor Filter
         if ($this->filterDoctor) {
             $query->where('referred_by_doctor_id', $this->filterDoctor);
         }
 
-        // Agent Filter
         if ($this->filterAgent) {
             $query->where('referred_by_agent_id', $this->filterAgent);
         }
 
+        return $query;
+    }
+
+    public function render()
+    {
+        $query = $this->buildQuery();
         $invoices = $query->paginate($this->perPage);
+
+        $companyId = auth()->user()->company_id;
+        $user = auth()->user();
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+        $activeBranchId = session('active_branch_id', 'all');
+
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+            collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+            && ! $user->hasRole('branch_admin');
+
+        $myBranchId = null;
+        if ($isGlobalAdmin) {
+            $myBranchId = ($activeBranchId === 'all' ? null : $activeBranchId);
+        } else {
+            $myBranchId = $user->branch_id;
+        }
+
+        if ($restrictAccess && ! $myBranchId && ! $isGlobalAdmin) {
+            $myBranchId = $user->branch_id;
+        }
 
         // Stats calculations with strict scoping
         $statsBase = Invoice::where('company_id', $companyId)->where('status', '!=', 'Cancelled');
@@ -293,5 +328,74 @@ class InvoiceManager extends Component
         $route = $withHeader ? 'lab.invoice.pdf' : 'lab.invoice.pdf.plain';
         $url = route($route, $id);
         $this->dispatch('open-new-tab', ['url' => $url]);
+    }
+
+    public function openExportModal()
+    {
+        $this->isExportModalOpen = true;
+    }
+
+    public function exportExcel()
+    {
+        $this->isExportModalOpen = false;
+        $invoices = $this->buildQuery()->get();
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=invoices_report_" . date('Y-m-d_His') . ".csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = $this->exportColumns;
+
+        $callback = function () use ($invoices, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Generate headers
+            $rowHeader = [];
+            if ($columns['invoice_number'] ?? false) $rowHeader[] = 'Invoice #';
+            if ($columns['date'] ?? false) $rowHeader[] = 'Date';
+            if ($columns['patient_name'] ?? false) $rowHeader[] = 'Patient Name';
+            if ($columns['patient_phone'] ?? false) $rowHeader[] = 'Phone';
+            if ($columns['total_amount'] ?? false) $rowHeader[] = 'Total Amount';
+            if ($columns['paid_amount'] ?? false) $rowHeader[] = 'Paid Amount';
+            if ($columns['due_amount'] ?? false) $rowHeader[] = 'Pending Amount';
+            if ($columns['payment_status'] ?? false) $rowHeader[] = 'Status';
+            if ($columns['collection_center'] ?? false) $rowHeader[] = 'Center/Branch';
+            
+            fputcsv($file, $rowHeader);
+
+            foreach ($invoices as $inv) {
+                $row = [];
+                if ($columns['invoice_number'] ?? false) $row[] = $inv->invoice_number;
+                if ($columns['date'] ?? false) $row[] = $inv->invoice_date->format('Y-m-d H:i');
+                if ($columns['patient_name'] ?? false) $row[] = $inv->patient->name ?? '';
+                if ($columns['patient_phone'] ?? false) $row[] = $inv->patient->phone ?? '';
+                if ($columns['total_amount'] ?? false) $row[] = $inv->total_amount;
+                if ($columns['paid_amount'] ?? false) $row[] = $inv->paid_amount;
+                if ($columns['due_amount'] ?? false) $row[] = $inv->due_amount;
+                if ($columns['payment_status'] ?? false) $row[] = $inv->payment_status;
+                if ($columns['collection_center'] ?? false) $row[] = $inv->collectionCenter->name ?? ($inv->branch->name ?? '');
+                
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf()
+    {
+        $this->isExportModalOpen = false;
+        $invoices = $this->buildQuery()->get();
+        $columns = $this->exportColumns;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.invoices-pdf', compact('invoices', 'columns'))->setPaper('a4', 'landscape');
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'invoices_report_' . date('Y-m-d_His') . '.pdf');
     }
 }
