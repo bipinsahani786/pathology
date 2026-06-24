@@ -6,7 +6,7 @@
         <div class="absolute top-0 left-1/2 w-[800px] h-[600px] bg-brand-500/10 blur-[200px] rounded-full -translate-x-1/2 z-0"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
             <span class="inline-block px-4 py-1.5 rounded-full bg-brand-50 text-brand-600 text-[11px] font-bold uppercase tracking-wider mb-6">Workflow</span>
-            <h1 class="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-8">{!! str_replace('Automates', '<span class="gradient-text">Automates</span>', e(\App\Models\SiteSetting::get('how_hero_title', 'How SWS Automates Your Lab'))) !!}</h1>
+            <h1 class="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-8">{!! format_landing_title(\App\Models\SiteSetting::get('how_hero_title', 'How SWS Automates Your Lab'), 'gradient-text') !!}</h1>
             <p class="text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed">{{ \App\Models\SiteSetting::get('how_hero_desc', 'A step-by-step look at how samples move from collection to automated reporting with zero manual friction.') }}</p>
         </div>
     </section>

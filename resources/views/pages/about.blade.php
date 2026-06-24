@@ -37,7 +37,7 @@
                 </span>
                 
                 <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8 text-zinc-900 leading-[1.1]">
-                    {!! str_replace(['Precision', 'Diagnostic'], ['<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Precision</span>', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Diagnostic</span>'], e($aboutTitle)) !!}
+                    {!! format_landing_title($aboutTitle) !!}
                 </h1>
                 
                 <p class="text-xl text-zinc-600 max-w-2xl mx-auto leading-relaxed font-medium">
@@ -79,10 +79,13 @@
                 <div class="lg:col-span-7 reveal-right lg:pl-8">
                     <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-4 block">{{ $heritageSubtitle }}</span>
                     <h3 class="font-display text-4xl md:text-5xl font-extrabold mb-8 tracking-tight text-zinc-900">
-                        {!! str_replace('Experts', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Experts</span>', e($heritageTitle)) !!}
+                        {!! format_landing_title($heritageTitle) !!}
                     </h3>
-                    <p class="text-lg text-zinc-600 mb-12 leading-relaxed font-medium">
+                    <p class="text-lg text-zinc-600 mb-6 leading-relaxed font-medium">
                         {{ $aboutDesc }}
+                    </p>
+                    <p class="text-lg text-zinc-800 mb-12 leading-relaxed font-bold bg-brand-50 p-4 rounded-xl border border-brand-100 inline-block">
+                        <i class="feather-info text-brand-600 mr-2"></i> Ojas Elab is a product of Startupwebsupport
                     </p>
 
                     <div class="grid grid-cols-3 gap-6 pt-8 border-t border-zinc-100">
@@ -105,7 +108,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 reveal">
                     <span class="text-xs font-bold text-brand-600 uppercase tracking-widest mb-3 block">{{ $valuesSubtitle }}</span>
-                    <h3 class="font-display text-4xl font-extrabold text-zinc-900">{!! str_replace('Pillars', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Pillars</span>', e($valuesTitle)) !!}</h3>
+                    <h3 class="font-display text-4xl font-extrabold text-zinc-900">{!! format_landing_title($valuesTitle) !!}</h3>
                 </div>
                 
                 <div class="grid md:grid-cols-3 gap-8">
@@ -131,7 +134,7 @@
             
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center mb-20 reveal">
-                    <h3 class="font-display text-4xl font-extrabold text-white">{!! str_replace('2026', '<span class="text-brand-400">2026</span>', e($roadmapTitle)) !!}</h3>
+                    <h3 class="font-display text-4xl font-extrabold text-white">{!! format_landing_title($roadmapTitle, 'text-brand-400') !!}</h3>
                 </div>
                 
                 <div class="relative">
@@ -168,7 +171,7 @@
             
             <div class="max-w-3xl mx-auto px-4 text-center relative z-10 reveal">
                 <h2 class="font-display text-5xl md:text-6xl font-extrabold mb-8 tracking-tight text-zinc-900">
-                    {!! str_replace('Modernize?', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600">Modernize?</span>', e($ctaTitle)) !!}
+                    {!! format_landing_title($ctaTitle) !!}
                 </h2>
                 <p class="text-zinc-600 mb-12 text-xl font-medium">{{ $ctaDesc }}</p>
                 

@@ -94,3 +94,32 @@ if (! function_exists('generate_qr_base64')) {
         return (new \chillerlan\QRCode\QRCode($options))->render($data);
     }
 }
+
+if (! function_exists('format_landing_title')) {
+    /**
+     * Highlights parts of a landing page title with a color class.
+     * If asterisks * are used, it highlights the text within.
+     * Otherwise, it highlights the last two words.
+     */
+    function format_landing_title(string $title, string $colorClass = 'text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600'): string
+    {
+        $title = e($title);
+        
+        // If user used asterisks, like "Welcome to *Our Lab*"
+        if (preg_match('/\*(.*?)\*/', $title)) {
+            return preg_replace('/\*(.*?)\*/', '<span class="'.$colorClass.'">$1</span>', $title);
+        }
+        
+        // Default behavior: highlight the last two words
+        $words = explode(' ', $title);
+        if (count($words) >= 3) {
+            $lastTwo = array_splice($words, -2);
+            return implode(' ', $words) . ' <span class="'.$colorClass.'">' . implode(' ', $lastTwo) . '</span>';
+        } elseif (count($words) == 2) {
+            return $words[0] . ' <span class="'.$colorClass.'">' . $words[1] . '</span>';
+        }
+        
+        // One word
+        return '<span class="'.$colorClass.'">' . $title . '</span>';
+    }
+}

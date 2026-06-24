@@ -48,8 +48,8 @@
                             <span class="text-xs font-bold text-brand-700 tracking-wide">Next-Gen LIS Platform 2.0</span>
                         </div>
 
-                        <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-zinc-900 leading-[1.1] mb-6 tracking-tight">
-                            {!! str_replace(['Modern', 'Laboratories'], ['<span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600">Modern</span>', '<span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-indigo-600">Laboratories</span>'], e($heroTitle)) !!}
+                        <h1 class="font-display text-5xl md:text-7xl font-extrabold text-zinc-900 tracking-tight leading-[1.1] mb-8">
+                            {!! format_landing_title($heroTitle) !!}
                         </h1>
 
                         <p class="text-lg text-zinc-600 leading-relaxed mb-10 max-w-xl">
@@ -120,7 +120,7 @@
                 <div class="bg-zinc-50 rounded-[2.5rem] p-10 md:p-16 border border-zinc-100 relative overflow-hidden">
                     <div class="grid lg:grid-cols-2 gap-16 items-center relative z-10">
                         <div>
-                            <h2 class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-6 font-display">{!! str_replace('Paper Friction?', '<span class="text-zinc-400 line-through">Paper Friction?</span>', e($homeFrictionTitle)) !!}</h2>
+                            <h2 class="text-4xl md:text-5xl font-extrabold text-zinc-900 mb-6 font-display">{!! format_landing_title($homeFrictionTitle, 'text-zinc-400 line-through') !!}</h2>
                             <p class="text-lg text-zinc-600 mb-8">{{ $homeFrictionDesc }}</p>
                         </div>
                         <div class="space-y-4">
@@ -374,8 +374,17 @@
                             </div>
                         </div>
 
-                        <div class="bg-white p-8 rounded-2xl border border-zinc-100 shadow-inner">
-                            <form action="{{ route('contact.submit') ?? '#' }}" method="POST" class="space-y-5">
+                        <div class="bg-white p-8 rounded-2xl border border-zinc-100 shadow-inner" id="contact-form-container">
+                            <div id="contact-success" class="hidden text-center py-8">
+                                <div class="w-16 h-16 bg-emerald-50 border-4 border-emerald-50/50 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                                    <i class="feather-check text-2xl text-emerald-500"></i>
+                                </div>
+                                <h3 class="font-bold text-zinc-900 mb-2 text-xl">Message Sent!</h3>
+                                <p class="text-zinc-500 text-sm">Thank you! We will get back to you shortly.</p>
+                                <button type="button" onclick="document.getElementById('contact-success').classList.add('hidden'); document.getElementById('contact-form').classList.remove('hidden'); document.getElementById('contact-form').reset();" class="mt-6 text-sm text-brand-600 font-bold hover:underline">Send another message</button>
+                            </div>
+
+                            <form id="contact-form" action="{{ route('contact.submit') ?? '#' }}" method="POST" class="space-y-5">
                                 @csrf
                                 <div class="grid grid-cols-2 gap-5">
                                     <div>
@@ -391,16 +400,22 @@
                                     <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Lab Name</label>
                                     <input type="text" name="lab_name" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="City Diagnostics">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Email</label>
-                                    <input type="email" name="email" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="rahul@example.com">
+                                <div class="grid grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Email</label>
+                                        <input type="email" name="email" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="rahul@example.com">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Mobile No</label>
+                                        <input type="tel" name="phone" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors" placeholder="9876543210">
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Message</label>
                                     <textarea name="message" rows="4" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 focus:outline-none focus:border-brand-500 transition-colors resize-none" placeholder="Tell us about your requirements..."></textarea>
                                 </div>
-                                <button type="submit" class="w-full py-4 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold shadow-lg shadow-zinc-900/10 transition-all">
-                                    Send Message
+                                <button type="submit" id="contact-submit-btn" class="w-full py-4 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold shadow-lg shadow-zinc-900/10 transition-all flex justify-center items-center gap-2">
+                                    <span>Send Message</span>
                                 </button>
                             </form>
                         </div>
@@ -428,4 +443,45 @@
         </section>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('contact-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const btn = document.getElementById('contact-submit-btn');
+                    const originalBtnHtml = btn.innerHTML;
+                    btn.innerHTML = '<i class="feather-loader animate-spin"></i> Sending...';
+                    btn.disabled = true;
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.success) {
+                            form.classList.add('hidden');
+                            document.getElementById('contact-success').classList.remove('hidden');
+                        } else {
+                            alert(data.message || 'Something went wrong. Please check your inputs and try again.');
+                            btn.innerHTML = originalBtnHtml;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        alert('Something went wrong. Please try again.');
+                        btn.innerHTML = originalBtnHtml;
+                        btn.disabled = false;
+                    });
+                });
+            }
+        });
+    </script>
 </x-landing-layout>

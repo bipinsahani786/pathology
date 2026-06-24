@@ -56,16 +56,22 @@ Route::post('/contact/submit', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'first_name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
+        'phone' => 'nullable|string|max:20',
     ]);
 
     \App\Models\Enquiry::create([
         'name' => trim($request->input('first_name').' '.$request->input('last_name')),
         'email' => $request->input('email'),
+        'phone' => $request->input('phone'),
         'lab_name' => $request->input('lab_name'),
         'message' => $request->input('message'),
         'status' => 'new',
         'enquiry_type' => 'website',
     ]);
+
+    if ($request->wantsJson()) {
+        return response()->json(['success' => true, 'message' => 'Thank you! We will get back to you shortly.']);
+    }
 
     return redirect('/')->with('success', 'Thank you! We will get back to you shortly.');
 })->name('contact.submit');

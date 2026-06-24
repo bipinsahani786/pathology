@@ -21,7 +21,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 reveal">
             <span
                 class="inline-block px-4 py-1.5 rounded-full bg-brand-50 text-brand-600 text-[11px] font-bold uppercase tracking-wider mb-6">{{ $heroSubtitle }}</span>
-            <h1 class="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-8">{!! str_replace('Growth Plan', '<span class="gradient-text">Growth Plan</span>', e($heroTitle)) !!}</h1>
+            <h1 class="font-display text-5xl md:text-7xl font-extrabold tracking-tight mb-8">{!! format_landing_title($heroTitle, 'gradient-text') !!}</h1>
             <p class="text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed">{{ $heroDesc }}</p>
         </div>
     </section>
@@ -83,7 +83,7 @@
         <section class="py-24 bg-zinc-50/50">
             <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 reveal">
-                    <h3 class="font-display text-3xl font-bold text-zinc-900">{!! str_replace('Questions', '<span class="gradient-text">Questions</span>', e($faqTitle)) !!}</h3>
+                    <h3 class="font-display text-3xl font-bold text-zinc-900">{!! format_landing_title($faqTitle, 'gradient-text') !!}</h3>
                 </div>
                 <div class="space-y-4" x-data="{ active: null }">
                     @foreach($faqs as $faq)
@@ -108,7 +108,7 @@
     <section class="py-28 bg-zinc-950 text-center relative overflow-hidden">
         <div class="absolute inset-0 bg-grid opacity-5"></div>
         <div class="relative z-10 reveal">
-            <h2 class="font-display text-5xl font-bold text-white mb-6 tracking-tight">{!! str_replace('Diagnostic Intelligence', '<span class="text-brand-400">Diagnostic Intelligence</span>', e($ctaTitle)) !!}</h2>
+            <h2 class="font-display text-5xl font-bold text-white mb-6 tracking-tight">{!! format_landing_title($ctaTitle, 'text-brand-400') !!}</h2>
             <p class="text-zinc-400 max-w-2xl mx-auto mb-12 text-lg">{{ $ctaDesc }}</p>
             <a href="#contact"
                 class="inline-block px-14 py-5 bg-gradient-to-r from-brand-500 to-brand-700 text-white rounded-2xl font-bold text-lg shadow-2xl shadow-brand-500/30 hover:-translate-y-1 transition-all duration-300">
