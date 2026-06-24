@@ -86,7 +86,7 @@ class Login extends Component
             }
 
             // 2. Internal Lab Staff (Standard Lab Operations)
-            if ($user->hasAnyRole(['lab_admin', 'staff', 'branch_admin']) || $user->company_id) {
+            if ($user->isLabStaff() || $user->company_id) {
                 $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
                 return redirect()->route($defaultPage);
             }
