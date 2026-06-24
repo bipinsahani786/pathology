@@ -94,9 +94,14 @@
         </div>
 
         <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p class="text-sm text-zinc-500 text-center md:text-left">
-                &copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.
-            </p>
+            <div class="flex flex-col gap-1 items-center md:items-start">
+                <p class="text-sm text-zinc-500 text-center md:text-left">
+                    &copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.
+                </p>
+                <p class="text-sm text-zinc-500 text-center md:text-left">
+                    Ojas Elab is a product of Startupwebsupport
+                </p>
+            </div>
             <div class="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5">
                 <div class="relative flex h-2.5 w-2.5">
                     <span

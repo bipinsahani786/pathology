@@ -26,19 +26,18 @@
                 </div>
 
                 <div class="grid sm:grid-cols-2 gap-8">
-                    <!-- 3. Tech Support -->
+                    <!-- Brand & Entity -->
                     <div class="glass p-8 rounded-[2.5rem] border-white/5 transition-all hover:border-brand-500/20">
-                        <div class="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 flex items-center justify-center mb-6"><i class="feather-headphones"></i></div>
-                        <h5 class="font-bold mb-2 italic tracking-tight">Global Support</h5>
-                        <p class="text-xs text-zinc-400 font-medium">Available 24/7 for critical LIS emergencies.</p>
-                        <p class="text-brand-600 font-bold text-sm mt-4 italic">support@sws.com</p>
+                        <div class="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 flex items-center justify-center mb-6"><i class="feather-info"></i></div>
+                        <h5 class="font-bold mb-2 italic tracking-tight">Ojas eLab</h5>
+                        <p class="text-xs text-zinc-400 font-medium italic">Legal Entity: Startup Web Support</p>
                     </div>
-                    <!-- 4. Sales -->
+                    <!-- Contact Details -->
                     <div class="glass p-8 rounded-[2.5rem] border-white/5 transition-all hover:border-brand-500/20">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6"><i class="feather-briefcase"></i></div>
-                        <h5 class="font-bold mb-2 italic tracking-tight">Enterprise Sales</h5>
-                        <p class="text-xs text-zinc-400 font-medium">Custom deployment & hospital pricing.</p>
-                        <p class="text-emerald-600 font-bold text-sm mt-4 italic">sales@sws.com</p>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6"><i class="feather-headphones"></i></div>
+                        <h5 class="font-bold mb-2 italic tracking-tight">Support</h5>
+                        <p class="text-brand-600 font-bold text-sm mt-4 italic"><i class="feather-phone mr-1"></i> 07479499718</p>
+                        <p class="text-emerald-600 font-bold text-sm mt-2 italic"><i class="feather-mail mr-1"></i> info@ojaselab.com</p>
                     </div>
                 </div>
 

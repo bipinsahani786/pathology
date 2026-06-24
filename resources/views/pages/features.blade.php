@@ -29,7 +29,7 @@
                 </span>
                 
                 <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 text-zinc-900 leading-[1.1]">
-                    {!! str_replace('Diagnostic Precision', '<span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">Diagnostic Precision</span>', e(\App\Models\SiteSetting::get('features_hero_title', 'Engineered for Diagnostic Precision'))) !!}
+                    {!! format_landing_title(\App\Models\SiteSetting::get('features_hero_title', 'Engineered for Diagnostic Precision'), 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600') !!}
                 </h1>
                 
                 <p class="text-xl text-zinc-600 max-w-2xl mx-auto leading-relaxed font-medium mb-10">
