@@ -193,26 +193,21 @@ class PosManager extends Component
             collect($roles)->contains(fn($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
             && !$user->hasRole('branch_admin');
 
-        if (!$isGlobalAdmin) {
-            $this->branch_id = $user->branch_id;
-            if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'))) {
-                $this->collection_center_id = $user->collection_center_id;
-                $cc = CollectionCenter::find($this->collection_center_id);
-                $this->branch_id = $cc->branch_id ?? $this->branch_id;
-            } else {
-                $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->where('branch_id', $this->branch_id)->first()->id ?? null);
+        // Default to active session branch if available, otherwise user's branch, otherwise first branch
+        if (!empty($activeBranchId) && $activeBranchId !== 'all') {
+            $this->branch_id = $activeBranchId;
+        } else {
+            $this->branch_id = $user->branch_id ?? (Branch::where('company_id', $companyId)->first()->id ?? null);
+        }
+
+        if (collect($roles)->contains(fn($r) => str_contains(strtolower($r), 'collection'))) {
+            $this->collection_center_id = $user->collection_center_id;
+            $cc = CollectionCenter::find($this->collection_center_id);
+            if ($cc && $cc->branch_id) {
+                $this->branch_id = $cc->branch_id;
             }
         } else {
-            // Global/Main Admin - Use session context or default
-            $this->branch_id = (empty($activeBranchId) || $activeBranchId === 'all') ? (Branch::where('company_id', $companyId)->first()->id ?? null) : $activeBranchId;
-            $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->first()->id ?? null);
-
-            if ($this->collection_center_id) {
-                $cc = CollectionCenter::find($this->collection_center_id);
-                if ($cc && $cc->branch_id) {
-                    $this->branch_id = $cc->branch_id;
-                }
-            }
+            $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->where('branch_id', $this->branch_id)->first()->id ?? null);
         }
 
         $this->expected_report_date = date('Y-m-d');

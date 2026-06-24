@@ -138,7 +138,12 @@
                 <li class="breadcrumb-item text-primary fw-medium">Billing</li>
             </ul>
         </div>
-        <div class="page-header-right ms-auto">
+        <div class="page-header-right ms-auto d-flex gap-2">
+            @if(auth()->user()->can('view invoices') || auth()->user()->collection_center_id)
+                <button type="button" class="btn btn-outline-primary" wire:click="openExportModal">
+                    <i class="feather-download me-1"></i> Export Reports
+                </button>
+            @endif
             @if(auth()->user()->can('create pos') || auth()->user()->collection_center_id)
                 <a href="{{ route('lab.pos') }}" wire:navigate class="btn btn-primary"><i class="feather-plus me-1"></i>New Bill</a>
             @endif
@@ -237,13 +242,13 @@
                     <div class="col-md-3">
                         <div class="input-group">
                             <span class="input-group-text bg-light fs-10 fw-bold">FROM</span>
-                            <input type="date" class="form-control" wire:model.live="filterDateFrom">
+                            <input type="datetime-local" class="form-control" wire:model.live="filterDateFrom">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="input-group">
                             <span class="input-group-text bg-light fs-10 fw-bold">TO</span>
-                            <input type="date" class="form-control" wire:model.live="filterDateTo">
+                            <input type="datetime-local" class="form-control" wire:model.live="filterDateTo">
                         </div>
                     </div>
                 </div>
@@ -254,6 +259,7 @@
                             <option value="Paid">✅ Paid</option>
                             <option value="Partial">⚠️ Partial</option>
                             <option value="Unpaid">❌ Unpaid</option>
+                            <option value="HasDues">⏳ Has Pending Dues</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -588,5 +594,91 @@
                 </div>
             </div>
         </div>
+
+        {{-- ======================== EXPORT MODAL ======================== --}}
+        @if($isExportModalOpen)
+            <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-light border-0">
+                            <h5 class="modal-title fw-bold text-dark"><i class="feather-download text-primary me-2"></i>Export Invoice Reports</h5>
+                            <button type="button" class="btn-close" wire:click="$set('isExportModalOpen', false)"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted fs-12 mb-3">Select the columns you want to include in the export. The currently applied filters on the screen will be used for the export.</p>
+                            
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-inv" wire:model="exportColumns.invoice_number">
+                                        <label class="form-check-label fw-medium fs-12" for="col-inv">Invoice #</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-date" wire:model="exportColumns.date">
+                                        <label class="form-check-label fw-medium fs-12" for="col-date">Date</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-pat" wire:model="exportColumns.patient_name">
+                                        <label class="form-check-label fw-medium fs-12" for="col-pat">Patient Name</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-phone" wire:model="exportColumns.patient_phone">
+                                        <label class="form-check-label fw-medium fs-12" for="col-phone">Patient Phone</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-tot" wire:model="exportColumns.total_amount">
+                                        <label class="form-check-label fw-medium fs-12" for="col-tot">Total Amount</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-paid" wire:model="exportColumns.paid_amount">
+                                        <label class="form-check-label fw-medium fs-12" for="col-paid">Paid Amount</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-due" wire:model="exportColumns.due_amount">
+                                        <label class="form-check-label fw-medium fs-12 text-danger" for="col-due">Pending Amount</label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-status" wire:model="exportColumns.payment_status">
+                                        <label class="form-check-label fw-medium fs-12" for="col-status">Payment Status</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <div class="form-check form-switch form-check-custom">
+                                        <input class="form-check-input" type="checkbox" id="col-cc" wire:model="exportColumns.collection_center">
+                                        <label class="form-check-label fw-medium fs-12" for="col-cc">Collection Center / Branch</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between gap-3">
+                                <button type="button" wire:click="exportExcel" class="btn btn-success flex-fill fw-bold" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="exportExcel"><i class="feather-file-text me-2"></i>Download Excel (CSV)</span>
+                                    <span wire:loading wire:target="exportExcel"><i class="spinner-border spinner-border-sm me-2"></i>Exporting...</span>
+                                </button>
+                                <button type="button" wire:click="exportPdf" class="btn btn-danger flex-fill fw-bold" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="exportPdf"><i class="feather-file me-2"></i>Download PDF</span>
+                                    <span wire:loading wire:target="exportPdf"><i class="spinner-border spinner-border-sm me-2"></i>Generating...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
     </div>
 </div>

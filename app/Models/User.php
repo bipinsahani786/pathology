@@ -219,6 +219,36 @@ class User extends Authenticatable
             ->latest();
     }
 
+    public function isLabStaff(): bool
+    {
+        // Spatie HasRoles trait might not be initialized yet in some boot phases
+        if (! method_exists($this, 'roles')) {
+            return false;
+        }
+
+        $rolesCollection = $this->roles;
+        if (! $rolesCollection || $rolesCollection->isEmpty()) {
+            return false;
+        }
+
+        $systemRoles = ['lab_admin', 'staff', 'branch_admin'];
+        $prefix = $this->company_id ? 'lab_' . $this->company_id . '_' : null;
+
+        foreach ($rolesCollection as $role) {
+            $name = strtolower($role->name);
+            
+            if (in_array($name, $systemRoles)) {
+                return true;
+            }
+
+            if ($prefix && str_starts_with($name, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Override Spatie hasRole to automatically handle tenant-prefixed roles (e.g. lab_2_collection_center matches collection_center).
      */

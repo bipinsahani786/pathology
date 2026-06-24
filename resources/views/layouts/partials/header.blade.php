@@ -50,7 +50,7 @@
                     $isExpiringSoon = $daysLeftInt <= 7;
                 @endphp
 
-                @if($company && auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']))
+                @if($company && auth()->user()->isLabStaff())
                     <div class="d-none d-xl-flex align-items-center me-2 border rounded-3 p-1 bg-white shadow-sm border-light overflow-hidden">
                         <div class="avatar-text avatar-md bg-soft-primary text-primary rounded-3 me-2 flex-shrink-0" style="width: 32px; height: 32px; line-height: 32px;">
                             <i class="feather-zap fs-12"></i>
@@ -117,7 +117,7 @@
                         </div>
                         <div class="p-2">
                             @php
-                                $isInternalStaff = auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']);
+                                $isInternalStaff = auth()->user()->isLabStaff();
                                 $profileRoute = $isInternalStaff ? 'lab.profile' : 'partner.profile';
                                 $settingsRoute = $isInternalStaff ? 'lab.settings' : 'partner.profile';
                             @endphp

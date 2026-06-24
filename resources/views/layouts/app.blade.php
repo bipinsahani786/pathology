@@ -150,7 +150,7 @@
                     <div class="row g-4" id="navigationLinks">
                         @php
                             $user = auth()->user();
-                            $isLabStaff = $user->hasAnyRole(['lab_admin', 'staff', 'branch_admin']);
+                            $isLabStaff = $user->isLabStaff();
                             $isCollectionCenter = $user->hasRole('collection_center');
                             $isDoctorAgent = $user->hasAnyRole(['doctor', 'agent']);
 

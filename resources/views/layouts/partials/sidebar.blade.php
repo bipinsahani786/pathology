@@ -158,7 +158,7 @@
                 @endrole
 
                 {{-- LAB ADMIN / STAFF / BRANCH ADMIN (Consolidated) --}}
-                @if(auth()->user()->hasAnyRole(['lab_admin', 'staff', 'branch_admin']))
+                @if(auth()->user()->isLabStaff())
                     <li class="nxl-item nxl-caption"><label>Main</label></li>
                     <li class="nxl-item {{ request()->routeIs('lab.dashboard') ? 'active' : '' }}">
                         <a href="{{ route('lab.dashboard') }}" class="nxl-link" wire:navigate>
