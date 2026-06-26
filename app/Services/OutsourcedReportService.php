@@ -178,6 +178,16 @@ class OutsourcedReportService
 
         $pageCount = $pdf->setSourceFile($tempPdfPath);
 
+        $resolvedHeader = null;
+        if ($headerPath && Storage::exists($headerPath)) {
+            $resolvedHeader = $this->prepareImageForFpdf(Storage::get($headerPath));
+        }
+
+        $resolvedFooter = null;
+        if ($footerPath && Storage::exists($footerPath)) {
+            $resolvedFooter = $this->prepareImageForFpdf(Storage::get($footerPath));
+        }
+
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
             $templateId = $pdf->importPage($pageNo);
             $size = $pdf->getTemplateSize($templateId);
@@ -186,46 +196,68 @@ class OutsourcedReportService
             $pdf->AddPage($orientation, [$size['width'], $size['height']]);
 
             // 1. Draw Header (Behind PDF)
-            if ($headerPath && Storage::exists($headerPath)) {
-                $ext = pathinfo($headerPath, PATHINFO_EXTENSION) ?: 'png';
-                $baseTemp = tempnam(sys_get_temp_dir(), 'hdr_');
-                $tempHeader = $baseTemp . '.' . $ext;
-                rename($baseTemp, $tempHeader);
-
-                file_put_contents($tempHeader, Storage::get($headerPath));
-                $pdf->Image($tempHeader, 0, 0, $size['width'], 0);
-                @unlink($tempHeader);
+            if ($resolvedHeader) {
+                $pdf->Image($resolvedHeader, 0, 0, $size['width'], 0);
             }
 
             // 2. Draw Footer (Behind PDF)
-            if ($footerPath && Storage::exists($footerPath)) {
-                $ext = pathinfo($footerPath, PATHINFO_EXTENSION) ?: 'png';
-                $baseTemp = tempnam(sys_get_temp_dir(), 'ftr_');
-                $tempFooter = $baseTemp . '.' . $ext;
-                rename($baseTemp, $tempFooter);
-
-                file_put_contents($tempFooter, Storage::get($footerPath));
-                
-                $sizeInfo = getimagesize($tempFooter);
+            if ($resolvedFooter) {
+                $sizeInfo = getimagesize($resolvedFooter);
                 if ($sizeInfo) {
                     $imgWidth = $sizeInfo[0];
                     $imgHeight = $sizeInfo[1];
                     $renderedHeight = ($size['width'] / $imgWidth) * $imgHeight;
                     $yPos = $size['height'] - $renderedHeight;
-                    $pdf->Image($tempFooter, 0, $yPos, $size['width'], 0);
+                    $pdf->Image($resolvedFooter, 0, $yPos, $size['width'], 0);
                 }
-                @unlink($tempFooter);
             }
 
             // 3. Draw original PDF page ON TOP of header and footer
             $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
         }
 
+        if ($resolvedHeader) @unlink($resolvedHeader);
+        if ($resolvedFooter) @unlink($resolvedFooter);
+
         $outPath = tempnam(sys_get_temp_dir(), 'outsourced_out_') . '.pdf';
         $pdf->Output('F', $outPath);
         @unlink($tempPdfPath);
 
         return $outPath;
+    }
+
+    private function prepareImageForFpdf($imgData): ?string
+    {
+        if (!$imgData) return null;
+        
+        $baseTemp = tempnam(sys_get_temp_dir(), 'img_');
+        file_put_contents($baseTemp, $imgData);
+        
+        $info = @getimagesize($baseTemp);
+        $mime = $info['mime'] ?? '';
+        
+        if (in_array($mime, ['image/jpeg', 'image/png', 'image/gif'])) {
+            $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'];
+            $ext = $extMap[$mime];
+            $finalPath = $baseTemp . '.' . $ext;
+            rename($baseTemp, $finalPath);
+            return $finalPath;
+        }
+        
+        // Unsupported mime type or WEBP, try convert to PNG using GD
+        $image = @imagecreatefromstring($imgData);
+        if ($image !== false) {
+            $finalPath = $baseTemp . '.png';
+            imagealphablending($image, false);
+            imagesavealpha($image, true);
+            imagepng($image, $finalPath);
+            imagedestroy($image);
+            @unlink($baseTemp);
+            return $finalPath;
+        }
+        
+        @unlink($baseTemp);
+        return null;
     }
 
     /**
