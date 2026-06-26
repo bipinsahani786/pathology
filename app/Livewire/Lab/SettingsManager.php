@@ -163,6 +163,8 @@ class SettingsManager extends Component
     // Outsourced PDF Default Crop Settings
     public $outsourced_crop_top = 33;
     public $outsourced_crop_bottom = 8;
+    
+    public $outsourced_pdf_mode = 'crop_to_image';
 
     public $report_page_break_style = 'continuous';
 
@@ -422,6 +424,7 @@ class SettingsManager extends Component
 
         $this->outsourced_crop_top = (int) Configuration::getFor('outsourced_crop_top', 18, $company->id, $branchId);
         $this->outsourced_crop_bottom = (int) Configuration::getFor('outsourced_crop_bottom', 8, $company->id, $branchId);
+        $this->outsourced_pdf_mode = Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $company->id, $branchId);
 
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
@@ -784,6 +787,7 @@ class SettingsManager extends Component
 
         Configuration::setFor('outsourced_crop_top', $this->outsourced_crop_top, $companyId, $branchId);
         Configuration::setFor('outsourced_crop_bottom', $this->outsourced_crop_bottom, $companyId, $branchId);
+        Configuration::setFor('outsourced_pdf_mode', $this->outsourced_pdf_mode, $companyId, $branchId);
 
         Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);

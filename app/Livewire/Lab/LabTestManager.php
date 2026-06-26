@@ -45,7 +45,6 @@ class LabTestManager extends Component
     public function updatedGlobalSearch()
     {
         $this->resetPage();
-        $this->selectedGlobalTests = [];
         $this->globalLimit = 15;
     }
 

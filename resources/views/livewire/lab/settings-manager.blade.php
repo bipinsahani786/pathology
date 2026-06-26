@@ -1083,6 +1083,13 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-11">Outsourced PDF Mode</label>
+                                        <select class="form-select form-select-sm" wire:model="outsourced_pdf_mode">
+                                            <option value="crop_to_image">Convert to Images (Classic)</option>
+                                            <option value="merge_with_header_footer">Merge with Header/Footer</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
                                         <label class="form-label fw-bold fs-11">Repeat Dept Header</label>
                                         <div class="form-check form-switch mt-1">
                                             <input class="form-check-input" type="checkbox"
