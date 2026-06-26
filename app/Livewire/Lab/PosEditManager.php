@@ -1127,8 +1127,14 @@ class PosEditManager extends Component
                 }
             }
 
+            // Ensure patient_membership_id is valid before updating the invoice
+            if ($invoice->patient_membership_id && !\App\Models\PatientMembership::where('id', $invoice->patient_membership_id)->exists()) {
+                $invoice->patient_membership_id = null;
+            }
+
             // Update invoice
             $invoice->update([
+                'patient_membership_id' => $invoice->patient_membership_id,
                 'patient_id' => $this->selectedPatient['id'],
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
