@@ -155,4 +155,104 @@ class OutsourcedReportService
     {
         return $file->store('outsourced-reports');
     }
+
+    /**
+     * Merge lab header and footer onto the existing PDF using FPDI.
+     *
+     * @param string $pdfPath
+     * @param string|null $headerPath
+     * @param string|null $footerPath
+     * @return string Temporary path to the generated PDF
+     */
+    public function mergeHeaderFooter(string $pdfPath, ?string $headerPath, ?string $footerPath): string
+    {
+        if (!Storage::exists($pdfPath)) {
+            Log::error("OutsourcedReportService: PDF not found in storage at {$pdfPath}");
+            throw new \Exception("Uploaded PDF not found");
+        }
+
+        $pdf = new \setasign\Fpdi\Fpdi();
+        
+        $tempPdfPath = tempnam(sys_get_temp_dir(), 'outsourced_in_') . '.pdf';
+        file_put_contents($tempPdfPath, Storage::get($pdfPath));
+
+        $pageCount = $pdf->setSourceFile($tempPdfPath);
+
+        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            $templateId = $pdf->importPage($pageNo);
+            $size = $pdf->getTemplateSize($templateId);
+            $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+            
+            $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+
+            // 1. Draw Header (Behind PDF)
+            if ($headerPath && Storage::exists($headerPath)) {
+                $ext = pathinfo($headerPath, PATHINFO_EXTENSION) ?: 'png';
+                $baseTemp = tempnam(sys_get_temp_dir(), 'hdr_');
+                $tempHeader = $baseTemp . '.' . $ext;
+                rename($baseTemp, $tempHeader);
+
+                file_put_contents($tempHeader, Storage::get($headerPath));
+                $pdf->Image($tempHeader, 0, 0, $size['width'], 0);
+                @unlink($tempHeader);
+            }
+
+            // 2. Draw Footer (Behind PDF)
+            if ($footerPath && Storage::exists($footerPath)) {
+                $ext = pathinfo($footerPath, PATHINFO_EXTENSION) ?: 'png';
+                $baseTemp = tempnam(sys_get_temp_dir(), 'ftr_');
+                $tempFooter = $baseTemp . '.' . $ext;
+                rename($baseTemp, $tempFooter);
+
+                file_put_contents($tempFooter, Storage::get($footerPath));
+                
+                $sizeInfo = getimagesize($tempFooter);
+                if ($sizeInfo) {
+                    $imgWidth = $sizeInfo[0];
+                    $imgHeight = $sizeInfo[1];
+                    $renderedHeight = ($size['width'] / $imgWidth) * $imgHeight;
+                    $yPos = $size['height'] - $renderedHeight;
+                    $pdf->Image($tempFooter, 0, $yPos, $size['width'], 0);
+                }
+                @unlink($tempFooter);
+            }
+
+            // 3. Draw original PDF page ON TOP of header and footer
+            $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
+        }
+
+        $outPath = tempnam(sys_get_temp_dir(), 'outsourced_out_') . '.pdf';
+        $pdf->Output('F', $outPath);
+        @unlink($tempPdfPath);
+
+        return $outPath;
+    }
+
+    /**
+     * Merge multiple PDF files into one.
+     *
+     * @param array $pdfPaths Array of absolute paths to temporary PDF files
+     * @return string Temporary path to the merged PDF
+     */
+    public function mergePdfs(array $pdfPaths): string
+    {
+        $pdf = new \setasign\Fpdi\Fpdi();
+
+        foreach ($pdfPaths as $path) {
+            if (file_exists($path)) {
+                $pageCount = $pdf->setSourceFile($path);
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $pdf->importPage($pageNo);
+                    $size = $pdf->getTemplateSize($templateId);
+                    $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+                    $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                    $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
+                }
+            }
+        }
+
+        $outPath = tempnam(sys_get_temp_dir(), 'merged_out_') . '.pdf';
+        $pdf->Output('F', $outPath);
+        return $outPath;
+    }
 }

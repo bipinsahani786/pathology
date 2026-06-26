@@ -284,19 +284,41 @@ class ReportPdfController extends Controller
         // ── Process Outsourced Report ────────────────────────────────────────
         $outsourcedImages = [];
         $pdfService = app(\App\Services\OutsourcedReportService::class);
+        $outsourcedPdfMode = \App\Models\Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $companyId, $branchId);
+        $mergeOutsourcedPdf = false;
+        $mergedPdfPath = null;
         
         if ($report->outsourced_pdf_path) {
-            $images = $pdfService->convertAndCrop(
-                $report->outsourced_pdf_path,
-                $report->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18, $report->company_id, $report->invoice->branch_id),
-                $report->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8, $report->company_id, $report->invoice->branch_id)
-            );
-            
-            if (!empty($images)) {
-                $outsourcedImages['report'] = [
-                    'lab_name' => $report->outsourced_lab_name,
-                    'images' => $images,
-                ];
+            if ($outsourcedPdfMode === 'merge_with_header_footer') {
+                $mergeOutsourcedPdf = true;
+                
+                // Fetch the stored paths (not base64) for FPDI
+                $headerImagePath = $showHeader ? \App\Models\Configuration::getFor('pdf_header_image', null, $companyId, $branchId) : null;
+                $footerImagePath = $showFooter ? \App\Models\Configuration::getFor('pdf_footer_image', null, $companyId, $branchId) : null;
+                
+                try {
+                    $mergedPdfPath = $pdfService->mergeHeaderFooter(
+                        $report->outsourced_pdf_path,
+                        $headerImagePath,
+                        $footerImagePath
+                    );
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to merge FPDI pdf: " . $e->getMessage());
+                    $mergeOutsourcedPdf = false;
+                }
+            } else {
+                $images = $pdfService->convertAndCrop(
+                    $report->outsourced_pdf_path,
+                    $report->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18, $companyId, $branchId),
+                    $report->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8, $companyId, $branchId)
+                );
+                
+                if (!empty($images)) {
+                    $outsourcedImages['report'] = [
+                        'lab_name' => $report->outsourced_lab_name,
+                        'images' => $images,
+                    ];
+                }
             }
         }
 
@@ -322,6 +344,35 @@ class ReportPdfController extends Controller
 
         $patientName = str_replace([' ', '/', '\\'], '_', $report->invoice->patient->name);
         $filename = 'Report_'.$patientName.'_'.$report->invoice->invoice_number.'.pdf';
+
+        // If we merged the outsourced PDF with FPDI
+        if ($mergeOutsourcedPdf && $mergedPdfPath) {
+            // If there are normal results, merge them with the outsourced PDF
+            if ($groupedResults->isNotEmpty()) {
+                $domPdfContent = $pdf->output();
+                $tempDomPdf = tempnam(sys_get_temp_dir(), 'dompdf_') . '.pdf';
+                file_put_contents($tempDomPdf, $domPdfContent);
+                
+                $finalPdfPath = $pdfService->mergePdfs([$tempDomPdf, $mergedPdfPath]);
+                
+                $finalPdfContent = file_get_contents($finalPdfPath);
+                @unlink($tempDomPdf);
+                @unlink($mergedPdfPath);
+                @unlink($finalPdfPath);
+                
+                return response($finalPdfContent, 200)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+            } else {
+                // Only outsourced results exist
+                $finalPdfContent = file_get_contents($mergedPdfPath);
+                @unlink($mergedPdfPath);
+                
+                return response($finalPdfContent, 200)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+            }
+        }
 
         return $pdf->stream($filename);
     }

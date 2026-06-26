@@ -46,7 +46,7 @@ class ReportManager extends Component
     public $isOutsourcedModalOpen = false;
     public $outsourcedInvoiceId = null;
     public $outsourcedPdf; // For the file upload
-    public $outsourcedLabName = '';
+    public $outsourcedPdfMode = 'crop_to_image';
     public $outsourcedCropTop = 18;
     public $outsourcedCropBottom = 5;
 
@@ -137,13 +137,13 @@ class ReportManager extends Component
         $invoice = Invoice::find($invoiceId);
         $testReport = $invoice->testReport;
         
+        $this->outsourcedPdfMode = \App\Models\Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $invoice->company_id, $invoice->branch_id);
+        
         if ($testReport && $testReport->outsourced_pdf_path) {
-            $this->outsourcedLabName = $testReport->outsourced_lab_name;
             $this->outsourcedCropTop = $testReport->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
             $this->outsourcedCropBottom = $testReport->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
             $this->hasExistingOutsourcedPdf = true;
         } else {
-            $this->outsourcedLabName = '';
             $this->outsourcedCropTop = (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
             $this->outsourcedCropBottom = (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
             $this->hasExistingOutsourcedPdf = false;
@@ -199,7 +199,6 @@ class ReportManager extends Component
 
         $testReport->update([
             'outsourced_pdf_path' => $path,
-            'outsourced_lab_name' => $this->outsourcedLabName,
             'outsourced_crop_top' => $this->outsourcedCropTop,
             'outsourced_crop_bottom' => $this->outsourcedCropBottom,
             'approved_by' => auth()->id(),

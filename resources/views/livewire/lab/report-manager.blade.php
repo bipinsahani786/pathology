@@ -483,20 +483,22 @@
                         <button type="button" class="btn-close" wire:click="closeOutsourcedModal"></button>
                     </div>
                     <div class="modal-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-muted text-uppercase fs-11">External Lab Name (Printed on Report)</label>
-                            <input type="text" class="form-control" wire:model.defer="outsourcedLabName" placeholder="e.g. Dr. Lal PathLabs, Thyrocare...">
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Top (%)</label>
-                                <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropTop" title="Percentage of the top of the PDF to crop out">
+                        @if($outsourcedPdfMode === 'crop_to_image')
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Top (%)</label>
+                                    <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropTop" title="Percentage of the top of the PDF to crop out">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Bottom (%)</label>
+                                    <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropBottom" title="Percentage of the bottom of the PDF to crop out">
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label fw-bold text-muted text-uppercase fs-10">Crop Bottom (%)</label>
-                                <input type="number" step="1" class="form-control" wire:model.defer="outsourcedCropBottom" title="Percentage of the bottom of the PDF to crop out">
+                        @else
+                            <div class="alert alert-info py-2 fs-12 mb-3">
+                                <i class="feather-info me-1"></i> PDF will be merged with your lab's letterhead (Header/Footer) automatically. No cropping needed.
                             </div>
-                        </div>
+                        @endif
                         
                         <div x-data="{ isUploading: false, progress: 0 }"
                              x-on:livewire-upload-start="isUploading = true"
