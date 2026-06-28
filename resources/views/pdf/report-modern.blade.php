@@ -6,6 +6,8 @@
     @php
         $sigMode = $settings['report_signature_mode'] ?? 'global_bottom';
         $showSignaturesEveryPage = ($settings['pdf_show_signatures'] ?? true) && ($sigMode === 'every_page');
+        $letterheadImgSrc = $settings['pdf_letterhead_image'] ?? null;
+        $letterheadMode = $settings['pdf_letterhead_mode'] ?? 'separate';
         
         $footerMargin = '30px';
         if ($settings['pdf_show_footer']) {
@@ -254,6 +256,13 @@
     </style>
 </head>
 <body>
+    {{-- ══════════════════ LETTERHEAD BACKGROUND ══════════════════ --}}
+    @if($letterheadMode === 'full_background' && $letterheadImgSrc && $showHeader)
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1001;">
+            <img src="{{ $letterheadImgSrc }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    @endif
+
     {{-- Watermark --}}
     @if($settings['pdf_show_watermark'] ?? true)
         @if(isset($company->logo) && $company->logo)
@@ -270,9 +279,9 @@
     {{-- HEADER --}}
     @if($settings['pdf_show_header'])
         <header>
-            @if($settings['pdf_header_image'])
+            @if($letterheadMode === 'separate' && $settings['pdf_header_image'] && $showHeader)
                 <img src="{{ $settings['pdf_header_image'] }}" class="custom-header-img" alt="Header">
-            @else
+            @elseif($showHeader)
                 @php
                     $displayLabName = ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name;
                     $displayAddress = ($invoice->branch && $invoice->branch->address) ? $invoice->branch->address : ($company->address ?? '');
@@ -364,9 +373,9 @@
             @endif
 
             @if($settings['pdf_show_footer'])
-                @if($settings['pdf_footer_image'])
+                @if($letterheadMode === 'separate' && $settings['pdf_footer_image'] && $settings['pdf_show_footer'])
                     <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
-                @else
+                @elseif($settings['pdf_show_footer'])
                     <div style="text-align: center;">
                         <strong>{{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}</strong> - {{ $company->tagline }}<br>
                         <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>

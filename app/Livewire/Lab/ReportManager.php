@@ -348,9 +348,17 @@ class ReportManager extends Component
     public function printReport($invoiceId, $withHeader)
     {
         if ($withHeader) {
-            $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (! $header) {
-                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+            $mode = \App\Models\Configuration::getFor('pdf_letterhead_mode', 'separate');
+            $hasImage = false;
+            
+            if ($mode === 'full_background') {
+                $hasImage = (bool) \App\Models\Configuration::getFor('pdf_letterhead_image');
+            } else {
+                $hasImage = (bool) \App\Models\Configuration::getFor('pdf_header_image');
+            }
+
+            if (! $hasImage) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead/Header in Settings before printing with header.']);
 
                 return;
             }

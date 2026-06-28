@@ -143,9 +143,15 @@ class SettingsManager extends Component
 
     public $pdf_footer_image;       // stored path
 
+    public $pdf_letterhead_mode = 'separate'; // 'separate' or 'full_background'
+
+    public $pdf_letterhead_image;   // stored path
+
     public $new_header_image;       // upload
 
     public $new_footer_image;       // upload
+
+    public $new_letterhead_image;   // upload
 
     // PDF Typography & Layout
     public $pdf_font_size = 13;
@@ -413,6 +419,8 @@ class SettingsManager extends Component
         $this->pdf_page_number_bg_color = Configuration::getFor('pdf_page_number_bg_color', 'rgba(255, 255, 255, 0.85)', $company->id, $branchId);
         $this->pdf_header_image = Configuration::getFor('pdf_header_image', null, $company->id, $branchId);
         $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null, $company->id, $branchId);
+        $this->pdf_letterhead_mode = Configuration::getFor('pdf_letterhead_mode', 'separate', $company->id, $branchId);
+        $this->pdf_letterhead_image = Configuration::getFor('pdf_letterhead_image', null, $company->id, $branchId);
 
         // PDF Typography & Layout
         $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 13, $company->id, $branchId);
@@ -730,8 +738,10 @@ class SettingsManager extends Component
     {
         $this->authorize('edit settings');
         $this->validate([
+            'pdf_letterhead_mode' => 'required|in:separate,full_background',
             'new_header_image' => 'nullable|image|max:3072',
             'new_footer_image' => 'nullable|image|max:3072',
+            'new_letterhead_image' => 'nullable|image|max:5120',
         ]);
 
         $companyId = auth()->user()->company_id;
@@ -740,10 +750,11 @@ class SettingsManager extends Component
         // SaaS Plan Enforcement for Custom Branding
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (!$hasCustomInvoice) {
-            if (is_object($this->new_header_image) || is_object($this->new_footer_image)) {
+            if (is_object($this->new_header_image) || is_object($this->new_footer_image) || is_object($this->new_letterhead_image)) {
                 session()->flash('error', 'Plan Restriction: Uploading custom letterhead images is a premium feature. Please upgrade your plan.');
                 $this->new_header_image = null;
                 $this->new_footer_image = null;
+                $this->new_letterhead_image = null;
 
                 return;
             }
@@ -761,6 +772,12 @@ class SettingsManager extends Component
             $this->new_footer_image = null;
         }
 
+        // Upload letterhead image
+        if (is_object($this->new_letterhead_image) && method_exists($this->new_letterhead_image, 'store')) {
+            $this->pdf_letterhead_image = $this->new_letterhead_image->store('invoice-headers');
+            $this->new_letterhead_image = null;
+        }
+
         // Upload signature image
         if (is_object($this->new_signature_image) && method_exists($this->new_signature_image, 'store')) {
             $this->signature_image = $this->new_signature_image->store('signatures');
@@ -774,8 +791,10 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('pdf_show_page_number', $this->pdf_show_page_number ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('pdf_page_number_bg_color', $this->pdf_page_number_bg_color, $companyId, $branchId);
+        Configuration::setFor('pdf_letterhead_mode', $this->pdf_letterhead_mode, $companyId, $branchId);
         Configuration::setFor('pdf_header_image', $this->pdf_header_image, $companyId, $branchId);
         Configuration::setFor('pdf_footer_image', $this->pdf_footer_image, $companyId, $branchId);
+        Configuration::setFor('pdf_letterhead_image', $this->pdf_letterhead_image, $companyId, $branchId);
 
         // Layout & Typography
         Configuration::setFor('pdf_font_size', $this->pdf_font_size, $companyId, $branchId);
@@ -999,6 +1018,14 @@ class SettingsManager extends Component
         $branchId = $this->selectedBranchId;
         $this->pdf_footer_image = null;
         Configuration::setFor('pdf_footer_image', null, $companyId, $branchId);
+    }
+
+    public function removeLetterheadImage()
+    {
+        $companyId = auth()->user()->company_id;
+        $branchId = $this->selectedBranchId;
+        $this->pdf_letterhead_image = null;
+        Configuration::setFor('pdf_letterhead_image', null, $companyId, $branchId);
     }
 
     /**

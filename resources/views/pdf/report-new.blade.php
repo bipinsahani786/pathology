@@ -10,6 +10,8 @@
         // ── Resolve image paths ──
         $headerImgSrc = $settings['pdf_header_image'] ?? null;
         $footerImgSrc = $settings['pdf_footer_image'] ?? null;
+        $letterheadImgSrc = $settings['pdf_letterhead_image'] ?? null;
+        $letterheadMode = $settings['pdf_letterhead_mode'] ?? 'separate';
 
         $sigImgSrc = $settings['global_sig_1_path'] ?? null;
 
@@ -577,6 +579,12 @@
 </head>
 
 <body>
+    {{-- ══════════════════ LETTERHEAD BACKGROUND ══════════════════ --}}
+    @if($letterheadMode === 'full_background' && $letterheadImgSrc && $showHeader)
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1001;">
+            <img src="{{ $letterheadImgSrc }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    @endif
 
     {{-- ══════════════════ WATERMARK ══════════════════ --}}
     @if($settings['pdf_show_watermark'] ?? true)
@@ -594,7 +602,7 @@
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
         <div class="header-logo-container">
-            @if($headerImgSrc && $showHeader)
+            @if($letterheadMode === 'separate' && $headerImgSrc && $showHeader)
                 <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header">
             @endif
         </div>
@@ -743,7 +751,7 @@
         </div>
 
         <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer"
-            style="{{ ($showHeader && ($showFooter ?? true)) ? '' : 'visibility: hidden;' }}">
+            style="{{ ($letterheadMode === 'separate' && $showHeader && ($showFooter ?? true)) ? '' : 'display: none;' }}">
 
         @if($settings['pdf_show_page_number'] ?? true)
             <div

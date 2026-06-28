@@ -989,14 +989,22 @@
                         </div>
                         <div class="card-body">
                             <div class="fs-11 text-muted mb-3">
-                                Upload custom header/footer images (screenshot of your letterpad). These will replace the
-                                default lab info section in the PDF.
+                                Choose how you want to upload your letterhead graphics. You can upload separate header and footer images, or a full A4 page letterhead.
                             </div>
 
-                            {{-- Header Image --}}
-                            <div class="mb-3 pb-3 border-bottom">
-                                <label class="form-label fw-bold fs-11">📄 Custom Header Image</label>
-                                @if($pdf_header_image)
+                            <div class="mb-4">
+                                <label class="form-label fw-bold fs-11 text-primary">Letterhead Graphic Mode</label>
+                                <select class="form-select form-select-sm" wire:model.live="pdf_letterhead_mode">
+                                    <option value="separate">Separate Header & Footer Images</option>
+                                    <option value="full_background">Full A4 Letterhead Background</option>
+                                </select>
+                            </div>
+
+                            @if($pdf_letterhead_mode === 'separate')
+                                {{-- Header Image --}}
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <label class="form-label fw-bold fs-11">📄 Custom Header Image</label>
+                                    @if($pdf_header_image)
                                     <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
                                         <img src="{{ secure_storage_url($pdf_header_image) }}" alt="Header"
                                             style="max-height:60px;max-width:100%;object-fit:contain;">
@@ -1045,6 +1053,35 @@
                                 @error('new_footer_image') <span class="text-danger fs-10">{{ $message }}</span> @enderror
                                 <div class="fs-10 text-muted mt-1">Max 3MB · JPG, PNG</div>
                             </div>
+                            @elseif($pdf_letterhead_mode === 'full_background')
+
+                            {{-- Letterhead Image --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold fs-11">🖼️ Full Letterhead Image (Background)</label>
+                                @if($pdf_letterhead_image)
+                                    <div class="mb-2 p-2 border rounded text-center" style="background:#f8fafc;">
+                                        <img src="{{ secure_storage_url($pdf_letterhead_image) }}" alt="Letterhead"
+                                            style="max-height:100px;max-width:100%;object-fit:contain;">
+                                        <div class="mt-1">
+                                            <button wire:click="removeLetterheadImage" class="btn btn-sm btn-outline-danger"><i
+                                                    class="feather-trash-2 me-1"></i>Remove</button>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if($new_letterhead_image)
+                                    <div class="mb-2 text-center">
+                                        <img src="{{ $new_letterhead_image->temporaryUrl() }}" alt="Preview" class="rounded border"
+                                            style="max-height:100px;">
+                                        <div class="fs-10 text-success mt-1"><i class="feather-check-circle me-1"></i>New letterhead
+                                            selected</div>
+                                    </div>
+                                @endif
+                                    <input type="file" wire:model="new_letterhead_image" accept="image/*"
+                                        class="form-control form-control-sm">
+                                    @error('new_letterhead_image') <span class="text-danger fs-10">{{ $message }}</span> @enderror
+                                    <div class="fs-10 text-muted mt-1">Full A4 background. Appears behind report content. Max 5MB · JPG, PNG</div>
+                                </div>
+                            @endif
 
                         </div>
 
@@ -1249,7 +1286,7 @@
                                 <h6 class="fw-bold fs-13 mb-3"><i class="feather-book-open me-2 text-primary"></i>How PDF
                                     Options Work</h6>
                                 <div class="row g-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="p-3 bg-white rounded-3 h-100 border">
                                             <div class="fw-bold fs-12 mb-1 text-primary"><i
                                                     class="feather-file-text me-1"></i>PDF with Header</div>
@@ -1257,7 +1294,7 @@
                                                 thank-you at bottom. Use for patients who need a complete invoice.</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="p-3 bg-white rounded-3 h-100 border">
                                             <div class="fw-bold fs-12 mb-1" style="color:#f59e0b;"><i
                                                     class="feather-minimize me-1"></i>PDF Without Header</div>
@@ -1266,13 +1303,20 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="p-3 bg-white rounded-3 h-100 border">
                                             <div class="fw-bold fs-12 mb-1" style="color:#7c3aed;"><i
                                                     class="feather-image me-1"></i>Custom Image Header</div>
                                             <div class="fs-11 text-muted">Upload a <strong>screenshot of your letterpad
                                                     header</strong> and it will be placed at the top of the PDF instead of
                                                 default info.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-3 bg-white rounded-3 h-100 border">
+                                            <div class="fw-bold fs-12 mb-1" style="color:#059669;"><i
+                                                    class="feather-layout me-1"></i>Full Letterhead Background</div>
+                                            <div class="fs-11 text-muted">Upload a full A4 background image. It appears behind the report content when Header & Footer are turned OFF.</div>
                                         </div>
                                     </div>
                                 </div>

@@ -221,11 +221,21 @@
 </head>
 
 <body>
+    @php
+        $letterheadMode = $settings['pdf_letterhead_mode'] ?? 'separate';
+        $letterheadImgSrc = $settings['pdf_letterhead_image'] ?? null;
+    @endphp
+
+    @if($letterheadMode === 'full_background' && $letterheadImgSrc && $showHeader)
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1001;">
+            <img src="{{ $letterheadImgSrc }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    @endif
 
     {{-- ══════════════════ FIXED HEADER ══════════════════ --}}
     <header>
         <div style="height: {{ $headerHeight }}; width: 100%; overflow: hidden; margin-bottom: 12px; padding: 0;">
-            @if($showHeader && $headerImgSrc)
+            @if($letterheadMode === 'separate' && $showHeader && $headerImgSrc)
                 <img class="header-banner" src="{{ $headerImgSrc }}" alt="Header">
             @endif
         </div>
@@ -274,11 +284,11 @@
     {{-- ══════════════════ FIXED FOOTER ══════════════════ --}}
     @if($showFooter)
         <footer>
-            <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden; padding: 0;">
-                @if($footerImgSrc)
-                    <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
-                @endif
-            </div>
+        <div style="height: {{ $footerHeight }}; width: 100%; overflow: hidden; padding: 0;">
+            @if($letterheadMode === 'separate' && $showFooter && $footerImgSrc)
+                <img class="footer-banner" src="{{ $footerImgSrc }}" alt="Footer">
+            @endif
+        </div>
         </footer>
     @endif
 
@@ -312,7 +322,11 @@
     <div class="summary-wrapper clearfix">
         <div class="status-box">
              @if($invoice->payment_status === 'Paid')
-                <div class="status-badge">FULLY PAID</div>
+                @if(file_exists(public_path('assets/images/paid-stamp.png')))
+                    <img src="{{ public_path('assets/images/paid-stamp.png') }}" style="float:left; width:130px; margin-top:20px; opacity: 0.85; transform: rotate(-5deg);" alt="Paid in Full">
+                @else
+                    <div class="status-badge">FULLY PAID</div>
+                @endif
             @elseif($invoice->payment_status === 'Partial')
                 <div class="status-badge" style="border-color:#d97706; color:#d97706;">PARTIAL</div>
             @else
