@@ -29,6 +29,7 @@ class TestReport extends Model
         'approved_at' => 'datetime',
         'outsourced_crop_top' => 'integer',
         'outsourced_crop_bottom' => 'integer',
+        'outsourced_pdf_path' => 'array',
         'report_date' => 'datetime',
     ];
 
