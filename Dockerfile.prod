@@ -3,7 +3,8 @@ WORKDIR /app
 COPY database/ database/
 COPY composer.json composer.lock* ./
 # Ignore scripts to avoid executing anything with missing dependencies
-RUN composer install \
+RUN composer self-update && \
+    composer install \
     --no-interaction \
     --no-plugins \
     --no-scripts \
