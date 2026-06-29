@@ -92,6 +92,8 @@ class InvoicePdfController extends Controller
 
         $headerImage = Configuration::getFor('invoice_header_image', Configuration::getFor('pdf_header_image', null, $companyId, $branchId), $companyId, $branchId);
         $footerImage = Configuration::getFor('invoice_footer_image', Configuration::getFor('pdf_footer_image', null, $companyId, $branchId), $companyId, $branchId);
+        $letterheadImage = Configuration::getFor('pdf_letterhead_image', null, $companyId, $branchId);
+        $letterheadMode = Configuration::getFor('pdf_letterhead_mode', 'separate', $companyId, $branchId);
 
         $view = 'pdf.invoice-'.$template;
         if (! view()->exists($view)) {
@@ -114,6 +116,8 @@ class InvoicePdfController extends Controller
             'pdf_footer_height' => Configuration::getFor('invoice_footer_height', Configuration::getFor('pdf_footer_height', null, $companyId, $branchId), $companyId, $branchId) ?: 180,
             'pdf_header_image' => ($finalShowHeader && $headerImage) ? storage_base64($headerImage) : null,
             'pdf_footer_image' => ($finalShowFooter && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_letterhead_image' => ($finalShowHeader && $letterheadImage) ? storage_base64($letterheadImage) : null,
+            'pdf_letterhead_mode' => $letterheadMode,
         ];
 
         // ── QR Code ──

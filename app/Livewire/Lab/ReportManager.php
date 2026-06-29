@@ -49,6 +49,7 @@ class ReportManager extends Component
     public $outsourcedPdfMode = 'crop_to_image';
     public $outsourcedCropTop = 18;
     public $outsourcedCropBottom = 5;
+    public $uploadedOutsourcedPdfs = [];
 
     public function updatingSearch()
     {
@@ -139,13 +140,15 @@ class ReportManager extends Component
         
         $this->outsourcedPdfMode = \App\Models\Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $invoice->company_id, $invoice->branch_id);
         
-        if ($testReport && $testReport->outsourced_pdf_path) {
+        if ($testReport && !empty($testReport->outsourced_pdf_path)) {
             $this->outsourcedCropTop = $testReport->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
             $this->outsourcedCropBottom = $testReport->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
-            $this->hasExistingOutsourcedPdf = true;
+            $this->uploadedOutsourcedPdfs = is_array($testReport->outsourced_pdf_path) ? $testReport->outsourced_pdf_path : [$testReport->outsourced_pdf_path];
+            $this->hasExistingOutsourcedPdf = count($this->uploadedOutsourcedPdfs) > 0;
         } else {
             $this->outsourcedCropTop = (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18);
             $this->outsourcedCropBottom = (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8);
+            $this->uploadedOutsourcedPdfs = [];
             $this->hasExistingOutsourcedPdf = false;
         }
         
@@ -157,6 +160,7 @@ class ReportManager extends Component
         $this->isOutsourcedModalOpen = false;
         $this->outsourcedInvoiceId = null;
         $this->outsourcedPdf = null;
+        $this->uploadedOutsourcedPdfs = [];
         $this->hasExistingOutsourcedPdf = false;
     }
 
@@ -177,10 +181,14 @@ class ReportManager extends Component
         $invoice = Invoice::findOrFail($this->outsourcedInvoiceId);
         $testReport = $invoice->testReport;
         
-        $path = $testReport ? $testReport->outsourced_pdf_path : null;
+        $paths = [];
+        if ($testReport && !empty($testReport->outsourced_pdf_path)) {
+            $paths = is_array($testReport->outsourced_pdf_path) ? $testReport->outsourced_pdf_path : [$testReport->outsourced_pdf_path];
+        }
         
         if ($this->outsourcedPdf) {
-            $path = app(\App\Services\OutsourcedReportService::class)->storePdf($this->outsourcedPdf);
+            $newPath = app(\App\Services\OutsourcedReportService::class)->storePdf($this->outsourcedPdf);
+            $paths[] = $newPath;
         }
 
         // Find or create TestReport
@@ -198,7 +206,7 @@ class ReportManager extends Component
         }
 
         $testReport->update([
-            'outsourced_pdf_path' => $path,
+            'outsourced_pdf_path' => $paths,
             'outsourced_crop_top' => $this->outsourcedCropTop,
             'outsourced_crop_bottom' => $this->outsourcedCropBottom,
             'approved_by' => auth()->id(),
@@ -217,6 +225,32 @@ class ReportManager extends Component
 
         // Auto download/print the generated report
         $this->printReport($invoice->id, 1);
+    }
+
+    public function deleteOutsourcedPdf($index)
+    {
+        $this->authorize('edit reports');
+        
+        $invoice = Invoice::findOrFail($this->outsourcedInvoiceId);
+        $testReport = $invoice->testReport;
+        
+        if ($testReport && !empty($testReport->outsourced_pdf_path)) {
+            $paths = is_array($testReport->outsourced_pdf_path) ? $testReport->outsourced_pdf_path : [$testReport->outsourced_pdf_path];
+            if (isset($paths[$index])) {
+                $pathToDelete = $paths[$index];
+                if (\Illuminate\Support\Facades\Storage::exists($pathToDelete)) {
+                    \Illuminate\Support\Facades\Storage::delete($pathToDelete);
+                }
+                unset($paths[$index]);
+                $paths = array_values($paths); // Reindex array
+                
+                $testReport->update(['outsourced_pdf_path' => $paths]);
+                $this->uploadedOutsourcedPdfs = $paths;
+                $this->hasExistingOutsourcedPdf = count($paths) > 0;
+                
+                $this->dispatch('notify', ['type' => 'success', 'message' => 'Report deleted successfully.']);
+            }
+        }
     }
 
     public function render()
@@ -348,9 +382,17 @@ class ReportManager extends Component
     public function printReport($invoiceId, $withHeader)
     {
         if ($withHeader) {
-            $header = \App\Models\Configuration::getFor('pdf_header_image');
-            if (! $header) {
-                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead (Header) in Settings before printing with header.']);
+            $mode = \App\Models\Configuration::getFor('pdf_letterhead_mode', 'separate');
+            $hasImage = false;
+            
+            if ($mode === 'full_background') {
+                $hasImage = (bool) \App\Models\Configuration::getFor('pdf_letterhead_image');
+            } else {
+                $hasImage = (bool) \App\Models\Configuration::getFor('pdf_header_image');
+            }
+
+            if (! $hasImage) {
+                $this->dispatch('notify', ['type' => 'error', 'message' => 'Please upload your Letterhead/Header in Settings before printing with header.']);
 
                 return;
             }

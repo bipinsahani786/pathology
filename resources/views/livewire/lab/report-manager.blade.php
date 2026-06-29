@@ -506,10 +506,29 @@
                              x-on:livewire-upload-error="isUploading = false"
                              x-on:livewire-upload-progress="progress = $event.detail.progress"
                              class="w-100">
+                             
+                            @if(count($uploadedOutsourcedPdfs) > 0)
+                                <div class="mb-4">
+                                    <h6 class="fs-12 fw-bold text-muted text-uppercase mb-2">Uploaded Reports</h6>
+                                    <ul class="list-group list-group-sm">
+                                        @foreach($uploadedOutsourcedPdfs as $index => $path)
+                                            <li class="list-group-item d-flex justify-content-between align-items-center bg-light border-0 mb-1 rounded-3">
+                                                <div class="d-flex align-items-center gap-2 text-truncate">
+                                                    <i class="feather-file-text text-primary"></i>
+                                                    <span class="fs-12 text-dark text-truncate" title="{{ basename($path) }}">Part #{{ $index + 1 }} - {{ basename($path) }}</span>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-light text-danger p-1 border-0" wire:click="deleteOutsourcedPdf({{ $index }})" title="Delete" wire:confirm="Are you sure you want to delete this report part?">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                             
                             <label class="btn btn-outline-primary border-dashed w-100 py-4 d-flex flex-column align-items-center justify-content-center mb-0" style="cursor: pointer; border-style: dashed;">
                                 <i class="feather-upload fs-1 mb-2"></i>
-                                <span class="fw-bold fs-14">{{ $hasExistingOutsourcedPdf ? 'Click to Replace PDF (Optional)' : 'Click to Select PDF' }}</span>
+                                <span class="fw-bold fs-14">{{ count($uploadedOutsourcedPdfs) > 0 ? 'Click to Upload Another PDF' : 'Click to Select PDF' }}</span>
                                 <span class="text-muted fs-11 mt-1">(Max 10MB)</span>
                                 <input type="file" class="d-none" wire:model="outsourcedPdf" accept=".pdf">
                             </label>

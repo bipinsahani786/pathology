@@ -131,11 +131,14 @@ class ReportPdfController extends Controller
 
         $headerImage = Configuration::getFor('pdf_header_image', null, $companyId, $branchId);
         $footerImage = Configuration::getFor('pdf_footer_image', null, $companyId, $branchId);
+        $letterheadImage = Configuration::getFor('pdf_letterhead_image', null, $companyId, $branchId);
 
         // ── Configuration settings ──────────────────────────────────────────
         $settings = [
             'pdf_header_image' => storage_base64($headerImage),
             'pdf_footer_image' => storage_base64($footerImage),
+            'pdf_letterhead_image' => storage_base64($letterheadImage),
+            'pdf_letterhead_mode' => Configuration::getFor('pdf_letterhead_mode', 'separate', $companyId, $branchId),
             'report_signature_mode' => Configuration::getFor('report_signature_mode', null, $companyId, $branchId) ?: 'global_bottom',
 
             'global_sig_1_name' => Configuration::getFor('authorized_signatory_name', null, $companyId, $branchId) ?: 'Authorized Signatory',
@@ -174,6 +177,7 @@ class ReportPdfController extends Controller
             'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId, $branchId) ?: 180,
             'pdf_header_image' => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
             'pdf_footer_image' => (Configuration::getFor('pdf_show_footer', '1', $companyId, $branchId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_letterhead_image' => ($request->get('header', '1') === '1' && $letterheadImage) ? storage_base64($letterheadImage) : null,
 
             // Visibility
             'pdf_show_header' => Configuration::getFor('pdf_show_header', null, $companyId, $branchId) !== '0',
@@ -288,7 +292,9 @@ class ReportPdfController extends Controller
         $mergeOutsourcedPdf = false;
         $mergedPdfPath = null;
         
-        if ($report->outsourced_pdf_path) {
+        if (!empty($report->outsourced_pdf_path)) {
+            $paths = is_array($report->outsourced_pdf_path) ? $report->outsourced_pdf_path : [$report->outsourced_pdf_path];
+            
             if ($outsourcedPdfMode === 'merge_with_header_footer') {
                 $mergeOutsourcedPdf = true;
                 
@@ -297,26 +303,40 @@ class ReportPdfController extends Controller
                 $footerImagePath = $showFooter ? \App\Models\Configuration::getFor('pdf_footer_image', null, $companyId, $branchId) : null;
                 
                 try {
-                    $mergedPdfPath = $pdfService->mergeHeaderFooter(
-                        $report->outsourced_pdf_path,
-                        $headerImagePath,
-                        $footerImagePath
-                    );
+                    $mergedParts = [];
+                    foreach ($paths as $path) {
+                        $mergedParts[] = $pdfService->mergeHeaderFooter(
+                            $path,
+                            $headerImagePath,
+                            $footerImagePath
+                        );
+                    }
+                    if (count($mergedParts) > 1) {
+                        $mergedPdfPath = $pdfService->mergePdfs($mergedParts);
+                        // Cleanup individual merged parts
+                        foreach ($mergedParts as $part) @unlink($part);
+                    } elseif (count($mergedParts) === 1) {
+                        $mergedPdfPath = $mergedParts[0];
+                    }
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error("Failed to merge FPDI pdf: " . $e->getMessage());
                     $mergeOutsourcedPdf = false;
                 }
             } else {
-                $images = $pdfService->convertAndCrop(
-                    $report->outsourced_pdf_path,
-                    $report->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18, $companyId, $branchId),
-                    $report->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8, $companyId, $branchId)
-                );
+                $allImages = [];
+                foreach ($paths as $path) {
+                    $images = $pdfService->convertAndCrop(
+                        $path,
+                        $report->outsourced_crop_top ?? (int) \App\Models\Configuration::getFor('outsourced_crop_top', 18, $companyId, $branchId),
+                        $report->outsourced_crop_bottom ?? (int) \App\Models\Configuration::getFor('outsourced_crop_bottom', 8, $companyId, $branchId)
+                    );
+                    $allImages = array_merge($allImages, $images);
+                }
                 
-                if (!empty($images)) {
+                if (!empty($allImages)) {
                     $outsourcedImages['report'] = [
                         'lab_name' => $report->outsourced_lab_name,
-                        'images' => $images,
+                        'images' => $allImages,
                     ];
                 }
             }
