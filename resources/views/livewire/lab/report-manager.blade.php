@@ -344,10 +344,8 @@
                                                      <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1" style="min-width: 240px; width: max-content !important;">
                                                          @can('edit reports')
                                                              <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.reports.entry', $invoice->id) }}"><i class="feather-edit me-2 text-info"></i> Edit Results</a></li>
-                                                             @if($invoice->testReport && $invoice->testReport->outsourced_pdf_path)
-                                                                 @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
-                                                                     <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="openOutsourcedModal({{ $invoice->id }})"><i class="feather-crop me-2 text-warning"></i> Edit Outsourced PDF</button></li>
-                                                                 @endif
+                                                             @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
+                                                                 <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="openOutsourcedModal({{ $invoice->id }})"><i class="{{ !empty($invoice->testReport->outsourced_pdf_path) ? 'feather-crop' : 'feather-upload-cloud' }} me-2 text-warning"></i> {{ !empty($invoice->testReport->outsourced_pdf_path) ? 'Edit Outsourced PDF' : 'Upload Outsourced PDF' }}</button></li>
                                                              @endif
                                                          @endcan
                                                          @if(auth()->user()->can('edit invoices') || (auth()->user()->collection_center_id && $invoice->collection_center_id === auth()->user()->collection_center_id))
