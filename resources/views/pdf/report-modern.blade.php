@@ -372,10 +372,10 @@
                 </div>
             @endif
 
-            @if($settings['pdf_show_footer'])
-                @if($letterheadMode === 'separate' && $settings['pdf_footer_image'] && $settings['pdf_show_footer'])
+            @if($showFooter)
+                @if($letterheadMode === 'separate' && $settings['pdf_footer_image'])
                     <img src="{{ $settings['pdf_footer_image'] }}" class="custom-footer-img" alt="Footer">
-                @elseif($settings['pdf_show_footer'])
+                @else
                     <div style="text-align: center;">
                         <strong>{{ ($invoice->branch && $invoice->branch->name) ? $invoice->branch->name : $company->name }}</strong> - {{ $company->tagline }}<br>
                         <span style="color: #777;">This is a computer-generated report. Interpretations should be correlated with clinical findings.</span>
