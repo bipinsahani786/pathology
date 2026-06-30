@@ -176,7 +176,7 @@ class ReportPdfController extends Controller
             'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId, $branchId) ?: 200,
             'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId, $branchId) ?: 180,
             'pdf_header_image' => ($request->get('header', '1') === '1' && $headerImage) ? storage_base64($headerImage) : null,
-            'pdf_footer_image' => (Configuration::getFor('pdf_show_footer', '1', $companyId, $branchId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
+            'pdf_footer_image' => ($request->get('header', '1') === '1' && Configuration::getFor('pdf_show_footer', '1', $companyId, $branchId) === '1' && $footerImage) ? storage_base64($footerImage) : null,
             'pdf_letterhead_image' => ($request->get('header', '1') === '1' && $letterheadImage) ? storage_base64($letterheadImage) : null,
 
             // Visibility
@@ -199,7 +199,7 @@ class ReportPdfController extends Controller
         $showFooterSetting = (bool) ($settings['pdf_show_footer'] ?? true);
 
         $showHeader = $showHeaderSetting && ($request->get('header', '1') === '1');
-        $showFooter = $showFooterSetting;
+        $showFooter = $showFooterSetting && ($request->get('header', '1') === '1');
 
         // ── QR Code Generation ──────────────────────────────────────────────
         $publicUrl = route('public.report.download', ['hash' => base64_encode($report->invoice_id)]);
