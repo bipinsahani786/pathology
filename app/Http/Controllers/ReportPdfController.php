@@ -17,7 +17,7 @@ class ReportPdfController extends Controller
     /**
      * Generate and stream the Lab Report PDF.
      */
-    public function download(Request $request, $id, $template = 'new')
+    public function download(Request $request, $id, $template = 'new', $filename = null)
     {
         return $this->generateReport($request, $id, $template, false);
     }
@@ -76,6 +76,18 @@ class ReportPdfController extends Controller
             'results.labTest.dept',
             'invoice.branch',
         ])->where('invoice_id', $invoiceId)->firstOrFail();
+
+        $patientName = str_replace([' ', '/', '\\'], '_', $report->invoice->patient->name);
+        $filename = 'Report_'.$patientName.'_'.$report->invoice->invoice_number.'.pdf';
+
+        if (!$isPublic) {
+            $currentPath = $request->getPathInfo();
+            if (!str_ends_with($currentPath, $filename)) {
+                $newPath = rtrim($currentPath, '/') . '/' . $filename;
+                $queryString = $request->getQueryString();
+                return redirect()->to($newPath . ($queryString ? '?' . $queryString : ''));
+            }
+        }
 
         // Auth & Isolation check for non-public access
         if (! $isPublic) {
@@ -322,7 +334,9 @@ class ReportPdfController extends Controller
                     \Illuminate\Support\Facades\Log::error("Failed to merge FPDI pdf: " . $e->getMessage());
                     $mergeOutsourcedPdf = false;
                 }
-            } else {
+            }
+            
+            if (!$mergeOutsourcedPdf) {
                 $allImages = [];
                 foreach ($paths as $path) {
                     $images = $pdfService->convertAndCrop(

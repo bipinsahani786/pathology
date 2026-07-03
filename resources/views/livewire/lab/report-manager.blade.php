@@ -258,33 +258,65 @@
                                     </td>
                                     <td style="padding: 8px 8px;">
                                         <div class="d-flex flex-column gap-1">
-                                            @foreach($invoice->items->take(4) as $item)
-                                                @if($item->lab_test_id && $item->labTest)
-                                                    @php $isComplete = $item->status === 'Completed'; @endphp
-                                                    <div class="d-flex align-items-start gap-1">
-                                                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
-                                                            wire:model.live="selectedTests"
-                                                            value="{{ $item->id }}"
-                                                            {{ !$isComplete ? 'disabled' : '' }}>
-                                                        <div style="
-                                                            font-size: 11px;
-                                                            font-weight: 600;
-                                                            color: {{ $isComplete ? '#155724' : '#721c24' }};
-                                                            background: {{ $isComplete ? '#d4edda' : '#f8d7da' }};
-                                                            /* border-left: 3px solid {{ $isComplete ? '#28a745' : '#dc3545' }}; */
-                                                            border-radius: 4px;
-                                                            padding: 2px 7px;
-                                                            white-space: normal;
-                                                            line-height: 1.4;
-                                                        " title="{{ $item->labTest->name }} ({{ $isComplete ? 'Result Entered' : 'Pending' }})">
-                                                            {{ $item->labTest->name }}
-                                                        </div>
+                                            @php
+                                                $displayTests = collect();
+                                                foreach($invoice->items as $item) {
+                                                    if($item->labTest) {
+                                                        if($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                                                            $innerTests = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
+                                                            foreach($innerTests as $inner) {
+                                                                $displayTests->push(['item' => $item, 'inner' => $inner, 'is_package' => true]);
+                                                            }
+                                                        } else {
+                                                            $displayTests->push(['item' => $item, 'inner' => null, 'is_package' => false]);
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            @foreach($displayTests->take(4) as $dt)
+                                                @php
+                                                    $item = $dt['item'];
+                                                    if ($dt['is_package']) {
+                                                        $inner = $dt['inner'];
+                                                        // Check if ANY parameter in this inner test has a non-empty result
+                                                        $isComplete = \App\Models\ReportResult::where('invoice_item_id', $item->id)
+                                                            ->where('lab_test_id', $inner->id)
+                                                            ->where(function($q) {
+                                                                $q->whereNotNull('result_value')->where('result_value', '!=', '');
+                                                            })
+                                                            ->exists();
+                                                        $checkboxValue = $item->id . '_' . $inner->id;
+                                                        $testName = $inner->name;
+                                                    } else {
+                                                        $isComplete = $item->status === 'Completed';
+                                                        $checkboxValue = $item->id;
+                                                        $testName = $item->labTest->name;
+                                                    }
+                                                @endphp
+                                                <div class="d-flex align-items-start gap-1">
+                                                    <input class="form-check-input mt-1 flex-shrink-0" type="checkbox"
+                                                        wire:model.live="selectedTests"
+                                                        value="{{ $checkboxValue }}"
+                                                        {{ !$isComplete ? 'disabled' : '' }}>
+                                                    <div style="
+                                                        font-size: 11px;
+                                                        font-weight: 600;
+                                                        color: {{ $isComplete ? '#155724' : '#721c24' }};
+                                                        background: {{ $isComplete ? '#d4edda' : '#f8d7da' }};
+                                                        border-radius: 4px;
+                                                        padding: 2px 7px;
+                                                        white-space: normal;
+                                                        line-height: 1.4;
+                                                    " title="{{ $testName }} ({{ $isComplete ? 'Result Entered' : 'Pending' }})">
+                                                        {{ $testName }}
                                                     </div>
-                                                @endif
+                                                </div>
                                             @endforeach
-                                            @if($invoice->items->count() > 4)
+                                            
+                                            @if($displayTests->count() > 4)
                                                 <div style="font-size: 11px; color: #6c757d; font-weight: 600; padding-left: 18px;">
-                                                    +{{ $invoice->items->count() - 4 }} more
+                                                    +{{ $displayTests->count() - 4 }} more
                                                 </div>
                                             @endif
                                         </div>

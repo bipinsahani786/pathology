@@ -996,7 +996,7 @@
                                 <label class="form-label fw-bold fs-11 text-primary">Letterhead Graphic Mode</label>
                                 <select class="form-select form-select-sm" wire:model.live="pdf_letterhead_mode">
                                     <option value="separate">Separate Header & Footer Images</option>
-                                    <option value="full_background">Full A4 Letterhead Background</option>
+                                    <option value="full_background">Full A4 Letterhead Background (Not valid for outsource report)</option>
                                 </select>
                             </div>
 

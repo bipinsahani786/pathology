@@ -110,10 +110,29 @@ class ReportManager extends Component
 
     public function printCompleted($invoiceId, $withHeader = 1)
     {
-        $testIds = \App\Models\InvoiceItem::where('invoice_id', $invoiceId)
-            ->where('status', 'Completed')
-            ->pluck('id')
-            ->implode(',');
+        $items = \App\Models\InvoiceItem::where('invoice_id', $invoiceId)->get();
+        $completedTestIds = [];
+        
+        foreach ($items as $item) {
+            if ($item->labTest && $item->labTest->is_package) {
+                // For packages, find inner tests that have actual results
+                $innerTestIds = \App\Models\ReportResult::where('invoice_item_id', $item->id)
+                    ->whereNotNull('result_value')
+                    ->where('result_value', '!=', '')
+                    ->pluck('lab_test_id')
+                    ->unique();
+                    
+                foreach ($innerTestIds as $innerId) {
+                    $completedTestIds[] = $item->id . '_' . $innerId;
+                }
+            } else {
+                if ($item->status === 'Completed') {
+                    $completedTestIds[] = $item->id;
+                }
+            }
+        }
+        
+        $testIds = implode(',', $completedTestIds);
 
         if (empty($testIds)) {
             $this->dispatch('notify', ['type' => 'error', 'message' => 'No completed tests found in this invoice.']);

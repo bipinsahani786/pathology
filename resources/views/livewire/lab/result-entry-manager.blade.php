@@ -126,8 +126,30 @@
                                                         <input type="checkbox" class="form-check-input me-2" 
                                                                wire:model.live="selectedTests" value="{{ $itemId }}">
                                                         <i class="feather-box text-primary me-2"></i>{{ $billItemName }} (Package)
-                                                        <span class="ms-2 badge {{ $isBillItemComplete ? 'bg-success' : 'bg-warning text-dark' }} fs-9">
-                                                            {{ $isBillItemComplete ? 'Completed' : 'Pending' }}
+                                                        @php
+                                                            $allInnerTestsFilled = true;
+                                                            if($testItem && $testItem->labTest && $testItem->labTest->is_package) {
+                                                                foreach($testsInItem as $paramsTemp) {
+                                                                    $tempFilled = true;
+                                                                    $hasAny = false;
+                                                                    foreach($paramsTemp as $pt) {
+                                                                        if(($pt['input_type'] ?? 'numeric') !== 'heading') {
+                                                                            $hasAny = true;
+                                                                            $val = $results[$pt['key']] ?? '';
+                                                                            $isFilled = ($val !== '' && $val !== null);
+                                                                            if(($pt['input_type'] ?? 'numeric') === 'culture_sensitivity') {
+                                                                                $cData = $cultureResults[$pt['key']] ?? null;
+                                                                                if($cData && (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name']))) $isFilled = true; else $isFilled = false;
+                                                                            }
+                                                                            if(!$isFilled) $tempFilled = false;
+                                                                        }
+                                                                    }
+                                                                    if(!$hasAny || !$tempFilled) $allInnerTestsFilled = false;
+                                                                }
+                                                            }
+                                                        @endphp
+                                                        <span class="ms-2 badge {{ $isBillItemComplete ? ($allInnerTestsFilled ? 'bg-success' : 'bg-info') : 'bg-warning text-dark' }} fs-9">
+                                                            {{ $isBillItemComplete ? ($allInnerTestsFilled ? 'Completed' : 'Partial') : 'Pending' }}
                                                         </span>
                                                     </div>
                                                     @can('edit reports')
@@ -174,11 +196,43 @@
                                                                 DLC Sum: {{ round($dlcSum, 2) }}%
                                                             </span>
                                                         @endif
-                                                        @if(!($testItem->labTest->is_package ?? false))
-                                                            <span class="ms-2 badge {{ $isBillItemComplete ? 'bg-success' : 'bg-warning text-dark' }} fs-9">
-                                                                {{ $isBillItemComplete ? 'Completed' : 'Pending' }}
-                                                            </span>
-                                                        @endif
+                                                        @php
+                                                            $innerTestFilled = true;
+                                                            $hasAnyInnerParam = false;
+                                                            foreach($params as $p) {
+                                                                if(($p['input_type'] ?? 'numeric') !== 'heading') {
+                                                                    $hasAnyInnerParam = true;
+                                                                    $val = $results[$p['key']] ?? '';
+                                                                    $isFilled = ($val !== '' && $val !== null);
+                                                                    
+                                                                    if(($p['input_type'] ?? 'numeric') === 'culture_sensitivity') {
+                                                                        $cData = $cultureResults[$p['key']] ?? null;
+                                                                        if($cData && (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name']))) {
+                                                                            $isFilled = true;
+                                                                        } else {
+                                                                            $isFilled = false;
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    if(!$isFilled) {
+                                                                        $innerTestFilled = false;
+                                                                    }
+                                                                }
+                                                            }
+                                                            if(!$hasAnyInnerParam) $innerTestFilled = false;
+                                                            
+                                                            $innerTestStatusClass = $innerTestFilled ? 'bg-success' : 'bg-warning text-dark';
+                                                            $innerTestStatusText = $innerTestFilled ? 'Completed' : 'Pending';
+                                                            
+                                                            // If it is not a package, we just use the bill item status as it matches the DB exactly
+                                                            if(!($testItem->labTest->is_package ?? false)) {
+                                                                $innerTestStatusClass = $isBillItemComplete ? 'bg-success' : 'bg-warning text-dark';
+                                                                $innerTestStatusText = $isBillItemComplete ? 'Completed' : 'Pending';
+                                                            }
+                                                        @endphp
+                                                        <span class="ms-2 badge {{ $innerTestStatusClass }} fs-9">
+                                                            {{ $innerTestStatusText }}
+                                                        </span>
                                                     </div>
                                                     
                                                     @if(!($testItem->labTest->is_package ?? false))

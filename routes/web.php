@@ -213,7 +213,7 @@ Route::middleware(['auth'])->group(function () {
             // Reports Generation
             Route::get('/reports', ReportManager::class)->name('reports');
             Route::get('/reports/entry/{id}', ResultEntryManager::class)->name('reports.entry');
-            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+            Route::get('/reports/print/{id}/{template?}/{filename?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
 
             // Invoice Print (browser)
             Route::get('/invoice/{id}/print', InvoicePrint::class)->name('invoice.print');
@@ -257,7 +257,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/invoices', \App\Livewire\Partner\PartnerInvoiceManager::class)->name('invoices');
             Route::get('/referrers/doctors', DoctorManager::class)->name('doctors');
             Route::get('/referrers/agents', AgentManager::class)->name('agents');
-            Route::get('/reports/print/{id}/{template?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
+            Route::get('/reports/print/{id}/{template?}/{filename?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('reports.print');
             Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
             Route::get('/invoice/{id}/print', \App\Livewire\Lab\InvoicePrint::class)->name('invoice.print');
 
