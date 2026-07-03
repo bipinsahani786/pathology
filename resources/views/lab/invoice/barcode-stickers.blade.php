@@ -202,27 +202,79 @@
         @php
             $printMode = \App\Models\Configuration::getFor('barcode_print_mode', 'sample', $invoice->company_id, $invoice->branch_id);
 
-            if ($printMode === 'test') {
-                $groupedItems = $invoice->items->groupBy('id');
+            $stickers = [];
+
+            foreach ($invoice->items as $item) {
+                $labTest = $item->labTest;
+                if (!$labTest) continue;
+
+                // Resolve tests (either the test itself, or inner tests if it's a package)
+                $testsToProcess = [];
+                if ($labTest->is_package && !empty($labTest->linked_test_ids)) {
+                    $testsToProcess = \App\Models\LabTest::whereIn('id', is_array($labTest->linked_test_ids) ? $labTest->linked_test_ids : json_decode($labTest->linked_test_ids, true))->get();
+                } else {
+                    $testsToProcess = [$labTest];
+                }
+
+                foreach ($testsToProcess as $test) {
+                    // Get sample type(s), default to 'Serum' if empty
+                    $sampleTypeStr = $test->sample_type ?: 'Serum';
+                    
+                    // Split by comma (,) or plus (+)
+                    $parts = preg_split('/[,\+]/', $sampleTypeStr);
+                    $parts = array_map('trim', $parts);
+                    // Filter out empty parts
+                    $parts = array_filter($parts);
+                    if (empty($parts)) {
+                        $parts = ['Serum'];
+                    }
+
+                    foreach ($parts as $part) {
+                        $partUpper = strtoupper($part);
+                        
+                        if ($printMode === 'sample') {
+                            // In sample mode, we group by sample type across the invoice.
+                            if (!isset($stickers[$partUpper])) {
+                                $stickers[$partUpper] = [
+                                    'sample_type' => $part,
+                                    'tests' => [],
+                                ];
+                            }
+                            $stickers[$partUpper]['tests'][] = $test->short_name ?: $test->name;
+                        } else {
+                            // In test mode, we print one sticker per test per sample type.
+                            $stickers[] = [
+                                'sample_type' => $part,
+                                'tests' => [$test->short_name ?: $test->name],
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // Format strings for output
+            if ($printMode === 'sample') {
+                foreach ($stickers as $key => $data) {
+                    $stickers[$key]['test_names_str'] = implode(', ', array_unique($data['tests']));
+                }
+                $stickers = array_values($stickers);
             } else {
-                $groupedItems = $invoice->items->groupBy(function($item) {
-                    return $item->labTest->sample_type ?? 'Serum';
-                });
+                foreach ($stickers as $key => $data) {
+                    $stickers[$key]['test_names_str'] = $data['tests'][0];
+                }
             }
         @endphp
 
-        @foreach($groupedItems as $groupKey => $items)
+        @foreach($stickers as $index => $sticker)
             @php
-                $sampleType = $items->first()->labTest->sample_type ?? 'Serum';
+                $sampleType = $sticker['sample_type'];
+                $testNames = $sticker['test_names_str'];
+                
                 $profile = $invoice->patient->patientProfile;
                 $genderShort = $profile ? substr($profile->gender ?? 'M', 0, 1) : 'M';
                 $age = $profile ? $profile->age : '0';
                 $ageType = $profile ? $profile->age_type : 'Y';
                 $ageStr = $age . substr($ageType, 0, 1);
-                
-                $testNames = $items->map(function($i) { 
-                    return $i->labTest->short_name ?: $i->labTest->name; 
-                })->implode(', ');
             @endphp
             <div class="barcode-sticker">
                 <div class="sticker-header">
@@ -230,7 +282,7 @@
                     <span>{{ $invoice->invoice_number }}</span>
                 </div>
                 
-                <svg class="barcode-svg" id="barcode-{{ $loop->index }}"></svg>
+                <svg class="barcode-svg" id="barcode-{{ $index }}"></svg>
                 
                 <div class="sticker-footer">
                     @if($printMode === 'sample')
@@ -242,7 +294,7 @@
                 </div>
 
                 <script>
-                    JsBarcode("#barcode-{{ $loop->index }}", "{{ $invoice->barcode ?? $invoice->invoice_number }}", {
+                    JsBarcode("#barcode-{{ $index }}", "{{ $invoice->barcode ?? $invoice->invoice_number }}", {
                         format: "CODE128",
                         width: 1.2,
                         height: 40,

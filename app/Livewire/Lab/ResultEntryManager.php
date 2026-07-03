@@ -487,56 +487,89 @@ class ResultEntryManager extends Component
         $item = \App\Models\InvoiceItem::find($itemId);
         if (!$item) return;
 
-        $hasResult = false;
-        $hasDlc = false;
-        $dlcSum = 0;
+        $testsData = [];
         $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
 
+        // Group results and DLC checks by lab_test_id
         foreach ($this->parametersList as $k => $p) {
             if (($p['invoice_item_id'] ?? null) == $itemId) {
+                $testId = $p['lab_test_id'] ?? 0;
+                if (!isset($testsData[$testId])) {
+                    $testsData[$testId] = ['hasResult' => false, 'allFilled' => true, 'hasDlc' => false, 'dlcSum' => 0];
+                }
+                
+                $inputType = $p['input_type'] ?? 'numeric';
+                
+                if ($inputType === 'heading') {
+                    continue; // headings don't require values
+                }
+
                 $val = $this->results[$k] ?? '';
-                if ($val !== '' && $val !== null) {
-                    $hasResult = true;
+                $isFilled = ($val !== '' && $val !== null);
+                
+                // Check culture results
+                if ($inputType === 'culture_sensitivity') {
+                    $cData = $this->cultureResults[$k] ?? null;
+                    if ($cData && (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name']))) {
+                        $isFilled = true;
+                    } else {
+                        $isFilled = false;
+                    }
+                }
+
+                if ($isFilled) {
+                    $testsData[$testId]['hasResult'] = true;
+                } else {
+                    $testsData[$testId]['allFilled'] = false;
                 }
                 
                 $code = strtoupper($p['short_code'] ?? '');
                 if (in_array($code, $dlcCodes)) {
-                    $hasDlc = true;
-                    $dlcSum += (float) ($this->results[$k] ?: 0);
+                    $testsData[$testId]['hasDlc'] = true;
+                    $testsData[$testId]['dlcSum'] += (float) ($val ?: 0);
                 }
             }
         }
 
-        if (!$hasResult) {
-            foreach ($this->parametersList as $k => $p) {
-                if (($p['invoice_item_id'] ?? null) == $itemId) {
-                    if (($p['input_type'] ?? '') === 'culture_sensitivity') {
-                        $cData = $this->cultureResults[$k] ?? null;
-                        if ($cData && (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name']))) {
-                            $hasResult = true;
-                            break;
-                        }
-                    }
-                }
+        $atLeastOneTestComplete = false;
+        $hasAnyResultInAnyTest = false;
+        $hasDlcError = false;
+        
+        foreach ($testsData as $data) {
+            if ($data['hasResult']) {
+                $hasAnyResultInAnyTest = true;
             }
-        }
-
-        $shouldBeCompleted = false;
-
-        if ($hasResult) {
-            $shouldBeCompleted = true;
             
-            if ($hasDlc && abs($dlcSum - 100) > 0.01) {
-                $shouldBeCompleted = false; // Cannot complete yet because DLC sum is not 100%
+            // If at least one test has all its parameters filled, the package can be marked completed
+            if ($data['allFilled']) {
+                $atLeastOneTestComplete = true;
+            }
+            
+            if ($data['hasDlc'] && abs($data['dlcSum'] - 100) > 0.01) {
+                $hasDlcError = true;
             }
         }
 
-        $newStatus = $shouldBeCompleted ? 'Completed' : 'Pending';
+        if (empty($testsData)) {
+            $atLeastOneTestComplete = false;
+        }
 
-        if ($item->status !== $newStatus) {
-            $item->update(['status' => $newStatus]);
-            if ($this->invoice) {
-                $this->invoice->load('items');
+        if ($item->status === 'Pending') {
+            // Auto-complete if at least one test is fully filled (so partial printing is allowed)
+            if ($atLeastOneTestComplete && !$hasDlcError) {
+                $item->update(['status' => 'Completed']);
+                if ($this->invoice) {
+                    $this->invoice->load('items');
+                }
+            }
+        } else {
+            // It is currently Completed.
+            // Downgrade to Pending if ALL tests are empty OR there's a DLC error
+            if (!$hasAnyResultInAnyTest || $hasDlcError) {
+                $item->update(['status' => 'Pending']);
+                if ($this->invoice) {
+                    $this->invoice->load('items');
+                }
             }
         }
     }
