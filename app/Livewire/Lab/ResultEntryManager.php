@@ -323,6 +323,22 @@ class ResultEntryManager extends Component
 
         $this->autoCalculateFormulas();
         $this->autoEvaluateRanges();
+
+        if ($param) {
+            $this->autoUpdateTestStatus($param['invoice_item_id']);
+        }
+    }
+
+    public function updatedCultureResults($value, $key)
+    {
+        $parts = explode('.', $key);
+        $paramKey = $parts[0] ?? null;
+        if ($paramKey) {
+            $param = $this->parametersList[$paramKey] ?? null;
+            if ($param) {
+                $this->autoUpdateTestStatus($param['invoice_item_id']);
+            }
+        }
     }
 
     private function autoCalculateFormulas()
@@ -466,9 +482,77 @@ class ResultEntryManager extends Component
         $this->highlights[$key] = ! ($this->highlights[$key] ?? false);
     }
 
+    private function autoUpdateTestStatus($itemId)
+    {
+        $item = \App\Models\InvoiceItem::find($itemId);
+        if (!$item) return;
+
+        $hasResult = false;
+        $hasDlc = false;
+        $dlcSum = 0;
+        $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
+
+        foreach ($this->parametersList as $k => $p) {
+            if (($p['invoice_item_id'] ?? null) == $itemId) {
+                $val = $this->results[$k] ?? '';
+                if ($val !== '' && $val !== null) {
+                    $hasResult = true;
+                }
+                
+                $code = strtoupper($p['short_code'] ?? '');
+                if (in_array($code, $dlcCodes)) {
+                    $hasDlc = true;
+                    $dlcSum += (float) ($this->results[$k] ?: 0);
+                }
+            }
+        }
+
+        if (!$hasResult) {
+            foreach ($this->parametersList as $k => $p) {
+                if (($p['invoice_item_id'] ?? null) == $itemId) {
+                    if (($p['input_type'] ?? '') === 'culture_sensitivity') {
+                        $cData = $this->cultureResults[$k] ?? null;
+                        if ($cData && (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name']))) {
+                            $hasResult = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        $shouldBeCompleted = false;
+
+        if ($hasResult) {
+            $shouldBeCompleted = true;
+            
+            if ($hasDlc && abs($dlcSum - 100) > 0.01) {
+                $shouldBeCompleted = false; // Cannot complete yet because DLC sum is not 100%
+            }
+        }
+
+        $newStatus = $shouldBeCompleted ? 'Completed' : 'Pending';
+
+        if ($item->status !== $newStatus) {
+            $item->update(['status' => $newStatus]);
+            if ($this->invoice) {
+                $this->invoice->load('items');
+            }
+        }
+    }
+
     public function saveReport($status = 'Draft')
     {
         $this->authorize('edit reports');
+
+        // Auto-evaluate and save test statuses before proceeding
+        if ($this->invoice && $this->invoice->items) {
+            foreach ($this->invoice->items as $item) {
+                if (!empty($item->lab_test_id)) {
+                    $this->autoUpdateTestStatus($item->id);
+                }
+            }
+        }
 
         // Validation: Block approval if any results are missing or tests are not marked completed
         if ($status === 'Approved') {

@@ -219,7 +219,7 @@
                         </li>
                     @endif
 
-                    @if(auth()->user()->hasAnyRole(['lab_admin', 'staff']))
+                    @if(auth()->user()->hasAnyRole(['lab_admin', 'staff']) || auth()->user()->canAny(['view departments', 'view tests', 'view test_packages', 'view branches']))
                         <li class="nxl-item nxl-caption"><label>Lab Management</label></li>
                         @if(\App\Models\Configuration::getFor('module_departments', '1') === '1')
                             <li class="nxl-item {{ request()->routeIs('lab.departments') ? 'active' : '' }}">
