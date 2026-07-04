@@ -39,7 +39,24 @@ class ResultEntryManager extends Component
 
     public function mount($id)
     {
-        if (!auth()->user()->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports'])) {
+        $user = auth()->user();
+        
+        // Direct DB check to avoid stale Spatie permission cache issues with custom roles
+        $hasReportAccess = $user->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports']);
+        
+        if (!$hasReportAccess) {
+            // Fallback: Check directly in DB in case Spatie cache is stale
+            $userRoleIds = $user->roles->pluck('id')->toArray();
+            $hasReportAccess = \DB::table('role_has_permissions')
+                ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+                ->whereIn('role_has_permissions.role_id', $userRoleIds)
+                ->where(function ($q) {
+                    $q->where('permissions.name', 'like', '%reports%');
+                })
+                ->exists();
+        }
+        
+        if (!$hasReportAccess) {
             abort(403, 'You do not have permission to access reports.');
         }
 

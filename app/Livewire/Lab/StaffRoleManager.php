@@ -9,6 +9,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class StaffRoleManager extends Component
 {
@@ -93,12 +94,24 @@ class StaffRoleManager extends Component
             $company = auth()->user()->company;
             $maxStaff = (int) ($company->plan->features['staff'] ?? -1);
 
-            if ($maxStaff != -1) {
+            if ($maxStaff > 0) {
                 $prefix = 'lab_' . $company->id . '_';
+                // Count only actual staff (exclude lab_admin owner, and exclude partner roles)
+                $partnerSuffixes = ['_doctor', '_agent', '_patient', '_collection_center'];
                 $currentStaffCount = \App\Models\User::where('company_id', $company->id)
-                    ->whereHas('roles', function ($q) use ($prefix) {
-                        $q->whereIn('name', ['staff', 'lab_admin', 'branch_admin', 'collection_center'])
-                          ->orWhere('name', 'like', $prefix . '%');
+                    ->whereHas('roles', function ($q) use ($prefix, $partnerSuffixes) {
+                        $q->where(function ($inner) use ($prefix, $partnerSuffixes) {
+                            // Count system staff roles (excluding lab_admin - the owner)
+                            $inner->whereIn('name', ['staff', 'branch_admin'])
+                              // Also count custom tenant roles
+                              ->orWhere(function ($custom) use ($prefix, $partnerSuffixes) {
+                                  $custom->where('name', 'like', $prefix . '%');
+                                  // Exclude tenant-prefixed partner roles
+                                  foreach ($partnerSuffixes as $suffix) {
+                                      $custom->where('name', 'not like', '%' . $suffix);
+                                  }
+                              });
+                        });
                     })->count();
 
                 if ($currentStaffCount >= $maxStaff) {
@@ -141,6 +154,10 @@ class StaffRoleManager extends Component
             $user->syncRoles([$role->name]);
 
             DB::commit();
+
+            // Clear Spatie permission cache so new role assignments take effect immediately
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
             $this->isStaffModalOpen = false;
             $this->resetStaffFields();
             session()->flash('message', 'Staff member saved successfully.');
@@ -253,6 +270,10 @@ class StaffRoleManager extends Component
             $role->syncPermissions($this->selectedPermissions);
 
             DB::commit();
+
+            // Clear Spatie permission cache so updated permissions take effect immediately
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
             $this->dispatch('refreshComponent'); // Ensure lists update
             $this->isRoleModalOpen = false;
             $this->resetRoleFields();

@@ -75,6 +75,9 @@ class Login extends Component
 
             session()->regenerate();
 
+            // Clear Spatie permission cache on login so role/permission changes are always fresh
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
             // Redirect based on user role
             if ($user->hasRole('super_admin')) {
                 return redirect()->route('admin.dashboard');
