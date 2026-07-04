@@ -48,7 +48,7 @@ class EnsureLabStaff
                            collect($roles)->contains(fn ($r) => str_ends_with($r, '_collection_center'));
 
             if ($isCollector) {
-                $allowedPaths = ['lab/pos*', 'lab/invoices*', 'lab/profile*', 'lab/invoice*', 'lab/membership-card*'];
+                $allowedPaths = ['lab/pos*', 'lab/invoices*', 'lab/profile*', 'lab/invoice*', 'lab/membership-card*', 'lab/reports*', 'lab/patients*'];
                 foreach ($allowedPaths as $path) {
                     if ($request->is($path)) {
                         return $next($request);
