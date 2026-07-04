@@ -195,15 +195,12 @@ class OutsourcedReportService
             
             $pdf->AddPage($orientation, [$size['width'], $size['height']]);
 
-            // 1. Draw original PDF page FIRST (so it is the background layer)
-            $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
-
-            // 2. Draw Header (ON TOP of PDF)
+            // 1. Draw Header (BEHIND PDF)
             if ($resolvedHeader) {
                 $pdf->Image($resolvedHeader, 0, 0, $size['width'], 0);
             }
 
-            // 3. Draw Footer (ON TOP of PDF)
+            // 2. Draw Footer (BEHIND PDF)
             if ($resolvedFooter) {
                 $sizeInfo = getimagesize($resolvedFooter);
                 if ($sizeInfo) {
@@ -214,6 +211,9 @@ class OutsourcedReportService
                     $pdf->Image($resolvedFooter, 0, $yPos, $size['width'], 0);
                 }
             }
+
+            // 3. Draw original PDF page LAST (so it is on top)
+            $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height']);
         }
 
         if ($resolvedHeader) @unlink($resolvedHeader);
