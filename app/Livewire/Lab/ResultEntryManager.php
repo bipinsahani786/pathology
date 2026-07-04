@@ -60,7 +60,17 @@ class ResultEntryManager extends Component
             abort(403, 'You do not have permission to access reports.');
         }
 
-        $this->invoice = Invoice::where('company_id', auth()->user()->company_id)
+        $restrictAccess = \App\Models\Configuration::getFor('restrict_branch_access', '1') === '1';
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! $user->hasRole('branch_admin');
+                         
+        $myBranchId = $isGlobalAdmin ? null : $user->branch_id;
+        
+        $this->invoice = Invoice::where('company_id', $user->company_id)
+            ->when($myBranchId && $restrictAccess, fn($q) => $q->where('branch_id', $myBranchId))
+            ->when($user->collection_center_id, fn($q) => $q->where('collection_center_id', $user->collection_center_id))
             ->with(['patient.patientProfile', 'items.labTest', 'testReport.results'])
             ->findOrFail($id);
 
