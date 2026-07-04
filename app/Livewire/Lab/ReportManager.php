@@ -19,7 +19,9 @@ class ReportManager extends Component
 
     public function mount()
     {
-        $this->authorize('view reports');
+        if (!auth()->user()->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports'])) {
+            abort(403, 'You do not have permission to access reports.');
+        }
     }
 
     public $dateRange = 'all'; // all, today, week, month, custom
