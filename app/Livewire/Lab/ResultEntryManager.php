@@ -39,7 +39,10 @@ class ResultEntryManager extends Component
 
     public function mount($id)
     {
-        $this->authorize('view reports');
+        if (!auth()->user()->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports'])) {
+            abort(403, 'You do not have permission to access reports.');
+        }
+
         $this->invoice = Invoice::where('company_id', auth()->user()->company_id)
             ->with(['patient.patientProfile', 'items.labTest', 'testReport.results'])
             ->findOrFail($id);
