@@ -19,7 +19,25 @@ class ReportManager extends Component
 
     public function mount()
     {
-        if (!auth()->user()->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports'])) {
+        $user = auth()->user();
+        
+        // Direct DB check to avoid stale Spatie permission cache issues with custom roles.
+        // This checks if any of the user's roles have any report-related permission.
+        $hasReportAccess = $user->hasAnyPermission(['view reports', 'create reports', 'edit reports', 'generate reports']);
+        
+        if (!$hasReportAccess) {
+            // Fallback: Check directly in DB in case Spatie cache is stale (e.g. Redis cache not cleared after role changes)
+            $userRoleIds = $user->roles->pluck('id')->toArray();
+            $hasReportAccess = \DB::table('role_has_permissions')
+                ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+                ->whereIn('role_has_permissions.role_id', $userRoleIds)
+                ->where(function ($q) {
+                    $q->where('permissions.name', 'like', '%reports%');
+                })
+                ->exists();
+        }
+        
+        if (!$hasReportAccess) {
             abort(403, 'You do not have permission to access reports.');
         }
     }
