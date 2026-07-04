@@ -206,6 +206,8 @@ class PosManager extends Component
             if ($cc && $cc->branch_id) {
                 $this->branch_id = $cc->branch_id;
             }
+        } elseif (!$isGlobalAdmin && $restrictAccess && $user->branch_id !== null) {
+            $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->where('branch_id', $this->branch_id)->first()->id ?? null);
         } else {
             $this->collection_center_id = $user->collection_center_id ?? (CollectionCenter::where('company_id', $companyId)->where('branch_id', $this->branch_id)->first()->id ?? null);
         }

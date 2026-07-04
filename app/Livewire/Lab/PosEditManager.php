@@ -316,7 +316,7 @@ class PosEditManager extends Component
 
             $this->cachedCenters = CollectionCenter::where('id', $this->collection_center_id)->get();
             $this->cachedBranches = Branch::where('id', $this->branch_id)->get();
-        } elseif (! $isGlobalAdmin && $restrictAccess) {
+        } elseif (! $isGlobalAdmin && $restrictAccess && auth()->user()->branch_id !== null) {
             $this->cachedCenters = CollectionCenter::where('company_id', $companyId)->where('branch_id', auth()->user()->branch_id)->where('is_active', true)->get();
             $this->cachedBranches = Branch::where('id', auth()->user()->branch_id)->get();
             if (! $this->branch_id) {

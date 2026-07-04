@@ -77,10 +77,22 @@ class InvoicePdfController extends Controller
             // 3. Branch Isolation: If enabled, staff can only see their branch's invoices
             $companyId = $user->company_id;
             $restrictBranch = Configuration::getFor('restrict_branch_access', '1', $companyId) === '1';
-            $isGlobalAdmin = $user->hasAnyRole(['lab_admin', 'super_admin']);
+            
+            $roles = $user->roles->pluck('name')->toArray();
+            $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+                collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_contains(strtolower($r), 'admin')))
+                && ! $user->hasRole('branch_admin');
 
-            if ($restrictBranch && ! $isGlobalAdmin && $invoice->branch_id !== $user->branch_id) {
+            if ($restrictBranch && ! $isGlobalAdmin && $user->branch_id !== null && $invoice->branch_id !== $user->branch_id) {
                 abort(403, 'You do not have access to invoices from this branch.');
+            }
+
+            // 4. Partner Isolation: Collection Centers
+            $isCC = $user->hasRole('collection_center') || $user->collection_center_id;
+            if (! $isGlobalAdmin && ! $user->hasRole('patient') && $isCC) {
+                if ($invoice->collection_center_id !== $user->collection_center_id) {
+                    abort(403, 'Unauthorized collection center access.');
+                }
             }
         } else {
             $companyId = $invoice->company_id;
