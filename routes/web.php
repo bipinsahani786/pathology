@@ -293,7 +293,7 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/profile', \App\Livewire\Patient\PatientProfile::class)->name('profile');
 
         // Dedicated Patient Report Download
-        Route::get('/report/{id}/print', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('report.download');
+        Route::get('/report/{id}/print/{template?}/{filename?}', [\App\Http\Controllers\ReportPdfController::class, 'download'])->name('report.download');
 
         // Dedicated Patient Invoice Download
         Route::get('/invoice/{id}/print', [\App\Http\Controllers\InvoicePdfController::class, 'download'])->name('invoice.download');
