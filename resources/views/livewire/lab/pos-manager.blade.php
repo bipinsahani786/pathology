@@ -352,16 +352,22 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="row g-2">
-                            <div class="col-md-4 col-6">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6 col-12">
+                                <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Invoice Date & Time</label>
+                                <input type="datetime-local" class="form-control form-control-sm" wire:model="invoice_date">
+                            </div>
+                            <div class="col-md-6 col-12">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Sample Received At</label>
                                 <input type="datetime-local" class="form-control form-control-sm" wire:model="sample_received_at">
                             </div>
-                            <div class="col-md-4 col-6">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Report Date</label>
                                 <input type="date" class="form-control form-control-sm" wire:model="expected_report_date">
                             </div>
-                            <div class="col-md-4 col-6">
+                            <div class="col-md-6 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Report Time</label>
                                 <input type="time" class="form-control form-control-sm" wire:model="expected_report_time">
                             </div>
@@ -710,7 +716,25 @@
                         @if($modalError)<div class="alert alert-danger py-2 fs-12 mb-3"><i class="feather-alert-circle me-1"></i>{{ $modalError }}</div>@endif
                         @if($errors->any())<div class="alert alert-danger py-2 fs-12 mb-3">@foreach($errors->all() as $err)<div><i class="feather-x-circle me-1"></i>{{ $err }}</div>@endforeach</div>@endif
                         <div class="row g-3">
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label><input type="text" class="form-control" wire:model="new_name" placeholder="Full Name"></div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select bg-light fw-semibold" wire:model="patient_title" style="max-width: 95px;">
+                                        <option value="">Select</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Miss.">Miss.</option>
+                                        <option value="Baby.">Baby.</option>
+                                        <option value="Master.">Master.</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="B/O">B/O</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="C/O">C/O</option>
+                                        <option value="S/O">S/O</option>
+                                    </select>
+                                    <input type="text" class="form-control" wire:model="new_name" placeholder="Full Name">
+                                </div>
+                            </div>
                             <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile</label><input type="text" class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
                             <div class="col-6">
                                 <label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span></label>
