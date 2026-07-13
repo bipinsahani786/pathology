@@ -202,6 +202,7 @@ class ReportPdfController extends Controller
             'pdf_show_test_method' => Configuration::getFor('pdf_show_test_method', null, $companyId, $branchId) !== '0',
             'pdf_show_watermark' => Configuration::getFor('pdf_show_watermark', null, $companyId, $branchId) !== '0',
             'pdf_show_page_number' => Configuration::getFor('pdf_show_page_number', null, $companyId, $branchId) !== '0',
+            'pdf_show_time' => Configuration::getFor('pdf_show_time', null, $companyId, $branchId) !== '0',
             'pdf_page_number_bg_color' => Configuration::getFor('pdf_page_number_bg_color', 'rgba(255, 255, 255, 0.85)', $companyId, $branchId),
 
             'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId, $branchId),

@@ -969,6 +969,16 @@
                                             style="width:3em;height:1.5em;">
                                     </div>
                                 </div>
+                                <div class="d-flex align-items-center justify-content-between mt-3">
+                                    <div>
+                                        <strong class="fs-12">Show Time in Report</strong>
+                                        <div class="fs-10 text-muted">Show/hide time alongside dates in the PDF report</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="pdf_show_time"
+                                            style="width:3em;height:1.5em;">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="alert alert-info py-2 fs-11 mb-0">

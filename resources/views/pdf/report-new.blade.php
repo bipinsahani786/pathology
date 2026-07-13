@@ -640,7 +640,7 @@
                     </td>
                     <td class="lbl">Collection Date</td>
                     <td class="val">:
-                        {{ $invoice->sample_collected_at ? $invoice->sample_collected_at->format('d/m/Y h:i A') : $invoice->created_at->format('d/m/Y h:i A') }}
+                        {{ $invoice->sample_collected_at ? $invoice->sample_collected_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : $invoice->created_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') }}
                     </td>
                 </tr>
                 <tr>
@@ -648,7 +648,7 @@
                     <td class="val">: {{ $invoice->doctor ? $invoice->doctor->name : 'SELF' }}</td>
                     <td class="lbl">Report Date</td>
                     <td class="val">:
-                        {{ ($report->report_date ?? $report->approved_at ?? now())->format('d/m/Y h:i A') }}
+                        {{ ($report->report_date ?? $report->approved_at ?? now())->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') }}
                     </td>
                 </tr>
                 <tr>
