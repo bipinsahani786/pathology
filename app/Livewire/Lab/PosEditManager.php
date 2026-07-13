@@ -119,6 +119,8 @@ class PosEditManager extends Component
 
     public $new_name;
 
+    public $patient_title = '';
+
     public $new_phone;
 
     public $new_age;
@@ -155,6 +157,8 @@ class PosEditManager extends Component
 
     // Logistics EXTRA
     public $sample_received_at;
+
+    public $invoice_date;
 
     // Cart expansion
     public $expandedCartItems = [];
@@ -230,6 +234,7 @@ class PosEditManager extends Component
         $this->branch_id = $invoice->branch_id;
         $this->collection_type = $invoice->collection_type;
         $this->sample_received_at = $this->invoice->sample_received_at ? $this->invoice->sample_received_at->format('Y-m-d\TH:i') : null;
+        $this->invoice_date = $this->invoice->invoice_date ? $this->invoice->invoice_date->format('Y-m-d\TH:i') : null;
         $this->expected_report_date = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('Y-m-d') : date('Y-m-d');
         $this->expected_report_time = $this->invoice->expected_report_time ? $this->invoice->expected_report_time->format('H:i') : date('H:i', strtotime('+24 hours'));
 
@@ -679,7 +684,18 @@ class PosEditManager extends Component
             return;
         }
         $this->editingPatientId = $this->selectedPatient['id'];
-        $this->new_name = $this->selectedPatient['name'];
+        
+        $name = $this->selectedPatient['name'];
+        $this->patient_title = ''; // default
+        $prefixes = ['Mr.', 'Mrs.', 'Miss.', 'Baby.', 'Master.', 'Dr.', 'B/O', 'Ms.', 'C/O', 'S/O'];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with(strtolower($name), strtolower($prefix) . ' ')) {
+                $this->patient_title = $prefix;
+                $name = substr($name, strlen($prefix) + 1);
+                break;
+            }
+        }
+        $this->new_name = $name;
         $this->new_phone = $this->selectedPatient['phone'];
         if ($this->patientProfileData) {
             $this->new_age = $this->patientProfileData['age'];
@@ -706,10 +722,12 @@ class PosEditManager extends Component
         try {
             $companyId = auth()->user()->company_id;
 
+            $fullName = $this->patient_title ? ($this->patient_title . ' ' . $this->new_name) : $this->new_name;
+
             if ($this->editingPatientId) {
                 $user = User::findOrFail($this->editingPatientId);
                 $user->update([
-                    'name' => $this->new_name,
+                    'name' => $fullName,
                     'phone' => $this->new_phone,
                 ]);
 
@@ -723,7 +741,7 @@ class PosEditManager extends Component
                 }
             } else {
                 $user = User::create([
-                    'name' => $this->new_name,
+                    'name' => $fullName,
                     'phone' => $this->new_phone ?: 'P'.time(),
                     'email' => null,
                     'password' => '12345678',
@@ -760,7 +778,8 @@ class PosEditManager extends Component
             $this->isPatientModalOpen = false;
             $this->editingPatientId = null;
             $this->modalError = '';
-            $this->reset(['new_name', 'new_phone', 'new_age']);
+            $this->reset(['new_name', 'new_phone', 'new_age', 'patient_title']);
+            $this->patient_title = '';
             $this->new_age_type = 'Years';
             $this->new_gender = 'Male';
             session()->flash('message', $this->editingPatientId ? 'Patient updated!' : 'Patient registered!');
@@ -1139,6 +1158,7 @@ class PosEditManager extends Component
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
+                'invoice_date' => $this->invoice_date ? \Carbon\Carbon::parse($this->invoice_date) : $invoice->invoice_date,
                 'sample_received_at' => $this->sample_received_at,
                 'referred_by_doctor_id' => $doctorId,
                 'referred_by_agent_id' => $agentId,

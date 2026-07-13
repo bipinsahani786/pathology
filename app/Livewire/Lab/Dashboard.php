@@ -130,7 +130,8 @@ class Dashboard extends Component
         $start = Carbon::parse($this->fromDate)->startOfDay();
         $end = Carbon::parse($this->toDate)->setHour(23)->setMinute(59)->setSecond(59);
 
-        $showStats = \App\Models\Configuration::getFor('show_dashboard_stats', '1') === '1';
+        $showStats = \App\Models\Configuration::getFor('show_dashboard_stats', '1') === '1'
+            && auth()->user()->can('view dashboard_stats');
 
         if (!$showStats) {
             return view('livewire.lab.dashboard', [
@@ -304,7 +305,7 @@ class Dashboard extends Component
         $channelData = $data['channelData'];
 
         return view('livewire.lab.dashboard', [
-            'showStats' => \App\Models\Configuration::getFor('show_dashboard_stats', '1') === '1',
+            'showStats' => $showStats,
             'daysLeft' => $daysLeft,
             'stats' => $data['stats'],
             'ops' => $data['ops'],
