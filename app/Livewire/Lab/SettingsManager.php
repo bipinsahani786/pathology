@@ -137,6 +137,8 @@ class SettingsManager extends Component
 
     public $pdf_show_page_number = true;
 
+    public $pdf_show_time = true;
+
     public $pdf_page_number_bg_color = 'rgba(255, 255, 255, 0.85)';
 
     public $pdf_header_image;       // stored path
@@ -416,6 +418,7 @@ class SettingsManager extends Component
         $this->pdf_show_test_method = Configuration::getFor('pdf_show_test_method', '1', $company->id, $branchId) === '1';
         $this->pdf_show_watermark = Configuration::getFor('pdf_show_watermark', '1', $company->id, $branchId) === '1';
         $this->pdf_show_page_number = Configuration::getFor('pdf_show_page_number', '1', $company->id, $branchId) === '1';
+        $this->pdf_show_time = Configuration::getFor('pdf_show_time', '1', $company->id, $branchId) === '1';
         $this->pdf_page_number_bg_color = Configuration::getFor('pdf_page_number_bg_color', 'rgba(255, 255, 255, 0.85)', $company->id, $branchId);
         $this->pdf_header_image = Configuration::getFor('pdf_header_image', null, $company->id, $branchId);
         $this->pdf_footer_image = Configuration::getFor('pdf_footer_image', null, $company->id, $branchId);
@@ -790,6 +793,7 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_show_test_method', $this->pdf_show_test_method ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('pdf_show_watermark', $this->pdf_show_watermark ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('pdf_show_page_number', $this->pdf_show_page_number ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('pdf_show_time', $this->pdf_show_time ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('pdf_page_number_bg_color', $this->pdf_page_number_bg_color, $companyId, $branchId);
         Configuration::setFor('pdf_letterhead_mode', $this->pdf_letterhead_mode, $companyId, $branchId);
         Configuration::setFor('pdf_header_image', $this->pdf_header_image, $companyId, $branchId);

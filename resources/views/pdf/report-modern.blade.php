@@ -391,13 +391,13 @@
             <td class="lbl">Patient Name</td>
             <td class="val" style="font-size:14px;">{{ $patient->name }} <small style="font-weight:normal;opacity:0.7;">({{ $patient->formatted_id }})</small></td>
             <td class="lbl">Registered</td>
-            <td class="val">{{ $invoice->created_at->format('d M, Y h:i A') }}</td>
+            <td class="val">{{ $invoice->created_at->format(($settings['pdf_show_time'] ?? true) ? 'd M, Y h:i A' : 'd M, Y') }}</td>
         </tr>
         <tr>
             <td class="lbl">Age / Gender</td>
             <td class="val">{{ $profile->age ?? '--' }} {{ $profile->age_type == 'Years' ? 'Y' : ($profile->age_type == 'Months' ? 'M' : 'D') }} / {{ $profile->gender ?? '--' }}</td>
             <td class="lbl">Reported</td>
-            <td class="val">{{ $report->approved_at ? $report->approved_at->format('d M, Y h:i A') : 'Pending' }}</td>
+            <td class="val">{{ $report->approved_at ? $report->approved_at->format(($settings['pdf_show_time'] ?? true) ? 'd M, Y h:i A' : 'd M, Y') : 'Pending' }}</td>
         </tr>
         <tr>
             <td class="lbl">Referred By</td>

@@ -129,6 +129,8 @@ class PosManager extends Component
 
     public $new_name;
 
+    public $patient_title = '';
+
     public $new_phone;
 
     public $new_age;
@@ -169,6 +171,8 @@ class PosManager extends Component
     // 6. LOGISTICS EXTRA
     // ==========================================
     public $sample_received_at;
+
+    public $invoice_date;
 
     // ==========================================
     // 7. CART EXPAND
@@ -215,9 +219,7 @@ class PosManager extends Component
         $this->expected_report_date = date('Y-m-d');
         $this->expected_report_time = date('H:i', strtotime('+24 hours'));
         $this->sample_received_at = now()->format('Y-m-d\TH:i');
-        $this->expected_report_date = date('Y-m-d');
-        $this->expected_report_time = date('H:i', strtotime('+24 hours'));
-        $this->sample_received_at = now()->format('Y-m-d\TH:i');
+        $this->invoice_date = now()->format('Y-m-d\TH:i');
         $this->addPaymentRow();
     }
 
@@ -665,7 +667,18 @@ class PosManager extends Component
             return;
         }
         $this->editingPatientId = $this->selectedPatient['id'];
-        $this->new_name = $this->selectedPatient['name'];
+        
+        $name = $this->selectedPatient['name'];
+        $this->patient_title = ''; // default
+        $prefixes = ['Mr.', 'Mrs.', 'Miss.', 'Baby.', 'Master.', 'Dr.', 'B/O', 'Ms.', 'C/O', 'S/O'];
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with(strtolower($name), strtolower($prefix) . ' ')) {
+                $this->patient_title = $prefix;
+                $name = substr($name, strlen($prefix) + 1);
+                break;
+            }
+        }
+        $this->new_name = $name;
         $this->new_phone = $this->selectedPatient['phone'];
         if ($this->patientProfileData) {
             $this->new_age = $this->patientProfileData['age'];
@@ -692,10 +705,12 @@ class PosManager extends Component
         try {
             $companyId = auth()->user()->company_id;
 
+            $fullName = $this->patient_title ? ($this->patient_title . ' ' . $this->new_name) : $this->new_name;
+
             if ($this->editingPatientId) {
                 $user = User::findOrFail($this->editingPatientId);
                 $user->update([
-                    'name' => $this->new_name,
+                    'name' => $fullName,
                     'phone' => $this->new_phone,
                 ]);
 
@@ -713,7 +728,7 @@ class PosManager extends Component
                 $defaultPass = $this->new_phone ?? '12345678';
 
                 $user = User::create([
-                    'name' => $this->new_name,
+                    'name' => $fullName,
                     'phone' => $this->new_phone,
                     'email' => $fallbackEmail,
                     'password' => $defaultPass,
@@ -768,7 +783,8 @@ class PosManager extends Component
             $this->isPatientModalOpen = false;
             $this->editingPatientId = null;
             $this->modalError = '';
-            $this->reset(['new_name', 'new_phone', 'new_age']);
+            $this->reset(['new_name', 'new_phone', 'new_age', 'patient_title']);
+            $this->patient_title = '';
             $this->new_age_type = 'Years';
             $this->new_gender = 'Male';
             session()->flash('message', $this->editingPatientId ? 'Patient updated!' : 'Patient registered!');
@@ -1206,7 +1222,7 @@ class PosManager extends Component
                 'referred_by_agent_id' => $agentId,
                 'invoice_number' => $invoiceNumber,
                 'barcode' => $barcode,
-                'invoice_date' => now(),
+                'invoice_date' => $this->invoice_date ? \Carbon\Carbon::parse($this->invoice_date) : now(),
                 'sample_received_at' => $this->sample_received_at,
                 'expected_report_time' => $this->expected_report_date && $this->expected_report_time
                     ? $this->expected_report_date . ' ' . $this->expected_report_time

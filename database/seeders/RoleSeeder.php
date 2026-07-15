@@ -40,6 +40,7 @@ class RoleSeeder extends Seeder
             'equipment',
             'audit_logs',
             'support_tickets',
+            'dashboard_stats',
         ];
         $actions = ['view', 'create', 'edit', 'delete'];
 
@@ -107,6 +108,7 @@ class RoleSeeder extends Seeder
             'create pos',
             'view inventory',
             'create inventory',
+            'view dashboard_stats',
         ]);
 
         // Collection Center User
@@ -132,6 +134,7 @@ class RoleSeeder extends Seeder
             'view inventory',
             'view support_tickets',
             'create support_tickets',
+            'view dashboard_stats',
         ]);
 
         // Customer (Patient)
