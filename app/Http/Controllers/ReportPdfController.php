@@ -271,6 +271,21 @@ class ReportPdfController extends Controller
                     return $r->invoice_item_id.'_'.$r->lab_test_id;
                 })->map(function ($testGroup) use ($report) {
                     $first = $testGroup->first();
+                    $labTest = $first->labTest;
+
+                    // Sort test results based on the parameter order defined in LabTest
+                    $parameterOrder = [];
+                    if (is_array($labTest->parameters)) {
+                        foreach ($labTest->parameters as $index => $param) {
+                            $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
+                            $parameterOrder[$paramName] = $index;
+                        }
+                    }
+
+                    $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
+                        return $parameterOrder[$r->parameter_name] ?? 9999;
+                    })->values();
+
                     $itemId = $first->invoice_item_id;
                     $testId = $first->lab_test_id;
 
