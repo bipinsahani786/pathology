@@ -640,7 +640,7 @@
                     </td>
                     <td class="lbl">Collection Date</td>
                     <td class="val">:
-                        {{ $invoice->sample_collected_at ? $invoice->sample_collected_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : $invoice->created_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') }}
+                        {{ $invoice->sample_received_at ? $invoice->sample_received_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : ($invoice->sample_collected_at ? $invoice->sample_collected_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : $invoice->created_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y')) }}
                     </td>
                 </tr>
                 <tr>
