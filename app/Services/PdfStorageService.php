@@ -102,7 +102,7 @@ class PdfStorageService
             'report' => $report,
             'invoice' => $report->invoice,
             'patient' => $report->invoice->patient,
-            'profile' => $report->invoice->patient->patientProfile,
+            'profile' => $report->invoice->patient?->patientProfile,
             'groupedResults' => $groupedResults,
             'settings' => $settings,
             'company' => $report->invoice->company,
@@ -158,7 +158,7 @@ class PdfStorageService
         $pdf = Pdf::loadView($viewName, [
             'invoice' => $invoice,
             'patient' => $invoice->patient,
-            'profile' => $invoice->patient->patientProfile,
+            'profile' => $invoice->patient?->patientProfile,
             'settings' => $settings,
             'company' => $invoice->company,
             'showHeader' => $settings['pdf_show_header'],
