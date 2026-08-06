@@ -66,7 +66,7 @@ class PdfStorageService
         // and preserve the parameter order (result ID).
         $results = $results->sortBy(function ($result) use ($activeItemIds) {
             $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
-            return ($itemOrder === false ? 999999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
+            return sprintf('%05d', $itemOrder === false ? 99999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
         });
 
         // Group by consecutive departments to strictly preserve sequence 
