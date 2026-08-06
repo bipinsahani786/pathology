@@ -57,9 +57,10 @@
 
 
         {{-- ════════════════════════════════════════════════════════
-             MACHINE INTEGRATION PANEL
+             MACHINE INTEGRATION PANEL (HIDDEN FOR NOW)
              Auto-polls every 15s for new machine data
         ════════════════════════════════════════════════════════ --}}
+        @if(false)
         <div wire:poll.15000ms="checkMachineData">
 
             {{-- Machine Data Ready Banner --}}
@@ -161,6 +162,7 @@
             @endif
 
         </div>{{-- /wire:poll --}}
+        @endif
 
         @if(session()->has('success'))
             <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">

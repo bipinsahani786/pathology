@@ -266,8 +266,7 @@ class ReportPdfController extends Controller
         // and preserve the parameter order (result ID).
         $results = $results->sortBy(function ($result) use ($activeItemIds) {
             $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
-            if ($itemOrder === false) $itemOrder = 999999;
-            return $itemOrder * 1000000 + $result->id;
+            return ($itemOrder === false ? 999999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
         });
 
         // Group by consecutive departments to strictly preserve sequence 
@@ -297,12 +296,13 @@ class ReportPdfController extends Controller
                     if (is_array($labTest->parameters)) {
                         foreach ($labTest->parameters as $index => $param) {
                             $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
-                            $parameterOrder[$paramName] = $index;
+                            $parameterOrder[strtolower(trim($paramName))] = $index;
                         }
                     }
 
                     $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
-                        return $parameterOrder[$r->parameter_name] ?? 9999;
+                        $pName = strtolower(trim($r->parameter_name));
+                        return $parameterOrder[$pName] ?? 999999;
                     })->values();
 
                     $itemId = $first->invoice_item_id;
