@@ -12,46 +12,77 @@ class FixInvoiceItemNames extends Command
      *
      * @var string
      */
-    protected $signature = 'fix:invoice-item-names';
+    protected $signature = 'fix:invoice-item-names {--apply : Actually perform the update in the database}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Restores original test names for invoice items where test_name was overwritten during edit.';
+    protected $description = 'Previews or restores original test names for corrupted invoice items.';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Starting invoice item names repair...');
+        $apply = $this->option('apply');
 
-        // Find how many items need fixing
-        $affectedCount = DB::table('invoice_items')
+        $this->info($apply ? 'Executing invoice item names repair...' : 'Previewing invoice item names to be fixed (Dry-Run Mode)...');
+        $this->newLine();
+
+        // Fetch affected items with invoice number and patient details for clear preview
+        $affectedItems = DB::table('invoice_items')
+            ->join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
             ->join('lab_tests', 'invoice_items.lab_test_id', '=', 'lab_tests.id')
             ->whereNotNull('invoice_items.lab_test_id')
             ->whereRaw('invoice_items.test_name != lab_tests.name')
-            ->count();
+            ->select([
+                'invoice_items.id as item_id',
+                'invoices.invoice_number',
+                'invoice_items.test_name as current_name',
+                'lab_tests.name as correct_name',
+            ])
+            ->get();
 
-        if ($affectedCount === 0) {
-            $this->info('No corrupted invoice items found. Everything is already correct!');
+        if ($affectedItems->isEmpty()) {
+            $this->info('✅ No corrupted invoice items found. All test names are already correct!');
             return 0;
         }
 
-        $this->info("Found {$affectedCount} corrupted invoice item(s). Repairing...");
+        $headers = ['Item ID', 'Invoice No', 'Current (Corrupted) Name', 'Will Be Changed To'];
+        $rows = [];
 
-        // Safely update test_name to match master lab_tests.name
-        $updated = DB::affectingStatement("
-            UPDATE invoice_items
-            JOIN lab_tests ON invoice_items.lab_test_id = lab_tests.id
-            SET invoice_items.test_name = lab_tests.name
-            WHERE invoice_items.lab_test_id IS NOT NULL
-              AND invoice_items.test_name != lab_tests.name
-        ");
+        foreach ($affectedItems as $item) {
+            $rows[] = [
+                $item->item_id,
+                $item->invoice_number,
+                $item->current_name,
+                $item->correct_name,
+            ];
+        }
 
-        $this->info("Successfully restored original test names for {$updated} item(s)!");
+        $this->table($headers, $rows);
+        $this->newLine();
+        $this->info("Total affected items found: " . $affectedItems->count());
+
+        if (!$apply) {
+            $this->newLine();
+            $this->warn('⚠️ THIS WAS JUST A PREVIEW (NO CHANGES WERE MADE TO THE DATABASE).');
+            $this->info('To actually apply these changes, run:');
+            $this->comment('php artisan fix:invoice-item-names --apply');
+        } else {
+            $updated = DB::affectingStatement("
+                UPDATE invoice_items
+                JOIN lab_tests ON invoice_items.lab_test_id = lab_tests.id
+                SET invoice_items.test_name = lab_tests.name
+                WHERE invoice_items.lab_test_id IS NOT NULL
+                  AND invoice_items.test_name != lab_tests.name
+            ");
+
+            $this->newLine();
+            $this->info("🎉 SUCCESS! Successfully restored original test names for {$updated} item(s).");
+        }
 
         return 0;
     }
