@@ -25,6 +25,7 @@ use App\Livewire\Lab\ReportManager;
 use App\Livewire\Lab\ResultEntryManager;
 use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\SettlementManager;
+use App\Livewire\Lab\MachineManager;
 use App\Livewire\Partner\PartnerDashboard;
 use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,29 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// ==========================================
+// MACHINE INTEGRATION API (Token-Secured)
+// No session/auth middleware — uses Bearer token
+// ==========================================
+Route::prefix('api/machine')->name('api.machine.')->group(function () {
+    // Bridge Agent / Machine pushes parsed JSON results
+    Route::post('/push-result', [\App\Http\Controllers\MachineDataController::class, 'pushResult'])
+        ->name('push-result');
+
+    // Bridge Agent pushes raw ASTM/proprietary string (server parses it)
+    Route::post('/push-raw', [\App\Http\Controllers\MachineDataController::class, 'pushRaw'])
+        ->name('push-raw');
+
+    // Bridge Agent heartbeat (machine online status tracking)
+    Route::post('/heartbeat', [\App\Http\Controllers\MachineDataController::class, 'heartbeat'])
+        ->name('heartbeat');
+
+    // Result Entry page checks if machine data is ready for an invoice (requires web auth)
+    Route::get('/pending/{invoiceId}', [\App\Http\Controllers\MachineDataController::class, 'pendingForInvoice'])
+        ->name('pending')
+        ->middleware('auth');
+});
 
 // Impersonation Routes
 Route::get('/impersonate/start/{user}', [\App\Http\Controllers\ImpersonationController::class, 'loginAs'])->name('impersonate.start')->middleware('auth');
@@ -235,6 +259,59 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/stock', \App\Livewire\Lab\Inventory\StockManager::class)->name('stock');
                 Route::get('/purchase', \App\Livewire\Lab\Inventory\PurchaseManager::class)->name('purchase');
                 Route::get('/issuance', \App\Livewire\Lab\Inventory\IssuanceManager::class)->name('issuance');
+            });
+
+            // Machine Integration Settings
+            Route::get('/machines', MachineManager::class)->name('machines');
+
+            Route::prefix('machines')->name('machine.bridge-agent.')->group(function () {
+                // Python version download
+                Route::get('/bridge-agent/download', function () {
+                    $file = base_path('bridge_agent/agent.py');
+                    if (!file_exists($file)) abort(404, 'Bridge Agent not found.');
+                    return response()->download($file, 'LabBridgeAgent.py');
+                })->name('download');
+
+                // Node.js version download
+                Route::get('/bridge-agent/download-node', function () {
+                    $file = base_path('bridge_agent/agent.js');
+                    if (!file_exists($file)) abort(404, 'Bridge Agent (Node.js) not found.');
+                    return response()->download($file, 'LabBridgeAgent.js');
+                })->name('download-node');
+
+                // package.json download for Node.js
+                Route::get('/bridge-agent/package-json', function () {
+                    $file = base_path('bridge_agent/package.json');
+                    if (!file_exists($file)) abort(404);
+                    return response()->download($file, 'package.json');
+                })->name('package-json');
+
+                Route::get('/bridge-agent/config', function () {
+                    $machine = \App\Models\MachineIntegration::where('company_id', auth()->user()->company_id)
+                        ->where('is_active', true)
+                        ->get(['id', 'name', 'machine_type', 'connection_type', 'port_or_ip', 'baud_rate', 'tcp_port', 'protocol', 'api_token']);
+
+                    $config = [
+                        'cloud_url'                   => config('app.url'),
+                        'heartbeat_interval_seconds'  => 60,
+                        'machines'                    => $machine->map(fn($m) => [
+                            'id'              => $m->id,
+                            'name'            => $m->name,
+                            'machine_type'    => $m->machine_type,
+                            'connection_type' => $m->connection_type,
+                            'com_port'        => $m->connection_type === 'serial' ? ($m->port_or_ip ?? 'COM1') : null,
+                            'host'            => $m->connection_type === 'tcp' ? $m->port_or_ip : null,
+                            'port'            => $m->tcp_port,
+                            'baud_rate'       => $m->baud_rate ?? 9600,
+                            'api_token'       => $m->api_token,
+                            'protocol'        => $m->protocol,
+                            'enabled'         => true,
+                        ])->toArray(),
+                    ];
+
+                    return response()->json($config)
+                        ->header('Content-Disposition', 'attachment; filename="config.json"');
+                })->name('config');
             });
 
             // Support Tickets

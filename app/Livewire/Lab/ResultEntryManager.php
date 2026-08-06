@@ -3,8 +3,12 @@
 namespace App\Livewire\Lab;
 
 use App\Models\Invoice;
+use App\Models\MachineIntegration;
+use App\Models\MachineResultLog;
 use App\Models\ReportResult;
 use App\Models\TestReport;
+use App\Services\MachineIntegration\MachineParserFactory;
+use App\Services\MachineIntegration\ResultImporter;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
@@ -36,6 +40,14 @@ class ResultEntryManager extends Component
     public $report_time; // Custom report time for PDF
 
     public $manualOverrides = []; // Track calculated fields that were manually edited
+
+    // ─────────────────────────────────────────
+    // Machine Integration
+    // ─────────────────────────────────────────
+    public $machineLogs        = [];   // Pending machine result logs for this invoice
+    public $machineImportResult = null; // Feedback after import
+    public $showMachineImport  = false; // Show/hide machine import panel
+    public $machineFilledKeys  = [];   // Keys auto-filled by machine (for highlight)
 
     public function mount($id)
     {
@@ -892,6 +904,115 @@ class ResultEntryManager extends Component
         }
     }
 
+    // ════════════════════════════════════════════════════════════
+    // MACHINE INTEGRATION METHODS
+    // ════════════════════════════════════════════════════════════
+
+    /**
+     * Poll for pending machine data for this invoice.
+     * Called by JS polling every 15 seconds via wire:poll.
+     */
+    public function checkMachineData(): void
+    {
+        $this->machineLogs = MachineResultLog::where('invoice_id', $this->invoice->id)
+            ->where('company_id', $this->invoice->company_id)
+            ->where('status', 'matched')
+            ->with('machine:id,name,machine_type,brand')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($log) => [
+                'id'              => $log->id,
+                'machine_name'    => $log->machine?->name ?? 'Unknown Machine',
+                'machine_type'    => $log->machine?->machine_type ?? '',
+                'params_count'    => count($log->parsed_data ?? []),
+                'received_at'     => $log->created_at->diffForHumans(),
+                'status'          => $log->status,
+            ])
+            ->toArray();
+    }
+
+    /**
+     * Import machine results for a specific log into the result fields.
+     */
+    public function importFromMachine(int $logId): void
+    {
+        $log = MachineResultLog::where('company_id', $this->invoice->company_id)
+            ->with('machine')
+            ->findOrFail($logId);
+
+        $importer = new ResultImporter();
+        $result   = $importer->importIntoReport($log, auth()->id());
+
+        // Re-initialize results data to pick up machine-filled values
+        $this->initializeResultsData();
+
+        // Track which keys were machine-filled for highlighting
+        $this->machineFilledKeys = array_keys($this->results);
+
+        // Refresh machine logs list
+        $this->checkMachineData();
+
+        $this->machineImportResult = [
+            'filled'           => $result['filled'],
+            'unmatched_params' => $result['unmatched_params'],
+            'machine_name'     => $log->machine?->name ?? 'Machine',
+        ];
+
+        $this->dispatch('notify',
+            type: $result['filled'] > 0 ? 'success' : 'warning',
+            message: $result['filled'] . ' parameters auto-filled from ' . ($log->machine?->name ?? 'machine') . '!'
+        );
+    }
+
+    /**
+     * Run the built-in simulator for testing without a physical machine.
+     */
+    public function simulateMachineData(int $machineId, string $testType = 'lft'): void
+    {
+        $machine = MachineIntegration::where('company_id', $this->invoice->company_id)
+            ->find($machineId);
+
+        if (!$machine) {
+            $this->dispatch('notify', type: 'error', message: 'Machine not found.');
+            return;
+        }
+
+        $sampleId = $this->invoice->barcode ?? ('SIM' . $this->invoice->id);
+        $rawData  = MachineParserFactory::generateSimulated($machine, $sampleId, $testType);
+        $parsed   = MachineParserFactory::parse($machine, $rawData);
+
+        $importer = new ResultImporter();
+        $log = $importer->receive(
+            machine:    $machine,
+            rawData:    $rawData,
+            parsedData: collect($parsed['results'])->mapWithKeys(
+                fn($v, $k) => [$k => is_array($v) ? $v : ['value' => $v, 'unit' => '']]
+            )->toArray(),
+            sampleId:   $sampleId,
+        );
+
+        if ($log->status === 'matched') {
+            $this->importFromMachine($log->id);
+        } else {
+            $this->dispatch('notify', type: 'warning', message: 'Simulated data generated but sample ID did not match invoice barcode.');
+        }
+    }
+
+    public function dismissMachineImportResult(): void
+    {
+        $this->machineImportResult = null;
+    }
+
+    public function toggleMachinePanel(): void
+    {
+        $this->showMachineImport = !$this->showMachineImport;
+        if ($this->showMachineImport) {
+            $this->checkMachineData();
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════
+
     public function render()
     {
         // Group parameters by Department -> Invoice Item (Bill Line) -> Lab Test (Actual Test Name)
@@ -901,8 +1022,15 @@ class ResultEntryManager extends Component
             });
         });
 
+        // Available machines for simulator (on this company)
+        $availableMachines = MachineIntegration::where('company_id', $this->invoice->company_id)
+            ->where('is_active', true)
+            ->select('id', 'name', 'machine_type', 'brand', 'last_seen_at')
+            ->get();
+
         return view('livewire.lab.result-entry-manager', [
-            'groupedParams' => $groupedParams,
+            'groupedParams'     => $groupedParams,
+            'availableMachines' => $availableMachines,
         ])->layout('layouts.app');
     }
 }

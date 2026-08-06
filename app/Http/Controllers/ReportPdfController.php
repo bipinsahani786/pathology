@@ -238,7 +238,7 @@ class ReportPdfController extends Controller
         $results = $report->results;
 
         // Safety: Filter out results for items that are no longer in the invoice
-       $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->toArray();
+        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->toArray();
         $results = $results->whereIn('invoice_item_id', $activeItemIds);
 
         if ($request->has('tests')) {
@@ -262,14 +262,14 @@ class ReportPdfController extends Controller
             });
         }
 
-          // Sort results to exactly match the sequence of test selection (invoice_item_id order)
+        // Sort results to exactly match the sequence of test selection (invoice_item_id order)
         // and preserve the parameter order (result ID).
         $results = $results->sortBy(function ($result) use ($activeItemIds) {
             $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
-            if ($itemOrder === false) $itemOrder = 999999;
-            return $itemOrder * 1000000 + $result->id;
+            return ($itemOrder === false ? 999999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
         });
-       // Group by consecutive departments to strictly preserve sequence 
+
+        // Group by consecutive departments to strictly preserve sequence 
         // without grouping all same-department tests together if they were selected at different times.
         $groupIndex = 0;
         $lastDeptId = -1;
@@ -281,7 +281,8 @@ class ReportPdfController extends Controller
             }
             $result->_group_index = $groupIndex;
         }
-          $groupedResults = $results->groupBy('_group_index')->map(function ($deptGroup) use ($report) {
+
+        $groupedResults = $results->groupBy('_group_index')->map(function ($deptGroup) use ($report) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function ($r) {
@@ -295,12 +296,13 @@ class ReportPdfController extends Controller
                     if (is_array($labTest->parameters)) {
                         foreach ($labTest->parameters as $index => $param) {
                             $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
-                            $parameterOrder[$paramName] = $index;
+                            $parameterOrder[strtolower(trim($paramName))] = $index;
                         }
                     }
 
                     $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
-                        return $parameterOrder[$r->parameter_name] ?? 9999;
+                        $pName = strtolower(trim($r->parameter_name));
+                        return $parameterOrder[$pName] ?? 999999;
                     })->values();
 
                     $itemId = $first->invoice_item_id;
