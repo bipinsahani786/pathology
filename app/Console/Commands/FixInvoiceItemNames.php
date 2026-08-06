@@ -72,13 +72,17 @@ class FixInvoiceItemNames extends Command
             $this->info('To actually apply these changes, run:');
             $this->comment('php artisan fix:invoice-item-names --apply');
         } else {
-            $updated = DB::affectingStatement("
-                UPDATE invoice_items
-                JOIN lab_tests ON invoice_items.lab_test_id = lab_tests.id
-                SET invoice_items.test_name = lab_tests.name
-                WHERE invoice_items.lab_test_id IS NOT NULL
-                  AND invoice_items.test_name != lab_tests.name
-            ");
+            $updated = 0;
+
+            // DB-Agnostic update (Compatible with PostgreSQL, MySQL, and SQLite)
+            DB::transaction(function () use ($affectedItems, &$updated) {
+                foreach ($affectedItems as $item) {
+                    DB::table('invoice_items')
+                        ->where('id', $item->item_id)
+                        ->update(['test_name' => $item->correct_name]);
+                    $updated++;
+                }
+            });
 
             $this->newLine();
             $this->info("🎉 SUCCESS! Successfully restored original test names for {$updated} item(s).");
