@@ -238,7 +238,7 @@ class ReportPdfController extends Controller
         $results = $report->results;
 
         // Safety: Filter out results for items that are no longer in the invoice
-        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->toArray();
+        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->values()->toArray();
         $results = $results->whereIn('invoice_item_id', $activeItemIds);
 
         if ($request->has('tests')) {
