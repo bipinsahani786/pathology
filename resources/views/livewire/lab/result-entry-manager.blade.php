@@ -56,6 +56,112 @@
         </div>
 
 
+        {{-- ════════════════════════════════════════════════════════
+             MACHINE INTEGRATION PANEL
+             Auto-polls every 15s for new machine data
+        ════════════════════════════════════════════════════════ --}}
+        <div wire:poll.15000ms="checkMachineData">
+
+            {{-- Machine Data Ready Banner --}}
+            @if(count($machineLogs) > 0)
+                <div class="alert border-0 shadow-sm rounded-3 mb-3"
+                     style="background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border-left: 4px solid #28a745 !important; border-left-style: solid !important;">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-success mb-1">
+                                <i class="feather-cpu me-2"></i>🟢 Machine Data Ready!
+                            </div>
+                            @foreach($machineLogs as $mlog)
+                                <div class="d-flex align-items-center gap-3 mt-2 flex-wrap">
+                                    <div>
+                                        @php
+                                            $mIcon = match($mlog['machine_type']) { 'hematology' => '🩸', 'electrolyte' => '⚗️', default => '🔬' };
+                                        @endphp
+                                        <span class="fw-semibold">{{ $mIcon }} {{ $mlog['machine_name'] }}</span>
+                                        <span class="text-muted small ms-2">{{ $mlog['params_count'] }} parameters — {{ $mlog['received_at'] }}</span>
+                                    </div>
+                                    <button wire:click="importFromMachine({{ $mlog['id'] }})"
+                                            wire:loading.attr="disabled"
+                                            class="btn btn-success btn-sm px-3">
+                                        <span wire:loading wire:target="importFromMachine({{ $mlog['id'] }})" class="spinner-border spinner-border-sm me-1"></span>
+                                        <i wire:loading.remove wire:target="importFromMachine({{ $mlog['id'] }})" class="feather-download me-1"></i>
+                                        Import {{ $mlog['params_count'] }} Results
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Machine Import Success / Result --}}
+            @if($machineImportResult)
+                <div class="alert {{ $machineImportResult['filled'] > 0 ? 'alert-success' : 'alert-warning' }} border-0 shadow-sm rounded-3 mb-3 d-flex justify-content-between align-items-start">
+                    <div>
+                        @if($machineImportResult['filled'] > 0)
+                            <i class="feather-check-circle me-2"></i>
+                            <strong>{{ $machineImportResult['filled'] }} parameters</strong> auto-filled from
+                            <strong>{{ $machineImportResult['machine_name'] }}</strong>!
+                            Values are highlighted in <span class="badge bg-success text-white">green</span> below.
+                        @else
+                            <i class="feather-alert-triangle me-2"></i>
+                            No parameters matched from {{ $machineImportResult['machine_name'] }}.
+                        @endif
+                        @if(!empty($machineImportResult['unmatched_params']))
+                            <div class="mt-1 small text-muted">
+                                Not matched: {{ implode(', ', array_slice($machineImportResult['unmatched_params'], 0, 8)) }}
+                                {{ count($machineImportResult['unmatched_params']) > 8 ? '...' : '' }}
+                            </div>
+                        @endif
+                    </div>
+                    <button wire:click="dismissMachineImportResult" class="btn-close btn-sm ms-3"></button>
+                </div>
+            @endif
+
+            {{-- Simulator Toggle Button (when no machines are online) --}}
+            @if(count($machineLogs) === 0 && $availableMachines->count() > 0)
+                <div class="mb-3">
+                    <button wire:click="toggleMachinePanel" class="btn btn-sm btn-outline-purple">
+                        🧪 {{ $showMachineImport ? 'Hide' : 'Simulate Machine Data (for testing)' }}
+                    </button>
+
+                    @if($showMachineImport)
+                        <div class="card border-purple mt-2 shadow-sm">
+                            <div class="card-body py-3">
+                                <div class="fw-semibold mb-2" style="color:#6f42c1">🧪 Machine Simulator</div>
+                                <p class="text-muted small mb-3">No machine connected. Use simulator to test the full import flow.</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($availableMachines as $am)
+                                        @php
+                                            $amIcon = match($am->machine_type) { 'hematology' => '🩸', 'electrolyte' => '⚗️', default => '🔬' };
+                                        @endphp
+                                        @if($am->machine_type === 'biochemistry')
+                                            <div class="d-flex gap-1">
+                                                <button wire:click="simulateMachineData({{ $am->id }}, 'lft')" class="btn btn-sm btn-soft-purple">
+                                                    {{ $amIcon }} {{ $am->name }} — LFT
+                                                </button>
+                                                <button wire:click="simulateMachineData({{ $am->id }}, 'rft')" class="btn btn-sm btn-soft-purple">
+                                                    RFT
+                                                </button>
+                                                <button wire:click="simulateMachineData({{ $am->id }}, 'lipid')" class="btn btn-sm btn-soft-purple">
+                                                    Lipid
+                                                </button>
+                                            </div>
+                                        @else
+                                            <button wire:click="simulateMachineData({{ $am->id }})" class="btn btn-sm btn-soft-purple">
+                                                {{ $amIcon }} {{ $am->name }}
+                                            </button>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+        </div>{{-- /wire:poll --}}
+
         @if(session()->has('success'))
             <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
                 <i class="feather-check-circle me-2"></i>{{ session('success') }}

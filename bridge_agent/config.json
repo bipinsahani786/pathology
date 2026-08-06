@@ -1,0 +1,50 @@
+{
+  "cloud_url": "https://YOUR_APP_DOMAIN.com",
+  "heartbeat_interval_seconds": 60,
+  "machines": [
+    {
+      "id": 1,
+      "name": "Cellomax 5",
+      "machine_type": "hematology",
+      "connection_type": "tcp",
+      "host": "192.168.1.50",
+      "port": 4001,
+      "api_token": "PASTE_API_TOKEN_FROM_SETTINGS_PAGE_HERE",
+      "protocol": "custom",
+      "enabled": true
+    },
+    {
+      "id": 2,
+      "name": "AURA Chem 120",
+      "machine_type": "biochemistry",
+      "connection_type": "tcp",
+      "host": "192.168.1.55",
+      "port": 4002,
+      "api_token": "PASTE_API_TOKEN_FROM_SETTINGS_PAGE_HERE",
+      "protocol": "astm",
+      "enabled": true
+    },
+    {
+      "id": 3,
+      "name": "SRP Healthcare Analyzer",
+      "machine_type": "biochemistry",
+      "connection_type": "serial",
+      "com_port": "COM1",
+      "baud_rate": 9600,
+      "api_token": "PASTE_API_TOKEN_FROM_SETTINGS_PAGE_HERE",
+      "protocol": "astm",
+      "enabled": true
+    },
+    {
+      "id": 4,
+      "name": "ST-200 Plus",
+      "machine_type": "electrolyte",
+      "connection_type": "serial",
+      "com_port": "COM3",
+      "baud_rate": 9600,
+      "api_token": "PASTE_API_TOKEN_FROM_SETTINGS_PAGE_HERE",
+      "protocol": "custom",
+      "enabled": true
+    }
+  ]
+}

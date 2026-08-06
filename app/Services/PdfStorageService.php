@@ -57,9 +57,33 @@ class PdfStorageService
 
         // ── Group Results ───────────────────────────────────────────────────
         $results = $report->results;
-        $groupedResults = $results->groupBy(function ($result) {
-            return $result->labTest->department_id ?? 0;
-        })->map(function ($deptGroup) use ($report) {
+        
+        // Safety: Filter out results for items that are no longer in the invoice
+        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->toArray();
+        $results = $results->whereIn('invoice_item_id', $activeItemIds);
+
+        // Sort results to exactly match the sequence of test selection (invoice_item_id order)
+        // and preserve the parameter order (result ID).
+        $results = $results->sortBy(function ($result) use ($activeItemIds) {
+            $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
+            if ($itemOrder === false) $itemOrder = 999999;
+            return $itemOrder * 1000000 + $result->id;
+        });
+
+        // Group by consecutive departments to strictly preserve sequence 
+        // without grouping all same-department tests together if they were selected at different times.
+        $groupIndex = 0;
+        $lastDeptId = -1;
+        foreach ($results as $result) {
+            $deptId = $result->labTest->department_id ?? 0;
+            if ($deptId !== $lastDeptId) {
+                $groupIndex++;
+                $lastDeptId = $deptId;
+            }
+            $result->_group_index = $groupIndex;
+        }
+
+        $groupedResults = $results->groupBy('_group_index')->map(function ($deptGroup) use ($report) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function ($r) {
