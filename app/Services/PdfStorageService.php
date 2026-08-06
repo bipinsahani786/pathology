@@ -57,6 +57,18 @@ class PdfStorageService
 
         // ── Group Results ───────────────────────────────────────────────────
         $results = $report->results;
+         // Safety: Filter out results for items that are no longer in the invoice
+        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->toArray();
+        $results = $results->whereIn('invoice_item_id', $activeItemIds);
+
+        // Sort results to exactly match the sequence of test selection (invoice_item_id order)
+        // and preserve the parameter order (result ID).
+        $results = $results->sortBy(function ($result) use ($activeItemIds) {
+            $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
+            if ($itemOrder === false) $itemOrder = 999999;
+            return $itemOrder * 1000000 + $result->id;
+        });
+
         $groupedResults = $results->groupBy(function ($result) {
             return $result->labTest->department_id ?? 0;
         })->map(function ($deptGroup) use ($report) {
