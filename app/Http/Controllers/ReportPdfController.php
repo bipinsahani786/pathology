@@ -269,9 +269,19 @@ class ReportPdfController extends Controller
             if ($itemOrder === false) $itemOrder = 999999;
             return $itemOrder * 1000000 + $result->id;
         });
-        $groupedResults = $results->groupBy(function ($result) {
-            return $result->labTest->department_id ?? 0;
-        })->map(function ($deptGroup) use ($report) {
+       // Group by consecutive departments to strictly preserve sequence 
+        // without grouping all same-department tests together if they were selected at different times.
+        $groupIndex = 0;
+        $lastDeptId = -1;
+        foreach ($results as $result) {
+            $deptId = $result->labTest->department_id ?? 0;
+            if ($deptId !== $lastDeptId) {
+                $groupIndex++;
+                $lastDeptId = $deptId;
+            }
+            $result->_group_index = $groupIndex;
+        }
+          $groupedResults = $results->groupBy('_group_index')->map(function ($deptGroup) use ($report) {
             return [
                 'department' => $deptGroup->first()->labTest->dept ?? null,
                 'tests' => $deptGroup->groupBy(function ($r) {
