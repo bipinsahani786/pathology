@@ -1158,6 +1158,14 @@
                                                 style="width:2.5em;height:1.25em;">
                                         </div>
                                     </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-11">Group Tests by Department</label>
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox" wire:model="report_group_by_dept"
+                                                style="width:2.5em;height:1.25em;">
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">OFF = Selection order &nbsp;|&nbsp; ON = Department grouped</div>
+                                    </div>
                                 </div>
 
                                 <div class="row g-3 mt-1 mb-3">

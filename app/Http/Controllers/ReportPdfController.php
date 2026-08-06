@@ -209,6 +209,7 @@ class ReportPdfController extends Controller
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId, $branchId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId, $branchId) === '1',
             'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId, $branchId) === '1',
+            'report_group_by_dept' => Configuration::getFor('report_group_by_dept', '0', $companyId, $branchId) === '1',
         ];
 
         // Determine final visibility (Setting toggle AND override via URL)
@@ -238,7 +239,8 @@ class ReportPdfController extends Controller
         $results = $report->results;
 
         // Safety: Filter out results for items that are no longer in the invoice
-        $activeItemIds = $report->invoice->items->sortBy('id')->pluck('id')->values()->toArray();
+        // IMPORTANT: Do NOT sort items here - keep their natural insertion order = selection order
+        $activeItemIds = $report->invoice->items->pluck('id')->values()->toArray();
         $results = $results->whereIn('invoice_item_id', $activeItemIds);
 
         if ($request->has('tests')) {
@@ -267,74 +269,36 @@ class ReportPdfController extends Controller
         $results = $results->sortBy(function ($result) use ($activeItemIds) {
             $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
             return sprintf('%05d', $itemOrder === false ? 99999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
-        });
+        })->values(); // values() resets keys so foreach iterates in sorted order
 
-        // Group by consecutive departments to strictly preserve sequence 
-        // without grouping all same-department tests together if they were selected at different times.
-        $groupIndex = 0;
-        $lastDeptId = -1;
-        foreach ($results as $result) {
-            $deptId = $result->labTest->department_id ?? 0;
-            if ($deptId !== $lastDeptId) {
-                $groupIndex++;
-                $lastDeptId = $deptId;
-            }
-            $result->_group_index = $groupIndex;
+        // ── Build grouped results based on setting ────────────────────────────
+        $groupByDept = $settings['report_group_by_dept'] ?? false;
+
+        if ($groupByDept) {
+            // DEPARTMENT MODE: group all tests of same dept together
+            $groupedResults = $results->groupBy(function ($r) {
+                return $r->labTest->department_id ?? 0;
+            })->map(function ($deptGroup) use ($report) {
+                return [
+                    'department' => $deptGroup->first()->labTest->dept ?? null,
+                    'tests' => $deptGroup->groupBy(function ($r) {
+                        return $r->invoice_item_id . '_' . $r->lab_test_id;
+                    })->map(function ($testGroup) use ($report) {
+                        return self::buildTestGroupData($testGroup, $report);
+                    }),
+                ];
+            });
+        } else {
+            // SELECTION ORDER MODE: each invoice_item prints separately in exact selection order
+            $groupedResults = $results->groupBy('invoice_item_id')->map(function ($itemGroup) use ($report) {
+                return [
+                    'department' => $itemGroup->first()->labTest->dept ?? null,
+                    'tests' => $itemGroup->groupBy('lab_test_id')->map(function ($testGroup) use ($report) {
+                        return self::buildTestGroupData($testGroup, $report);
+                    }),
+                ];
+            });
         }
-
-        $groupedResults = $results->groupBy('_group_index')->map(function ($deptGroup) use ($report) {
-            return [
-                'department' => $deptGroup->first()->labTest->dept ?? null,
-                'tests' => $deptGroup->groupBy(function ($r) {
-                    return $r->invoice_item_id.'_'.$r->lab_test_id;
-                })->map(function ($testGroup) use ($report) {
-                    $first = $testGroup->first();
-                    $labTest = $first->labTest;
-
-                    // Sort test results based on the parameter order defined in LabTest
-                    $parameterOrder = [];
-                    if (is_array($labTest->parameters)) {
-                        foreach ($labTest->parameters as $index => $param) {
-                            $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
-                            $parameterOrder[strtolower(trim($paramName))] = $index;
-                        }
-                    }
-
-                    $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
-                        $pName = strtolower(trim($r->parameter_name));
-                        return $parameterOrder[$pName] ?? 999999;
-                    })->values();
-
-                    $itemId = $first->invoice_item_id;
-                    $testId = $first->lab_test_id;
-
-                    // Find the invoice item to get comments
-                    $item = $report->invoice->items->where('id', $itemId)->first();
-                    $remark = '';
-                    if ($item) {
-                        $raw = $item->report_comments;
-                        $decoded = json_decode($raw, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                            // New granular format (JSON keyed by test_id)
-                            $remark = $decoded[$testId] ?? '';
-                        } else {
-                            // Legacy format (String).
-                            // If it's a package, we don't know which test it belongs to,
-                            // but usually it was intended for the whole item, so we show it for all
-                            // or maybe just the last one? Showing for all is safer for not losing data.
-                            $remark = $raw;
-                        }
-                    }
-
-                    return [
-                        'name' => $first->labTest->name,
-                        'labTest' => $first->labTest,
-                        'results' => $testGroup,
-                        'remark' => $remark,
-                    ];
-                }),
-            ];
-        });
 
         // ── Process Outsourced Report ────────────────────────────────────────
         $outsourcedImages = [];
@@ -456,5 +420,50 @@ class ReportPdfController extends Controller
     public function generateNew($reportId, Request $request)
     {
         return $this->download($request, $reportId, 'new');
+    }
+
+    /**
+     * Build a single test group's data array (shared by both grouping modes)
+     */
+    private static function buildTestGroupData($testGroup, $report): array
+    {
+        $first = $testGroup->first();
+        $labTest = $first->labTest;
+
+        // Sort parameters by LabTest-defined order
+        $parameterOrder = [];
+        if (is_array($labTest->parameters)) {
+            foreach ($labTest->parameters as $index => $param) {
+                $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
+                $parameterOrder[strtolower(trim($paramName))] = $index;
+            }
+        }
+
+        $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
+            $pName = strtolower(trim($r->parameter_name));
+            return $parameterOrder[$pName] ?? 999999;
+        })->values();
+
+        $itemId = $first->invoice_item_id;
+        $testId  = $first->lab_test_id;
+
+        $item   = $report->invoice->items->where('id', $itemId)->first();
+        $remark = '';
+        if ($item) {
+            $raw     = $item->report_comments;
+            $decoded = json_decode($raw, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $remark = $decoded[$testId] ?? '';
+            } else {
+                $remark = $raw;
+            }
+        }
+
+        return [
+            'name'    => $first->labTest->name,
+            'labTest' => $first->labTest,
+            'results' => $testGroup,
+            'remark'  => $remark,
+        ];
     }
 }
