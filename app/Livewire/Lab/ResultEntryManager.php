@@ -1023,10 +1023,14 @@ class ResultEntryManager extends Component
         });
 
         // Available machines for simulator (on this company)
+        // Hidden for now to avoid DB error before migration
+        $availableMachines = collect();
+        /*
         $availableMachines = MachineIntegration::where('company_id', $this->invoice->company_id)
             ->where('is_active', true)
             ->select('id', 'name', 'machine_type', 'brand', 'last_seen_at')
             ->get();
+        */
 
         return view('livewire.lab.result-entry-manager', [
             'groupedParams'     => $groupedParams,
