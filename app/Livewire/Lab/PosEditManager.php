@@ -251,6 +251,7 @@ class PosEditManager extends Component
 
             $test = LabTest::find($item->lab_test_id);
             $cartItem = [
+                'invoice_item_id' => $item->id,
                 'id' => $item->lab_test_id,
                 'name' => $item->test_name,
                 'test_code' => $test->test_code ?? '',
@@ -449,6 +450,7 @@ class PosEditManager extends Component
         $test = LabTest::findOrFail($testId);
         if (! collect($this->cart)->contains('id', $test->id)) {
             $cartItem = [
+                'invoice_item_id' => null,
                 'id' => $test->id,
                 'name' => $test->name,
                 'test_code' => $test->test_code,
@@ -1182,17 +1184,19 @@ class PosEditManager extends Component
 
             // Sync invoice items in-place to preserve database IDs (and keep report results linked)
             $existingItems = InvoiceItem::where('invoice_id', $invoice->id)
-                ->whereNotNull('lab_test_id')
                 ->get()
-                ->keyBy('lab_test_id');
+                ->keyBy('id');
 
             $keptItemIds = [];
 
             foreach ($this->cart as $item) {
                 $labTestId = $item['id'];
-                if ($existingItems->has($labTestId)) {
-                    $existingItem = $existingItems->get($labTestId);
+                $itemId = $item['invoice_item_id'] ?? null;
+
+                if ($itemId && $existingItems->has($itemId)) {
+                    $existingItem = $existingItems->get($itemId);
                     $existingItem->update([
+                        'lab_test_id' => $labTestId,
                         'test_name' => $item['name'],
                         'is_package' => $item['is_package'],
                         'mrp' => $item['mrp'],
