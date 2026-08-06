@@ -277,10 +277,10 @@ class ReportPdfController extends Controller
         if ($groupByDept) {
             // DEPARTMENT MODE: group all tests of same dept together
             $groupedResults = $results->groupBy(function ($r) {
-                return $r->labTest->department_id ?? 0;
+                return $r->labTest?->department_id ?? 0;
             })->map(function ($deptGroup) use ($report) {
                 return [
-                    'department' => $deptGroup->first()->labTest->dept ?? null,
+                    'department' => $deptGroup->first()?->labTest?->dept ?? null,
                     'tests' => $deptGroup->groupBy(function ($r) {
                         return $r->invoice_item_id . '_' . $r->lab_test_id;
                     })->map(function ($testGroup) use ($report) {
@@ -292,7 +292,7 @@ class ReportPdfController extends Controller
             // SELECTION ORDER MODE: each invoice_item prints separately in exact selection order
             $groupedResults = $results->groupBy('invoice_item_id')->map(function ($itemGroup) use ($report) {
                 return [
-                    'department' => $itemGroup->first()->labTest->dept ?? null,
+                    'department' => $itemGroup->first()?->labTest?->dept ?? null,
                     'tests' => $itemGroup->groupBy('lab_test_id')->map(function ($testGroup) use ($report) {
                         return self::buildTestGroupData($testGroup, $report);
                     }),
@@ -428,11 +428,11 @@ class ReportPdfController extends Controller
     private static function buildTestGroupData($testGroup, $report): array
     {
         $first = $testGroup->first();
-        $labTest = $first->labTest;
+        $labTest = $first?->labTest;
 
         // Sort parameters by LabTest-defined order
         $parameterOrder = [];
-        if (is_array($labTest->parameters)) {
+        if ($labTest && is_array($labTest->parameters)) {
             foreach ($labTest->parameters as $index => $param) {
                 $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
                 $parameterOrder[strtolower(trim($paramName))] = $index;
@@ -440,12 +440,12 @@ class ReportPdfController extends Controller
         }
 
         $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
-            $pName = strtolower(trim($r->parameter_name));
+            $pName = strtolower(trim($r->parameter_name ?? ''));
             return $parameterOrder[$pName] ?? 999999;
         })->values();
 
-        $itemId = $first->invoice_item_id;
-        $testId  = $first->lab_test_id;
+        $itemId = $first?->invoice_item_id;
+        $testId  = $first?->lab_test_id;
 
         $item   = $report->invoice->items->where('id', $itemId)->first();
         $remark = '';
@@ -460,8 +460,8 @@ class ReportPdfController extends Controller
         }
 
         return [
-            'name'    => $first->labTest->name,
-            'labTest' => $first->labTest,
+            'name'    => $labTest?->name ?? ($first?->parameter_name ?? 'Test'),
+            'labTest' => $labTest,
             'results' => $testGroup,
             'remark'  => $remark,
         ];

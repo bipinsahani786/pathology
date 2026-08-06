@@ -75,10 +75,10 @@ class PdfStorageService
 
         if ($groupByDept) {
             $groupedResults = $results->groupBy(function ($r) {
-                return $r->labTest->department_id ?? 0;
+                return $r->labTest?->department_id ?? 0;
             })->map(function ($deptGroup) use ($report) {
                 return [
-                    'department' => $deptGroup->first()->labTest->dept ?? null,
+                    'department' => $deptGroup->first()?->labTest?->dept ?? null,
                     'tests' => $deptGroup->groupBy(function ($r) {
                         return $r->invoice_item_id . '_' . $r->lab_test_id;
                     })->map(fn($tg) => $this->buildTestGroupData($tg, $report)),
@@ -87,7 +87,7 @@ class PdfStorageService
         } else {
             $groupedResults = $results->groupBy('invoice_item_id')->map(function ($itemGroup) use ($report) {
                 return [
-                    'department' => $itemGroup->first()->labTest->dept ?? null,
+                    'department' => $itemGroup->first()?->labTest?->dept ?? null,
                     'tests' => $itemGroup->groupBy('lab_test_id')->map(fn($tg) => $this->buildTestGroupData($tg, $report)),
                 ];
             });
@@ -102,7 +102,7 @@ class PdfStorageService
             'report' => $report,
             'invoice' => $report->invoice,
             'patient' => $report->invoice->patient,
-            'profile' => $report->invoice->patient->patientProfile,
+            'profile' => $report->invoice->patient?->patientProfile,
             'groupedResults' => $groupedResults,
             'settings' => $settings,
             'company' => $report->invoice->company,
@@ -158,7 +158,7 @@ class PdfStorageService
         $pdf = Pdf::loadView($viewName, [
             'invoice' => $invoice,
             'patient' => $invoice->patient,
-            'profile' => $invoice->patient->patientProfile,
+            'profile' => $invoice->patient?->patientProfile,
             'settings' => $settings,
             'company' => $invoice->company,
             'showHeader' => $settings['pdf_show_header'],
@@ -235,10 +235,10 @@ class PdfStorageService
     private function buildTestGroupData($testGroup, $report): array
     {
         $first = $testGroup->first();
-        $labTest = $first->labTest;
+        $labTest = $first?->labTest;
 
         $parameterOrder = [];
-        if (is_array($labTest->parameters)) {
+        if ($labTest && is_array($labTest->parameters)) {
             foreach ($labTest->parameters as $index => $param) {
                 $paramName = is_array($param) ? ($param['name'] ?? '') : $param;
                 $parameterOrder[strtolower(trim($paramName))] = $index;
@@ -246,11 +246,11 @@ class PdfStorageService
         }
 
         $testGroup = $testGroup->sortBy(function ($r) use ($parameterOrder) {
-            return $parameterOrder[strtolower(trim($r->parameter_name))] ?? 999999;
+            return $parameterOrder[strtolower(trim($r->parameter_name ?? ''))] ?? 999999;
         })->values();
 
-        $itemId = $first->invoice_item_id;
-        $testId = $first->lab_test_id;
+        $itemId = $first?->invoice_item_id;
+        $testId = $first?->lab_test_id;
         $item   = $report->invoice->items->where('id', $itemId)->first();
         $remark = '';
         if ($item) {
@@ -262,9 +262,11 @@ class PdfStorageService
         }
 
         return [
-            'name'    => $first->labTest->name,
-            'labTest' => $first->labTest,
+            'name'    => $labTest?->name ?? ($first?->parameter_name ?? 'Test'),
+            'labTest' => $labTest,
             'results' => $testGroup,
             'remark'  => $remark,
         ];
     }
+}
+
