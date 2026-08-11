@@ -1189,7 +1189,7 @@ class PosEditManager extends Component
 
             $keptItemIds = [];
 
-            foreach ($this->cart as $item) {
+            foreach ($this->cart as $idx => $item) {
                 $labTestId = $item['id'];
                 $itemId = $item['invoice_item_id'] ?? null;
 
@@ -1202,6 +1202,7 @@ class PosEditManager extends Component
                         'mrp' => $item['mrp'],
                         'price' => $item['price'],
                         'b2b_price' => data_get($testPrices->get($labTestId), 'b2b_price', 0),
+                        'sort_order' => $idx,
                     ]);
                     $keptItemIds[] = $existingItem->id;
                 } else {
@@ -1214,6 +1215,7 @@ class PosEditManager extends Component
                         'price' => $item['price'],
                         'b2b_price' => data_get($testPrices->get($labTestId), 'b2b_price', 0),
                         'status' => 'Pending',
+                        'sort_order' => $idx,
                     ]);
                     $keptItemIds[] = $newItem->id;
                 }

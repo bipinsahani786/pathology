@@ -198,8 +198,8 @@
             </div>
             
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                <div class="table-responsive" x-data="resultEntrySortable()" x-init="initSortable($refs.sortableContainer)">
+                    <table class="table table-hover align-middle mb-0" x-ref="sortableContainer">
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 30%">Test Parameter</th>
@@ -209,16 +209,25 @@
                                 <th style="width: 10%" class="text-center">Highlight</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($groupedParams as $dept => $billItems)
-                                {{-- Department Header --}}
-                                <tr>
-                                    <td colspan="5" class="bg-primary text-white py-2 fs-13 fw-bold">
-                                        <i class="feather-layers me-2"></i>{{ strtoupper($dept) }}
-                                    </td>
-                                </tr>
-                                
-                                @foreach($billItems as $itemId => $testsInItem)
+                        @php $currentDept = null; @endphp
+                        @foreach($groupedParams as $itemId => $testsInItem)
+                            @php
+                                $firstTestParams = $testsInItem->first();
+                                $itemDept = $firstTestParams->first()['department'] ?? 'General';
+                            @endphp
+                            
+                            @if($currentDept !== $itemDept)
+                                <tbody class="department-header ignore-sort">
+                                    <tr>
+                                        <td colspan="5" class="bg-primary text-white py-2 fs-13 fw-bold">
+                                            <i class="feather-layers me-2"></i>{{ strtoupper($itemDept) }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                @php $currentDept = $itemDept; @endphp
+                            @endif
+                            
+                            <tbody class="sortable-item" data-id="{{ $itemId }}">
                                     @php
                                         $testItem = $invoice->items->where('id', $itemId)->first();
                                         $isBillItemComplete = $testItem && $testItem->status === 'Completed';
@@ -231,6 +240,11 @@
                                             <td colspan="5" class="bg-soft-primary py-2 fs-12 fw-bold text-dark border-bottom">
                                                 <div class="d-flex align-items-center justify-content-between px-2">
                                                     <div class="d-flex align-items-center">
+                                                        <i class="feather-move drag-handle me-2 text-muted" style="cursor: grab;" title="Drag to reorder"></i>
+                                                        <div class="d-flex flex-column me-2" style="line-height: 1;">
+                                                            <button wire:click="moveTestUp({{ $itemId }})" class="btn btn-link p-0 text-muted" title="Move Up"><i class="feather-chevron-up fs-11"></i></button>
+                                                            <button wire:click="moveTestDown({{ $itemId }})" class="btn btn-link p-0 text-muted" title="Move Down"><i class="feather-chevron-down fs-11"></i></button>
+                                                        </div>
                                                         <input type="checkbox" class="form-check-input me-2" 
                                                                wire:model.live="selectedTests" value="{{ $itemId }}">
                                                         <i class="feather-box text-primary me-2"></i>{{ $billItemName }} (Package)
@@ -283,6 +297,13 @@
                                             <td colspan="5" class="bg-light py-2 fs-12 fw-bold text-dark border-bottom">
                                                 <div class="d-flex align-items-center justify-content-between px-3">
                                                     <div class="d-flex align-items-center">
+                                                        @if(!($testItem->labTest->is_package ?? false))
+                                                            <i class="feather-move drag-handle me-2 text-muted" style="cursor: grab;" title="Drag to reorder"></i>
+                                                            <div class="d-flex flex-column me-2" style="line-height: 1;">
+                                                                <button wire:click="moveTestUp({{ $itemId }})" class="btn btn-link p-0 text-muted" title="Move Up"><i class="feather-chevron-up fs-11"></i></button>
+                                                                <button wire:click="moveTestDown({{ $itemId }})" class="btn btn-link p-0 text-muted" title="Move Down"><i class="feather-chevron-down fs-11"></i></button>
+                                                            </div>
+                                                        @endif
                                                         <input type="checkbox" class="form-check-input me-2" 
                                                                wire:model.live="selectedTests" 
                                                                value="{{ ($testItem->labTest->is_package ?? false) ? $itemId . '_' . $labTestId : $itemId }}">
@@ -579,9 +600,8 @@
                                             </td>
                                         </tr>
                                      @endforeach
-                                 @endforeach
-                             @endforeach
-                        </tbody>
+                            </tbody>
+                        @endforeach
                     </table>
                 </div>
                 
@@ -703,3 +723,28 @@
     @push('scripts')
     @endpush
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('resultEntrySortable', () => ({
+            initSortable(el) {
+                if (typeof Sortable === 'undefined') return;
+                Sortable.create(el, {
+                    draggable: '.sortable-item',
+                    filter: '.ignore-sort',
+                    handle: '.drag-handle',
+                    animation: 150,
+                    onEnd: (evt) => {
+                        let orderedIds = [];
+                        el.querySelectorAll('.sortable-item').forEach(tbody => {
+                            let id = tbody.getAttribute('data-id');
+                            if (id) orderedIds.push(id);
+                        });
+                        @this.call('updateTestOrder', orderedIds);
+                    }
+                });
+            }
+        }));
+    });
+</script>

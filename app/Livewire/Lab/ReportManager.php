@@ -71,6 +71,68 @@ class ReportManager extends Component
     public $outsourcedCropBottom = 5;
     public $uploadedOutsourcedPdfs = [];
 
+    // Reorder Modal
+    public $isReorderModalOpen = false;
+    public $reorderInvoiceId = null;
+    public $reorderItems = [];
+
+    public function openReorderModal($invoiceId)
+    {
+        $this->authorize('edit reports');
+        $this->reorderInvoiceId = $invoiceId;
+        $this->loadReorderItems();
+        $this->isReorderModalOpen = true;
+    }
+
+    public function closeReorderModal()
+    {
+        $this->isReorderModalOpen = false;
+        $this->reorderInvoiceId = null;
+        $this->reorderItems = [];
+    }
+
+    private function loadReorderItems()
+    {
+        if ($this->reorderInvoiceId) {
+            $items = \App\Models\InvoiceItem::with('labTest')
+                ->where('invoice_id', $this->reorderInvoiceId)
+                ->orderBy('sort_order', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+            $this->reorderItems = $items->toArray();
+        }
+    }
+
+    public function moveReorderItemUp($index)
+    {
+        $this->authorize('edit reports');
+        if ($index > 0) {
+            $temp = $this->reorderItems[$index - 1];
+            $this->reorderItems[$index - 1] = $this->reorderItems[$index];
+            $this->reorderItems[$index] = $temp;
+            $this->saveReorderItems();
+        }
+    }
+
+    public function moveReorderItemDown($index)
+    {
+        $this->authorize('edit reports');
+        if ($index < count($this->reorderItems) - 1) {
+            $temp = $this->reorderItems[$index + 1];
+            $this->reorderItems[$index + 1] = $this->reorderItems[$index];
+            $this->reorderItems[$index] = $temp;
+            $this->saveReorderItems();
+        }
+    }
+
+    private function saveReorderItems()
+    {
+        foreach ($this->reorderItems as $idx => $itemData) {
+            \App\Models\InvoiceItem::where('id', $itemData['id'])->update(['sort_order' => $idx]);
+            $this->reorderItems[$idx]['sort_order'] = $idx;
+        }
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -130,7 +192,10 @@ class ReportManager extends Component
 
     public function printCompleted($invoiceId, $withHeader = 1)
     {
-        $items = \App\Models\InvoiceItem::where('invoice_id', $invoiceId)->get();
+        $items = \App\Models\InvoiceItem::where('invoice_id', $invoiceId)
+                    ->orderBy('sort_order', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->get();
         $completedTestIds = [];
         
         foreach ($items as $item) {
