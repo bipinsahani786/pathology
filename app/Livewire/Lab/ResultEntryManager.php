@@ -363,8 +363,10 @@ class ResultEntryManager extends Component
             }
         }
 
-        $this->autoCalculateFormulas();
-        $this->autoEvaluateRanges();
+        $targetItemId = $param ? $param['invoice_item_id'] : null;
+        
+        $this->autoCalculateFormulas($targetItemId);
+        $this->autoEvaluateRanges($targetItemId);
 
         if ($param) {
             $this->autoUpdateTestStatus($param['invoice_item_id']);
@@ -383,12 +385,13 @@ class ResultEntryManager extends Component
         }
     }
 
-    private function autoCalculateFormulas()
+    private function autoCalculateFormulas($targetItemId = null)
     {
         // Group parameters by invoice_item_id to isolate calculation scope
         $groupedParams = [];
         foreach ($this->parametersList as $k => $p) {
             $itemId = $p['invoice_item_id'];
+            if ($targetItemId && $itemId != $targetItemId) continue;
             $groupedParams[$itemId][$k] = $p;
         }
 
@@ -411,6 +414,28 @@ class ResultEntryManager extends Component
                     }
 
                     $formula = strtoupper($p['formula']);
+                    
+                    // Check if all dependent variables are empty
+                    preg_match_all('/\{([A-Z0-9_]+)\}/', $formula, $matches);
+                    $dependentVars = $matches[1] ?? [];
+                    $allEmpty = true;
+                    if (count($dependentVars) > 0) {
+                        foreach ($params as $subK => $subP) {
+                            if (!empty($subP['short_code']) && in_array(strtoupper($subP['short_code']), $dependentVars)) {
+                                if (isset($this->results[$subK]) && $this->results[$subK] !== '') {
+                                    $allEmpty = false;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        $allEmpty = false; // No variables, just constants
+                    }
+                    
+                    if ($allEmpty && count($dependentVars) > 0) {
+                        $this->results[$k] = ''; // Reset if all inputs are empty
+                        continue;
+                    }
 
                     // Clean up formula for ExpressionLanguage by removing braces {CODE} -> CODE
                     $formula = preg_replace('/\{([A-Z0-9_]+)\}/', '$1', $formula);
@@ -470,7 +495,7 @@ class ResultEntryManager extends Component
         return true;
     }
 
-    private function autoEvaluateRanges()
+    private function autoEvaluateRanges($targetItemId = null)
     {
         foreach ($this->results as $key => $val) {
             if ($val === '') {
@@ -480,6 +505,10 @@ class ResultEntryManager extends Component
             }
 
             if (! isset($this->parametersList[$key])) {
+                continue;
+            }
+
+            if ($targetItemId && $this->parametersList[$key]['invoice_item_id'] != $targetItemId) {
                 continue;
             }
 
@@ -1013,13 +1042,75 @@ class ResultEntryManager extends Component
 
     // ════════════════════════════════════════════════════════════
 
+    public function updateTestOrder($orderedIds)
+    {
+        $this->authorize('edit reports');
+        foreach ($orderedIds as $index => $id) {
+            \App\Models\InvoiceItem::where('id', $id)->update(['sort_order' => $index]);
+        }
+        $this->invoice->load('items');
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Test order updated successfully.']);
+    }
+
+    public function moveTestUp($itemId)
+    {
+        $this->reorderItem($itemId, 'up');
+    }
+
+    public function moveTestDown($itemId)
+    {
+        $this->reorderItem($itemId, 'down');
+    }
+
+    private function reorderItem($itemId, $direction)
+    {
+        $this->authorize('edit reports');
+        $items = $this->invoice->items()->orderBy('sort_order')->orderBy('id')->get();
+        
+        $currentIndex = $items->search(fn($item) => $item->id == $itemId);
+        if ($currentIndex === false) return;
+        
+        $targetIndex = $direction === 'up' ? $currentIndex - 1 : $currentIndex + 1;
+        
+        if ($targetIndex >= 0 && $targetIndex < $items->count()) {
+            $currentItem = $items[$currentIndex];
+            $targetItem = $items[$targetIndex];
+            
+            // Re-index all if there are duplicate sort_orders
+            if ($currentItem->sort_order === $targetItem->sort_order) {
+                foreach ($items as $index => $item) {
+                    $item->sort_order = $index;
+                    $item->save();
+                }
+                // Refresh local objects
+                $currentItem->refresh();
+                $targetItem->refresh();
+            }
+            
+            // Swap
+            $temp = $currentItem->sort_order;
+            $currentItem->sort_order = $targetItem->sort_order;
+            $targetItem->sort_order = $temp;
+            $currentItem->save();
+            $targetItem->save();
+            
+            $this->invoice->load('items');
+        }
+    }
+
     public function render()
     {
-        // Group parameters by Department -> Invoice Item (Bill Line) -> Lab Test (Actual Test Name)
-        $groupedParams = collect($this->parametersList)->groupBy('department')->map(function ($items) {
-            return collect($items)->groupBy('invoice_item_id')->map(function ($testGroup) {
-                return collect($testGroup)->groupBy('lab_test_id');
-            });
+        // Group parameters by Invoice Item (Bill Line) -> Lab Test (Actual Test Name)
+        // Since parametersList might retain its original PHP array order across Livewire requests,
+        // we explicitly sort it based on the current sorted order of invoice->items.
+        $itemOrder = $this->invoice->items->pluck('id')->toArray();
+        $sortedParams = collect($this->parametersList)->sortBy(function ($param) use ($itemOrder) {
+            $idx = array_search($param['invoice_item_id'], $itemOrder);
+            return $idx === false ? 99999 : $idx;
+        });
+
+        $groupedParams = $sortedParams->groupBy('invoice_item_id')->map(function ($testGroup) {
+            return collect($testGroup)->groupBy('lab_test_id');
         });
 
         // Available machines for simulator (on this company)

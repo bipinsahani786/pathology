@@ -1256,7 +1256,7 @@ class PosManager extends Component
                 ]);
             }
 
-            foreach ($this->cart as $item) {
+            foreach ($this->cart as $idx => $item) {
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'lab_test_id' => $item['id'],
@@ -1265,6 +1265,7 @@ class PosManager extends Component
                     'mrp' => $item['mrp'],
                     'price' => $item['mrp'],
                     'b2b_price' => data_get($testPrices->get($item['id']), 'b2b_price', 0),
+                    'sort_order' => $idx,
                 ]);
             }
 

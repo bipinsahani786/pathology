@@ -344,6 +344,10 @@
                                                                  <i class="feather-upload-cloud"></i>
                                                              </button>
                                                          @endif
+
+                                                         <button type="button" wire:click="openReorderModal({{ $invoice->id }})" class="action-btn action-btn-info" title="Reorder Tests">
+                                                             <i class="feather-move"></i>
+                                                         </button>
                                                      @endcan
                                                      
                                                       @if($invoice->testReport && $invoice->testReport->status === 'Draft')
@@ -379,6 +383,7 @@
                                                              @if(auth()->user()->company->plan?->features['enable_outsourcing'] ?? false)
                                                                  <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="openOutsourcedModal({{ $invoice->id }})"><i class="{{ !empty($invoice->testReport->outsourced_pdf_path) ? 'feather-crop' : 'feather-upload-cloud' }} me-2 text-warning"></i> {{ !empty($invoice->testReport->outsourced_pdf_path) ? 'Edit Outsourced PDF' : 'Upload Outsourced PDF' }}</button></li>
                                                              @endif
+                                                             <li><button type="button" class="dropdown-item fs-12 py-2 text-nowrap" wire:click="openReorderModal({{ $invoice->id }})"><i class="feather-move me-2 text-info"></i> Reorder Tests</button></li>
                                                          @endcan
                                                          @if(auth()->user()->can('edit invoices') || (auth()->user()->collection_center_id && $invoice->collection_center_id === auth()->user()->collection_center_id))
                                                              <li><a class="dropdown-item fs-12 py-2 text-nowrap" href="{{ route('lab.invoice.edit', $invoice->id) }}" wire:navigate><i class="feather-edit-3 me-2 text-warning"></i> Modify Invoice</a></li>
@@ -584,6 +589,58 @@
                             <span wire:loading.remove wire:target="saveOutsourcedReport"><i class="feather-check me-2"></i>Generate & Download</span>
                             <span wire:loading wire:target="saveOutsourcedReport"><i class="spinner-border spinner-border-sm me-2"></i>Processing...</span>
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Reorder Tests Modal --}}
+    @if($isReorderModalOpen)
+        <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg overflow-hidden">
+                    <div class="modal-header bg-soft-info border-bottom-0 pb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white p-2 rounded-3 shadow-sm me-3">
+                                <i class="feather-move text-info fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-1">Reorder Tests</h5>
+                                <p class="text-muted fs-12 mb-0">Change the print order of tests for this invoice.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close shadow-none" wire:click="closeReorderModal"></button>
+                    </div>
+                    <div class="modal-body bg-light p-3">
+                        @if(count($reorderItems) > 0)
+                            <div class="list-group list-group-flush shadow-sm rounded-3">
+                                @foreach($reorderItems as $index => $item)
+                                    <div class="list-group-item d-flex align-items-center justify-content-between p-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="feather-hash text-muted me-2 fs-12"></i>
+                                            <span class="fw-bold fs-12 text-dark">{{ $item['lab_test']['name'] ?? 'Unknown Test' }}</span>
+                                        </div>
+                                        <div class="d-flex flex-column bg-light rounded-1" style="line-height: 1;">
+                                            <button type="button" class="btn btn-link p-0 text-muted" wire:click="moveReorderItemUp({{ $index }})" {{ $index === 0 ? 'disabled' : '' }}>
+                                                <i class="feather-chevron-up fs-11"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-link p-0 text-muted" wire:click="moveReorderItemDown({{ $index }})" {{ $index === count($reorderItems) - 1 ? 'disabled' : '' }}>
+                                                <i class="feather-chevron-down fs-11"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center text-muted p-4">
+                                <i class="feather-inbox fs-1 mb-2 d-block"></i>
+                                <p class="mb-0 fs-12">No tests found for this invoice.</p>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 bg-light">
+                        <button type="button" class="btn btn-primary fw-bold w-100" wire:click="closeReorderModal">Done</button>
                     </div>
                 </div>
             </div>

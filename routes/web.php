@@ -35,6 +35,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+
 // ==========================================
 // MACHINE INTEGRATION API (Token-Secured)
 // No session/auth middleware — uses Bearer token
