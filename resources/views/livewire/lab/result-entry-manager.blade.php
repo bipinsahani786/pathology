@@ -520,17 +520,28 @@
                                                      </td>
                                                  </tr>
                                              @elseif(($p['input_type'] ?? 'numeric') === 'heading')
-                                                 {{-- ── Group Heading / Section Separator Row ── --}}
-                                                 <tr wire:key="param-{{ $paramKey }}" class="table-secondary">
-                                                     <td colspan="5" class="fw-bold fs-12 ps-3 py-2" 
-                                                         style="background: #e8eeff; border-top: 2px solid #b0bfff; border-bottom: 1px solid #b0bfff; letter-spacing: 0.03em;">
-                                                         <i class="feather-layers me-2 text-primary" style="font-size: 12px;"></i>
-                                                         <span class="text-dark">{{ strtoupper($p['name']) }}</span>
-                                                     </td>
-                                                 </tr>
+                                                 @if(trim($p['name']) === '')
+                                                     {{-- ── Group End Row ── --}}
+                                                     @php $inGroup = false; @endphp
+                                                     <tr wire:key="param-{{ $paramKey }}" class="table-borderless">
+                                                         <td colspan="5" class="text-center py-2 text-muted fs-11" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #ffffff 10px, #ffffff 20px); border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
+                                                             <i class="feather-corner-down-left me-1"></i> <i>Group Closed</i>
+                                                         </td>
+                                                     </tr>
+                                                 @else
+                                                     {{-- ── Group Heading / Section Separator Row ── --}}
+                                                     @php $inGroup = true; @endphp
+                                                     <tr wire:key="param-{{ $paramKey }}" class="table-secondary">
+                                                         <td colspan="5" class="fw-bold fs-12 ps-3 py-2" 
+                                                             style="background: #e8eeff; border-top: 2px solid #b0bfff; border-bottom: 1px solid #b0bfff; letter-spacing: 0.03em;">
+                                                             <i class="feather-layers me-2 text-primary" style="font-size: 12px;"></i>
+                                                             <span class="text-dark">{{ strtoupper($p['name']) }}</span>
+                                                         </td>
+                                                     </tr>
+                                                 @endif
                                              @else
                                                  <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
-                                                     <td class="fw-bold fs-12 ps-4">
+                                                     <td class="fw-bold fs-12 {{ isset($inGroup) && $inGroup ? 'ps-5' : 'ps-3' }}">
                                                          <div class="d-flex align-items-center">
                                                              {{ $p['name'] }}
                                                              @if($isHigh)

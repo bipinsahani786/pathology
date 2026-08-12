@@ -467,13 +467,21 @@
                             @endif
                         </td>
                     </tr>
+                    @php $inGroup = false; @endphp
                     @foreach($results as $r)
                         @php
                             // Detect sub-header/heading: empty result_value AND empty reference_range
                             $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
-                                && (is_null($r->reference_range) || trim($r->reference_range) === '');
+                                && (is_null($r->reference_range) || trim($r->reference_range) === '')
+                                && empty($r->culture_data);
+                            $isEmptyHeading = $isSubHeader && trim($r->parameter_name) === '';
                         @endphp
-                        @if($isSubHeader)
+                        
+                        @if($isEmptyHeading)
+                            @php $inGroup = false; @endphp
+                            {{-- Do not render anything for Group End --}}
+                        @elseif($isSubHeader)
+                            @php $inGroup = true; @endphp
                             {{-- ── Group Heading / Sub-Header Row ── --}}
                             <tr>
                                 <td colspan="4" 
@@ -566,7 +574,7 @@
                             </tr>
                         @else
                             <tr>
-                                <td style="padding-left: 15px;">
+                                <td style="padding-left: {{ $inGroup ? '25px' : '10px' }};">
                                     <div>{{ $r->parameter_name }}</div>
                                     @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
                                         <div style="font-size: 8px; color: #777; font-style: italic;">Method: {{ $r->method }}</div>
