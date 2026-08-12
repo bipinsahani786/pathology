@@ -519,6 +519,15 @@
                                                          </div>
                                                      </td>
                                                  </tr>
+                                             @elseif(($p['input_type'] ?? 'numeric') === 'heading')
+                                                 {{-- ── Group Heading / Section Separator Row ── --}}
+                                                 <tr wire:key="param-{{ $paramKey }}" class="table-secondary">
+                                                     <td colspan="5" class="fw-bold fs-12 ps-3 py-2" 
+                                                         style="background: #e8eeff; border-top: 2px solid #b0bfff; border-bottom: 1px solid #b0bfff; letter-spacing: 0.03em;">
+                                                         <i class="feather-layers me-2 text-primary" style="font-size: 12px;"></i>
+                                                         <span class="text-dark">{{ strtoupper($p['name']) }}</span>
+                                                     </td>
+                                                 </tr>
                                              @else
                                                  <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
                                                      <td class="fw-bold fs-12 ps-4">

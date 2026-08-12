@@ -107,7 +107,10 @@
                                 <th>Patient Details</th>
                                 <th>Date & Time</th>
                                 <th class="text-end">Bill Amount</th>
-                                <th class="text-end text-success">My Profit</th>
+                                @if($showPaymentDistribution)
+                                <th style="width: 200px;">Payment Distribution</th>
+                                @endif
+                                <th class="text-end text-success">Total Profit</th>
                                 <th class="text-end text-danger">Due</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-end pe-4">Actions</th>
@@ -146,7 +149,94 @@
                                         <div class="fs-11 text-muted">{{ $invDate->format('h:i A') }}</div>
                                     </td>
                                     <td class="text-end fw-bold text-dark">₹{{ number_format($inv->total_amount, 2) }}</td>
-                                    <td class="text-end fw-bold text-success">₹{{ number_format($this->role === 'Collection Center' ? $inv->cc_profit_amount : ($this->role === 'Doctor' ? $inv->doctor_commission_amount : $inv->agent_commission_amount), 2) }}</td>
+                                    @php
+                                        $profitAmount = $this->role === 'Collection Center'
+                                            ? $inv->cc_profit_amount
+                                            : ($this->role === 'Doctor' ? $inv->doctor_commission_amount : $inv->agent_commission_amount);
+
+                                        // Build per-test breakdown
+                                        $breakdownRows = [];
+                                        $cartTotal = $inv->items->where('lab_test_id', '!=', null)->sum('price');
+                                        foreach ($inv->items->where('lab_test_id', '!=', null) as $it) {
+                                            $ratio = $cartTotal > 0 ? ($it->price / $cartTotal) : 0;
+                                            $effPrice = round($inv->total_amount * $ratio, 2);
+                                            $testComm = $cartTotal > 0 ? round($profitAmount * ($it->price / $cartTotal), 2) : 0;
+                                            $breakdownRows[] = [
+                                                'name' => $it->labTest->name ?? $it->test_name ?? 'Test',
+                                                'price' => $it->price,
+                                                'eff' => $effPrice,
+                                                'comm' => $testComm,
+                                            ];
+                                        }
+                                        $bId = 'bp-'.$inv->id;
+                                    @endphp
+                                    @if($showPaymentDistribution)
+                                    <td class="fs-12" style="min-width: 240px;">
+                                        @php
+                                            $basisGuess = 'Gross';
+                                            $netPool = max(0, $inv->total_amount - $inv->total_b2b_amount);
+                                            if ($inv->total_b2b_amount > 0 && $profitAmount > 0) {
+                                                $grossPct = ($inv->total_amount > 0) ? ($profitAmount / $inv->total_amount) * 100 : 0;
+                                                $netPct = ($netPool > 0) ? ($profitAmount / $netPool) * 100 : 0;
+                                                
+                                                $grossDiff = abs(round($grossPct) - $grossPct);
+                                                $netDiff = abs(round($netPct) - $netPct);
+                                                
+                                                if ($netDiff < 0.05 && $grossDiff >= 0.05) {
+                                                    $basisGuess = 'Profit';
+                                                } elseif ($grossDiff < 0.05 && $netDiff >= 0.05) {
+                                                    $basisGuess = 'Gross';
+                                                } elseif ($netDiff < $grossDiff) {
+                                                    $basisGuess = 'Profit';
+                                                }
+                                            }
+                                        @endphp
+                                    
+                                        <div class="d-flex justify-content-between mb-1 text-dark">
+                                            <span>Bill Amount:</span>
+                                            <span class="fw-bold">₹{{ number_format($inv->total_amount, 2) }}</span>
+                                        </div>
+                                        
+                                        @if($inv->total_b2b_amount > 0)
+                                            @if($basisGuess === 'Profit')
+                                                <div class="d-flex justify-content-between mb-1 text-muted" style="font-size: 11px;">
+                                                    <span>- Lab Base (B2B):</span>
+                                                    <span>₹{{ number_format($inv->total_b2b_amount, 2) }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-1 text-muted border-top border-light pt-1" style="font-size: 11px;">
+                                                    <span>= Net Profit Pool:</span>
+                                                    <span class="fw-bold">₹{{ number_format($netPool, 2) }}</span>
+                                                </div>
+                                            @else
+                                                <div class="d-flex justify-content-between mb-1 text-muted" style="font-size: 11px;">
+                                                    <span title="Lab's fixed base cost for these tests">Base (B2B) Info:</span>
+                                                    <span>₹{{ number_format($inv->total_b2b_amount, 2) }}</span>
+                                                </div>
+                                            @endif
+                                        @endif
+                                        
+                                        <div class="d-flex justify-content-between mb-1 text-success mt-2">
+                                            <span>Your Profit <small class="text-muted" style="font-size:9px;">(on {{ $basisGuess }})</small>:</span>
+                                            <span class="fw-bold">₹{{ number_format($profitAmount, 2) }}</span>
+                                        </div>
+                                        
+                                        @php
+                                            $labNetProfit = max(0, $inv->total_amount - ($inv->total_b2b_amount > 0 ? $inv->total_b2b_amount : 0) - $profitAmount);
+                                        @endphp
+                                        <div class="d-flex justify-content-between mb-1 text-primary">
+                                            <span>Lab Net Profit:</span>
+                                            <span>₹{{ number_format($labNetProfit, 2) }}</span>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between border-top border-light pt-1 mt-1 text-primary" style="font-size: 11px;">
+                                            <span>Total Lab Share:</span>
+                                            <span class="fw-bold">₹{{ number_format($inv->total_amount - $profitAmount, 2) }}</span>
+                                        </div>
+                                    </td>
+                                    @endif
+                                    <td class="text-end fw-bold text-success fs-14 bg-soft-success bg-opacity-50">
+                                        ₹{{ number_format($profitAmount, 2) }}
+                                    </td>
                                     <td class="text-end fw-bold text-danger">₹{{ number_format($inv->due_amount, 2) }}</td>
                                     <td class="text-center">
                                         @php
@@ -334,5 +424,30 @@
         .shadowed { box-shadow: 0 4px 10px rgba(59, 113, 202, 0.3) !important; }
         .page-link:hover { background-color: #f8f9fa; color: #3b71ca; }
         .active .page-link:hover { color: #fff; }
+        .border-dashed { border-style: dashed !important; }
     </style>
+
+    <script>
+        function initPopovers() {
+            // Destroy existing popovers first
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                const existing = bootstrap.Popover.getInstance(el);
+                if (existing) existing.dispose();
+                new bootstrap.Popover(el, { sanitize: false });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initPopovers);
+        document.addEventListener('livewire:update', initPopovers);
+
+        // Close popover when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('[data-bs-toggle="popover"]') && !e.target.closest('.popover')) {
+                document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+                    const p = bootstrap.Popover.getInstance(el);
+                    if (p) p.hide();
+                });
+            }
+        });
+    </script>
 </div>
