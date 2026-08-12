@@ -825,13 +825,18 @@
                         </thead>
                     @endif
                     <tbody>
-                        @php $hasSubHeaders = false; @endphp
+                        @php 
+                            $inGroup = false; 
+                        @endphp
 
                         @foreach($results as $r)
                             @php
                                 // Detect sub-header: no result value AND no reference range
                                 $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
-                                    && (is_null($r->reference_range) || trim($r->reference_range) === '');
+                                    && (is_null($r->reference_range) || trim($r->reference_range) === '')
+                                    && empty($r->culture_data);
+                                    
+                                $isEmptyHeading = $isSubHeader && trim($r->parameter_name) === '';
 
                                 // Determine flag
                                 $flag = null;
@@ -848,8 +853,12 @@
                                 $isAbnormal = $r->is_highlighted;
                             @endphp
 
-                            @if($isSubHeader)
-                                {{-- ── Sub-Header Row ── --}}
+                            @if($isEmptyHeading)
+                                @php $inGroup = false; @endphp
+                                {{-- Do not render anything for Group End --}}
+                            @elseif($isSubHeader)
+                                @php $inGroup = true; @endphp
+                                {{-- ── Sub Header Row ── --}}
                                 @php $hasSubHeaders = true; @endphp
                                 <tr class="sub-hdr">
                                     <td colspan="5">{{ strtoupper($r->parameter_name) }}</td>
@@ -956,7 +965,7 @@
                                     </tr>
                                 @else
                                     {{-- ── Parameter Row ── --}}
-                                    <tr class="{{ $hasSubHeaders ? 'param-indent' : '' }}">
+                                    <tr class="{{ $inGroup ? 'param-indent' : '' }}">
                                         <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
                                             {{ strtoupper($r->parameter_name) }}
                                             @if(($settings['pdf_show_test_method'] ?? true) && $r->method)

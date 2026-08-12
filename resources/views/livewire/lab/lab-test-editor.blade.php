@@ -155,6 +155,7 @@
                                                                 wire:model="parameters.{{ $index }}.name" 
                                                                 placeholder="e.g. Differential Leukocyte Count">
                                                         </div>
+                                                        <div class="fs-10 text-muted mt-1 ms-5"><i class="feather-info me-1"></i>Leave empty to use as a <b>"Group End"</b> separator (stops indentation).</div>
                                                     </td>
                                                     <td class="py-2">
                                                         <span class="text-muted fs-11"><i class="feather-minus"></i> (no config)</span>
