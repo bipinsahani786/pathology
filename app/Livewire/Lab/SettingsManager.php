@@ -68,6 +68,8 @@ class SettingsManager extends Component
 
     public $commission_basis_agent = 'gross';
 
+    public $partner_show_payment_distribution = true;
+
     public $restrict_unpaid_reports = false;
 
     // Invoice Print & Layout Settings
@@ -397,6 +399,7 @@ class SettingsManager extends Component
         $this->restrict_unpaid_reports = Configuration::getFor('restrict_unpaid_reports', '0', $company->id, $branchId) === '1';
         $this->commission_basis_doctor = Configuration::getFor('commission_basis_doctor', 'gross', $company->id, $branchId);
         $this->commission_basis_agent = Configuration::getFor('commission_basis_agent', 'gross', $company->id, $branchId);
+        $this->partner_show_payment_distribution = Configuration::getFor('partner_show_payment_distribution', '1', $company->id, $branchId) === '1';
         $this->bill_template = Configuration::getFor('bill_template', 'classic', $company->id, $branchId);
 
         // Invoice Print Layout (with fallback to pdf_ report equivalents for backward compatibility)
@@ -618,6 +621,7 @@ class SettingsManager extends Component
         Configuration::setFor('restrict_unpaid_reports', $this->restrict_unpaid_reports ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('commission_basis_doctor', $this->commission_basis_doctor, $companyId, $branchId);
         Configuration::setFor('commission_basis_agent', $this->commission_basis_agent, $companyId, $branchId);
+        Configuration::setFor('partner_show_payment_distribution', $this->partner_show_payment_distribution ? '1' : '0', $companyId, $branchId);
 
         $hasCustomInvoice = auth()->user()->company->plan?->features['custom_invoice'] ?? false;
         if (!$hasCustomInvoice) {

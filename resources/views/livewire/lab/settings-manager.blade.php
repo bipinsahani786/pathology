@@ -581,6 +581,19 @@
                                             </div>
                                             <div class="col-12 mt-3">
                                                 <div class="d-flex align-items-center justify-content-between p-2 rounded-3 mb-2"
+                                                    style="background:rgba(25,135,84,0.05);">
+                                                    <div>
+                                                        <div class="fw-bold fs-12 text-dark"><i
+                                                                class="feather-eye text-success me-2"></i>Show Payment Distribution to Partners</div>
+                                                        <div class="fs-11 text-muted mt-1">If enabled, doctors and agents will see a detailed breakdown of B2B cuts and Net Profit pools on their invoices. If disabled, they only see their Final Profit amount.</div>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            wire:model.live="partner_show_payment_distribution"
+                                                            style="width:2.5em;height:1.25em;">
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 mb-2"
                                                     style="background:rgba(59,113,202,0.05);">
                                                     <div>
                                                         <div class="fw-bold fs-12 text-dark"><i

@@ -468,7 +468,20 @@
                         </td>
                     </tr>
                     @foreach($results as $r)
-                        @if(!empty($r->culture_data))
+                        @php
+                            // Detect sub-header/heading: empty result_value AND empty reference_range
+                            $isSubHeader = (is_null($r->result_value) || trim($r->result_value) === '')
+                                && (is_null($r->reference_range) || trim($r->reference_range) === '');
+                        @endphp
+                        @if($isSubHeader)
+                            {{-- ── Group Heading / Sub-Header Row ── --}}
+                            <tr>
+                                <td colspan="4" 
+                                    style="padding: 5px 8px 3px 10px; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #1a1a1a; border-bottom: 1px solid #ccc; background: #f5f5f5;">
+                                    {{ strtoupper($r->parameter_name) }}
+                                </td>
+                            </tr>
+                        @elseif(!empty($r->culture_data))
                             {{-- ── Culture & Sensitivity Spanned Row ── --}}
                             <tr>
                                 <td colspan="4" style="padding: 12px 8px; border-bottom: 1px dashed #eee;">

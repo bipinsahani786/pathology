@@ -50,7 +50,7 @@ class PartnerInvoiceManager extends Component
     public function render()
     {
         $user = Auth::user();
-        $query = Invoice::with(['patient'])->where('status', '!=', 'Cancelled');
+        $query = Invoice::with(['patient', 'items.labTest'])->where('status', '!=', 'Cancelled');
 
         if ($this->role === 'Doctor') {
             $query->where('referred_by_doctor_id', $user->id);
@@ -110,8 +110,12 @@ class PartnerInvoiceManager extends Component
             $this->stats['today_profit'] = (clone $statsQuery)->whereDate('invoice_date', today())->sum('agent_commission_amount');
         }
 
+        // Fetch the distribution visibility setting
+        $showPaymentDistribution = \App\Models\Configuration::getFor('partner_show_payment_distribution', '1', $user->company_id, $user->branch_id) === '1';
+
         return view('livewire.partner.partner-invoice-manager', [
             'invoices' => $query->latest()->paginate($this->perPage),
+            'showPaymentDistribution' => $showPaymentDistribution,
         ]);
     }
 

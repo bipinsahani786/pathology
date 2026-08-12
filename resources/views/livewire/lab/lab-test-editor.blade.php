@@ -98,9 +98,14 @@
                                     <h6 class="fw-bold text-dark mb-0">Report Parameters</h6>
                                     <p class="fs-11 text-muted mb-0">Define fields that will appear on the final report.</p>
                                 </div>
-                                <button type="button" wire:click="addParameter" class="btn btn-soft-primary btn-sm px-3 rounded-pill">
-                                    <i class="feather-plus me-1"></i>Add Field
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" wire:click="addHeading" class="btn btn-soft-secondary btn-sm px-3 rounded-pill">
+                                        <i class="feather-type me-1"></i>Add Heading
+                                    </button>
+                                    <button type="button" wire:click="addParameter" class="btn btn-soft-primary btn-sm px-3 rounded-pill">
+                                        <i class="feather-plus me-1"></i>Add Field
+                                    </button>
+                                </div>
                             </div>
 
                             {{-- Desktop Table (hidden on small screens) --}}
@@ -119,62 +124,93 @@
                                         </tr>
                                     </thead>
                                     <tbody id="parameters-list" 
-                                        x-data="{
-                                            init() {
-                                                new Sortable(this.$el, {
-                                                    handle: '.drag-handle',
-                                                    animation: 150,
-                                                    onEnd: (evt) => {
-                                                        let order = Array.from(this.$el.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
-                                                        @this.reorderParameters(order);
-                                                    }
-                                                });
-                                            }
-                                        }">
+                                         x-data="{}"
+                                         x-init="
+                                             const el = $el;
+                                             new Sortable(el, {
+                                                 handle: '.drag-handle',
+                                                 animation: 150,
+                                                 onEnd: (evt) => {
+                                                     let order = Array.from(el.querySelectorAll('tr[data-id]')).map(tr => tr.getAttribute('data-id')).filter(Boolean);
+                                                     $wire.reorderParameters(order);
+                                                 }
+                                             });
+                                         ">
                                         @foreach($parameters as $index => $param)
-                                            <tr wire:key="param-d-{{ $index }}" data-id="{{ $index }}" class="border-bottom border-white">
-                                                <td class="ps-3 py-2">
-                                                    <div class="drag-handle text-muted cursor-move" style="cursor: grab;">
-                                                        <i class="feather-grid fs-6"></i>
-                                                    </div>
-                                                </td>
-                                                <td class="py-2">
-                                                    <input type="text" class="form-control form-control-sm @error('parameters.' . $index . '.name') is-invalid @enderror" 
-                                                        wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
-                                                        style="border: 1px solid #0d6efd; color: #0d6efd; min-width: 60px;"
-                                                        wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control form-control-sm" 
-                                                        wire:model="parameters.{{ $index }}.method" placeholder="Method">
-                                                </td>
-                                                <td>
-                                                    <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
-                                                        <option value="numeric">Numerical</option>
-                                                        <option value="text">Text/Qualitative</option>
-                                                        <option value="selection">Dropdown List</option>
-                                                        <option value="calculated">Formula</option>
-                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <input type="text" class="form-control form-control-sm" style="width: 80px;" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
-                                                        <button type="button" wire:click="openRangeModal({{ $index }})" 
-                                                            class="btn btn-sm {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} flex-grow-1 py-1 rounded-pill">
-                                                            <i class="feather-settings me-1"></i>Config
+                                            @if(($param['input_type'] ?? 'numeric') === 'heading')
+                                                {{-- ── Heading / Group Row ── --}}
+                                                <tr wire:key="param-d-{{ $index }}" data-id="{{ $index }}" 
+                                                    class="border-bottom border-white" style="background: #f0f4ff;">
+                                                    <td class="ps-3 py-2">
+                                                        <div class="drag-handle text-muted cursor-move" style="cursor: grab;">
+                                                            <i class="feather-grid fs-6"></i>
+                                                        </div>
+                                                    </td>
+                                                    <td colspan="4" class="py-2 ps-2">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="badge bg-secondary rounded-pill fs-10" style="white-space:nowrap;">HEADING</span>
+                                                            <input type="text" 
+                                                                class="form-control form-control-sm fw-bold @error('parameters.' . $index . '.name') is-invalid @enderror" 
+                                                                style="border: 1px solid #6c757d; background: #eef2ff;"
+                                                                wire:model="parameters.{{ $index }}.name" 
+                                                                placeholder="e.g. Differential Leukocyte Count">
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-2">
+                                                        <span class="text-muted fs-11"><i class="feather-minus"></i> (no config)</span>
+                                                    </td>
+                                                    <td class="text-end pe-3">
+                                                        <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
+                                                            <i class="feather-trash-2"></i>
                                                         </button>
-                                                    </div>
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
-                                                        <i class="feather-trash-2"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                </tr>
+                                            @else
+                                                {{-- ── Normal Parameter Row ── --}}
+                                                <tr wire:key="param-d-{{ $index }}" data-id="{{ $index }}" class="border-bottom border-white">
+                                                    <td class="ps-3 py-2">
+                                                        <div class="drag-handle text-muted cursor-move" style="cursor: grab;">
+                                                            <i class="feather-grid fs-6"></i>
+                                                        </div>
+                                                    </td>
+                                                    <td class="py-2">
+                                                        <input type="text" class="form-control form-control-sm @error('parameters.' . $index . '.name') is-invalid @enderror" 
+                                                            wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
+                                                            style="border: 1px solid #0d6efd; color: #0d6efd; min-width: 60px;"
+                                                            wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" class="form-control form-control-sm" 
+                                                            wire:model="parameters.{{ $index }}.method" placeholder="Method">
+                                                    </td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
+                                                            <option value="numeric">Numerical</option>
+                                                            <option value="text">Text/Qualitative</option>
+                                                            <option value="selection">Dropdown List</option>
+                                                            <option value="calculated">Formula</option>
+                                                            <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <input type="text" class="form-control form-control-sm" style="width: 80px;" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
+                                                            <button type="button" wire:click="openRangeModal({{ $index }})" 
+                                                                class="btn btn-sm {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} flex-grow-1 py-1 rounded-pill">
+                                                                <i class="feather-settings me-1"></i>Config
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end pe-3">
+                                                        <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0">
+                                                            <i class="feather-trash-2"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endif
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -182,73 +218,97 @@
                             </div>
 
                             {{-- Mobile Card Layout (visible only on small screens) --}}
-                            <div class="d-lg-none" id="parameters-list-mobile"
-                                x-data="{
-                                    init() {
-                                        new Sortable(this.$el, {
-                                            handle: '.drag-handle-mobile',
-                                            animation: 150,
-                                            onEnd: (evt) => {
-                                                let order = Array.from(this.$el.querySelectorAll('.card')).map(card => card.getAttribute('data-id'));
-                                                @this.reorderParameters(order);
-                                            }
-                                        });
-                                    }
-                                }">
+                             <div class="d-lg-none" id="parameters-list-mobile"
+                                x-data="{}"
+                                x-init="
+                                    const el = $el;
+                                    new Sortable(el, {
+                                        handle: '.drag-handle-mobile',
+                                        animation: 150,
+                                        onEnd: (evt) => {
+                                            let order = Array.from(el.querySelectorAll('[data-id]')).map(card => card.getAttribute('data-id')).filter(Boolean);
+                                            $wire.reorderParameters(order);
+                                        }
+                                    });
+                                ">
                                 @foreach($parameters as $index => $param)
-                                    <div wire:key="param-m-{{ $index }}" data-id="{{ $index }}" class="card border shadow-sm rounded-3 mb-2">
-                                        <div class="card-body p-3">
-                                            {{-- Row 1: Name + Delete --}}
-                                            <div class="d-flex align-items-center gap-2 mb-2">
-                                                <div class="drag-handle-mobile text-muted pe-1" style="cursor: grab;">
-                                                    <i class="feather-grid fs-6"></i>
-                                                </div>
-                                                <input type="text" class="form-control form-control-sm flex-grow-1 @error('parameters.' . $index . '.name') is-invalid @enderror" 
-                                                    wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
-                                                <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0 flex-shrink-0">
-                                                    <i class="feather-trash-2"></i>
-                                                </button>
-                                            </div>
-                                            {{-- Row 2: Code + Method --}}
-                                            <div class="row g-2 mb-2">
-                                                <div class="col-4">
-                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Code</label>
-                                                    <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
-                                                        style="border: 1px solid #0d6efd; color: #0d6efd;"
-                                                        wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
-                                                </div>
-                                                <div class="col-8">
-                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Method</label>
-                                                    <input type="text" class="form-control form-control-sm" 
-                                                        wire:model="parameters.{{ $index }}.method" placeholder="e.g. CLIA, HPLC">
-                                                </div>
-                                            </div>
-                                            {{-- Row 3: Input Type + Unit + Config --}}
-                                            <div class="row g-2">
-                                                <div class="col-5">
-                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Input</label>
-                                                    <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
-                                                        <option value="numeric">Numerical</option>
-                                                        <option value="text">Text</option>
-                                                        <option value="selection">Dropdown</option>
-                                                        <option value="calculated">Formula</option>
-                                                        <option value="culture_sensitivity">Culture Sensitivity</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-3">
-                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Unit</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
-                                                </div>
-                                                <div class="col-4">
-                                                    <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Range</label>
-                                                    <button type="button" wire:click="openRangeModal({{ $index }})" 
-                                                        class="btn btn-sm w-100 {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} py-1 rounded-pill">
-                                                        <i class="feather-settings me-1"></i>Config
+                                    @if(($param['input_type'] ?? 'numeric') === 'heading')
+                                        {{-- ── Heading Mobile Card ── --}}
+                                        <div wire:key="param-m-{{ $index }}" data-id="{{ $index }}" 
+                                             class="card border shadow-sm rounded-3 mb-2" style="background: #f0f4ff; border-color: #c7d2fe !important;">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="drag-handle-mobile text-muted pe-1" style="cursor: grab;">
+                                                        <i class="feather-grid fs-6"></i>
+                                                    </div>
+                                                    <span class="badge bg-secondary rounded-pill fs-10" style="white-space:nowrap;">HEADING</span>
+                                                    <input type="text" 
+                                                        class="form-control form-control-sm flex-grow-1 fw-bold @error('parameters.' . $index . '.name') is-invalid @enderror" 
+                                                        style="border: 1px solid #6c757d; background: #eef2ff;"
+                                                        wire:model="parameters.{{ $index }}.name" 
+                                                        placeholder="e.g. Differential Leukocyte Count">
+                                                    <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0 flex-shrink-0">
+                                                        <i class="feather-trash-2"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        {{-- ── Normal Parameter Mobile Card ── --}}
+                                        <div wire:key="param-m-{{ $index }}" data-id="{{ $index }}" class="card border shadow-sm rounded-3 mb-2">
+                                            <div class="card-body p-3">
+                                                {{-- Row 1: Name + Delete --}}
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <div class="drag-handle-mobile text-muted pe-1" style="cursor: grab;">
+                                                        <i class="feather-grid fs-6"></i>
+                                                    </div>
+                                                    <input type="text" class="form-control form-control-sm flex-grow-1 @error('parameters.' . $index . '.name') is-invalid @enderror" 
+                                                        wire:model="parameters.{{ $index }}.name" placeholder="Parameter Name">
+                                                    <button type="button" wire:click="removeParameter({{ $index }})" class="btn btn-icon btn-soft-danger btn-sm border-0 flex-shrink-0">
+                                                        <i class="feather-trash-2"></i>
+                                                    </button>
+                                                </div>
+                                                {{-- Row 2: Code + Method --}}
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col-4">
+                                                        <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Code</label>
+                                                        <input type="text" class="form-control form-control-sm text-center fw-bold bg-white" 
+                                                            style="border: 1px solid #0d6efd; color: #0d6efd;"
+                                                            wire:model="parameters.{{ $index }}.short_code" placeholder="CODE">
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Method</label>
+                                                        <input type="text" class="form-control form-control-sm" 
+                                                            wire:model="parameters.{{ $index }}.method" placeholder="e.g. CLIA, HPLC">
+                                                    </div>
+                                                </div>
+                                                {{-- Row 3: Input Type + Unit + Config --}}
+                                                <div class="row g-2">
+                                                    <div class="col-5">
+                                                        <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Input</label>
+                                                        <select class="form-select form-select-sm" wire:model.live="parameters.{{ $index }}.input_type">
+                                                            <option value="numeric">Numerical</option>
+                                                            <option value="text">Text</option>
+                                                            <option value="selection">Dropdown</option>
+                                                            <option value="calculated">Formula</option>
+                                                            <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Unit</label>
+                                                        <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $index }}.unit" placeholder="Unit">
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <label class="fs-10 text-muted text-uppercase fw-bold d-block mb-1">Range</label>
+                                                        <button type="button" wire:click="openRangeModal({{ $index }})" 
+                                                            class="btn btn-sm w-100 {{ count($parameters[$index]['ranges'] ?? []) > 0 ? 'btn-soft-success' : 'btn-soft-primary' }} py-1 rounded-pill">
+                                                            <i class="feather-settings me-1"></i>Config
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endforeach
                                 @if(count($parameters) === 0)
                                     <div class="text-center text-muted py-4 bg-light rounded-3">

@@ -84,6 +84,15 @@ class LabTestEditor extends Component
         ];
     }
 
+    public function addHeading()
+    {
+        $this->parameters[] = [
+            'name' => '', 'unit' => '', 'range_type' => 'flexible',
+            'options' => [], 'ranges' => [],
+            'short_code' => '', 'input_type' => 'heading', 'formula' => '', 'method' => '',
+        ];
+    }
+
     public function openRangeModal($index)
     {
         $this->editingParamIndex = $index;
@@ -182,13 +191,26 @@ class LabTestEditor extends Component
     public function save()
     {
         $labTestService = new LabTestService;
+        // Temporarily set a placeholder name for heading rows so they pass 'required' validation,
+        // then clear it back if user left it blank — headings can have empty names.
         $this->validate([
             'name' => 'required|string|max:255',
             'method' => 'nullable|string|max:100',
             'mrp' => 'required|numeric|min:0',
             'department_id' => 'required|exists:departments,id',
-            'parameters.*.name' => 'required|string|max:255',
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity',
+            'parameters.*.name' => [
+                'string', 'max:255',
+                function ($attribute, $value, $fail) {
+                    // Extract index from attribute like 'parameters.0.name'
+                    $parts = explode('.', $attribute);
+                    $index = $parts[1] ?? null;
+                    $inputType = $this->parameters[$index]['input_type'] ?? 'numeric';
+                    if ($inputType !== 'heading' && (is_null($value) || trim($value) === '')) {
+                        $fail('Parameter name is required.');
+                    }
+                },
+            ],
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity,heading',
             'parameters.*.method' => 'nullable|string|max:100',
         ], [
             'parameters.*.name.required' => 'Parameter name is required.',
