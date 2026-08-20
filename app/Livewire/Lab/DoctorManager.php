@@ -4,15 +4,18 @@ namespace App\Livewire\Lab;
 
 use App\Models\DoctorProfile;
 use App\Models\User;
+use App\Services\Import\BulkImportService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination; // Required for Postgres-safe unique validation
 
 class DoctorManager extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -43,6 +46,13 @@ class DoctorManager extends Component
     public $commission_percentage = 0;
 
     public $isModalOpen = false;
+
+    // Bulk Import Variables
+    public $importFile;
+
+    public $isImportModalOpen = false;
+
+    public $importSummary = null;
 
     /**
      * Reset pagination when searching
@@ -243,6 +253,117 @@ class DoctorManager extends Component
     {
         $this->isModalOpen = false;
         $this->resetFields();
+    }
+
+    /**
+     * Open Bulk Import Modal
+     */
+    public function openImportModal()
+    {
+        $this->authorize('create doctors');
+        $this->reset(['importFile', 'importSummary']);
+        $this->resetValidation();
+        $this->isImportModalOpen = true;
+    }
+
+    /**
+     * Close Bulk Import Modal
+     */
+    public function closeImportModal()
+    {
+        $this->isImportModalOpen = false;
+        $this->reset(['importFile', 'importSummary']);
+        $this->resetValidation();
+    }
+
+    /**
+     * Download sample Excel template for doctors
+     */
+    public function downloadSampleTemplate(BulkImportService $importService)
+    {
+        return $importService->downloadSampleTemplate('doctors');
+    }
+
+    /**
+     * Process bulk Excel/CSV import for doctors
+     */
+    public function processBulkImport(BulkImportService $importService)
+    {
+        $this->authorize('create doctors');
+
+        try {
+            $this->validate([
+                'importFile' => 'required|file|max:10240',
+            ], [
+                'importFile.required' => 'Please select an Excel or CSV file to import.',
+                'importFile.max' => 'File size cannot exceed 10MB.',
+            ]);
+        } catch (\League\Flysystem\UnableToRetrieveMetadata | \League\Flysystem\FilesystemException $e) {
+            $this->importFile = null;
+            $this->importSummary = [
+                'total' => 0,
+                'success' => 0,
+                'skipped' => 0,
+                'errors' => ['Uploaded file expired or could not be found. Please browse and select your Excel file again.'],
+            ];
+            return;
+        }
+
+        $filePath = null;
+        try {
+            if (method_exists($this->importFile, 'getRealPath') && $this->importFile->getRealPath() && file_exists($this->importFile->getRealPath())) {
+                $filePath = $this->importFile->getRealPath();
+            }
+        } catch (\Throwable $e) {
+            $filePath = null;
+        }
+
+        if (! $filePath || ! file_exists($filePath)) {
+            try {
+                $fn = $this->importFile->getFilename();
+                if (file_exists(storage_path('app/private/livewire-tmp/' . $fn))) {
+                    $filePath = storage_path('app/private/livewire-tmp/' . $fn);
+                } elseif (file_exists(storage_path('app/livewire-tmp/' . $fn))) {
+                    $filePath = storage_path('app/livewire-tmp/' . $fn);
+                }
+            } catch (\Throwable $e) {
+                $filePath = null;
+            }
+        }
+
+        if (! $filePath || ! file_exists($filePath)) {
+            $this->importFile = null;
+            $this->importSummary = [
+                'total' => 0,
+                'success' => 0,
+                'skipped' => 0,
+                'errors' => ['Unable to read uploaded file. Please select your file again.'],
+            ];
+            return;
+        }
+
+        $user = auth()->user();
+        $companyId = $user->company_id;
+
+        $activeBranchId = session('active_branch_id', 'all');
+        $roles = $user->roles->pluck('name')->toArray();
+        $isGlobalAdmin = ($user->hasAnyRole(['lab_admin', 'super_admin']) ||
+                         collect($roles)->contains(fn ($r) => str_ends_with($r, '_admin') || str_ends_with($r, '_super_admin') || str_contains(strtolower($r), 'admin')))
+                         && ! $user->hasRole('branch_admin');
+
+        $myBranchId = $isGlobalAdmin
+            ? ($activeBranchId === 'all' ? null : $activeBranchId)
+            : $user->branch_id;
+
+        $this->importSummary = $importService->importDoctors($filePath, $companyId, $myBranchId);
+        $this->importFile = null;
+
+        if ($this->importSummary['success'] > 0) {
+            session()->flash('message', "Successfully imported {$this->importSummary['success']} doctor(s).");
+        }
+        if ($this->importSummary['skipped'] > 0 && $this->importSummary['success'] === 0) {
+            session()->flash('error', "Import completed with errors. Please check the summary above.");
+        }
     }
 
     public function render()

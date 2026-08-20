@@ -15,10 +15,11 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     ghostscript \
     libmagickwand-dev \
+    libzip-dev \
     poppler-utils
 
 # PHP extensions install 
-RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
+RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip
 RUN pecl install redis imagick && docker-php-ext-enable redis imagick
 
 # Allow Imagick to process PDF files (security policy override)

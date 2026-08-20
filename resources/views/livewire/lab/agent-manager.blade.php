@@ -15,6 +15,9 @@
         </div>
         <div class="page-header-right d-flex gap-2">
             @can('create agents')
+                <button wire:click="openImportModal" class="btn btn-outline-success btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
+                    <i class="feather-upload me-1 text-success"></i> Import from Excel
+                </button>
                 <button wire:click="create" class="btn btn-primary btn-sm shadow-sm d-flex align-items-center transition-all hover-lift">
                     <i class="feather-user-plus me-1"></i> Add New Agent
                 </button>
@@ -24,7 +27,7 @@
 
     <div class="main-content">
         
-        @if (session()->has('message') && !$isModalOpen)
+        @if (session()->has('message') && !$isModalOpen && !$isImportModalOpen)
             <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
                 <i class="feather-check-circle fs-4 me-2"></i>
                 <strong>{{ session('message') }}</strong>
@@ -32,7 +35,7 @@
             </div>
         @endif
 
-        @if (session()->has('error') && !$isModalOpen)
+        @if (session()->has('error') && !$isModalOpen && !$isImportModalOpen)
             <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center py-3 alert-dismissible fade show">
                 <i class="feather-alert-triangle fs-4 me-2"></i>
                 <strong>{{ session('error') }}</strong>
@@ -261,6 +264,179 @@
                     </div>
                 </form>
 
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- BULK EXCEL / CSV IMPORT MODAL --}}
+    @if($isImportModalOpen)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="modal-header bg-white border-bottom p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-soft-success text-success p-3 rounded-circle shadow-sm">
+                                <i class="feather-file-text fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-0">Bulk Referral Agent Import from Excel</h5>
+                                <p class="text-muted fs-12 mb-0">Upload an Excel (.xlsx, .xls) or CSV (.csv) file to import multiple referral agents.</p>
+                            </div>
+                        </div>
+                        <button type="button" wire:click="closeImportModal" class="btn-close shadow-none"></button>
+                    </div>
+
+                    <div class="modal-body p-4 bg-white">
+                        
+                        {{-- Import Results Summary (Show at TOP) --}}
+                        @if($importSummary)
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-3 bg-soft-success border border-success border-opacity-25 rounded-3 text-center flex-grow-1">
+                                        <div class="fs-4 fw-bold text-success">{{ $importSummary['success'] }}</div>
+                                        <div class="fs-12 text-muted fw-medium">Successfully Imported</div>
+                                    </div>
+                                    <div class="p-3 {{ $importSummary['skipped'] > 0 ? 'bg-soft-danger border border-danger border-opacity-25' : 'bg-soft-warning border border-warning border-opacity-25' }} rounded-3 text-center flex-grow-1">
+                                        <div class="fs-4 fw-bold {{ $importSummary['skipped'] > 0 ? 'text-danger' : 'text-warning' }}">{{ $importSummary['skipped'] }}</div>
+                                        <div class="fs-12 text-muted fw-medium">Skipped / Failed</div>
+                                    </div>
+                                    <div class="p-3 bg-soft-primary border border-primary border-opacity-25 rounded-3 text-center flex-grow-1">
+                                        <div class="fs-4 fw-bold text-primary">{{ $importSummary['total'] }}</div>
+                                        <div class="fs-12 text-muted fw-medium">Total Rows Read</div>
+                                    </div>
+                                </div>
+
+                                @if(!empty($importSummary['errors']))
+                                    <div class="card border border-danger border-opacity-25 bg-soft-danger rounded-3 mb-3">
+                                        <div class="card-header bg-transparent border-0 pb-0">
+                                            <h6 class="fs-13 fw-bold text-danger mb-0">
+                                                <i class="feather-alert-triangle me-1"></i> Import Issues & Skipped Records:
+                                            </h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <ul class="mb-0 fs-12 text-danger ps-3" style="max-height: 180px; overflow-y: auto;">
+                                                @foreach($importSummary['errors'] as $err)
+                                                    <li class="mb-1 fw-medium">{{ $err }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- Step 1: Download Template --}}
+                        <div class="p-3 mb-4 rounded-3 border border-primary border-opacity-25 bg-soft-primary d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                            <div>
+                                <div class="fw-bold text-primary fs-14 mb-1">
+                                    <i class="feather-download me-1"></i> Need an agent template?
+                                </div>
+                                <div class="text-muted fs-12">
+                                    Download our pre-formatted Excel template with sample referral agent records.
+                                </div>
+                            </div>
+                            <button type="button" wire:click="downloadSampleTemplate" class="btn btn-primary btn-sm px-3 shadow-sm text-nowrap d-flex align-items-center">
+                                <i class="feather-download me-2"></i> Download Sample Excel
+                            </button>
+                        </div>
+
+                        {{-- Step 2: Upload File --}}
+                        <div class="mb-4">
+                            <label class="form-label fs-12 fw-bold text-muted text-uppercase mb-2">
+                                Select Excel / CSV File <span class="text-danger">*</span>
+                            </label>
+                            <div class="border border-2 border-dashed rounded-4 p-4 text-center bg-light position-relative">
+                                <input type="file" wire:model="importFile" accept=".xlsx,.xls,.csv" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" id="excelAgentFile">
+                                
+                                {{-- Loading State inside dropzone --}}
+                                <div wire:loading wire:target="importFile" class="py-2">
+                                    <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+                                    <div class="fw-bold text-dark fs-14">Uploading & Processing Spreadsheet...</div>
+                                    <div class="text-muted fs-12">Please wait while your file is being uploaded</div>
+                                </div>
+
+                                {{-- Idle / Selected State --}}
+                                <div wire:loading.remove wire:target="importFile" class="d-flex flex-column align-items-center">
+                                    @if($importFile)
+                                        <div class="bg-white p-3 rounded-circle shadow-sm mb-2 text-success">
+                                            <i class="feather-check-circle fs-2"></i>
+                                        </div>
+                                        <span class="badge bg-success fs-13 px-3 py-2 mb-1 shadow-sm">
+                                            <i class="feather-file-text me-1"></i> {{ $importFile->getClientOriginalName() }}
+                                        </span>
+                                        <span class="text-muted fs-11 mt-1">Click or drag another file to replace</span>
+                                    @else
+                                        <div class="bg-white p-3 rounded-circle shadow-sm mb-2 text-primary">
+                                            <i class="feather-upload-cloud fs-2"></i>
+                                        </div>
+                                        <div class="fw-bold text-dark fs-14 mb-1">Drag & drop your Excel or CSV file here</div>
+                                        <div class="text-muted fs-12 mb-3">Supported formats: .xlsx, .xls, .csv (Max 10MB)</div>
+                                        <label for="excelAgentFile" class="btn btn-outline-primary btn-sm px-4 shadow-sm cursor-pointer">
+                                            <i class="feather-file-plus me-1"></i> Browse File
+                                        </label>
+                                    @endif
+                                </div>
+                            </div>
+                            @error('importFile') <div class="text-danger fs-11 fw-bold mt-2">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- Column Reference Guide --}}
+                        <div class="card border border-light bg-light rounded-3 mb-3">
+                            <div class="card-body p-3">
+                                <div class="fw-bold text-dark fs-12 text-uppercase mb-2">
+                                    <i class="feather-info text-info me-1"></i> Expected Column Headers:
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered bg-white fs-11 mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Column</th>
+                                                <th>Required?</th>
+                                                <th>Accepted Values / Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-bold">Agent Name</td>
+                                                <td><span class="badge bg-danger">Required</span></td>
+                                                <td>e.g. Vikram Kumar</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Phone Number</td>
+                                                <td><span class="badge bg-secondary">Optional</span></td>
+                                                <td>10-digit mobile number</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Agency Name</td>
+                                                <td><span class="badge bg-secondary">Optional</span></td>
+                                                <td>e.g. LifeCare Referral Associates</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Commission %</td>
+                                                <td><span class="badge bg-secondary">Optional</span></td>
+                                                <td>0 to 100 (e.g. 10 for 10%)</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Email</td>
+                                                <td><span class="badge bg-secondary">Optional</span></td>
+                                                <td>Unique email address</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer bg-light border-top p-3 d-flex justify-content-end gap-2">
+                        <button type="button" wire:click="closeImportModal" class="btn btn-light border px-4 fw-medium shadow-sm">Close</button>
+                        <button type="button" wire:click="processBulkImport" wire:loading.attr="disabled" class="btn btn-success px-5 fw-bold shadow-sm d-flex align-items-center">
+                            <div wire:loading.remove wire:target="processBulkImport"><i class="feather-check-circle me-2"></i> Start Import</div>
+                            <div wire:loading wire:target="processBulkImport"><span class="spinner-border spinner-border-sm me-2" role="status"></span> Importing Agents...</div>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
