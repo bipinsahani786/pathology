@@ -26,17 +26,15 @@ echo "3. Running database migrations..."
 docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
 echo "4. Publishing assets and caching configuration..."
-docker compose -f docker-compose.prod.yml exec -T app php artisan livewire:publish --assets
+docker compose -f docker-compose.prod.yml exec -T -u root app php artisan livewire:publish --assets
 docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
 docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
 docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
 docker compose -f docker-compose.prod.yml exec -T app php artisan event:cache
 
-# Set permissions for storage and bootstrap/cache in the volume if needed
-# The Dockerfile handles this internally, but when using shared volumes, we might need to ensure
-# the host volume has correct permissions for the www-data user (uid 33 in alpine/debian).
-echo "5. Ensuring correct permissions for storage and bootstrap/cache..."
-docker compose -f docker-compose.prod.yml exec -T -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Set permissions for storage, bootstrap/cache, and published assets
+echo "5. Ensuring correct permissions..."
+docker compose -f docker-compose.prod.yml exec -T -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public/vendor
 docker compose -f docker-compose.prod.yml exec -T -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 echo "6. Restarting background workers (scheduler & queue)..."
