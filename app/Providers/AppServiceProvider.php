@@ -38,9 +38,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super_admin') ? true : null;
         });
 
-        if (app()->isProduction() || request()->header('x-forwarded-proto') === 'https') {
-            URL::forceScheme('https');
-        }
+        // Gate definition and permissions above
     }
 
     /**
