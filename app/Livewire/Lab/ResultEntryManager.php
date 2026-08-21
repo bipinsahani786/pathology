@@ -86,7 +86,41 @@ class ResultEntryManager extends Component
             ->with(['patient.patientProfile', 'items.labTest', 'testReport.results'])
             ->findOrFail($id);
 
-        $this->testReport = $this->invoice->testReport;
+        // Auto-complete any tests without parameters
+        $hasAnyParamTest = false;
+        $itemsUpdated = false;
+        foreach ($this->invoice->items as $item) {
+            if ($item->lab_test_id) {
+                $hasParams = $item->hasParameters();
+                if ($hasParams) {
+                    $hasAnyParamTest = true;
+                } elseif ($item->status !== 'Completed') {
+                    $item->update(['status' => 'Completed']);
+                    $itemsUpdated = true;
+                }
+            }
+        }
+        if ($itemsUpdated) {
+            $this->invoice->load('items.labTest');
+        }
+
+        // If ALL tests have no parameters and no testReport exists, auto-create approved report
+        if (!$hasAnyParamTest && $this->invoice->items->count() > 0 && !$this->invoice->testReport) {
+            $this->testReport = TestReport::create([
+                'company_id' => $this->invoice->company_id,
+                'invoice_id' => $this->invoice->id,
+                'patient_id' => $this->invoice->patient_id,
+                'status' => 'Approved',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'report_date' => now(),
+            ]);
+            $this->invoice->update(['sample_status' => 'Ready']);
+            $this->invoice->load('testReport');
+        } else {
+            $this->testReport = $this->invoice->testReport;
+        }
+
         $this->comments = $this->testReport ? $this->testReport->comments : '';
 
         // Initialize report date/time
@@ -175,7 +209,14 @@ class ResultEntryManager extends Component
 
                 if ($test->parameters) {
                     foreach ($test->parameters as $param) {
-                        $paramName = is_array($param) ? ($param['name'] ?? 'Unknown') : $param;
+                        $paramName = is_array($param) ? trim($param['name'] ?? '') : trim((string) $param);
+                        $inputType = is_array($param) ? ($param['input_type'] ?? 'numeric') : 'numeric';
+
+                        // Skip blank parameter names unless it's explicitly a heading
+                        if ($inputType !== 'heading' && $paramName === '') {
+                            continue;
+                        }
+
                         $key = $item->id.'_'.$test->id.'_'.md5($paramName);
 
                         // NEW: Smart Range Matching
@@ -558,6 +599,17 @@ class ResultEntryManager extends Component
         $item = \App\Models\InvoiceItem::find($itemId);
         if (!$item) return;
 
+        // If test has no parameters (e.g. billing charge / OPD), it is automatically Completed
+        if (!$item->hasParameters()) {
+            if ($item->status !== 'Completed') {
+                $item->update(['status' => 'Completed']);
+                if ($this->invoice) {
+                    $this->invoice->load('items');
+                }
+            }
+            return;
+        }
+
         $testsData = [];
         $dlcCodes = ['NEU', 'LYM', 'MONO', 'EOS', 'BASO'];
 
@@ -622,7 +674,8 @@ class ResultEntryManager extends Component
         }
 
         if (empty($testsData)) {
-            $atLeastOneTestComplete = false;
+            $atLeastOneTestComplete = true;
+            $hasAnyResultInAnyTest = true;
         }
 
         if ($item->status === 'Pending') {
@@ -636,7 +689,7 @@ class ResultEntryManager extends Component
         } else {
             // It is currently Completed.
             // Downgrade to Pending if ALL tests are empty OR there's a DLC error
-            if (!$hasAnyResultInAnyTest || $hasDlcError) {
+            if ((!$hasAnyResultInAnyTest && !empty($testsData)) || $hasDlcError) {
                 $item->update(['status' => 'Pending']);
                 if ($this->invoice) {
                     $this->invoice->load('items');
@@ -673,32 +726,35 @@ class ResultEntryManager extends Component
                 return;
             }
 
-            // Check if ANY results have been entered at all
-            $hasAnyResult = false;
-            foreach ($this->results as $key => $val) {
-                if ($val !== '' && $val !== null) {
-                    $hasAnyResult = true;
-                    break;
-                }
-                
-                // Also check if it's a culture sensitivity test with a valid result
-                if (isset($this->parametersList[$key]) && ($this->parametersList[$key]['input_type'] ?? '') === 'culture_sensitivity') {
-                    $cData = $this->cultureResults[$key] ?? null;
-                    if ($cData) {
-                        if (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name'])) {
-                            $hasAnyResult = true;
-                            break;
+            // Check if ANY results have been entered for tests that actually have parameters
+            $testsWithParams = $tests->filter(fn ($i) => $i->hasParameters());
+            if ($testsWithParams->count() > 0) {
+                $hasAnyResult = false;
+                foreach ($this->results as $key => $val) {
+                    if ($val !== '' && $val !== null) {
+                        $hasAnyResult = true;
+                        break;
+                    }
+                    
+                    // Also check if it's a culture sensitivity test with a valid result
+                    if (isset($this->parametersList[$key]) && ($this->parametersList[$key]['input_type'] ?? '') === 'culture_sensitivity') {
+                        $cData = $this->cultureResults[$key] ?? null;
+                        if ($cData) {
+                            if (($cData['growth_status'] ?? '') === 'No Growth' || !empty($cData['organism_name'])) {
+                                $hasAnyResult = true;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if (! $hasAnyResult && $tests->count() > 0) {
-                $msg = 'Cannot approve report. No results have been entered for any test.';
-                $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
-                session()->flash('error', $msg);
+                if (! $hasAnyResult) {
+                    $msg = 'Cannot approve report. No results have been entered for any test.';
+                    $this->dispatch('notify', ['type' => 'error', 'message' => $msg]);
+                    session()->flash('error', $msg);
 
-                return;
+                    return;
+                }
             }
 
             // DLC Validation (Hard Block)

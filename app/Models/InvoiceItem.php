@@ -27,4 +27,16 @@ class InvoiceItem extends Model
     {
         return $this->belongsTo(LabTest::class);
     }
+
+    /**
+     * Check if this line item requires parameter result entry.
+     */
+    public function hasParameters(): bool
+    {
+        if (!$this->lab_test_id) {
+            return false;
+        }
+
+        return $this->labTest ? $this->labTest->hasParameters() : false;
+    }
 }
