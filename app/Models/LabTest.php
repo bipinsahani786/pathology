@@ -29,6 +29,40 @@ class LabTest extends Model
         return $this->belongsTo(Department::class, 'department_id');
     }
 
+    /**
+     * Check if the test has at least one valid parameter (excluding headings).
+     * For packages, checks if any linked test has parameters.
+     */
+    public function hasParameters(): bool
+    {
+        if ($this->is_package) {
+            if (empty($this->linked_test_ids) || !is_array($this->linked_test_ids)) {
+                return false;
+            }
+            $linked = static::whereIn('id', $this->linked_test_ids)->get();
+            foreach ($linked as $lt) {
+                if ($lt->hasParameters()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (empty($this->parameters) || !is_array($this->parameters)) {
+            return false;
+        }
+
+        foreach ($this->parameters as $p) {
+            $inputType = is_array($p) ? ($p['input_type'] ?? 'numeric') : 'numeric';
+            $paramName = is_array($p) ? trim($p['name'] ?? '') : trim((string) $p);
+            if ($inputType !== 'heading' && $paramName !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     protected static function booted()
     {
         static::saved(function ($test) {

@@ -15,6 +15,7 @@ use App\Models\PatientMembership;
 use App\Models\PatientProfile;
 use App\Models\Payment;
 use App\Models\PaymentMode;
+use App\Models\TestReport;
 use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\DB;
@@ -1188,10 +1189,18 @@ class PosEditManager extends Component
                 ->keyBy('id');
 
             $keptItemIds = [];
+            $cartTestIds = collect($this->cart)->pluck('id')->filter()->unique()->toArray();
+            $cartLabTests = LabTest::whereIn('id', $cartTestIds)->get()->keyBy('id');
+            $hasAnyParamTest = false;
 
             foreach ($this->cart as $idx => $item) {
                 $labTestId = $item['id'];
                 $itemId = $item['invoice_item_id'] ?? null;
+                $lt = $cartLabTests->get($labTestId);
+                $hasParams = $lt ? $lt->hasParameters() : false;
+                if ($hasParams) {
+                    $hasAnyParamTest = true;
+                }
 
                 if ($itemId && $existingItems->has($itemId)) {
                     $existingItem = $existingItems->get($itemId);
@@ -1202,6 +1211,7 @@ class PosEditManager extends Component
                         'mrp' => $item['mrp'],
                         'price' => $item['price'],
                         'b2b_price' => data_get($testPrices->get($labTestId), 'b2b_price', 0),
+                        'status' => $hasParams ? $existingItem->status : 'Completed',
                         'sort_order' => $idx,
                     ]);
                     $keptItemIds[] = $existingItem->id;
@@ -1214,7 +1224,7 @@ class PosEditManager extends Component
                         'mrp' => $item['mrp'],
                         'price' => $item['price'],
                         'b2b_price' => data_get($testPrices->get($labTestId), 'b2b_price', 0),
-                        'status' => 'Pending',
+                        'status' => $hasParams ? 'Pending' : 'Completed',
                         'sort_order' => $idx,
                     ]);
                     $keptItemIds[] = $newItem->id;
@@ -1334,6 +1344,28 @@ class PosEditManager extends Component
             }
             Payment::where('invoice_id', $invoice->id)->whereNotIn('id', $keptPaymentIds)->delete();
 
+            // If this invoice contains ONLY parameterless tests, auto-create/update Approved TestReport
+            if (!$hasAnyParamTest && count($this->cart) > 0) {
+                $existingReport = TestReport::where('invoice_id', $invoice->id)->first();
+                if (!$existingReport) {
+                    TestReport::create([
+                        'company_id' => $companyId,
+                        'invoice_id' => $invoice->id,
+                        'patient_id' => $this->selectedPatient['id'],
+                        'status' => 'Approved',
+                        'approved_by' => auth()->id(),
+                        'approved_at' => now(),
+                        'report_date' => now(),
+                    ]);
+                } elseif ($existingReport->status !== 'Approved') {
+                    $existingReport->update([
+                        'status' => 'Approved',
+                        'approved_by' => auth()->id(),
+                        'approved_at' => now(),
+                    ]);
+                }
+                $invoice->update(['sample_status' => 'Ready']);
+            }
 
             // 4. Apply new Commissions using service
             $commissionService->applyCommissions($invoice);

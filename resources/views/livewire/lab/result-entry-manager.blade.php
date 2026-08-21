@@ -619,9 +619,43 @@
                                                     " placeholder="Add specific interpretation for {{ $testName }}..."></textarea>
                                             </td>
                                         </tr>
-                                     @endforeach
+                                    @endforeach
                             </tbody>
                         @endforeach
+
+                        @php
+                            $parameterlessItems = $invoice->items->filter(fn($i) => !empty($i->lab_test_id) && !$i->hasParameters());
+                        @endphp
+                        @if($parameterlessItems->count() > 0)
+                            <tbody class="department-header ignore-sort">
+                                <tr>
+                                    <td colspan="5" class="bg-soft-info text-dark py-2 px-3 fs-12 fw-bold border-top border-bottom">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span><i class="feather-info text-info me-2"></i>BILLING & SERVICES (NO TEST VALUES REQUIRED)</span>
+                                            <span class="badge bg-success text-white fs-10 fw-semibold">Auto-Approved / Completed</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            @foreach($parameterlessItems as $pItem)
+                                <tbody class="ignore-sort" wire:key="paramless-{{ $pItem->id }}">
+                                    <tr>
+                                        <td colspan="5" class="py-2 px-3 bg-white border-bottom">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="feather-check-circle text-success me-2 fs-14"></i>
+                                                    <span class="fw-bold text-dark fs-12">{{ $pItem->test_name ?? $pItem->labTest?->name }}</span>
+                                                    <span class="badge bg-soft-success text-success ms-2 fs-10">Completed</span>
+                                                </div>
+                                                <div class="text-muted fs-11">
+                                                    <i class="feather-check me-1 text-success"></i>Billing / Service item — No parameter results entry required
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            @endforeach
+                        @endif
                     </table>
                 </div>
                 

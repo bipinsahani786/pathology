@@ -279,8 +279,9 @@
                                                     $item = $dt['item'];
                                                     if ($dt['is_package']) {
                                                         $inner = $dt['inner'];
-                                                        // Check if ANY parameter in this inner test has a non-empty result
-                                                        $isComplete = \App\Models\ReportResult::where('invoice_item_id', $item->id)
+                                                        $hasInnerParams = $inner ? $inner->hasParameters() : false;
+                                                        // Check if ANY parameter in this inner test has a non-empty result or if it has no parameters
+                                                        $isComplete = !$hasInnerParams || \App\Models\ReportResult::where('invoice_item_id', $item->id)
                                                             ->where('lab_test_id', $inner->id)
                                                             ->where(function($q) {
                                                                 $q->whereNotNull('result_value')->where('result_value', '!=', '');
@@ -289,7 +290,7 @@
                                                         $checkboxValue = $item->id . '_' . $inner->id;
                                                         $testName = $inner->name;
                                                     } else {
-                                                        $isComplete = $item->status === 'Completed';
+                                                        $isComplete = $item->status === 'Completed' || !$item->hasParameters();
                                                         $checkboxValue = $item->id;
                                                         $testName = $item->labTest->name;
                                                     }

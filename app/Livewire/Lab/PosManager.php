@@ -16,6 +16,7 @@ use App\Models\PatientMembership;
 use App\Models\PatientProfile;
 use App\Models\Payment;
 use App\Models\PaymentMode;
+use App\Models\TestReport;
 use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\DB;
@@ -1256,7 +1257,17 @@ class PosManager extends Component
                 ]);
             }
 
+            $cartTestIds = collect($this->cart)->pluck('id')->filter()->unique()->toArray();
+            $cartLabTests = LabTest::whereIn('id', $cartTestIds)->get()->keyBy('id');
+            $hasAnyParamTest = false;
+
             foreach ($this->cart as $idx => $item) {
+                $lt = $cartLabTests->get($item['id']);
+                $hasParams = $lt ? $lt->hasParameters() : false;
+                if ($hasParams) {
+                    $hasAnyParamTest = true;
+                }
+
                 InvoiceItem::create([
                     'invoice_id' => $invoice->id,
                     'lab_test_id' => $item['id'],
@@ -1265,8 +1276,24 @@ class PosManager extends Component
                     'mrp' => $item['mrp'],
                     'price' => $item['mrp'],
                     'b2b_price' => data_get($testPrices->get($item['id']), 'b2b_price', 0),
+                    'status' => $hasParams ? 'Pending' : 'Completed',
                     'sort_order' => $idx,
                 ]);
+            }
+
+            // If this invoice contains ONLY parameterless tests (e.g. OPD Consultation / billing charges),
+            // auto-create an Approved TestReport and set sample_status to Ready
+            if (!$hasAnyParamTest && count($this->cart) > 0) {
+                TestReport::create([
+                    'company_id' => $companyId,
+                    'invoice_id' => $invoice->id,
+                    'patient_id' => data_get($this->selectedPatient, 'id'),
+                    'status' => 'Approved',
+                    'approved_by' => auth()->id(),
+                    'approved_at' => now(),
+                    'report_date' => now(),
+                ]);
+                $invoice->update(['sample_status' => 'Ready']);
             }
 
             foreach ($this->payments as $payment) {
