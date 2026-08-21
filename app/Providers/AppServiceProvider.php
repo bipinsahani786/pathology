@@ -38,7 +38,9 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super_admin') ? true : null;
         });
 
-        // Gate definition and permissions above
+        if (env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 
     /**
