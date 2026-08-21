@@ -25,7 +25,8 @@ sleep 5
 echo "3. Running database migrations..."
 docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
 
-echo "4. Caching configuration and routes..."
+echo "4. Publishing assets and caching configuration..."
+docker compose -f docker-compose.prod.yml exec -T app php artisan livewire:publish --assets
 docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
 docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
 docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
