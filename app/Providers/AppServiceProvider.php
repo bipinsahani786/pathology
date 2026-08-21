@@ -27,6 +27,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        // Force correct URL generation in production (behind Cloudflare/Docker reverse proxy)
+        // Inside Docker, PHP sees requests from nginx on 'localhost', so url() would generate
+        // 'https://localhost/...' which breaks in the browser. forceRootUrl ensures the correct domain.
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+            URL::forceRootUrl(config('app.url'));
+        }
+
         // Define Gate for Lab Admin
         Gate::define('lab_admin', function ($user) {
             return $user->hasRole('lab_admin') || $user->hasRole('super_admin');
