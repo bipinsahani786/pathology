@@ -38,9 +38,6 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super_admin') ? true : null;
         });
 
-        if (str_starts_with(config('app.url'), 'https://') || request()->header('x-forwarded-proto') === 'https' || request()->isSecure()) {
-            URL::forceScheme('https');
-        }
     }
 
     /**
