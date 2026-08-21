@@ -128,7 +128,9 @@
     <script src="{{ asset('assets/vendors/js/circle-progress.min.js') }}" data-navigate-once></script>
     <script src="{{ asset('assets/js/common-init.min.js') }}"></script>
     <script src="{{ asset('assets/js/theme-customizer-init.min.js') }}"></script>
-    <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
+    @if(request()->routeIs('*dashboard*'))
+        <script src="{{ asset('assets/js/dashboard-init.min.js') }}"></script>
+    @endif
 
     <script src="https://cdn.ckeditor.com/ckeditor5/35.1.0/classic/ckeditor.js" data-navigate-once></script>
 
