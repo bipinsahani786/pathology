@@ -188,6 +188,8 @@ class ReportPdfController extends Controller
             // ALWAYS reserve space for physical letterhead (1 inch = ~96px minimum, but user wants settings-driven)
             'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId, $branchId) ?: 320,
             'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId, $branchId) ?: 280,
+            'pdf_margin_left' => Configuration::getFor('pdf_margin_left', null, $companyId, $branchId) ?: 25,
+            'pdf_margin_right' => Configuration::getFor('pdf_margin_right', null, $companyId, $branchId) ?: 25,
 
             'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId, $branchId) ?: 200,
             'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId, $branchId) ?: 180,

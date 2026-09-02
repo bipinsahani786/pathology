@@ -211,6 +211,8 @@ class PdfStorageService
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId, $branchId) ?: 'Helvetica',
             'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId, $branchId) ?: 310,
             'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId, $branchId) ?: 255,
+            'pdf_margin_left' => Configuration::getFor('pdf_margin_left', null, $companyId, $branchId) ?: 25,
+            'pdf_margin_right' => Configuration::getFor('pdf_margin_right', null, $companyId, $branchId) ?: 25,
             'pdf_header_height' => Configuration::getFor('pdf_header_height', null, $companyId, $branchId) ?: 200,
             'pdf_footer_height' => Configuration::getFor('pdf_footer_height', null, $companyId, $branchId) ?: 180,
 
