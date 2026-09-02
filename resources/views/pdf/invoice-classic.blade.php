@@ -13,6 +13,8 @@
         // ── Margins from Settings ──
         $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $marginLeft   = ($settings['pdf_margin_left'] ?? 25) . 'px';
+        $marginRight  = ($settings['pdf_margin_right'] ?? 25) . 'px';
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
         
@@ -30,7 +32,7 @@
             color: #1a1a1a;
             background: #fff;
             line-height: 1.45;
-            margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px;
+            margin: {{ $marginTop }} {{ $marginRight }} {{ $marginBottom }} {{ $marginLeft }};
             padding-top: 10px; /* Extra safety gap */
         }
 
@@ -56,7 +58,7 @@
         /* ── PATIENT INFO BOX (Fixed in Header) ── */
         .patient-box {
             border: 1px solid #1a1a1a !important;
-            margin: 4px 25px 0;
+            margin: 4px {{ $marginRight }} 0 {{ $marginLeft }};
             padding: 8px 10px;
             font-size: 10.5px;
             display: block;

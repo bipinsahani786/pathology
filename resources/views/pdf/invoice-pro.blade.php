@@ -34,6 +34,8 @@ if (!function_exists('getIndianCurrency')) {
         
         $marginTop    = ($settings['pdf_margin_top'] ?? 310) . 'px';
         $marginBottom = ($settings['pdf_margin_bottom'] ?? 255) . 'px';
+        $marginLeft   = ($settings['pdf_margin_left'] ?? 25) . 'px';
+        $marginRight  = ($settings['pdf_margin_right'] ?? 25) . 'px';
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
         $fontSize     = ($settings['pdf_font_size'] ?? 13) . 'px';
@@ -42,7 +44,7 @@ if (!function_exists('getIndianCurrency')) {
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: {{ $fontFamily }}; font-size: {{ $fontSize }}; color: #000; margin: {{ $marginTop }} 25px {{ $marginBottom }} 25px; line-height: 1.4; position: relative; padding-top: 10px; }
+        body { font-family: {{ $fontFamily }}; font-size: {{ $fontSize }}; color: #000; margin: {{ $marginTop }} {{ $marginRight }} {{ $marginBottom }} {{ $marginLeft }}; line-height: 1.4; position: relative; padding-top: 10px; }
 
         /* Watermark */
         .watermark { position: absolute; top: 35%; left: 50%; width: 450px; margin-left: -225px; opacity: 0.06; z-index: -100; text-align: center; }
@@ -53,7 +55,7 @@ if (!function_exists('getIndianCurrency')) {
         .header-banner { width: 100% !important; min-width: 100% !important; display: block; }
         
         /* Patient Info (Standardized Grid) */
-        .patient-box { border: 1.5px solid #1e293b !important; margin: 4px 25px 0; padding: 10px; border-radius: 2px; background: #fff; }
+        .patient-box { border: 1.5px solid #1e293b !important; margin: 4px {{ $marginRight }} 0 {{ $marginLeft }}; padding: 10px; border-radius: 2px; background: #fff; }
         .patient-table { width: 100%; border-collapse: collapse; }
         .patient-table td { padding: 1px 2px; vertical-align: top; font-size: 10.5px; }
         .patient-table .lbl { font-weight: 700; color: #4b5563; width: 14%; }
