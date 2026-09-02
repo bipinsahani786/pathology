@@ -1263,6 +1263,25 @@
                                     </div>
                                 </div>
 
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-11">Left Margin</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control" wire:model="pdf_margin_left">
+                                            <span class="input-group-text">px</span>
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Left side spacing (default: 25px)</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold fs-11">Right Margin</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control" wire:model="pdf_margin_right">
+                                            <span class="input-group-text">px</span>
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Right side spacing (default: 25px)</div>
+                                    </div>
+                                </div>
+
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold fs-11">Header Height</label>

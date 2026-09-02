@@ -18,8 +18,12 @@
         // ── Margins from Settings ──
         $marginTopVal = (int) ($settings['pdf_margin_top'] ?? 310);
         $marginBottomVal = (int) ($settings['pdf_margin_bottom'] ?? 255);
+        $marginLeftVal = (int) ($settings['pdf_margin_left'] ?? 25);
+        $marginRightVal = (int) ($settings['pdf_margin_right'] ?? 25);
         $marginTop = $marginTopVal . 'px';
         $marginBottom = $marginBottomVal . 'px';
+        $marginLeft = $marginLeftVal . 'px';
+        $marginRight = $marginRightVal . 'px';
         $headerHeight = ($settings['pdf_header_height'] ?? 200) . 'px';
         $footerHeight = ($settings['pdf_footer_height'] ?? 180) . 'px';
 
@@ -66,9 +70,9 @@
             line-height: 1.45;
             margin:
                 {{ $marginTop }}
-                25px
+                {{ $marginRight }}
                 {{ $marginBottom }}
-                25px;
+                {{ $marginLeft }};
         }
 
         /* ══════════════════════════════════════════════
@@ -109,7 +113,7 @@
             left: 0;
             right: 0;
             border: 1px solid #1a1a1a !important;
-            margin: 0 25px 0;
+            margin: 0 {{ $marginRight }} 0 {{ $marginLeft }};
             padding: 8px 10px;
             font-size:
                 {{ $sz10_5 }}
@@ -243,8 +247,9 @@
             position: absolute;
             bottom: calc({{ $footerHeight }} + 5px);
             /* Dynamically positioned just above the footer banner */
-            left: 0;
-            width: 100%;
+            left: {{ $marginLeft }};
+            right: {{ $marginRight }};
+            width: auto;
         }
 
         .multi-sig-table {

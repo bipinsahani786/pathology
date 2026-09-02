@@ -166,6 +166,10 @@ class SettingsManager extends Component
 
     public $pdf_margin_bottom = 255;
 
+    public $pdf_margin_left = 25;
+
+    public $pdf_margin_right = 25;
+
     public $pdf_header_height = 200;
 
     public $pdf_footer_height = 180;
@@ -435,6 +439,8 @@ class SettingsManager extends Component
         $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica', $company->id, $branchId);
         $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 310, $company->id, $branchId);
         $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255, $company->id, $branchId);
+        $this->pdf_margin_left = (int) Configuration::getFor('pdf_margin_left', 25, $company->id, $branchId);
+        $this->pdf_margin_right = (int) Configuration::getFor('pdf_margin_right', 25, $company->id, $branchId);
         $this->pdf_header_height = (int) Configuration::getFor('pdf_header_height', 200, $company->id, $branchId);
         $this->pdf_footer_height = (int) Configuration::getFor('pdf_footer_height', 180, $company->id, $branchId);
 
@@ -812,6 +818,8 @@ class SettingsManager extends Component
         Configuration::setFor('pdf_font_family', $this->pdf_font_family, $companyId, $branchId);
         Configuration::setFor('pdf_margin_top', $this->pdf_margin_top, $companyId, $branchId);
         Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom, $companyId, $branchId);
+        Configuration::setFor('pdf_margin_left', $this->pdf_margin_left, $companyId, $branchId);
+        Configuration::setFor('pdf_margin_right', $this->pdf_margin_right, $companyId, $branchId);
         Configuration::setFor('pdf_header_height', $this->pdf_header_height, $companyId, $branchId);
         Configuration::setFor('pdf_footer_height', $this->pdf_footer_height, $companyId, $branchId);
 
