@@ -90,6 +90,8 @@ class PosManager extends Component
 
     public $manual_discount_amt = 0;
 
+    public $discount_remarks = '';
+
     public $total_discount = 0;
 
     public $net_payable = 0;
@@ -1233,6 +1235,7 @@ class PosManager extends Component
                 'voucher_id' => $this->applied_voucher->id ?? null,
                 'voucher_discount_amount' => $this->voucher_discount_amt,
                 'discount_amount' => $this->manual_discount_amt,
+                'discount_remarks' => $this->discount_remarks ?: null,
                 'total_amount' => $this->net_payable,
                 'total_b2b_amount' => $totalB2bAmount,
                 'cc_profit_amount' => $ccProfitAmount,
@@ -1348,6 +1351,7 @@ class PosManager extends Component
             $this->membership_fee = 0;
             $this->purchasedMembershipRecordId = null;
             $this->manual_discount_input = 0;
+            $this->discount_remarks = '';
             $this->expandedCartItems = [];
             $this->payments = [];
             $this->addPaymentRow();

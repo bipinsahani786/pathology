@@ -50,6 +50,7 @@ class LabTestService
                 [
                     'company_id' => auth()->user()->company_id, // Handled by trait, but safe to pass
                     'name' => $data['name'],
+                    'method' => $data['method'] ?? null,
                     'test_code' => $data['test_code'] ?? null,
                     'department_id' => $data['department_id'] ?? null,
                     'description' => $data['description'] ?? null,
@@ -60,6 +61,9 @@ class LabTestService
                     'tat_hours' => $data['tat_hours'] ?? 24,
                     'parameters' => $data['parameters'] ?? [],
                     'is_active' => $data['is_active'] ?? true,
+                    'show_method_on_report' => $data['show_method_on_report'] ?? true,
+                    'show_interpretation_on_report' => $data['show_interpretation_on_report'] ?? true,
+                    'show_note_on_report' => $data['show_note_on_report'] ?? true,
                 ]
             );
         } catch (\Exception $e) {

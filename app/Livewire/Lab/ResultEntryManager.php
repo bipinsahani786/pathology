@@ -35,6 +35,8 @@ class ResultEntryManager extends Component
 
     public $testComments = []; // Comments per invoice item (test)
 
+    public $testOptions = []; // Report print visibility options per test [itemId_testId => ['show_method' => bool, ...]]
+
     public $report_date; // Custom report date for PDF
 
     public $report_time; // Custom report time for PDF
@@ -187,6 +189,12 @@ class ResultEntryManager extends Component
             $decodedComments = json_decode($rawComments, true);
             $isJson = (json_last_error() === JSON_ERROR_NONE && is_array($decodedComments));
 
+            $rawOptions = $item->report_options ?? [];
+            $decodedOptions = is_array($rawOptions) ? $rawOptions : json_decode($rawOptions, true);
+            if (!is_array($decodedOptions)) {
+                $decodedOptions = [];
+            }
+
             // Handle Packages vs Single Tests
             $testsToProcess = [];
             if ($item->labTest) {
@@ -206,6 +214,13 @@ class ResultEntryManager extends Component
                     // Legacy fallback: show the same comment for all tests in the item if it's not JSON
                     $this->testComments[$commentKey] = $rawComments;
                 }
+
+                $savedOpt = $decodedOptions[$test->id] ?? null;
+                $this->testOptions[$commentKey] = [
+                    'show_method' => isset($savedOpt['show_method']) ? (bool) $savedOpt['show_method'] : (bool) ($test->show_method_on_report ?? true),
+                    'show_interpretation' => isset($savedOpt['show_interpretation']) ? (bool) $savedOpt['show_interpretation'] : (bool) ($test->show_interpretation_on_report ?? true),
+                    'show_note' => isset($savedOpt['show_note']) ? (bool) $savedOpt['show_note'] : (bool) ($test->show_note_on_report ?? true),
+                ];
 
                 if ($test->parameters) {
                     foreach ($test->parameters as $param) {
@@ -873,6 +888,16 @@ class ResultEntryManager extends Component
                     $item->update(['report_comments' => json_encode($itemComments)]);
                 }
             }
+
+            // Save Test Level Visibility Options (show_method, show_interpretation, show_note)
+            $itemOpts = [];
+            foreach ($this->testOptions as $key => $opts) {
+                if (str_starts_with($key, $item->id.'_')) {
+                    $testId = substr($key, strlen($item->id.'_'));
+                    $itemOpts[$testId] = $opts;
+                }
+            }
+            $item->update(['report_options' => $itemOpts]);
         }
 
         if ($status === 'Approved') {

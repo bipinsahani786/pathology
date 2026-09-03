@@ -108,7 +108,15 @@
                                 <tr><td class="pe-3 text-muted">Voucher Discount</td><td class="text-end" style="color:#198754;">- ₹{{ number_format($invoice->voucher_discount_amount, 2) }}</td></tr>
                             @endif
                             @if($invoice->discount_amount > 0)
-                                <tr><td class="pe-3 text-muted">Manual Discount</td><td class="text-end" style="color:#198754;">- ₹{{ number_format($invoice->discount_amount, 2) }}</td></tr>
+                                <tr>
+                                    <td class="pe-3 text-muted">
+                                        Manual Discount
+                                        @if($invoice->discount_remarks)
+                                            <div class="fs-10 text-muted fst-italic">({{ $invoice->discount_remarks }})</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end" style="color:#198754;">- ₹{{ number_format($invoice->discount_amount, 2) }}</td>
+                                </tr>
                             @endif
                             <tr class="border-top"><td class="pe-3 fw-bold fs-14 pt-2">Total</td><td class="text-end fw-bold fs-14 pt-2 text-primary">₹{{ number_format($invoice->total_amount, 2) }}</td></tr>
                             <tr><td class="pe-3 text-muted">Paid</td><td class="text-end fw-bold" style="color:#198754;">₹{{ number_format($invoice->paid_amount, 2) }}</td></tr>

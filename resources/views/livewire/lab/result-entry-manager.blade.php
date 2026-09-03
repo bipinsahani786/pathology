@@ -364,16 +364,35 @@
                                                         </span>
                                                     </div>
                                                     
-                                                    @if(!($testItem->labTest->is_package ?? false))
-                                                        @can('edit reports')
-                                                            <button wire:click="toggleTestStatus({{ $itemId }})" 
-                                                                    class="btn btn-xs {{ $isBillItemComplete ? 'btn-outline-danger' : 'btn-outline-success' }} py-0 px-2"
-                                                                    style="font-size: 10px;">
-                                                                <i class="feather-{{ $isBillItemComplete ? 'x-circle' : 'check-circle' }} me-1"></i>
-                                                                Mark {{ $isBillItemComplete ? 'Pending' : 'Complete' }}
-                                                            </button>
-                                                        @endcan
-                                                    @endif
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        @php $optKey = $itemId . '_' . $labTestId; @endphp
+                                                        <div class="d-flex align-items-center gap-2 bg-white px-2 py-1 rounded border" title="PDF Report Print Options for this test">
+                                                            <span class="fs-10 text-muted fw-bold text-uppercase me-1"><i class="feather-printer me-1 text-primary"></i>Print:</span>
+                                                            <div class="form-check form-check-inline form-switch mb-0" title="Show/Hide Method on PDF Report">
+                                                                <input class="form-check-input" type="checkbox" wire:model.live="testOptions.{{ $optKey }}.show_method" id="m_{{ $optKey }}">
+                                                                <label class="form-check-label fs-10 fw-semibold {{ ($testOptions[$optKey]['show_method'] ?? true) ? 'text-primary' : 'text-muted text-decoration-line-through' }}" for="m_{{ $optKey }}">Method</label>
+                                                            </div>
+                                                            <div class="form-check form-check-inline form-switch mb-0" title="Show/Hide Clinical Interpretation on PDF Report">
+                                                                <input class="form-check-input" type="checkbox" wire:model.live="testOptions.{{ $optKey }}.show_interpretation" id="i_{{ $optKey }}">
+                                                                <label class="form-check-label fs-10 fw-semibold {{ ($testOptions[$optKey]['show_interpretation'] ?? true) ? 'text-primary' : 'text-muted text-decoration-line-through' }}" for="i_{{ $optKey }}">Interp</label>
+                                                            </div>
+                                                            <div class="form-check form-check-inline form-switch mb-0" title="Show/Hide Notes on PDF Report">
+                                                                <input class="form-check-input" type="checkbox" wire:model.live="testOptions.{{ $optKey }}.show_note" id="n_{{ $optKey }}">
+                                                                <label class="form-check-label fs-10 fw-semibold {{ ($testOptions[$optKey]['show_note'] ?? true) ? 'text-primary' : 'text-muted text-decoration-line-through' }}" for="n_{{ $optKey }}">Note</label>
+                                                            </div>
+                                                        </div>
+
+                                                        @if(!($testItem->labTest->is_package ?? false))
+                                                            @can('edit reports')
+                                                                <button wire:click="toggleTestStatus({{ $itemId }})" 
+                                                                        class="btn btn-xs {{ $isBillItemComplete ? 'btn-outline-danger' : 'btn-outline-success' }} py-0 px-2"
+                                                                        style="font-size: 10px;">
+                                                                    <i class="feather-{{ $isBillItemComplete ? 'x-circle' : 'check-circle' }} me-1"></i>
+                                                                    Mark {{ $isBillItemComplete ? 'Pending' : 'Complete' }}
+                                                                </button>
+                                                            @endcan
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

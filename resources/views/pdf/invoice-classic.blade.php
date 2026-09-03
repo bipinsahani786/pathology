@@ -344,7 +344,12 @@
             @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
             @if($totalDisc > 0)
                 <tr>
-                    <td class="total-lbl">Discount (-)</td>
+                    <td class="total-lbl">
+                        Discount (-)
+                        @if(!empty($invoice->discount_remarks))
+                            <div style="font-size:9px; color:#6b7280; font-weight:normal;">({{ $invoice->discount_remarks }})</div>
+                        @endif
+                    </td>
                     <td class="total-val" style="color:#16a34a;">- Rs.{{ number_format($totalDisc, 2) }}</td>
                 </tr>
             @endif

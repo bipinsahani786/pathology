@@ -48,6 +48,9 @@
                     @php $totalDisc = $invoice->membership_discount_amount + $invoice->voucher_discount_amount + $invoice->discount_amount; @endphp
                     @if($totalDisc > 0)
                         <div class="d-flex justify-content-between"><span>Discount:</span><span>-₹{{ number_format($totalDisc, 0) }}</span></div>
+                        @if(!empty($invoice->discount_remarks))
+                            <div class="text-end text-muted fs-9" style="margin-top:-3px; margin-bottom:2px;">({{ $invoice->discount_remarks }})</div>
+                        @endif
                     @endif
                     <div class="d-flex justify-content-between fw-bold fs-13 mt-1 pt-1" style="border-top:1px solid #333;">
                         <span>TOTAL:</span><span>₹{{ number_format($invoice->total_amount, 0) }}</span>

@@ -205,6 +205,9 @@
         @if($totalDisc > 0)
             <div class="total-row"><span class="lbl">Total Savings:</span><span class="val">-
                     Rs.{{ number_format($totalDisc, 2) }}</span></div>
+            @if(!empty($invoice->discount_remarks))
+                <div style="font-size: 8px; color: #555; text-align: right; margin-top: -3px; margin-bottom: 2px;">({{ $invoice->discount_remarks }})</div>
+            @endif
         @endif
         <div class="total-row grand-total"><span class="lbl bold">NET PAYABLE:</span><span
                 class="val">Rs.{{ number_format($invoice->total_amount, 2) }}</span></div>

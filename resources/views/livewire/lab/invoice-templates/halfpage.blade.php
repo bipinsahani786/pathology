@@ -107,7 +107,15 @@
                                 <tr><td class="px-2 py-1 border-dark">Subtotal</td><td class="text-end fw-bold border-dark px-2 py-1">{{ number_format($invoice->subtotal, 2) }}</td></tr>
                                 @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
                                 @if($totalDisc > 0)
-                                    <tr><td class="px-2 py-1 border-dark">Discount</td><td class="text-end fw-bold border-dark px-2 py-1">- {{ number_format($totalDisc, 2) }}</td></tr>
+                                    <tr>
+                                        <td class="px-2 py-1 border-dark">
+                                            Discount
+                                            @if(!empty($invoice->discount_remarks))
+                                                <div class="fs-9 text-muted fst-italic">({{ $invoice->discount_remarks }})</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-end fw-bold border-dark px-2 py-1">- {{ number_format($totalDisc, 2) }}</td>
+                                    </tr>
                                 @endif
                                 <tr><td class="px-2 py-1 fw-bold border-dark text-uppercase">Net Payable</td><td class="text-end fw-bold border-dark px-2 py-1">{{ number_format($invoice->total_amount, 2) }}</td></tr>
                                 <tr><td class="px-2 py-1 border-dark">Paid</td><td class="text-end fw-bold border-dark px-2 py-1">{{ number_format($invoice->paid_amount, 2) }}</td></tr>

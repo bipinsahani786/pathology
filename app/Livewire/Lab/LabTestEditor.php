@@ -32,6 +32,12 @@ class LabTestEditor extends Component
 
     public $interpretation;
 
+    public $show_method_on_report = true;
+
+    public $show_interpretation_on_report = true;
+
+    public $show_note_on_report = true;
+
     public array $parameters = [];
 
     public $editingParamIndex = null;
@@ -55,9 +61,15 @@ class LabTestEditor extends Component
             $this->tat_hours = $test->tat_hours;
             $this->description = $test->description;
             $this->interpretation = $test->interpretation;
+            $this->show_method_on_report = (bool) ($test->show_method_on_report ?? true);
+            $this->show_interpretation_on_report = (bool) ($test->show_interpretation_on_report ?? true);
+            $this->show_note_on_report = (bool) ($test->show_note_on_report ?? true);
             $this->is_active = $test->is_active;
             $this->parameters = is_array($test->parameters) ? $test->parameters : [];
         } else {
+            $this->show_method_on_report = true;
+            $this->show_interpretation_on_report = true;
+            $this->show_note_on_report = true;
             $this->addParameter();
         }
     }
@@ -230,6 +242,9 @@ class LabTestEditor extends Component
                 'tat_hours' => $this->tat_hours,
                 'parameters' => $this->parameters,
                 'is_active' => $this->is_active,
+                'show_method_on_report' => (bool) $this->show_method_on_report,
+                'show_interpretation_on_report' => (bool) $this->show_interpretation_on_report,
+                'show_note_on_report' => (bool) $this->show_note_on_report,
             ];
 
             $labTestService->saveTest($data, $this->test_id);

@@ -181,11 +181,16 @@
                             <span class="text-dark fw-bold fs-13">₹{{ number_format($invoice->subtotal, 2) }}</span>
                         </div>
                         
-                        @if($invoice->discount_amount > 0 || $invoice->membership_discount_amount > 0 || $invoice->voucher_discount_amount > 0)
+                            @if($invoice->discount_amount > 0 || $invoice->membership_discount_amount > 0 || $invoice->voucher_discount_amount > 0)
                             <div class="d-flex justify-content-between mb-2 text-success">
                                 <span class="fs-13">Total Discount</span>
                                 <span class="fw-bold fs-13">- ₹{{ number_format($invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount, 2) }}</span>
                             </div>
+                            @if($invoice->discount_remarks)
+                                <div class="text-end mb-2 mt-n1">
+                                    <small class="text-muted fs-11 fw-semibold"><i class="feather-info me-1"></i>Reason: {{ $invoice->discount_remarks }}</small>
+                                </div>
+                            @endif
                             @if($invoice->membership)
                                 <div class="text-end mb-2 mt-n1">
                                     <small class="text-success fs-10 fw-bold">Applied: {{ $invoice->membership->name }} ({{ $invoice->membership->discount_percentage }}%)</small>
