@@ -254,6 +254,8 @@ class SettingsManager extends Component
 
     public $module_inventory = true;
 
+    public $inventory_allow_negative_stock = false;
+
     public $modulesSaved = false;
 
     // ==========================================
@@ -519,6 +521,7 @@ class SettingsManager extends Component
         $this->module_settlements = Configuration::getFor('module_settlements', '1', $company->id, 'global') === '1';
         $this->module_marketing = Configuration::getFor('module_marketing', '1', $company->id, 'global') === '1';
         $this->module_inventory = Configuration::getFor('module_inventory', '1', $company->id, 'global') === '1';
+        $this->inventory_allow_negative_stock = Configuration::getFor('inventory_allow_negative_stock', '0', $company->id, 'global') === '1';
 
         // UI Scaling (Always Global/Company Wide context)
         $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100, $company->id, 'global');
@@ -985,6 +988,7 @@ class SettingsManager extends Component
         Configuration::setFor('module_settlements', $this->module_settlements ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_marketing', $this->module_marketing ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('inventory_allow_negative_stock', $this->inventory_allow_negative_stock ? '1' : '0', $companyId, 'global');
 
         $this->modulesSaved = true;
     }

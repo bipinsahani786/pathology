@@ -3,6 +3,8 @@
 namespace App\Livewire\Lab;
 
 use App\Models\Department;
+use App\Models\InventoryItem;
+use App\Models\LabTestConsumable;
 use App\Services\LabTestService;
 use Livewire\Component;
 
@@ -40,6 +42,8 @@ class LabTestEditor extends Component
 
     public array $parameters = [];
 
+    public array $consumables = []; // [{inventory_item_id, quantity_per_test}]
+
     public $editingParamIndex = null;
 
     public $isRangeModalOpen = false;
@@ -66,6 +70,14 @@ class LabTestEditor extends Component
             $this->show_note_on_report = (bool) ($test->show_note_on_report ?? true);
             $this->is_active = $test->is_active;
             $this->parameters = is_array($test->parameters) ? $test->parameters : [];
+
+            // Load existing consumables
+            $this->consumables = $test->consumables->map(function ($c) {
+                return [
+                    'inventory_item_id' => $c->inventory_item_id,
+                    'quantity_per_test' => $c->quantity_per_test,
+                ];
+            })->toArray();
         } else {
             $this->show_method_on_report = true;
             $this->show_interpretation_on_report = true;
@@ -247,7 +259,19 @@ class LabTestEditor extends Component
                 'show_note_on_report' => (bool) $this->show_note_on_report,
             ];
 
-            $labTestService->saveTest($data, $this->test_id);
+            $test = $labTestService->saveTest($data, $this->test_id);
+
+            // Sync consumables
+            LabTestConsumable::where('lab_test_id', $test->id)->delete();
+            foreach ($this->consumables as $c) {
+                if (!empty($c['inventory_item_id']) && ($c['quantity_per_test'] ?? 0) > 0) {
+                    LabTestConsumable::create([
+                        'lab_test_id'       => $test->id,
+                        'inventory_item_id' => $c['inventory_item_id'],
+                        'quantity_per_test' => $c['quantity_per_test'],
+                    ]);
+                }
+            }
 
             session()->flash('message', $this->test_id ? 'Test updated successfully.' : 'New test created.');
 
@@ -255,6 +279,17 @@ class LabTestEditor extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving test: '.$e->getMessage());
         }
+    }
+
+    public function addConsumable()
+    {
+        $this->consumables[] = ['inventory_item_id' => '', 'quantity_per_test' => 1];
+    }
+
+    public function removeConsumable($index)
+    {
+        unset($this->consumables[$index]);
+        $this->consumables = array_values($this->consumables);
     }
 
     public function render()
@@ -265,8 +300,14 @@ class LabTestEditor extends Component
             ->orderBy('name')
             ->get();
 
+        $inventoryItems = InventoryItem::where('company_id', auth()->user()->company_id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.lab.lab-test-editor', [
             'departments' => $departments,
+            'inventoryItems' => $inventoryItems,
         ])->layout('layouts.app', ['title' => $this->test_id ? 'Edit Lab Test' : 'New Lab Test']);
     }
 }

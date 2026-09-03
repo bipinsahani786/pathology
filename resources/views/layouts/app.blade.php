@@ -606,6 +606,9 @@
                     @if(session()->has('success') || session()->has('message'))
                         Livewire.dispatch('notify', { type: 'success', message: @js(session('success') ?? session('message')) });
                     @endif
+                    @if(session()->has('warning'))
+                        Livewire.dispatch('notify', { type: 'warning', message: @js(session('warning')) });
+                    @endif
                     @if(session()->has('error'))
                         Livewire.dispatch('notify', { type: 'error', message: @js(session('error')) });
                     @endif
@@ -623,7 +626,8 @@
                         toast.style.borderRadius = '16px';
                         toast.style.backgroundColor = '#ffffff';
                         toast.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-                        toast.style.border = `1px solid ${info.type === 'error' ? '#fee2e2' : '#dcfce7'}`;
+                        const borderColor = info.type === 'error' ? '#fee2e2' : (info.type === 'warning' ? '#fef3c7' : '#dcfce7');
+                        toast.style.border = `1px solid ${borderColor}`;
                         toast.style.display = 'flex';
                         toast.style.alignItems = 'center';
                         toast.style.gap = '15px';
@@ -631,14 +635,16 @@
                         toast.style.transform = 'translateX(100px)';
                         toast.style.opacity = '0';
 
-                        const accentColor = info.type === 'error' ? '#ef4444' : '#10b981';
+                        const accentColor = info.type === 'error' ? '#ef4444' : (info.type === 'warning' ? '#f59e0b' : '#10b981');
+                        const iconName = info.type === 'error' ? 'alert-octagon' : (info.type === 'warning' ? 'alert-triangle' : 'check-circle');
+                        const titleText = info.type === 'error' ? 'Attention Required' : (info.type === 'warning' ? 'Inventory Notice' : 'Action Successful');
 
                         toast.innerHTML = `
                             <div style="background: ${accentColor}; color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                                <i class="feather-${info.type === 'error' ? 'alert-octagon' : 'check-circle'}" style="font-size: 20px;"></i>
+                                <i class="feather-${iconName}" style="font-size: 20px;"></i>
                             </div>
                             <div style="flex: 1;">
-                                <div style="color: #111827; font-weight: 700; font-size: 15px; margin-bottom: 2px;">${info.type === 'error' ? 'Attention Required' : 'Action Successful'}</div>
+                                <div style="color: #111827; font-weight: 700; font-size: 15px; margin-bottom: 2px;">${titleText}</div>
                                 <div style="color: #6b7280; font-size: 13px; font-weight: 500;">${info.message}</div>
                             </div>
                             <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #9ca3af; cursor: pointer; padding: 5px;">

@@ -23,6 +23,7 @@ class TestReport extends Model
         'approved_by',
         'approved_at',
         'report_date',
+        'inventory_deducted',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class TestReport extends Model
         'outsourced_crop_bottom' => 'integer',
         'outsourced_pdf_path' => 'array',
         'report_date' => 'datetime',
+        'inventory_deducted' => 'boolean',
     ];
 
     public function invoice()

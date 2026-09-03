@@ -306,6 +306,15 @@
         /* ══════════════════════════════════════════════
            SECTION TITLES
            ══════════════════════════════════════════════ */
+        .test-header-group {
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+        }
+
+        .keep-together {
+            page-break-inside: avoid !important;
+        }
+
         .dept-title {
             text-align: center;
             font-weight: 700;
@@ -316,6 +325,8 @@
             text-transform: uppercase;
             margin: {{ $deptTitleMarginTop }}px 0 {{ $deptTitleMarginBottom }}px;
             color: #1a1a1a;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
         }
 
         .test-title {
@@ -327,6 +338,8 @@
             text-transform: uppercase;
             margin-bottom: {{ $testTitleMarginBottom }}px;
             color: #1a1a1a;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
         }
 
         .method-line {
@@ -337,6 +350,8 @@
             color: #555;
             font-style: italic;
             margin-bottom: {{ $methodLineMarginBottom }}px;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
         }
 
         /* ── Barcode Area ── */
@@ -857,19 +872,25 @@
                 @endif
             @endif
 
-            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both;">
-                {{-- ── Department & Test Title ── --}}
-                @if($showDeptAlways || $isFirstInDept)
-                    <div class="dept-title">{{ strtoupper($deptName) }}</div>
-                @endif
-                <div class="test-title" style="margin-bottom: {{ $testTitleMarginBottom }}px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
+            @php
+                $testParamCount = $results->count();
+                // Prevent orphan headers: If test has 15 or fewer parameters, keep entire test block together
+                $keepEntireTestTogether = $testParamCount <= 15;
+            @endphp
 
-                {{-- ── Method (from LabTest master) ── --}}
-                @if($showTestMethod && $labTest->method)
-                    <div class="method-line">Method: {{ $labTest->method }}</div>
-                @endif
+            <div class="test-block-wrapper {{ $keepEntireTestTogether ? 'keep-together' : '' }}" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; {{ $keepEntireTestTogether ? 'page-break-inside: avoid !important;' : '' }}">
+                <div class="test-header-group">
+                    {{-- ── Department & Test Title ── --}}
+                    @if($showDeptAlways || $isFirstInDept)
+                        <div class="dept-title">{{ strtoupper($deptName) }}</div>
+                    @endif
+                    <div class="test-title" style="margin-bottom: {{ $testTitleMarginBottom }}px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
 
-
+                    {{-- ── Method (from LabTest master) ── --}}
+                    @if($showTestMethod && $labTest->method)
+                        <div class="method-line">Method: {{ $labTest->method }}</div>
+                    @endif
+                </div>
 
                 <table class="result-table">
                     @php

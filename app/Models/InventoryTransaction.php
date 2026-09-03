@@ -13,6 +13,7 @@ class InventoryTransaction extends Model
     protected $fillable = [
         'branch_id',
         'item_id',
+        'batch_id',
         'type',
         'quantity',
         'source',
@@ -20,7 +21,18 @@ class InventoryTransaction extends Model
         'performed_by_id',
         'issued_to_id',
         'remarks',
+        'purchase_group_id',
     ];
+
+    public function batch()
+    {
+        return $this->belongsTo(InventoryBatch::class, 'batch_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(InventorySupplier::class, 'reference_id');
+    }
 
     public function branch()
     {
