@@ -348,6 +348,36 @@
                         </div>
                     </div>
 
+                    <!-- Report Print Visibility Card -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-header py-3 bg-light rounded-top-4">
+                            <h6 class="card-title mb-0 fw-bold text-dark">
+                                <i class="feather-printer text-primary me-2"></i>Report Print Visibility
+                            </h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="fs-11 text-muted mb-3">Turn off/on what appears on the patient report PDF for this test.</p>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" wire:model="show_method_on_report" id="test-show-method">
+                                <label class="form-check-label fw-bold text-dark fs-12" for="test-show-method">Show Method on Report</label>
+                                <div class="fs-10 text-muted">Prints test & parameter methods (e.g. Method: HPLC, (Method: Diazo)).</div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" wire:model="show_interpretation_on_report" id="test-show-interp">
+                                <label class="form-check-label fw-bold text-dark fs-12" for="test-show-interp">Show Interpretation on Report</label>
+                                <div class="fs-10 text-muted">Prints clinical interpretation section below test parameters.</div>
+                            </div>
+
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" wire:model="show_note_on_report" id="test-show-note">
+                                <label class="form-check-label fw-bold text-dark fs-12" for="test-show-note">Show Notes on Report</label>
+                                <div class="fs-10 text-muted">Prints internal notes/description below test parameters.</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Status Card -->
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-body p-4">

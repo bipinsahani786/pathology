@@ -625,6 +625,21 @@
                             @if ($manual_discount_amt > 0)
                                 <div class="text-end text-success fs-10 fw-bold mt-1">- ₹{{ number_format($manual_discount_amt, 0) }}</div>
                             @endif
+
+                            {{-- Discount Remarks / Reason --}}
+                            <div class="mt-2">
+                                <label class="form-label fs-10 text-muted fw-bold text-uppercase mb-1">Discount Remarks / Reason</label>
+                                <input type="text" list="posDiscountReasons" class="form-control form-control-sm fs-11" wire:model="discount_remarks" placeholder="Reason for discount (e.g. Doctor ref, Staff, VIP)">
+                                <datalist id="posDiscountReasons">
+                                    <option value="Doctor Request">
+                                    <option value="Staff / Family">
+                                    <option value="Senior Citizen">
+                                    <option value="Management Approved">
+                                    <option value="Camp / Special Offer">
+                                    <option value="Financial Hardship">
+                                    <option value="Repeat Patient">
+                                </datalist>
+                            </div>
                         </div>
 
                         {{-- Total Discount --}}

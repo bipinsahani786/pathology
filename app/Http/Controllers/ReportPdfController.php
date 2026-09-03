@@ -183,6 +183,9 @@ class ReportPdfController extends Controller
             'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId, $branchId) ?: '#d32f2f',
             
             'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId, $branchId) ?: 13,
+            'report_vertical_spacing' => (int) Configuration::getFor('report_vertical_spacing', 0, $companyId, $branchId),
+            'report_heading_spacing' => (int) Configuration::getFor('report_heading_spacing', 0, $companyId, $branchId),
+            'report_patient_info_spacing' => (int) Configuration::getFor('report_patient_info_spacing', 0, $companyId, $branchId),
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId, $branchId) ?: 'Helvetica',
 
             // ALWAYS reserve space for physical letterhead (1 inch = ~96px minimum, but user wants settings-driven)
@@ -451,6 +454,7 @@ class ReportPdfController extends Controller
 
         $item   = $report->invoice->items->where('id', $itemId)->first();
         $remark = '';
+        $options = [];
         if ($item) {
             $raw     = $item->report_comments;
             $decoded = json_decode($raw, true);
@@ -459,6 +463,12 @@ class ReportPdfController extends Controller
             } else {
                 $remark = $raw;
             }
+
+            $rawOpts = $item->report_options;
+            $decodedOpts = is_array($rawOpts) ? $rawOpts : json_decode($rawOpts ?? '[]', true);
+            if (is_array($decodedOpts)) {
+                $options = $decodedOpts[$testId] ?? [];
+            }
         }
 
         return [
@@ -466,6 +476,7 @@ class ReportPdfController extends Controller
             'labTest' => $labTest,
             'results' => $testGroup,
             'remark'  => $remark,
+            'options' => $options,
         ];
     }
 }

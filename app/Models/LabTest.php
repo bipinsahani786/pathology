@@ -12,6 +12,7 @@ class LabTest extends Model
     protected $fillable = [
         'company_id', 'global_test_id', 'department_id', 'test_code', 'name', 'method', 'department',
         'mrp', 'b2b_price', 'sample_type', 'tat_hours', 'parameters', 'is_active', 'description', 'interpretation', 'is_package', 'linked_test_ids',
+        'show_method_on_report', 'show_interpretation_on_report', 'show_note_on_report',
     ];
 
     protected $casts = [
@@ -19,6 +20,9 @@ class LabTest extends Model
         'mrp' => 'decimal:2',
         'b2b_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'show_method_on_report' => 'boolean',
+        'show_interpretation_on_report' => 'boolean',
+        'show_note_on_report' => 'boolean',
         'parameters' => 'array',
         'is_package' => 'boolean',
         'linked_test_ids' => 'array',

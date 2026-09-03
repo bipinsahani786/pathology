@@ -160,6 +160,12 @@ class SettingsManager extends Component
     // PDF Typography & Layout
     public $pdf_font_size = 13;
 
+    public $report_vertical_spacing = 0;
+
+    public $report_heading_spacing = 0;
+
+    public $report_patient_info_spacing = 0;
+
     public $pdf_font_family = 'Helvetica';
 
     public $pdf_margin_top = 310;
@@ -436,6 +442,9 @@ class SettingsManager extends Component
 
         // PDF Typography & Layout
         $this->pdf_font_size = (int) Configuration::getFor('pdf_font_size', 13, $company->id, $branchId);
+        $this->report_vertical_spacing = (int) Configuration::getFor('report_vertical_spacing', 0, $company->id, $branchId);
+        $this->report_heading_spacing = (int) Configuration::getFor('report_heading_spacing', 0, $company->id, $branchId);
+        $this->report_patient_info_spacing = (int) Configuration::getFor('report_patient_info_spacing', 0, $company->id, $branchId);
         $this->pdf_font_family = Configuration::getFor('pdf_font_family', 'Helvetica', $company->id, $branchId);
         $this->pdf_margin_top = (int) Configuration::getFor('pdf_margin_top', 310, $company->id, $branchId);
         $this->pdf_margin_bottom = (int) Configuration::getFor('pdf_margin_bottom', 255, $company->id, $branchId);
@@ -815,6 +824,9 @@ class SettingsManager extends Component
 
         // Layout & Typography
         Configuration::setFor('pdf_font_size', $this->pdf_font_size, $companyId, $branchId);
+        Configuration::setFor('report_vertical_spacing', (int) $this->report_vertical_spacing, $companyId, $branchId);
+        Configuration::setFor('report_heading_spacing', (int) $this->report_heading_spacing, $companyId, $branchId);
+        Configuration::setFor('report_patient_info_spacing', (int) $this->report_patient_info_spacing, $companyId, $branchId);
         Configuration::setFor('pdf_font_family', $this->pdf_font_family, $companyId, $branchId);
         Configuration::setFor('pdf_margin_top', $this->pdf_margin_top, $companyId, $branchId);
         Configuration::setFor('pdf_margin_bottom', $this->pdf_margin_bottom, $companyId, $branchId);

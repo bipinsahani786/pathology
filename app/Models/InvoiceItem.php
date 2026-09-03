@@ -10,6 +10,7 @@ class InvoiceItem extends Model
 
     protected $casts = [
         'is_package' => 'boolean',
+        'report_options' => 'array',
     ];
 
     /**

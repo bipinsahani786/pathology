@@ -1131,6 +1131,37 @@
                                     </div>
                                 </div>
 
+                                <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Report Spacing & Compaction (Vertical Spacing)</div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold fs-11 d-flex justify-content-between align-items-center">
+                                            <span>Patient Info Spacing (px)</span>
+                                            <span class="badge bg-soft-primary text-primary fs-9 py-0 px-1">Negative Allowed</span>
+                                        </label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="report_patient_info_spacing"
+                                            step="1" min="-25" max="30" placeholder="0">
+                                        <div class="fs-10 text-muted mt-1">Controls patient card row gap, padding & QR/Barcode scale. Use negative (-2 to -10) to compact.</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold fs-11 d-flex justify-content-between align-items-center">
+                                            <span>Test Heading Spacing (px)</span>
+                                            <span class="badge bg-soft-primary text-primary fs-9 py-0 px-1">Negative Allowed</span>
+                                        </label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="report_heading_spacing"
+                                            step="1" min="-25" max="30" placeholder="0">
+                                        <div class="fs-10 text-muted mt-1">Controls gap around Department (Biochemistry) & Test Title (LFT). Use negative to pull closer.</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold fs-11 d-flex justify-content-between align-items-center">
+                                            <span>Results Row Spacing (px)</span>
+                                            <span class="badge bg-soft-primary text-primary fs-9 py-0 px-1">Negative Allowed</span>
+                                        </label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="report_vertical_spacing"
+                                            step="1" min="-25" max="30" placeholder="0">
+                                        <div class="fs-10 text-muted mt-1">Controls test parameter rows height & padding. Negative compresses rows to fit on 1 page.</div>
+                                    </div>
+                                </div>
+
                                 <hr class="my-3">
                                 <div class="fw-bold fs-11 mb-2 text-muted text-uppercase">Report Layout Options</div>
                                 <div class="row g-3 mb-3">

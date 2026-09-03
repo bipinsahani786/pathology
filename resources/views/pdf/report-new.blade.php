@@ -48,6 +48,42 @@
         $sz11 = round(11 * $scale, 1) . 'px';
         $sz11_5 = round(11.5 * $scale, 1) . 'px';
         $sz12 = round(12 * $scale, 1) . 'px';
+
+        // ── Vertical Spacing from Settings (supports negative & positive) ──
+        $verticalSpacing = (int) ($settings['report_vertical_spacing'] ?? 0);
+        $headingSpacing = (int) ($settings['report_heading_spacing'] ?? 0);
+        $patientInfoSpacing = (int) ($settings['report_patient_info_spacing'] ?? 0);
+
+        // ── Patient Info Box Spacing (Separate Setting) ──
+        $patientBoxPadY = max(1, 8 + $patientInfoSpacing);
+        $patientBoxPadX = max(4, 10 + round($patientInfoSpacing * 0.3));
+        $patientTdPadY  = $patientInfoSpacing < 0 ? max(0, round(0.5 + ($patientInfoSpacing * 0.05), 1)) : round(0.5 + ($patientInfoSpacing * 0.3), 1);
+        $patientLineHeight = $patientInfoSpacing < 0 ? max(0.85, round(1.1 + ($patientInfoSpacing * 0.025), 2)) : round(1.1 + ($patientInfoSpacing * 0.02), 2);
+        $qrCodeSize = max(28, 55 + ($patientInfoSpacing * 1.5));
+        $barcodeHeight = max(14, 30 + $patientInfoSpacing);
+        $barcodeWidth = max(60, 100 + ($patientInfoSpacing * 2));
+        $barcodeMarginTop = max(1, 5 + round($patientInfoSpacing * 0.3));
+
+        // ── Test Headings Spacing (Separate Setting for BIOCHEMISTRY, LFT, gap) ──
+        $deptTitleMarginTop    = max(0, 10 + $headingSpacing);
+        $deptTitleMarginBottom = max(0, 2 + round($headingSpacing * 0.3));
+        $testTitleMarginBottom = max(1, 12 + $headingSpacing);
+        $methodLineMarginBottom = max(0, 5 + round($headingSpacing * 0.4));
+        $testBlockMarginBottom = max(4, 30 + ($headingSpacing * 2.5));
+
+        // ── Results Rows Spacing ──
+        $tdPadY = max(0, 5 + $verticalSpacing);
+        $rowLineHeight = $verticalSpacing < 0 
+            ? max(0.85, round(1.35 + ($verticalSpacing * 0.035), 2)) 
+            : round(1.35 + ($verticalSpacing * 0.02), 2);
+        $resultTableMarginBottom = max(2, 8 + $verticalSpacing);
+        $subHdrPadTop          = max(0, 3 + $verticalSpacing);
+        $subHdrPadBottom       = max(0, 1 + round($verticalSpacing * 0.4));
+        $theadPadY             = max(2, 6 + round($verticalSpacing * 0.4));
+        $methodMarginTop       = max(0, 2 + $verticalSpacing);
+        $interpMarginTop       = max(4, 15 + $verticalSpacing);
+        $interpMarginBottom    = max(3, 10 + round($verticalSpacing * 0.7));
+        $extraNegMargin        = $verticalSpacing < -5 ? min(0, round(($verticalSpacing + 5) * 0.35)) : 0;
     @endphp
 
     <style>
@@ -114,7 +150,7 @@
             right: 0;
             border: 1px solid #1a1a1a !important;
             margin: 0 {{ $marginRight }} 0 {{ $marginLeft }};
-            padding: 8px 10px;
+            padding: {{ $patientBoxPadY }}px {{ $patientBoxPadX }}px;
             font-size:
                 {{ $sz10_5 }}
             ;
@@ -128,9 +164,9 @@
         }
 
         .patient-table td {
-            padding: 0.5px 2px;
+            padding: {{ $patientTdPadY }}px 2px;
             vertical-align: top;
-            line-height: 1.1;
+            line-height: {{ $patientLineHeight }};
         }
 
         .patient-table .lbl {
@@ -152,20 +188,20 @@
         }
 
         .qr-code {
-            width: 55px;
-            height: 55px;
+            width: {{ $qrCodeSize }}px;
+            height: {{ $qrCodeSize }}px;
             display: block;
             margin: 0 auto;
         }
 
         .barcode {
-            margin-top: 5px;
+            margin-top: {{ $barcodeMarginTop }}px;
             text-align: center;
         }
 
         .barcode-img {
-            width: 100px;
-            height: 30px;
+            width: {{ $barcodeWidth }}px;
+            height: {{ $barcodeHeight }}px;
         }
 
         /* ══════════════════════════════════════════════
@@ -278,7 +314,7 @@
             ;
             letter-spacing: 0.8px;
             text-transform: uppercase;
-            margin: 10px 0 2px;
+            margin: {{ $deptTitleMarginTop }}px 0 {{ $deptTitleMarginBottom }}px;
             color: #1a1a1a;
         }
 
@@ -289,7 +325,7 @@
                 {{ $sz11 }}
             ;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: {{ $testTitleMarginBottom }}px;
             color: #1a1a1a;
         }
 
@@ -300,7 +336,7 @@
             ;
             color: #555;
             font-style: italic;
-            margin-bottom: 5px;
+            margin-bottom: {{ $methodLineMarginBottom }}px;
         }
 
         /* ── Barcode Area ── */
@@ -320,20 +356,22 @@
         .result-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: {{ $resultTableMarginBottom }}px;
             font-size:
                 {{ $sz10 }}
             ;
+            line-height: {{ $rowLineHeight }};
         }
 
         .result-table tr {
             page-break-inside: avoid;
+            line-height: {{ $rowLineHeight }};
         }
 
         .result-table thead th {
             border-top: 1.5px solid #333;
             border-bottom: 1.5px solid #333;
-            padding: 6px 6px;
+            padding: {{ $theadPadY }}px 6px;
             text-align: left;
             font-weight: 700;
             font-size:
@@ -342,13 +380,23 @@
             text-transform: uppercase;
             color: #000;
             background: #fbfbfb;
+            line-height: {{ $rowLineHeight }};
         }
 
         .result-table tbody td {
-            padding: 5px 6px;
+            padding: {{ $tdPadY }}px 6px;
             vertical-align: top;
             border-bottom: 0.5px solid #eee;
+            line-height: {{ $rowLineHeight }};
         }
+
+        @if($extraNegMargin < 0)
+        .result-table tbody td > div,
+        .result-table tbody td > span {
+            margin-top: {{ $extraNegMargin }}px;
+            margin-bottom: {{ $extraNegMargin }}px;
+        }
+        @endif
 
         /* Explicitly remove vertical lines */
         .result-table,
@@ -369,9 +417,10 @@
                 {{ $sz10 }}
             ;
             text-transform: uppercase;
-            padding: 3px 6px 1px;
+            padding: {{ $subHdrPadTop }}px 6px {{ $subHdrPadBottom }}px;
             color: #1a1a1a;
             border-bottom: none;
+            line-height: {{ $rowLineHeight }};
         }
 
         /* Indented parameter rows under sub-headers */
@@ -409,12 +458,12 @@
            INTERPRETATION & REMARKS BLOCKS
            ══════════════════════════════════════════════ */
         .interp-block {
-            margin: 15px 0 10px;
+            margin: {{ $interpMarginTop }}px 0 {{ $interpMarginBottom }}px;
             padding: 4px 0;
             font-size:
                 {{ $sz10 }}
             ;
-            line-height: 1.5;
+            line-height: {{ $verticalSpacing < 0 ? max(1.1, round(1.5 + ($verticalSpacing * 0.03), 2)) : 1.5 }};
             page-break-inside: avoid;
         }
 
@@ -781,6 +830,16 @@
                 $testName = $testData['name'];
                 $labTest = $testData['labTest'];
                 $results = $testData['results'];
+                $options = $testData['options'] ?? [];
+
+                $showTestMethod = ($settings['pdf_show_test_method'] ?? true) 
+                    && ($options['show_method'] ?? ($labTest->show_method_on_report ?? true));
+
+                $showTestInterp = ($settings['report_show_interpretation'] ?? true) 
+                    && ($options['show_interpretation'] ?? ($labTest->show_interpretation_on_report ?? true));
+
+                $showTestNote = ($settings['report_show_note'] ?? true) 
+                    && ($options['show_note'] ?? ($labTest->show_note_on_report ?? true));
             @endphp
 
             @php
@@ -798,15 +857,15 @@
                 @endif
             @endif
 
-            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both;">
+            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both;">
                 {{-- ── Department & Test Title ── --}}
                 @if($showDeptAlways || $isFirstInDept)
                     <div class="dept-title">{{ strtoupper($deptName) }}</div>
                 @endif
-                <div class="test-title" style="margin-bottom: 12px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
+                <div class="test-title" style="margin-bottom: {{ $testTitleMarginBottom }}px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
 
                 {{-- ── Method (from LabTest master) ── --}}
-                @if(($settings['pdf_show_test_method'] ?? true) && $labTest->method)
+                @if($showTestMethod && $labTest->method)
                     <div class="method-line">Method: {{ $labTest->method }}</div>
                 @endif
 
@@ -973,9 +1032,9 @@
                                     <tr class="{{ $inGroup ? 'param-indent' : '' }}">
                                         <td class="{{ $isAbnormal ? 'result-bold' : '' }}">
                                             {{ strtoupper($r->parameter_name) }}
-                                            @if(($settings['pdf_show_test_method'] ?? true) && $r->method)
+                                            @if($showTestMethod && $r->method)
                                                 <div
-                                                    style="font-size: {{ $sz8 }}; font-weight: normal; font-style: italic; color: #555; margin-top: 2px;">
+                                                    style="font-size: {{ $sz8 }}; font-weight: normal; font-style: italic; color: #555; margin-top: {{ $methodMarginTop }}px; line-height: {{ $rowLineHeight }};">
                                                     (Method: {{ $r->method }})
                                                 </div>
                                             @endif
@@ -1033,14 +1092,14 @@
                 </table>
 
                 {{-- ── Method (per-result level, if different from test master) ── --}}
-                @if(($settings['pdf_show_test_method'] ?? true) && $results->first()->method && $results->first()->method !== $labTest->method)
+                @if($showTestMethod && $results->first()->method && $results->first()->method !== $labTest->method)
                     <p style="font-size:{{ $sz9 }}; color:#555; font-style:italic; margin-bottom:5px;">
                         <strong>Method:</strong> {{ $results->first()->method }}
                     </p>
                 @endif
 
                 {{-- ── Default Interpretation (from LabTest master — stored as HTML) ── --}}
-                @if(($settings['report_show_interpretation'] ?? true) && $labTest->interpretation)
+                @if($showTestInterp && $labTest->interpretation)
                     <div class="interp-block" style="page-break-inside: avoid;">
                         <div class="interp-label">Interpretation:</div>
                         <div class="interp-content">
@@ -1050,7 +1109,7 @@
                 @endif
 
                 {{-- ── Description / Note (from LabTest master — plain text) ── --}}
-                @if(($settings['report_show_note'] ?? true) && $labTest->description)
+                @if($showTestNote && $labTest->description)
                     <div class="interp-block" style="color:#555; page-break-inside: avoid;">
                         <div class="interp-label" style="color:#333;">Note:</div>
                         <div class="interp-content">

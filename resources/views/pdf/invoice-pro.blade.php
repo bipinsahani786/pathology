@@ -200,7 +200,15 @@ if (!function_exists('getIndianCurrency')) {
             <tr><td>Gross Total</td><td style="text-align:right;font-weight:700;">Rs.{{ number_format($invoice->subtotal, 2) }}</td></tr>
             @php $totalDisc = $invoice->discount_amount + $invoice->membership_discount_amount + $invoice->voucher_discount_amount; @endphp
             @if($totalDisc > 0)
-                <tr><td>Taxable Discount (-)</td><td style="text-align:right;font-weight:700;">- Rs.{{ number_format($totalDisc, 2) }}</td></tr>
+                <tr>
+                    <td>
+                        Taxable Discount (-)
+                        @if(!empty($invoice->discount_remarks))
+                            <div style="font-size:9px; color:#6b7280; font-weight:normal;">({{ $invoice->discount_remarks }})</div>
+                        @endif
+                    </td>
+                    <td style="text-align:right;font-weight:700;">- Rs.{{ number_format($totalDisc, 2) }}</td>
+                </tr>
             @endif
             <tr class="grand-total"><td>NET PAYABLE</td><td style="text-align:right;">Rs.{{ number_format($invoice->total_amount, 2) }}</td></tr>
             <tr><td>Amount Received</td><td style="text-align:right;font-weight:700;">Rs.{{ number_format($invoice->paid_amount, 2) }}</td></tr>

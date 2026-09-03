@@ -208,6 +208,9 @@ class PdfStorageService
             'report_abnormal_color' => Configuration::getFor('report_abnormal_color', '#d32f2f', $companyId, $branchId) ?: '#d32f2f',
 
             'pdf_font_size' => Configuration::getFor('pdf_font_size', null, $companyId, $branchId) ?: 13,
+            'report_vertical_spacing' => (int) Configuration::getFor('report_vertical_spacing', 0, $companyId, $branchId),
+            'report_heading_spacing' => (int) Configuration::getFor('report_heading_spacing', 0, $companyId, $branchId),
+            'report_patient_info_spacing' => (int) Configuration::getFor('report_patient_info_spacing', 0, $companyId, $branchId),
             'pdf_font_family' => Configuration::getFor('pdf_font_family', null, $companyId, $branchId) ?: 'Helvetica',
             'pdf_margin_top' => Configuration::getFor('pdf_margin_top', null, $companyId, $branchId) ?: 310,
             'pdf_margin_bottom' => Configuration::getFor('pdf_margin_bottom', null, $companyId, $branchId) ?: 255,
@@ -255,12 +258,19 @@ class PdfStorageService
         $testId = $first?->lab_test_id;
         $item   = $report->invoice->items->where('id', $itemId)->first();
         $remark = '';
+        $options = [];
         if ($item) {
             $raw     = $item->report_comments;
             $decoded = json_decode($raw, true);
             $remark  = (json_last_error() === JSON_ERROR_NONE && is_array($decoded))
                 ? ($decoded[$testId] ?? '')
                 : $raw;
+
+            $rawOpts = $item->report_options;
+            $decodedOpts = is_array($rawOpts) ? $rawOpts : json_decode($rawOpts ?? '[]', true);
+            if (is_array($decodedOpts)) {
+                $options = $decodedOpts[$testId] ?? [];
+            }
         }
 
         return [
@@ -268,6 +278,7 @@ class PdfStorageService
             'labTest' => $labTest,
             'results' => $testGroup,
             'remark'  => $remark,
+            'options' => $options,
         ];
     }
 }

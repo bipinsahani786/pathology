@@ -15,6 +15,25 @@
         } elseif ($showSignaturesEveryPage) {
             $footerMargin = '130px';
         }
+
+        // ── Vertical Spacing from Settings (supports negative & positive) ──
+        $verticalSpacing = (int) ($settings['report_vertical_spacing'] ?? 0);
+        $headingSpacing = (int) ($settings['report_heading_spacing'] ?? 0);
+        $patientInfoSpacing = (int) ($settings['report_patient_info_spacing'] ?? 0);
+
+        $patientBoxMarginBottom = max(4, 20 + $headingSpacing);
+        $patientTdPadY = max(1, 5 + round($patientInfoSpacing * 0.5));
+        $patientTdPadX = max(4, 10 + round($patientInfoSpacing * 0.5));
+
+        $tdPadY = max(0, 6 + $verticalSpacing);
+        $thPadY = max(2, 8 + round($verticalSpacing * 0.4));
+        $rowLineHeight = $verticalSpacing < 0 
+            ? max(0.85, round(1.35 + ($verticalSpacing * 0.035), 2)) 
+            : round(1.35 + ($verticalSpacing * 0.02), 2);
+        $deptMarginTop = max(3, 20 + $headingSpacing);
+        $deptMarginBottom = max(2, 10 + round($headingSpacing * 0.5));
+        $testTitlePadTop = max(2, 10 + round($headingSpacing * 0.5));
+        $testTitlePadBottom = max(1, 5 + round($headingSpacing * 0.3));
     @endphp
     <style>
         @page {
@@ -79,12 +98,12 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 0px;
-            margin-bottom: 20px;
+            margin-bottom: {{ $patientBoxMarginBottom }}px;
             border: 1px solid #ccc;
         }
 
         .patient-box td {
-            padding: 5px 10px;
+            padding: {{ $patientTdPadY }}px {{ $patientTdPadX }}px;
             border: 1px solid #eee;
         }
         
@@ -108,16 +127,18 @@
 
         .results-table th {
             background-color: #f3f4f6;
-            padding: 8px;
+            padding: {{ $thPadY }}px 8px;
             text-align: left;
             border-bottom: 1px solid #ccc;
             font-weight: bold;
             color: #333;
+            line-height: {{ $rowLineHeight }};
         }
 
         .results-table td {
-            padding: 6px 8px;
+            padding: {{ $tdPadY }}px 8px;
             border-bottom: 1px dashed #eee;
+            line-height: {{ $rowLineHeight }};
         }
 
         /* Department Header */
@@ -128,8 +149,8 @@
             background: #14b8a6;
             color: white;
             padding: 4px;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin-top: {{ $deptMarginTop }}px;
+            margin-bottom: {{ $deptMarginBottom }}px;
             border-radius: 3px;
             letter-spacing: 1px;
         }
@@ -138,8 +159,8 @@
             font-size: 12px;
             font-weight: bold;
             text-decoration: underline;
-            padding-top: 10px;
-            padding-bottom: 5px;
+            padding-top: {{ $testTitlePadTop }}px;
+            padding-bottom: {{ $testTitlePadBottom }}px;
         }
 
         /* Abnormal Flags */
