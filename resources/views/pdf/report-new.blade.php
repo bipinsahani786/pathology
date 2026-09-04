@@ -1074,7 +1074,7 @@
                                                 $displayRange = $r->reference_range;
 
                                                 // Backup: If range is empty, try to show the full master range list
-                                                if (empty(trim($displayRange)) && isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
+                                                if (empty(trim($displayRange ?? '')) && isset($r->labTest->parameters) && is_array($r->labTest->parameters)) {
                                                     $masterParam = collect($r->labTest->parameters)->first(function ($p) use ($r) {
                                                         $pName = is_array($p) ? ($p['name'] ?? '') : $p;
                                                         return $pName === $r->parameter_name;
@@ -1089,15 +1089,17 @@
                                                             $femaleRange = $ranges->firstWhere('gender', 'Female');
 
                                                             if ($maleRange && $femaleRange) {
-                                                                $displayRange = "M: " . ($maleRange['display_range'] ?? '') . "<br>F: " . ($femaleRange['display_range'] ?? '');
+                                                                $displayRange = "M: " . nl2br(e($maleRange['display_range'] ?? '')) . "<br>F: " . nl2br(e($femaleRange['display_range'] ?? ''));
                                                             } else {
                                                                 // Just join all unique display ranges
-                                                                $displayRange = $ranges->pluck('display_range')->unique()->filter()->implode('<br>');
+                                                                $displayRange = $ranges->pluck('display_range')->unique()->filter()->map(fn($v) => nl2br(e($v)))->implode('<br>');
                                                             }
                                                         } else {
-                                                            $displayRange = $ranges->first()['display_range'] ?? ($ranges->first()['normal_value'] ?? '');
+                                                            $displayRange = nl2br(e($ranges->first()['display_range'] ?? ($ranges->first()['normal_value'] ?? '')));
                                                         }
                                                     }
+                                                } else {
+                                                    $displayRange = nl2br(e($displayRange ?? ''));
                                                 }
                                             @endphp
                                             {!! $displayRange !!}

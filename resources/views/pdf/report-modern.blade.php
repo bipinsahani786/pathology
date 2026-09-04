@@ -635,7 +635,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $r->unit }}</td>
-                                <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
+                                <td>{!! nl2br(e($r->reference_range)) !!}</td>
                             </tr>
                         @endif
                     @endforeach

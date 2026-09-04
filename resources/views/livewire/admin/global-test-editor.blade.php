@@ -345,7 +345,15 @@
                                             </td>
                                             <td><input type="text" class="form-control form-control-sm text-center" style="width: 65px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.min_val" placeholder="Min"></td>
                                             <td><input type="text" class="form-control form-control-sm text-center" style="width: 65px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.max_val" placeholder="Max"></td>
-                                            <td><input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.display_range" placeholder="e.g. 13.5 - 17.5"></td>
+                                            <td>
+                                                <textarea
+                                                    class="form-control form-control-sm"
+                                                    wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.display_range"
+                                                    placeholder="e.g. 13.5 - 17.5&#10;(One line per range)"
+                                                    rows="2"
+                                                    style="min-width:160px; resize:vertical; font-size:11px; line-height:1.4;"
+                                                ></textarea>
+                                            </td>
                                             <td class="text-end pe-3">
                                                 <button type="button" wire:click="removeRange({{ $rIndex }})" class="btn btn-icon btn-soft-danger btn-xs border-0">
                                                     <i class="feather-trash-2"></i>
