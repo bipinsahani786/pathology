@@ -326,12 +326,38 @@
                             <p class="text-muted small mb-0">{{ $partnerType }} Insights • {{ $selectedPartner->phone ?? 'N/A' }}</p>
                         </div>
                     </div>
-                    <div class="d-flex gap-2 align-items-center">
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
                         <div class="input-group input-group-sm">
                             <input type="date" wire:model.live="startDate" class="form-control border-0 bg-light rounded-start shadow-sm">
                             <span class="input-group-text bg-light border-0">To</span>
                             <input type="date" wire:model.live="endDate" class="form-control border-0 bg-light rounded-end shadow-sm">
                         </div>
+
+                        {{-- Download PDF --}}
+                        <a href="{{ route('lab.settlements.commission.pdf', [
+                                'partner_id'   => $selectedPartnerId,
+                                'partner_type' => $partnerType,
+                                'start_date'   => $startDate,
+                                'end_date'     => $endDate,
+                            ]) }}"
+                            target="_blank"
+                            class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm fw-bold"
+                            title="Download PDF Report">
+                            <i class="feather-file-text me-1"></i> PDF
+                        </a>
+
+                        {{-- Download Excel --}}
+                        <a href="{{ route('lab.settlements.commission.excel', [
+                                'partner_id'   => $selectedPartnerId,
+                                'partner_type' => $partnerType,
+                                'start_date'   => $startDate,
+                                'end_date'     => $endDate,
+                            ]) }}"
+                            class="btn btn-sm btn-success rounded-pill px-3 shadow-sm fw-bold"
+                            title="Download Excel Report">
+                            <i class="feather-download me-1"></i> Excel
+                        </a>
+
                         <button wire:click="selectPartner({{ $selectedPartnerId }}, 'process')" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
                             <i class="feather-dollar-sign me-2"></i>New Settlement
                         </button>
@@ -340,28 +366,43 @@
                 <div class="card-body p-4 bg-soft-light">
                     {{-- Mini Stats Layer --}}
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <div class="stat-card-inner p-4 rounded-4  border-start border-primary border-4">
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-primary border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Patients Referred</p>
                                 <h3 class="fw-bolder text-dark mb-0">{{ $partnerStats['total_bills'] ?? 0 }}</h3>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card-inner p-4 rounded-4  border-start border-success border-4">
-                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Total Revenue</p>
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-success border-4">
+                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Total MRP</p>
                                 <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_revenue'] ?? 0, 2) }}</h3>
+                                <small class="text-muted fs-10">Before discount</small>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card-inner p-4 rounded-4  border-start border-info border-4">
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-danger border-4">
+                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Total Discount</p>
+                                <h3 class="fw-bolder text-danger mb-0">₹{{ number_format($partnerStats['total_discount'] ?? 0, 2) }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-info border-4">
+                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Net Amount</p>
+                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_net'] ?? 0, 2) }}</h3>
+                                <small class="text-muted fs-10">After discount</small>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-warning border-4">
                                 <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Earned Commission</p>
                                 <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['total_commission'] ?? 0, 2) }}</h3>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card-inner p-4 rounded-4  border-start border-warning border-4">
-                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Avg Ticket Size</p>
-                                <h3 class="fw-bolder text-dark mb-0">₹{{ number_format($partnerStats['avg_bill'] ?? 0, 2) }}</h3>
+                        <div class="col-md-2">
+                            <div class="stat-card-inner p-3 rounded-4 border-start border-4" style="border-color:#7d3c98 !important">
+                                <p class="text-muted fs-10 fw-bold text-uppercase mb-1">Avg Comm %</p>
+                                <h3 class="fw-bolder mb-0" style="color:#7d3c98">{{ $partnerStats['avg_comm_pct'] ?? 0 }}%</h3>
+                                <small class="text-muted fs-10">On MRP</small>
                             </div>
                         </div>
                     </div>
@@ -369,25 +410,48 @@
                     <div class="row g-4">
                         <div class="col-lg-8">
                             <h6 class="fw-bold mb-3 d-flex align-items-center"><i class="feather-activity text-primary me-2"></i>Referral Performance History</h6>
-                            <div class="table-responsive  rounded-4 shadow-sm border">
+                            <div class="table-responsive rounded-4 shadow-sm border">
                                 <table class="table table-hover align-middle mb-0 fs-13">
                                     <thead class="bg-light fs-11 text-muted text-uppercase">
                                         <tr>
                                             <th class="ps-4">Patient</th>
-                                            <th>Bill Date</th>
-                                            <th class="text-end">Bill Amount</th>
+                                            <th>Date</th>
+                                            <th class="text-end">MRP</th>
+                                            <th class="text-end">Discount</th>
+                                            <th class="text-end">Net Amt</th>
+                                            <th class="text-end">Cust. Paid</th>
+                                            <th class="text-end">Commission</th>
+                                            <th class="text-center">Comm %</th>
                                             <th class="text-center">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($partnerHistory as $bill)
+                                            @php
+                                                $commAmt  = $partnerType == 'Doctor' ? $bill->doctor_commission_amount : $bill->agent_commission_amount;
+                                                $mrpBase  = $bill->subtotal > 0 ? $bill->subtotal : $bill->total_amount;
+                                                $commPct  = $mrpBase > 0 ? round(($commAmt / $mrpBase) * 100, 2) : 0;
+                                            @endphp
                                             <tr>
                                                 <td class="ps-4">
                                                     <div class="fw-bold">{{ $bill->patient->name ?? 'N/A' }}</div>
                                                     <small class="text-muted">{{ $bill->invoice_number }}</small>
                                                 </td>
-                                                <td>{{ $bill->invoice_date->format('d M, Y') }}</td>
-                                                <td class="text-end fw-bold">₹{{ number_format($bill->total_amount, 2) }}</td>
+                                                <td class="text-nowrap">{{ $bill->invoice_date->format('d M, Y') }}</td>
+                                                <td class="text-end fw-bold">₹{{ number_format($mrpBase, 2) }}</td>
+                                                <td class="text-end text-danger">
+                                                    {{ $bill->discount_amount > 0 ? '₹'.number_format($bill->discount_amount, 2) : '—' }}
+                                                </td>
+                                                <td class="text-end">₹{{ number_format($bill->total_amount, 2) }}</td>
+                                                <td class="text-end text-success fw-bold">₹{{ number_format($bill->paid_amount, 2) }}</td>
+                                                <td class="text-end text-primary fw-bold">₹{{ number_format($commAmt, 2) }}</td>
+                                                <td class="text-center">
+                                                    @if($commPct > 0)
+                                                        <span class="badge rounded-pill px-2 py-1 fs-10 fw-bold" style="background:rgba(125,60,152,0.1);color:#7d3c98">{{ $commPct }}%</span>
+                                                    @else
+                                                        <span class="text-muted fs-11">0%</span>
+                                                    @endif
+                                                </td>
                                                 <td class="text-center">
                                                     <span class="badge {{ $bill->payment_status === 'Paid' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }} rounded-pill px-3 py-1 fs-10">
                                                         {{ $bill->payment_status }}
@@ -395,9 +459,34 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr><td colspan="4" class="text-center py-5">No referral history for this period.</td></tr>
+                                            <tr><td colspan="9" class="text-center py-5">No referral history for this period.</td></tr>
                                         @endforelse
                                     </tbody>
+                                    @if(count($partnerHistory) > 0)
+                                    @php
+                                        $commField = $partnerType == 'Doctor' ? 'doctor_commission_amount' : 'agent_commission_amount';
+                                        $totSubtotal = $partnerHistory->sum(fn($b) => $b->subtotal > 0 ? $b->subtotal : $b->total_amount);
+                                        $totDisc     = $partnerHistory->sum('discount_amount');
+                                        $totNet      = $partnerHistory->sum('total_amount');
+                                        $totPaid     = $partnerHistory->sum('paid_amount');
+                                        $totComm     = $partnerHistory->sum($commField);
+                                        $totPct      = $totSubtotal > 0 ? round(($totComm / $totSubtotal) * 100, 2) : 0;
+                                    @endphp
+                                    <tfoot>
+                                        <tr style="background:#1a5276">
+                                            <td colspan="2" class="ps-4 fw-bold text-white" style="background:#1a5276">
+                                                TOTAL ({{ count($partnerHistory) }} invoices)
+                                            </td>
+                                            <td class="text-end fw-bold text-white" style="background:#1a5276">₹{{ number_format($totSubtotal, 2) }}</td>
+                                            <td class="text-end fw-bold text-white" style="background:#1a5276">₹{{ number_format($totDisc, 2) }}</td>
+                                            <td class="text-end fw-bold text-white" style="background:#1a5276">₹{{ number_format($totNet, 2) }}</td>
+                                            <td class="text-end fw-bold text-white" style="background:#1a5276">₹{{ number_format($totPaid, 2) }}</td>
+                                            <td class="text-end fw-bold text-white" style="background:#1a5276">₹{{ number_format($totComm, 2) }}</td>
+                                            <td class="text-center fw-bold text-white" style="background:#1a5276">{{ $totPct }}%</td>
+                                            <td style="background:#1a5276"></td>
+                                        </tr>
+                                    </tfoot>
+                                    @endif
                                 </table>
                             </div>
                         </div>

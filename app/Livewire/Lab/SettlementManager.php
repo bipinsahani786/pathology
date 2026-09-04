@@ -248,11 +248,22 @@ class SettlementManager extends Component
 
         $earningsField = $this->getEarningsField();
 
+        $totalSubtotal   = (clone $statsQuery)->sum('subtotal');
+        $totalRevenue    = (clone $statsQuery)->sum('total_amount');
+        $totalDiscount   = (clone $statsQuery)->sum('discount_amount');
+        $totalCommission = (clone $statsQuery)->where('payment_status', 'Paid')->sum($earningsField);
+        $avgCommPct      = $totalSubtotal > 0
+            ? round(($totalCommission / $totalSubtotal) * 100, 2)
+            : 0;
+
         $this->partnerStats = [
-            'total_bills' => (clone $statsQuery)->count(),
-            'total_revenue' => (clone $statsQuery)->sum('total_amount'),
-            'total_commission' => (clone $statsQuery)->where('payment_status', 'Paid')->sum($earningsField),
-            'avg_bill' => (clone $statsQuery)->avg('total_amount') ?? 0,
+            'total_bills'      => (clone $statsQuery)->count(),
+            'total_revenue'    => $totalSubtotal,      // Original MRP (subtotal)
+            'total_net'        => $totalRevenue,        // After discount
+            'total_discount'   => $totalDiscount,
+            'total_commission' => $totalCommission,
+            'avg_bill'         => (clone $statsQuery)->avg('total_amount') ?? 0,
+            'avg_comm_pct'     => $avgCommPct,
             'settlement_history' => Settlement::where('user_id', $this->selectedPartnerId)
                 ->where('company_id', $companyId)
                 ->when($myBranchId, fn ($q) => $q->whereHas('user', fn ($u) => $u->where('branch_id', $myBranchId)))
@@ -265,7 +276,6 @@ class SettlementManager extends Component
         $this->partnerHistory = (clone $statsQuery)
             ->with(['patient', 'doctor', 'collectionCenter'])
             ->latest()
-            ->take(20)
             ->get();
     }
 

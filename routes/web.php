@@ -220,6 +220,10 @@ Route::middleware(['auth'])->group(function () {
             // Settlements (Partner Commissions)
             Route::get('/settlements', SettlementManager::class)->name('settlements');
 
+            // Commission Report Export (PDF & Excel)
+            Route::get('/settlements/commission-report/pdf', [\App\Http\Controllers\CommissionReportController::class, 'downloadPdf'])->name('settlements.commission.pdf');
+            Route::get('/settlements/commission-report/excel', [\App\Http\Controllers\CommissionReportController::class, 'downloadExcel'])->name('settlements.commission.excel');
+
             // Point of Sale (Billing & Invoicing)
             Route::get('/pos', PosManager::class)->name('pos');
             Route::get('/pos/{invoice}/summary', PosSummary::class)->name('pos.summary');
