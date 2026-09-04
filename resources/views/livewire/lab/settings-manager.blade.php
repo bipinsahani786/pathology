@@ -341,6 +341,24 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        {{-- Inventory Settings (always visible in modules tab) --}}
+                        <hr class="my-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="feather-box text-primary me-2"></i>Inventory Settings</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light">
+                                    <div>
+                                        <div class="fw-bold fs-13"><i class="feather-alert-triangle me-2 text-warning"></i>Allow Negative Stock</div>
+                                        <div class="fs-11 text-muted">Report approve hone pe agar stock kam hai toh negative me jaane de. OFF karne pe sirf warning dikhega aur available stock hi deduct hoga.</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="inventory_allow_negative_stock"
+                                            wire:model="inventory_allow_negative_stock">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">

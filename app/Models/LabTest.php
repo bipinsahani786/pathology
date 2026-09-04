@@ -67,6 +67,14 @@ class LabTest extends Model
         return false;
     }
 
+    /**
+     * Inventory consumables mapped to this test for auto-deduction.
+     */
+    public function consumables()
+    {
+        return $this->hasMany(LabTestConsumable::class);
+    }
+
     protected static function booted()
     {
         static::saved(function ($test) {

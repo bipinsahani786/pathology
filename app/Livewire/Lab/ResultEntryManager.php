@@ -902,7 +902,29 @@ class ResultEntryManager extends Component
 
         if ($status === 'Approved') {
             $this->invoice->update(['sample_status' => 'Ready']);
+
             $msg = 'Report Approved Successfully and ready for printing.';
+
+            // Auto-deduct inventory consumables for this report
+            try {
+                $deductionService = new \App\Services\InventoryDeductionService;
+                $branchId = $this->invoice->branch_id ?? auth()->user()->branch_id;
+                $deductionResult = $deductionService->deductForReport($this->testReport, $branchId);
+
+                if (!empty($deductionResult['warnings'])) {
+                    session()->flash('warning', implode(' | ', $deductionResult['warnings']));
+                }
+
+                if (!empty($deductionResult['deducted'])) {
+                    $deductedList = collect($deductionResult['deducted'])->map(function ($d) {
+                        return "{$d['item']} ({$d['quantity']} {$d['unit']})";
+                    })->implode(', ');
+                    $msg .= " | 📦 Stock Deducted: {$deductedList}";
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Inventory auto-deduction failed: '.$e->getMessage());
+            }
+
             session()->flash('success', $msg);
             $this->dispatch('notify', ['type' => 'success', 'message' => $msg]);
 

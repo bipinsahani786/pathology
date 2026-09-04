@@ -605,7 +605,7 @@
                                                          </div>
                                                      </td>
                                                      <td class="fs-12 text-muted">{{ $p['unit'] }}</td>
-                                                     <td class="fs-12 fw-medium text-dark">{{ $p['ref_range'] ?: '-' }}</td>
+                                                     <td class="fs-12 fw-medium text-dark">{!! nl2br(e($p['ref_range'] ?: '-')) !!}</td>
                                                      <td class="text-center">
                                                          <div class="form-check form-switch d-flex justify-content-center">
                                                              <input class="form-check-input" type="checkbox" 

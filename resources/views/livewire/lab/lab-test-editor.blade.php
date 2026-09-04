@@ -29,7 +29,7 @@
             <div class="row g-4">
                 <!-- Main Details Card -->
                 <div class="col-xl-8">
-                    <div class="card stretch stretch-full border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
                         <div class="card-header py-3">
                             <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-info text-primary me-2"></i>Primary Details</h6>
                         </div>
@@ -320,6 +320,68 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Inventory Consumables Card --}}
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="card-title mb-0 fw-bold text-dark"><i class="feather-box text-warning me-2"></i>Inventory Consumables Mapping</h6>
+                            @if($inventoryItems->count() > 0)
+                                <button type="button" wire:click="addConsumable" class="btn btn-sm btn-soft-warning px-3">
+                                    <i class="feather-plus me-1"></i>Add Reagent
+                                </button>
+                            @endif
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="fs-11 text-muted mb-3">Map reagents/consumables used for this test. When a patient report is approved, these items will automatically deduct from branch inventory.</p>
+
+                            @if($inventoryItems->isEmpty())
+                                <div class="alert alert-soft-warning fs-12 mb-0">
+                                    <i class="feather-alert-triangle me-2"></i>No inventory items created yet. Go to <strong>Inventory &rarr; Items</strong> to add reagents/consumables first.
+                                </div>
+                            @elseif(count($consumables) > 0)
+                                <table class="table table-sm table-bordered align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="fs-11 fw-bold text-muted ps-3">Inventory Item / Reagent</th>
+                                            <th class="fs-11 fw-bold text-muted text-center" style="width:140px;">Qty Per Test</th>
+                                            <th style="width:50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($consumables as $ci => $cons)
+                                            <tr>
+                                                <td class="ps-3">
+                                                    <select class="form-select form-select-sm" wire:model="consumables.{{ $ci }}.inventory_item_id">
+                                                        <option value="">-- Select Item --</option>
+                                                        @foreach($inventoryItems as $invItem)
+                                                            <option value="{{ $invItem->id }}">{{ $invItem->name }} ({{ $invItem->unit }})</option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-center"
+                                                        wire:model="consumables.{{ $ci }}.quantity_per_test" placeholder="1">
+                                                </td>
+                                                <td class="text-center">
+                                                    <button type="button" wire:click="removeConsumable({{ $ci }})" class="btn btn-xs btn-outline-danger p-1" title="Remove">
+                                                        <i class="feather-trash-2 fs-11"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
+                                <div class="text-center text-muted py-3 bg-light rounded-3">
+                                    <i class="feather-package fs-3 d-block mb-2 opacity-50"></i>
+                                    <p class="fs-12 mb-2">No consumables mapped for this test yet.</p>
+                                    <button type="button" wire:click="addConsumable" class="btn btn-sm btn-outline-warning">
+                                        <i class="feather-plus me-1"></i>Map a Reagent / Consumable
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Interpretation Side Card -->
@@ -508,7 +570,13 @@
                                                 <input type="text" class="form-control form-control-sm text-center" style="width: 65px;" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.max_val" placeholder="Max">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm" wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.display_range" placeholder="e.g. 13.5 - 17.5">
+                                                <textarea
+                                                    class="form-control form-control-sm"
+                                                    wire:model="parameters.{{ $editingParamIndex }}.ranges.{{ $rIndex }}.display_range"
+                                                    placeholder="e.g. 13.5 - 17.5&#10;(One line per range)"
+                                                    rows="2"
+                                                    style="min-width:160px; resize:vertical; font-size:11px; line-height:1.4;"
+                                                ></textarea>
                                             </td>
                                             <td class="text-end pe-3">
                                                 <button type="button" wire:click="removeRange({{ $rIndex }})" class="btn btn-icon btn-soft-danger btn-xs border-0">

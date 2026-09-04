@@ -59,7 +59,7 @@ class Dashboard extends Component
         // 4. Most Used Items (based on consumption transactions in last 30 days)
         $mostUsedItems = InventoryTransaction::select('item_id', DB::raw('SUM(quantity) as total_used'))
             ->where('branch_id', $branchId)
-            ->where('source', 'consumption')
+            ->whereIn('source', ['consumption', 'report_consumption'])
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('item_id')
             ->orderByDesc('total_used')

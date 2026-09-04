@@ -1371,6 +1371,17 @@ class PosEditManager extends Component
                 $invoice->update(['sample_status' => 'Ready']);
             }
 
+            // Revert any old inventory deductions for this invoice since tests may have changed
+            $existingReportForInv = \App\Models\TestReport::where('invoice_id', $invoice->id)->first();
+            if ($existingReportForInv && $existingReportForInv->inventory_deducted) {
+                try {
+                    $deductionService = new \App\Services\InventoryDeductionService;
+                    $deductionService->revertForReport($existingReportForInv);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to revert inventory on invoice edit: '.$e->getMessage());
+                }
+            }
+
             // 4. Apply new Commissions using service
             $commissionService->applyCommissions($invoice);
 

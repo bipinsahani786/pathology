@@ -142,6 +142,15 @@
         }
 
         /* Department Header */
+        .test-header-group {
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+        }
+
+        .keep-together {
+            page-break-inside: avoid !important;
+        }
+
         .dept-header {
             font-size: 13px;
             font-weight: bold;
@@ -153,6 +162,8 @@
             margin-bottom: {{ $deptMarginBottom }}px;
             border-radius: 3px;
             letter-spacing: 1px;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
         }
 
         .test-title {
@@ -161,6 +172,8 @@
             text-decoration: underline;
             padding-top: {{ $testTitlePadTop }}px;
             padding-bottom: {{ $testTitlePadBottom }}px;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
         }
 
         /* Abnormal Flags */
@@ -458,10 +471,17 @@
                 @endif
             @endif
 
-            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both;">
-                @if($showDeptAlways || $isFirstTestInDept)
-                    <div class="dept-header">{{ strtoupper($deptName) }}</div>
-                @endif
+            @php
+                $testParamCount = $results->count();
+                $keepEntireTestTogether = $testParamCount <= 15;
+            @endphp
+
+            <div class="test-block-wrapper {{ $keepEntireTestTogether ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $keepEntireTestTogether ? 'page-break-inside: avoid !important;' : '' }}">
+                <div class="test-header-group">
+                    @if($showDeptAlways || $isFirstTestInDept)
+                        <div class="dept-header">{{ strtoupper($deptName) }}</div>
+                    @endif
+                </div>
             
             <table class="results-table">
                 @php
@@ -615,7 +635,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $r->unit }}</td>
-                                <td><span style="white-space: pre-line;">{{ $r->reference_range }}</span></td>
+                                <td>{!! nl2br(e($r->reference_range)) !!}</td>
                             </tr>
                         @endif
                     @endforeach
