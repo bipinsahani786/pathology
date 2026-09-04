@@ -312,7 +312,7 @@
         }
 
         .keep-together {
-            page-break-inside: avoid !important;
+            page-break-inside: auto;
         }
 
         .dept-title {
@@ -376,6 +376,14 @@
                 {{ $sz10 }}
             ;
             line-height: {{ $rowLineHeight }};
+        }
+
+        .result-table thead {
+            display: table-header-group;
+        }
+
+        .result-table tfoot {
+            display: table-footer-group;
         }
 
         .result-table tr {
@@ -838,6 +846,7 @@
             $dept = $data['department'];
             $tests = $data['tests'];
             $deptName = $dept ? $dept->name : 'General';
+            $deptHeaderShown = false;
         @endphp
 
         @foreach($tests as $testId => $testData)
@@ -846,7 +855,13 @@
                 $labTest = $testData['labTest'];
                 $results = $testData['results'];
                 $options = $testData['options'] ?? [];
+            @endphp
 
+            @if($results->isEmpty())
+                @continue
+            @endif
+
+            @php
                 $showTestMethod = ($settings['pdf_show_test_method'] ?? true) 
                     && ($options['show_method'] ?? ($labTest->show_method_on_report ?? true));
 
@@ -855,12 +870,10 @@
 
                 $showTestNote = ($settings['report_show_note'] ?? true) 
                     && ($options['show_note'] ?? ($labTest->show_note_on_report ?? true));
-            @endphp
 
-            @php
                 $style = $settings['report_page_break_style'] ?? 'continuous';
                 $showDeptAlways = $settings['report_show_dept_header_always'] ?? true;
-                $isFirstInDept = $loop->first;
+                $isFirstInDept = !$deptHeaderShown;
             @endphp
 
             {{-- Page break logic --}}
@@ -872,17 +885,12 @@
                 @endif
             @endif
 
-            @php
-                $testParamCount = $results->count();
-                // Prevent orphan headers: If test has 15 or fewer parameters, keep entire test block together
-                $keepEntireTestTogether = $testParamCount <= 15;
-            @endphp
-
-            <div class="test-block-wrapper {{ $keepEntireTestTogether ? 'keep-together' : '' }}" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; {{ $keepEntireTestTogether ? 'page-break-inside: avoid !important;' : '' }}">
+            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both;">
                 <div class="test-header-group">
                     {{-- ── Department & Test Title ── --}}
-                    @if($showDeptAlways || $isFirstInDept)
+                    @if($showDeptAlways || !$deptHeaderShown)
                         <div class="dept-title">{{ strtoupper($deptName) }}</div>
+                        @php $deptHeaderShown = true; @endphp
                     @endif
                     <div class="test-title" style="margin-bottom: {{ $testTitleMarginBottom }}px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>
 
