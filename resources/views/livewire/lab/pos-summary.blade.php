@@ -95,7 +95,7 @@
                                     <div>
                                         <h6 class="fw-bold mb-1 text-dark">{{ $invoice->patient->name ?? 'Walk-in Patient' }} <span class="badge bg-soft-info text-info ms-1">{{ $invoice->patient->formatted_id ?? '' }}</span></h6>
                                         <div class="text-muted fs-12">
-                                            {{ $invoice->patient->patientProfile->age ?? 'N/A' }} YRS / {{ $invoice->patient->patientProfile->gender ?? 'N/A' }} 
+                                            {{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_text : 'N/A' }} / {{ $invoice->patient->patientProfile->gender ?? 'N/A' }} 
                                             | 📞 {{ $invoice->patient->phone ?? 'No Phone' }}
                                         </div>
                                     </div>

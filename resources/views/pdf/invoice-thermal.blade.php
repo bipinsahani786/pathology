@@ -172,7 +172,7 @@
     <div class="info-row"><span class="lbl">Patient:</span><span
             class="val">{{ strtoupper($invoice->patient->name) }}</span></div>
     <div class="info-row"><span class="lbl">Age/Gender:</span><span
-            class="val">{{ $invoice->patient->patientProfile->age ?? '-' }}{{ $invoice->patient->patientProfile->age_type == 'Years' ? 'Y' : ($invoice->patient->patientProfile->age_type == 'Months' ? 'M' : 'D') }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</span></div>
+            class="val">{{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_display : '-' }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</span></div>
     <div class="info-row"><span class="lbl">Patient ID:</span><span
             class="val">{{ $invoice->patient->formatted_id ?? 'N/A' }}</span></div>
     @if($invoice->doctor)

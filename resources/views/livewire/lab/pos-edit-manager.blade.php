@@ -108,8 +108,7 @@
                                                     <span
                                                         class="badge bg-soft-primary text-primary fs-10">{{ $selectedPatient['formatted_id'] ?? '—' }}</span>
                                                     <span
-                                                        class="badge bg-soft-info text-info fs-10">{{ $patientProfileData['age'] ?? '' }}
-                                                        {{ $patientProfileData['age_type'] ?? 'Yrs' }}</span>
+                                                        class="badge bg-soft-info text-info fs-10">{{ $patientProfileData['age_text'] ?? (($patientProfileData['age'] ?? '') . ' ' . ($patientProfileData['age_type'] ?? 'Yrs')) }}</span>
                                                     <span
                                                         class="badge bg-soft-{{ ($patientProfileData['gender'] ?? '') == 'Male' ? 'primary' : (($patientProfileData['gender'] ?? '') == 'Female' ? 'danger' : 'warning') }} fs-10">{{ $patientProfileData['gender'] ?? '—' }}</span>
                                                 </div>
@@ -158,7 +157,7 @@
                                                                         <div class="text-muted fs-10">{{ $pt->phone }}</div>
                                                                 </div>
                                                                 <span
-                                                                    class="badge bg-soft-info text-info fs-10">{{ $pt->patientProfile->age ?? '' }}{{ $pt->patientProfile->age_type == 'Years' ? 'Y' : ($pt->patientProfile->age_type == 'Months' ? 'M' : 'D') }}/{{ substr($pt->patientProfile->gender ?? '', 0, 1) }}</span>
+                                                                    class="badge bg-soft-info text-info fs-10">{{ $pt->patientProfile ? $pt->patientProfile->age_display : '' }}/{{ substr($pt->patientProfile->gender ?? '', 0, 1) }}</span>
                                                             </div>
                                                         </button>
                                                     @endforeach
@@ -853,25 +852,37 @@
                                     <input type="text" class="form-control" wire:model="new_name" placeholder="Full Name">
                                 </div>
                             </div>
-                            <div class="col-12"><label class="form-label fw-semibold fs-11">Mobile</label><input type="text"
+                            <div class="col-6"><label class="form-label fw-semibold fs-11">Mobile</label><input type="text"
                                     class="form-control" wire:model="new_phone" placeholder="10 Digit" maxlength="10"></div>
-                            <div class="col-6">
-                                <label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" wire:model="new_age" placeholder="Age">
-                                    <select class="form-select bg-light" wire:model="new_age_type" style="max-width: 90px;">
-                                        <option value="Years">Yrs</option>
-                                        <option value="Months">Mos</option>
-                                        <option value="Days">Dys</option>
-                                    </select>
-                                </div>
-                            </div>
                             <div class="col-6"><label class="form-label fw-semibold fs-11">Gender</label><select
                                     class="form-select" wire:model="new_gender">
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
                                     <option value="Other">Other</option>
                                 </select></div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold fs-11">Age <span class="text-danger">*</span> <span class="text-muted fw-normal fs-10">(Years / Months / Days)</span></label>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="new_age" placeholder="0" min="0" max="150">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Yrs</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="new_age_months" placeholder="0" min="0" max="11">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Mos</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="new_age_days" placeholder="0" min="0" max="31">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Days</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

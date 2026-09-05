@@ -48,7 +48,7 @@
                             <td class="fw-bold text-uppercase" style="width: 35%;">{{ $invoice->patient->name ?? 'N/A' }}</td>
                             <td class="fw-bold" style="width: 15%;">Age / Gender</td>
                             <td class="fw-bold text-uppercase" style="width: 35%;">
-                                {{ $invoice->patient->patientProfile->age ?? '-' }} {{ $invoice->patient->patientProfile->age_type ?? 'Yrs' }} / {{ $invoice->patient->patientProfile->gender ?? '-' }}
+                                {{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_text : '-' }} / {{ $invoice->patient->patientProfile->gender ?? '-' }}
                             </td>
                         </tr>
                         <tr>

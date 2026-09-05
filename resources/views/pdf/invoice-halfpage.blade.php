@@ -139,8 +139,7 @@
                     <td style="width: 22%; font-size: 11px; color: #000; font-weight: bold; padding: 4.5px 8px; border: 1px solid #000; text-transform: uppercase;">{{ $invoice->patient->name ?? 'N/A' }}</td>
                     <td style="width: 13%; font-size: 11px; color: #000; font-weight: bold; padding: 4.5px 8px; border: 1px solid #000;">Age / Gender</td>
                     <td style="width: 22%; font-size: 11px; color: #000; font-weight: bold; padding: 4.5px 8px; border: 1px solid #000;">
-                        {{ $invoice->patient->patientProfile->age ?? '-' }}
-                        {{ ($invoice->patient->patientProfile->age_type ?? 'Yrs') == 'Years' ? 'Y' : (($invoice->patient->patientProfile->age_type ?? 'Yrs') == 'Months' ? 'M' : 'D') }}
+                        {{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_display : '-' }}
                         / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}
                     </td>
                     <td rowspan="3" style="width: 20%; text-align: center; border: 1px solid #000; padding: 4px; vertical-align: middle;">

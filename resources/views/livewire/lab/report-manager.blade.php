@@ -244,7 +244,7 @@
                                         <div class="fw-bold fs-14">{{ $invoice->patient->name }}</div>
                                         <div class="badge bg-soft-info text-info fs-10 fw-bold px-2 py-1 mb-1">{{ $invoice->patient->formatted_id }}</div>
                                         <div class="fs-10 text-muted">
-                                            {{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'Y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}
+                                            {{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_text : '--' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}
                                         </div>
                                     </td>
                                     <td>

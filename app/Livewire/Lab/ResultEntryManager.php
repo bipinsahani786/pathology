@@ -158,19 +158,27 @@ class ResultEntryManager extends Component
             $ageYears = now()->diffInYears($dob);
         } else {
             // Fallback to manual age fields
-            $ageYears = (int) ($profile->age ?? 0);
             $type = $profile->age_type ?? 'Years';
-            if ($type === 'Months') {
-                $ageMonths = $ageYears; // age field holds months
-                $ageDays = $ageMonths * 30;
-                $ageYears = 0;
+            $pAge = (int) ($profile->age ?? 0);
+            $pMonths = (int) ($profile->age_months ?? 0);
+            $pDays = (int) ($profile->age_days ?? 0);
+
+            if ($type === 'Years') {
+                $ageYears = $pAge;
+                $ageMonths = ($pAge * 12) + $pMonths;
+                $ageDays = ($ageMonths * 30) + $pDays;
+            } elseif ($type === 'Months') {
+                $ageYears = (int) floor($pAge / 12);
+                $ageMonths = $pAge;
+                $ageDays = ($pAge * 30) + $pDays;
             } elseif ($type === 'Days') {
-                $ageDays = $ageYears; // age field holds days
-                $ageMonths = 0;
                 $ageYears = 0;
+                $ageMonths = 0;
+                $ageDays = $pAge;
             } else {
-                $ageMonths = $ageYears * 12;
-                $ageDays = $ageYears * 365;
+                $ageYears = $pAge;
+                $ageMonths = $pAge * 12;
+                $ageDays = $pAge * 365;
             }
         }
 

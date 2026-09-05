@@ -52,7 +52,7 @@
                         @if($invoice->patient->patientProfile)
                             <div class="fs-11 text-muted">
                                 {{ $invoice->patient->patientProfile->patient_id_string ?? '' }}
-                                · {{ $invoice->patient->patientProfile->age ?? '' }} {{ $invoice->patient->patientProfile->age_type ?? 'Yrs' }}
+                                · {{ $invoice->patient->patientProfile->age_text }}
                                 · {{ $invoice->patient->patientProfile->gender ?? '' }}
                             </div>
                         @endif

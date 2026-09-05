@@ -28,6 +28,10 @@ class PartnerPatientManager extends Component
 
     public $age;
 
+    public $age_months;
+
+    public $age_days;
+
     public $age_type = 'Years';
 
     public $gender = 'Male';
@@ -179,8 +183,22 @@ class PartnerPatientManager extends Component
         $this->email = $user->email;
 
         if ($user->patientProfile) {
-            $this->age = $user->patientProfile->age;
-            $this->age_type = $user->patientProfile->age_type;
+            $type = $user->patientProfile->age_type ?? 'Years';
+            $pAge = (int) ($user->patientProfile->age ?? 0);
+            if ($type === 'Years') {
+                $this->age = $pAge > 0 ? $pAge : '';
+                $this->age_months = $user->patientProfile->age_months ?? '';
+                $this->age_days = $user->patientProfile->age_days ?? '';
+            } elseif ($type === 'Months') {
+                $this->age = '';
+                $this->age_months = $pAge > 0 ? $pAge : '';
+                $this->age_days = $user->patientProfile->age_days ?? '';
+            } elseif ($type === 'Days') {
+                $this->age = '';
+                $this->age_months = '';
+                $this->age_days = $pAge > 0 ? $pAge : '';
+            }
+            $this->age_type = $type;
             $this->gender = $user->patientProfile->gender;
             $this->blood_group = $user->patientProfile->blood_group;
             $this->address = $user->patientProfile->address;
@@ -204,11 +222,38 @@ class PartnerPatientManager extends Component
                 'email',
                 Rule::unique('users', 'email')->ignore($this->user_id),
             ],
-            'age' => 'required|numeric|min:1|max:150',
-            'age_type' => 'required|in:Years,Months,Days',
+            'age' => 'nullable|integer|min:0|max:150',
+            'age_months' => 'nullable|integer|min:0|max:11',
+            'age_days' => 'nullable|integer|min:0|max:31',
             'gender' => 'required|in:Male,Female,Other',
             'blood_group' => 'nullable|string|max:5',
         ]);
+
+        $years = (int) ($this->age ?: 0);
+        $months = (int) ($this->age_months ?: 0);
+        $days = (int) ($this->age_days ?: 0);
+
+        if ($years === 0 && $months === 0 && $days === 0) {
+            $this->addError('age', 'Please specify patient age (Years, Months, or Days).');
+            return;
+        }
+
+        if ($years > 0) {
+            $finalAge = $years;
+            $finalAgeType = 'Years';
+            $finalMonths = $months > 0 ? $months : null;
+            $finalDays = $days > 0 ? $days : null;
+        } elseif ($months > 0) {
+            $finalAge = $months;
+            $finalAgeType = 'Months';
+            $finalMonths = null;
+            $finalDays = $days > 0 ? $days : null;
+        } else {
+            $finalAge = $days;
+            $finalAgeType = 'Days';
+            $finalMonths = null;
+            $finalDays = null;
+        }
 
         DB::beginTransaction();
         try {
@@ -220,8 +265,10 @@ class PartnerPatientManager extends Component
             ]);
 
             PatientProfile::where('user_id', $this->user_id)->update([
-                'age' => $this->age,
-                'age_type' => $this->age_type,
+                'age' => $finalAge,
+                'age_type' => $finalAgeType,
+                'age_months' => $finalMonths,
+                'age_days' => $finalDays,
                 'gender' => $this->gender,
                 'blood_group' => $this->blood_group,
                 'address' => $this->address,
@@ -238,7 +285,7 @@ class PartnerPatientManager extends Component
 
     public function resetFields()
     {
-        $this->reset(['user_id', 'name', 'phone', 'email', 'age', 'blood_group', 'address']);
+        $this->reset(['user_id', 'name', 'phone', 'email', 'age', 'age_months', 'age_days', 'blood_group', 'address']);
         $this->age_type = 'Years';
         $this->gender = 'Male';
         $this->resetValidation();

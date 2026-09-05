@@ -86,7 +86,7 @@
                                     </td>
                                     <td>
                                         <div class="fs-13 text-dark fw-medium">
-                                            {{ $patient->patientProfile->age ?? 'N/A' }} {{ $patient->patientProfile->age_type ?? 'Yrs' }}, 
+                                            {{ $patient->patientProfile ? $patient->patientProfile->age_text : 'N/A' }}, 
                                             {{ $patient->patientProfile->gender ?? 'N/A' }}
                                         </div>
                                         @if(!empty($patient->patientProfile->blood_group))
@@ -190,20 +190,29 @@
                                 @error('email') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Age <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" wire:model="age" placeholder="Age" min="1" max="150">
+                            <div class="col-md-8">
+                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Age <span class="text-danger">*</span> <span class="text-muted fw-normal fs-11 text-lowercase">(Years / Months / Days)</span></label>
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="age" placeholder="0" min="0" max="150">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Yrs</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="age_months" placeholder="0" min="0" max="11">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Mos</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" wire:model="age_days" placeholder="0" min="0" max="31">
+                                            <span class="input-group-text bg-light text-muted fs-11 fw-semibold">Days</span>
+                                        </div>
+                                    </div>
+                                </div>
                                 @error('age') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fs-12 fw-bold text-muted text-uppercase">Age Unit <span class="text-danger">*</span></label>
-                                <select class="form-select" wire:model="age_type">
-                                    <option value="Years">Years</option>
-                                    <option value="Months">Months</option>
-                                    <option value="Days">Days</option>
-                                </select>
-                                @error('age_type') <span class="text-danger fs-11 fw-bold">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="col-md-4">
