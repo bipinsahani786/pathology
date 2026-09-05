@@ -133,7 +133,7 @@ if (!function_exists('getIndianCurrency')) {
                 </tr>
                 <tr>
                     <td class="lbl">Age/Gender</td>
-                    <td class="val">: {{ $invoice->patient->patientProfile->age ?? '-' }} {{ $invoice->patient->patientProfile->age_type == 'Years' ? 'Y' : ($invoice->patient->patientProfile->age_type == 'Months' ? 'M' : 'D') }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</td>
+                    <td class="val">: {{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_display : '-' }} / {{ strtoupper($invoice->patient->patientProfile->gender ?? '-') }}</td>
                     <td class="lbl">Date</td>
                     <td class="val">: {{ $invoice->invoice_date->format('d/m/Y h:i A') }}</td>
                 </tr>

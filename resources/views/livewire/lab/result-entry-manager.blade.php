@@ -28,7 +28,7 @@
                             <div>
                                 <div class="fs-11 text-muted text-uppercase fw-bold mb-1">Patient Info</div>
                                 <div class="fw-bold fs-13">{{ $invoice->patient->name }} <span class="badge bg-soft-info text-info ms-1">{{ $invoice->patient->formatted_id }}</span></div>
-                                <div class="fs-11 text-muted">{{ $invoice->patient->patientProfile->age ?? '--' }} {{ $invoice->patient->patientProfile->age_type ?? 'y' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}</div>
+                                <div class="fs-11 text-muted">{{ $invoice->patient->patientProfile ? $invoice->patient->patientProfile->age_text : '--' }} | {{ $invoice->patient->patientProfile->gender ?? '--' }}</div>
                             </div>
                         </div>
                     </div>

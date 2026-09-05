@@ -711,10 +711,7 @@
                 </tr>
                 <tr>
                     <td class="lbl">Age/Gender</td>
-                    <td class="val">: {{ $profile->age ?? '--' }}
-                        {{ $profile->age_type == 'Years' ? 'Y' : ($profile->age_type == 'Months' ? 'M' : 'D') }} /
-                        {{ $profile->gender ?? '--' }}
-                    </td>
+                    <td class="val">: {{ $profile ? $profile->age_display : '--' }} / {{ $profile->gender ?? '--' }}</td>
                     <td class="lbl">Collection Date</td>
                     <td class="val">:
                         {{ $invoice->sample_received_at ? $invoice->sample_received_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : ($invoice->sample_collected_at ? $invoice->sample_collected_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y') : $invoice->created_at->format(($settings['pdf_show_time'] ?? true) ? 'd/m/Y h:i A' : 'd/m/Y')) }}

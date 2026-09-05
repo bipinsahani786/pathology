@@ -128,6 +128,10 @@ class PosEditManager extends Component
 
     public $new_age;
 
+    public $new_age_months;
+
+    public $new_age_days;
+
     public $new_age_type = 'Years';
 
     public $new_gender = 'Male';
@@ -704,8 +708,22 @@ class PosEditManager extends Component
         $this->new_name = $name;
         $this->new_phone = $this->selectedPatient['phone'];
         if ($this->patientProfileData) {
-            $this->new_age = $this->patientProfileData['age'];
-            $this->new_age_type = $this->patientProfileData['age_type'] ?? 'Years';
+            $type = $this->patientProfileData['age_type'] ?? 'Years';
+            $pAge = (int) ($this->patientProfileData['age'] ?? 0);
+            if ($type === 'Years') {
+                $this->new_age = $pAge > 0 ? $pAge : '';
+                $this->new_age_months = $this->patientProfileData['age_months'] ?? '';
+                $this->new_age_days = $this->patientProfileData['age_days'] ?? '';
+            } elseif ($type === 'Months') {
+                $this->new_age = '';
+                $this->new_age_months = $pAge > 0 ? $pAge : '';
+                $this->new_age_days = $this->patientProfileData['age_days'] ?? '';
+            } elseif ($type === 'Days') {
+                $this->new_age = '';
+                $this->new_age_months = '';
+                $this->new_age_days = $pAge > 0 ? $pAge : '';
+            }
+            $this->new_age_type = $type;
             $this->new_gender = $this->patientProfileData['gender'] ?? 'Male';
         }
         $this->isPatientModalOpen = true;
@@ -720,9 +738,36 @@ class PosEditManager extends Component
         $this->validate([
             'new_name' => 'required|string|max:255',
             'new_phone' => 'nullable|numeric|digits:10',
-            'new_age' => 'required|numeric|min:1|max:150',
-            'new_age_type' => 'required|in:Years,Months,Days',
+            'new_age' => 'nullable|integer|min:0|max:150',
+            'new_age_months' => 'nullable|integer|min:0|max:11',
+            'new_age_days' => 'nullable|integer|min:0|max:31',
         ]);
+
+        $years = (int) ($this->new_age ?: 0);
+        $months = (int) ($this->new_age_months ?: 0);
+        $days = (int) ($this->new_age_days ?: 0);
+
+        if ($years === 0 && $months === 0 && $days === 0) {
+            $this->modalError = 'Please specify patient age (Years, Months, or Days).';
+            return;
+        }
+
+        if ($years > 0) {
+            $finalAge = $years;
+            $finalAgeType = 'Years';
+            $finalMonths = $months > 0 ? $months : null;
+            $finalDays = $days > 0 ? $days : null;
+        } elseif ($months > 0) {
+            $finalAge = $months;
+            $finalAgeType = 'Months';
+            $finalMonths = null;
+            $finalDays = $days > 0 ? $days : null;
+        } else {
+            $finalAge = $days;
+            $finalAgeType = 'Days';
+            $finalMonths = null;
+            $finalDays = null;
+        }
 
         DB::beginTransaction();
         try {
@@ -740,8 +785,10 @@ class PosEditManager extends Component
                 $profile = PatientProfile::where('user_id', $user->id)->first();
                 if ($profile) {
                     $profile->update([
-                        'age' => $this->new_age,
-                        'age_type' => $this->new_age_type,
+                        'age' => $finalAge,
+                        'age_type' => $finalAgeType,
+                        'age_months' => $finalMonths,
+                        'age_days' => $finalDays,
                         'gender' => $this->new_gender,
                     ]);
                 }
@@ -773,8 +820,10 @@ class PosEditManager extends Component
                     'company_id' => $companyId,
                     'user_id' => $user->id,
                     'patient_id_string' => $patientIdString,
-                    'age' => $this->new_age,
-                    'age_type' => $this->new_age_type,
+                    'age' => $finalAge,
+                    'age_type' => $finalAgeType,
+                    'age_months' => $finalMonths,
+                    'age_days' => $finalDays,
                     'gender' => $this->new_gender,
                 ]);
                 $user->assignRole('patient');
@@ -784,7 +833,7 @@ class PosEditManager extends Component
             $this->isPatientModalOpen = false;
             $this->editingPatientId = null;
             $this->modalError = '';
-            $this->reset(['new_name', 'new_phone', 'new_age', 'patient_title']);
+            $this->reset(['new_name', 'new_phone', 'new_age', 'new_age_months', 'new_age_days', 'patient_title']);
             $this->patient_title = '';
             $this->new_age_type = 'Years';
             $this->new_gender = 'Male';

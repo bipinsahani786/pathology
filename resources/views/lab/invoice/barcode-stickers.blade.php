@@ -272,9 +272,7 @@
                 
                 $profile = $invoice->patient->patientProfile;
                 $genderShort = $profile ? substr($profile->gender ?? 'M', 0, 1) : 'M';
-                $age = $profile ? $profile->age : '0';
-                $ageType = $profile ? $profile->age_type : 'Y';
-                $ageStr = $age . substr($ageType, 0, 1);
+                $ageStr = $profile ? $profile->age_display : '0Y';
             @endphp
             <div class="barcode-sticker">
                 <div class="sticker-header">

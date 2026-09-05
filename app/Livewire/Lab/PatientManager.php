@@ -41,6 +41,10 @@ class PatientManager extends Component
     // Patient Profile Fields
     public $age;
 
+    public $age_months;
+
+    public $age_days;
+
     public $age_type = 'Years';
 
     public $gender = 'Male';
@@ -97,8 +101,22 @@ class PatientManager extends Component
         $this->email = $user->email;
 
         if ($user->patientProfile) {
-            $this->age = $user->patientProfile->age;
-            $this->age_type = $user->patientProfile->age_type;
+            $type = $user->patientProfile->age_type ?? 'Years';
+            $pAge = (int) ($user->patientProfile->age ?? 0);
+            if ($type === 'Years') {
+                $this->age = $pAge > 0 ? $pAge : '';
+                $this->age_months = $user->patientProfile->age_months ?? '';
+                $this->age_days = $user->patientProfile->age_days ?? '';
+            } elseif ($type === 'Months') {
+                $this->age = '';
+                $this->age_months = $pAge > 0 ? $pAge : '';
+                $this->age_days = $user->patientProfile->age_days ?? '';
+            } elseif ($type === 'Days') {
+                $this->age = '';
+                $this->age_months = '';
+                $this->age_days = $pAge > 0 ? $pAge : '';
+            }
+            $this->age_type = $type;
             $this->gender = $user->patientProfile->gender;
             $this->blood_group = $user->patientProfile->blood_group;
             $this->address = $user->patientProfile->address;
@@ -125,11 +143,38 @@ class PatientManager extends Component
                 'email',
                 Rule::unique('users', 'email')->ignore($this->user_id),
             ],
-            'age' => 'required|numeric|min:1|max:150',
-            'age_type' => 'required|in:Years,Months,Days',
+            'age' => 'nullable|integer|min:0|max:150',
+            'age_months' => 'nullable|integer|min:0|max:11',
+            'age_days' => 'nullable|integer|min:0|max:31',
             'gender' => 'required|in:Male,Female,Other',
             'blood_group' => 'nullable|string|max:5',
         ]);
+
+        $years = (int) ($this->age ?: 0);
+        $months = (int) ($this->age_months ?: 0);
+        $days = (int) ($this->age_days ?: 0);
+
+        if ($years === 0 && $months === 0 && $days === 0) {
+            $this->addError('age', 'Please specify patient age (Years, Months, or Days).');
+            return;
+        }
+
+        if ($years > 0) {
+            $finalAge = $years;
+            $finalAgeType = 'Years';
+            $finalMonths = $months > 0 ? $months : null;
+            $finalDays = $days > 0 ? $days : null;
+        } elseif ($months > 0) {
+            $finalAge = $months;
+            $finalAgeType = 'Months';
+            $finalMonths = null;
+            $finalDays = $days > 0 ? $days : null;
+        } else {
+            $finalAge = $days;
+            $finalAgeType = 'Days';
+            $finalMonths = null;
+            $finalDays = null;
+        }
 
         DB::beginTransaction();
         try {
@@ -155,8 +200,10 @@ class PatientManager extends Component
                 ]);
 
                 PatientProfile::where('user_id', $this->user_id)->update([
-                    'age' => $this->age,
-                    'age_type' => $this->age_type,
+                    'age' => $finalAge,
+                    'age_type' => $finalAgeType,
+                    'age_months' => $finalMonths,
+                    'age_days' => $finalDays,
                     'gender' => $this->gender,
                     'blood_group' => $this->blood_group,
                     'address' => $this->address,
@@ -168,9 +215,7 @@ class PatientManager extends Component
 
                 // 1. Create the User record (Allows them to log in later)
                 $activeBranchId = session('active_branch_id', 'all');
-                $myBranchId = auth()->user()->hasRole('lab_admin') || auth()->user()->hasRole('super_admin')
-                    ? ($activeBranchId === 'all' ? null : $activeBranchId)
-                    : auth()->user()->branch_id;
+                $branchId = ($activeBranchId && $activeBranchId !== 'all') ? $activeBranchId : auth()->user()->branch_id;
 
                 $user = User::create([
                     'name' => $this->name,
@@ -179,18 +224,18 @@ class PatientManager extends Component
                     'password' => Hash::make($this->phone ?? '12345678'),
                     'is_active' => true,
                     'company_id' => $companyId,
-                    'branch_id' => $myBranchId,
+                    'branch_id' => $branchId,
                 ]);
 
                 // 2. Generate a unique Patient ID from settings
-                $pPrefix = \App\Models\Configuration::getFor('patient_id_prefix', 'PAT');
-                $pDigits = (int) \App\Models\Configuration::getFor('patient_id_digits', 4);
+                $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
+                $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
 
-                $maxLocalId = \App\Models\PatientProfile::where('company_id', $companyId)->max('company_patient_number') ?? 0;
+                $maxLocalId = PatientProfile::where('company_id', $companyId)->max('company_patient_number') ?? 0;
 
                 if ($maxLocalId == 0) {
                     // Fallback to parsing the latest patient_id_string for smooth transition
-                    $lastProfile = \App\Models\PatientProfile::where('company_id', $companyId)
+                    $lastProfile = PatientProfile::where('company_id', $companyId)
                                     ->whereNotNull('patient_id_string')
                                     ->orderBy('id', 'desc')
                                     ->first();
@@ -218,8 +263,10 @@ class PatientManager extends Component
                     'user_id' => $user->id,
                     'patient_id_string' => $patientIdString,
                     'company_patient_number' => $nextPId,
-                    'age' => $this->age,
-                    'age_type' => $this->age_type,
+                    'age' => $finalAge,
+                    'age_type' => $finalAgeType,
+                    'age_months' => $finalMonths,
+                    'age_days' => $finalDays,
                     'gender' => $this->gender,
                     'blood_group' => $this->blood_group,
                     'address' => $this->address,
@@ -262,7 +309,7 @@ class PatientManager extends Component
      */
     public function resetFields()
     {
-        $this->reset(['user_id', 'name', 'phone', 'email', 'age', 'blood_group', 'address']);
+        $this->reset(['user_id', 'name', 'phone', 'email', 'age', 'age_months', 'age_days', 'blood_group', 'address']);
         $this->age_type = 'Years';
         $this->gender = 'Male';
         $this->resetValidation();
