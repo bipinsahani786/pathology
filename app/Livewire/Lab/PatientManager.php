@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\Configuration;
 use App\Models\PatientProfile;
 use App\Models\User;
 use App\Services\Import\BulkImportService;
@@ -228,8 +229,8 @@ class PatientManager extends Component
                 ]);
 
                 // 2. Generate a unique Patient ID from settings
-                $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT');
-                $pDigits = (int) Configuration::getFor('patient_id_digits', 4);
+                $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT', $companyId, $branchId);
+                $pDigits = (int) Configuration::getFor('patient_id_digits', 4, $companyId, $branchId);
 
                 $maxLocalId = PatientProfile::where('company_id', $companyId)->max('company_patient_number') ?? 0;
 
