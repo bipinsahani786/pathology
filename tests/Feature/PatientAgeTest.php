@@ -105,4 +105,40 @@ class PatientAgeTest extends TestCase
         $this->assertEquals('5 Y 6 M', $createdUser->patientProfile->age_display);
         $this->assertEquals('5 Yrs 6 Mos', $createdUser->patientProfile->age_text);
     }
+
+    public function test_patient_manager_store_new_patient(): void
+    {
+        $company = \App\Models\Company::first();
+        if (!$company) {
+            $company = \App\Models\Company::create(['name' => 'Test Lab', 'email' => 'lab@test.com', 'is_active' => true]);
+        }
+        $user = \App\Models\User::first();
+        if (!$user) {
+            $user = \App\Models\User::create([
+                'name' => 'Admin User',
+                'email' => 'admin@test.com',
+                'password' => bcrypt('password'),
+                'company_id' => $company->id,
+                'is_active' => true,
+            ]);
+        }
+
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'patient', 'guard_name' => 'web']);
+        $perm = \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'create patients', 'guard_name' => 'web']);
+        $user->givePermissionTo($perm);
+
+        $this->actingAs($user);
+
+        $component = new \App\Livewire\Lab\PatientManager();
+        $component->name = 'Jane Doe';
+        $component->phone = '9876543211';
+        $component->age = 28;
+        $component->gender = 'Female';
+        $component->store();
+
+        $createdUser = \App\Models\User::where('name', 'Jane Doe')->first();
+        $this->assertNotNull($createdUser);
+        $this->assertNotNull($createdUser->patientProfile);
+        $this->assertStringStartsWith('PAT', $createdUser->patientProfile->patient_id_string);
+    }
 }
