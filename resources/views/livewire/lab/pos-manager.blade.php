@@ -345,13 +345,74 @@
                             </div>
                             <div class="col-md-4 col-6">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>
-                                <select class="form-select form-select-sm" wire:model="collection_type">
+                                <select class="form-select form-select-sm" wire:model.live="collection_type">
                                     <option value="Center">🏥 Center</option>
-                                    <option value="Home Collection">🏠 Home Collection</option>
+                                    @if($hasHomeCollection)
+                                        <option value="Home Collection">🏠 Home Collection</option>
+                                    @endif
                                     <option value="Hospital">🏨 Hospital</option>
                                 </select>
                             </div>
                         </div>
+
+                        {{-- Home Collection Details --}}
+                        @if($collection_type === 'Home Collection')
+                        <div class="p-3 mb-3 rounded-3 border border-primary border-opacity-25" style="background: rgba(59,113,202,0.04);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-primary fs-11 text-uppercase">
+                                    <i class="feather-home me-1"></i> Home Collection Schedule & Phlebotomist
+                                </span>
+                                <span class="badge bg-soft-primary text-primary fs-10">Home Visit</span>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Patient Home Address <span class="text-danger">*</span></label>
+                                    <textarea class="form-control form-control-sm @error('collection_address') is-invalid @enderror" 
+                                        rows="2" placeholder="Full pickup address with house/flat no., street..." wire:model="collection_address"></textarea>
+                                    @error('collection_address') <div class="invalid-feedback fs-10">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Landmark</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. Near City Hospital, 2nd Floor" wire:model="collection_landmark">
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Assign Phlebotomist</label>
+                                    <select class="form-select form-select-sm" wire:model="phlebotomist_id">
+                                        <option value="">-- Assign Later / Any Phlebotomist --</option>
+                                        @foreach($phlebotomists as $phleb)
+                                            <option value="{{ $phleb->id }}">{{ $phleb->name }} ({{ $phleb->phone }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-4 col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Visit Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control form-control-sm @error('scheduled_date') is-invalid @enderror" wire:model="scheduled_date">
+                                    @error('scheduled_date') <div class="invalid-feedback fs-10">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="col-md-4 col-6">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Slot From</label>
+                                    <input type="time" class="form-control form-control-sm" wire:model="scheduled_slot_start">
+                                </div>
+                                <div class="col-md-4 col-6">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Slot To</label>
+                                    <input type="time" class="form-control form-control-sm" wire:model="scheduled_slot_end">
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4 col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Home Collection Fee (₹)</label>
+                                    <input type="number" step="any" min="0" class="form-control form-control-sm fw-bold text-primary" wire:model.live.debounce.300ms="home_collection_fee">
+                                </div>
+                                <div class="col-md-8 col-12">
+                                    <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Special Instructions / Notes</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. Fasting 10 hrs required, call before arriving" wire:model="collection_notes">
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <div class="row g-2 mb-2">
                             <div class="col-md-6 col-12">
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Invoice Date & Time</label>
@@ -647,6 +708,14 @@
                             <div class="d-flex justify-content-between align-items-center mb-1 fs-11">
                                 <span class="text-muted">Total Savings</span>
                                 <span class="fw-bold text-success">- ₹{{ number_format($total_discount, 0) }}</span>
+                            </div>
+                        @endif
+
+                        {{-- Home Collection Fee --}}
+                        @if ($collection_type === 'Home Collection' && (float)$home_collection_fee > 0)
+                            <div class="d-flex justify-content-between align-items-center mb-1 fs-11">
+                                <span class="text-muted"><i class="feather-home me-1"></i>Home Collection Fee</span>
+                                <span class="fw-bold text-dark">+ ₹{{ number_format($home_collection_fee, 2) }}</span>
                             </div>
                         @endif
 

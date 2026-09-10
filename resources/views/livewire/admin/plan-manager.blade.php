@@ -201,6 +201,13 @@
                                         @error('max_collection_centers') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-soft-primary rounded-3 border border-primary border-opacity-10 h-100">
+                                        <label class="form-label fs-11 fw-bold text-primary text-uppercase mb-1">Max Phlebotomists</label>
+                                        <input type="number" class="form-control form-control-sm" wire:model="max_phlebotomists">
+                                        @error('max_phlebotomists') <span class="text-danger fs-10 mt-1">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Module Toggle Switches -->
@@ -247,6 +254,17 @@
                                         </div>
                                         <div class="form-check form-switch m-0">
                                             <input class="form-check-input" type="checkbox" wire:model="enable_outsourcing">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light border-primary border-opacity-25">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-12"><i class="feather-home text-primary me-1"></i> Home Collection Module</div>
+                                            <div class="text-muted fs-10">Enable phlebotomists, home visits, GPS tracking & vial printing</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="has_home_collection">
                                         </div>
                                     </div>
                                 </div>

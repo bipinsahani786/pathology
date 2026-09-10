@@ -40,6 +40,11 @@ class Login extends Component
                 return redirect()->route('partner.dashboard');
             }
 
+            // 4. Phlebotomist Portal
+            if ($user->hasRole('phlebotomist')) {
+                return redirect()->route('phlebotomist.dashboard');
+            }
+
             // 4. Lab Staff
             if ($user->company_id) {
                 $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
@@ -86,6 +91,11 @@ class Login extends Component
             // 1. External Referral Partners & Collection Centers (Priority)
             if ($user->hasAnyRole(['doctor', 'agent', 'collection_center']) || $user->collection_center_id) {
                 return redirect()->route('partner.dashboard');
+            }
+
+            // 2. Phlebotomist Portal
+            if ($user->hasRole('phlebotomist')) {
+                return redirect()->route('phlebotomist.dashboard');
             }
 
             // 2. Internal Lab Staff (Standard Lab Operations)

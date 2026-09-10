@@ -130,6 +130,14 @@
                         </button>
                     </li>
                 @endif
+                @if(auth()->user()->company->plan?->features['home_collection'] ?? false)
+                    <li class="nav-item">
+                        <button wire:click="$set('activeTab', 'home_collection')"
+                            class="nav-link {{ $activeTab === 'home_collection' ? 'active' : '' }}">
+                            <i class="feather-home me-1"></i> Home Collection
+                        </button>
+                    </li>
+                @endif
             @endcan
 
             @can('view staff_roles')
@@ -358,6 +366,20 @@
                                     </div>
                                 </div>
                             </div>
+                            @if(auth()->user()->company->plan?->features['home_collection'] ?? false)
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light border-primary border-opacity-25">
+                                    <div>
+                                        <div class="fw-bold fs-13"><i class="feather-home me-2 text-primary"></i>Home Collection & Phlebotomists</div>
+                                        <div class="fs-11 text-muted">Enable or disable Home Visit scheduling and phlebotomists in lab side.</div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="module_home_collection"
+                                            wire:model="module_home_collection">
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-end">
@@ -2307,6 +2329,117 @@
                         background-color: rgba(25, 135, 84, 0.08) !important;
                     }
                 </style>
+            @endif
+
+            {{-- ==================================================== --}}
+            {{-- HOME COLLECTION SETTINGS TAB --}}
+            {{-- ==================================================== --}}
+            @if($activeTab === 'home_collection' && (auth()->user()->company->plan?->features['home_collection'] ?? false))
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title fs-15 mb-0 fw-bold">
+                                <i class="feather-home me-2 text-primary"></i> Home Collection & Phlebotomist Settings
+                            </h5>
+                            <p class="text-muted fs-12 mb-0">Configure default collection fees, phlebotomist commission rates, and notification alerts.</p>
+                        </div>
+                        @if($homeCollectionSaved)
+                            <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill fs-12">
+                                <i class="feather-check-circle me-1"></i> Settings Saved Successfully!
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form wire:submit.prevent="saveHomeCollectionSettings">
+                        <div class="row g-4 mb-4">
+                            {{-- Module Master Switch --}}
+                            <div class="col-12">
+                                <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-13">Enable Home Collection for this Lab</div>
+                                        <div class="text-muted fs-11">Turn ON to show Phlebotomists, Home Visits, and POS Home Collection options.</div>
+                                    </div>
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" wire:model="module_home_collection">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Pricing & Commission --}}
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 h-100">
+                                    <h6 class="fw-bold text-dark fs-13 mb-3"><i class="feather-dollar-sign text-primary me-2"></i>Pricing & Charges</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold fs-12">Default Home Collection Fee (₹)</label>
+                                        <input type="number" step="any" min="0" class="form-control" wire:model="home_collection_default_fee" placeholder="0">
+                                        <div class="fs-10 text-muted mt-1">Automatically applied in POS when Home Collection is chosen (can be edited per-bill).</div>
+                                        @error('home_collection_default_fee') <span class="text-danger fs-11">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label fw-semibold fs-12">Default Phlebotomist Commission per Visit (₹)</label>
+                                        <input type="number" step="any" min="0" class="form-control" wire:model="phlebotomist_default_commission" placeholder="0">
+                                        <div class="fs-10 text-muted mt-1">Default flat commission credited per completed home collection visit.</div>
+                                        @error('phlebotomist_default_commission') <span class="text-danger fs-11">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Notification Toggles --}}
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 h-100">
+                                    <h6 class="fw-bold text-dark fs-13 mb-3"><i class="feather-bell text-warning me-2"></i>Patient Alerts (SMS / WhatsApp)</h6>
+                                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded bg-light">
+                                        <div>
+                                            <div class="fw-semibold fs-12">WhatsApp Notifications</div>
+                                            <div class="fs-10 text-muted">Send alerts on Phlebotomist Assignment & En Route</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="hc_notify_whatsapp">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light">
+                                        <div>
+                                            <div class="fw-semibold fs-12">SMS Notifications</div>
+                                            <div class="fs-10 text-muted">Send direct SMS alerts (Indian SMS gateway ready)</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="hc_notify_sms">
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info py-2 px-3 mt-3 mb-0 fs-11 border-0">
+                                        <i class="feather-info me-1"></i> Notifications are logged in development mode. Configured SMS/WhatsApp gateways will deliver messages when enabled.
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Message Templates --}}
+                            <div class="col-12">
+                                <div class="p-3 border rounded-3">
+                                    <h6 class="fw-bold text-dark fs-13 mb-2"><i class="feather-message-square text-success me-2"></i>Notification Message Templates</h6>
+                                    <div class="fs-11 text-muted mb-3">Placeholders available: <code>{patient_name}</code>, <code>{phlebotomist_name}</code>, <code>{phlebotomist_phone}</code>, <code>{date}</code>, <code>{slot}</code></div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold fs-12">Assigned Notification Template</label>
+                                        <textarea class="form-control fs-12 font-monospace" rows="3" wire:model="hc_whatsapp_template_assign"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="form-label fw-semibold fs-12">En Route Notification Template</label>
+                                        <textarea class="form-control fs-12 font-monospace" rows="3" wire:model="hc_whatsapp_template_enroute"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">
+                                <i class="feather-save me-2"></i> Save Home Collection Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
             @endif
         </div>
     </div>

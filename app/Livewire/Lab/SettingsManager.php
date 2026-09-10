@@ -259,6 +259,25 @@ class SettingsManager extends Component
     public $modulesSaved = false;
 
     // ==========================================
+    // HOME COLLECTION SETTINGS
+    // ==========================================
+    public $module_home_collection = true;
+
+    public $home_collection_default_fee = 0;
+
+    public $phlebotomist_default_commission = 0;
+
+    public $hc_notify_whatsapp = false;
+
+    public $hc_notify_sms = false;
+
+    public $hc_whatsapp_template_assign = '';
+
+    public $hc_whatsapp_template_enroute = '';
+
+    public $homeCollectionSaved = false;
+
+    // ==========================================
     // WHATSAPP SETTINGS
     // ==========================================
     public $whatsapp_share_mode = 'pdf';
@@ -522,6 +541,13 @@ class SettingsManager extends Component
         $this->module_marketing = Configuration::getFor('module_marketing', '1', $company->id, 'global') === '1';
         $this->module_inventory = Configuration::getFor('module_inventory', '1', $company->id, 'global') === '1';
         $this->inventory_allow_negative_stock = Configuration::getFor('inventory_allow_negative_stock', '0', $company->id, 'global') === '1';
+        $this->module_home_collection = Configuration::getFor('module_home_collection', '1', $company->id, 'global') === '1';
+        $this->home_collection_default_fee = (float) Configuration::getFor('home_collection_default_fee', '0', $company->id, $branchId);
+        $this->phlebotomist_default_commission = (float) Configuration::getFor('phlebotomist_default_commission', '0', $company->id, $branchId);
+        $this->hc_notify_whatsapp = Configuration::getFor('hc_notify_whatsapp', '0', $company->id, 'global') === '1';
+        $this->hc_notify_sms = Configuration::getFor('hc_notify_sms', '0', $company->id, 'global') === '1';
+        $this->hc_whatsapp_template_assign = Configuration::getFor('hc_whatsapp_template_assign', 'Namaste {patient_name}! Aapka home sample collection {date} ko {slot} ke liye confirm ho gaya hai. Phlebotomist: {phlebotomist_name} ({phlebotomist_phone}). Dhanyawad!', $company->id, 'global');
+        $this->hc_whatsapp_template_enroute = Configuration::getFor('hc_whatsapp_template_enroute', 'Namaste {patient_name}! Aapka phlebotomist {phlebotomist_name} aapke ghar ki taraf aa raha hai. Kripya ready rahein.', $company->id, 'global');
 
         // UI Scaling (Always Global/Company Wide context)
         $this->ui_font_scale = (int) Configuration::getFor('ui_font_scale', 100, $company->id, 'global');
@@ -989,6 +1015,7 @@ class SettingsManager extends Component
         Configuration::setFor('module_marketing', $this->module_marketing ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0', $companyId, 'global');
         Configuration::setFor('inventory_allow_negative_stock', $this->inventory_allow_negative_stock ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_home_collection', $this->module_home_collection ? '1' : '0', $companyId, 'global');
 
         $this->modulesSaved = true;
     }
@@ -1038,6 +1065,40 @@ class SettingsManager extends Component
         Configuration::setFor('whatsapp_report_message', $this->whatsapp_report_message, $companyId, 'global');
 
         $this->whatsappSaved = true;
+    }
+
+    // ==========================================
+    // SAVE HOME COLLECTION SETTINGS
+    // ==========================================
+    public function saveHomeCollectionSettings()
+    {
+        $this->authorize('edit settings');
+
+        $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
+        if (! $hasFeature) {
+            session()->flash('error', 'Plan Restriction: Home Collection module is not enabled for your plan.');
+
+            return;
+        }
+
+        $this->validate([
+            'home_collection_default_fee' => 'required|numeric|min:0',
+            'phlebotomist_default_commission' => 'required|numeric|min:0',
+            'hc_whatsapp_template_assign' => 'nullable|string|max:1000',
+            'hc_whatsapp_template_enroute' => 'nullable|string|max:1000',
+        ]);
+
+        $companyId = auth()->user()->company_id;
+
+        Configuration::setFor('module_home_collection', $this->module_home_collection ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('home_collection_default_fee', (string) $this->home_collection_default_fee, $companyId, $this->selectedBranchId);
+        Configuration::setFor('phlebotomist_default_commission', (string) $this->phlebotomist_default_commission, $companyId, $this->selectedBranchId);
+        Configuration::setFor('hc_notify_whatsapp', $this->hc_notify_whatsapp ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('hc_notify_sms', $this->hc_notify_sms ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('hc_whatsapp_template_assign', $this->hc_whatsapp_template_assign, $companyId, 'global');
+        Configuration::setFor('hc_whatsapp_template_enroute', $this->hc_whatsapp_template_enroute, $companyId, 'global');
+
+        $this->homeCollectionSaved = true;
     }
 
     public function removeHeaderImage()
