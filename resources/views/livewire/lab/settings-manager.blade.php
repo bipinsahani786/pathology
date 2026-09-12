@@ -1234,6 +1234,15 @@
                                             <input class="form-check-input" type="checkbox"
                                                 wire:model="report_show_interpretation" style="width:2.5em;height:1.25em;">
                                         </div>
+                                        <div class="fs-10 text-muted mt-1">Print on PDF report</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-11">Edit Interpretation in Result Entry</label>
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox"
+                                                wire:model="allow_result_entry_interpretation_edit" style="width:2.5em;height:1.25em;">
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Show editor during result entry</div>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold fs-11">Show Test Notes</label>

@@ -192,6 +192,8 @@ class SettingsManager extends Component
 
     public $report_show_interpretation = true;
 
+    public $allow_result_entry_interpretation_edit = true;
+
     public $report_show_note = true;
 
     public $report_group_by_dept = false; // false = selection order, true = department grouped
@@ -481,6 +483,7 @@ class SettingsManager extends Component
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1', $company->id, $branchId) === '1';
+        $this->allow_result_entry_interpretation_edit = Configuration::getFor('allow_result_entry_interpretation_edit', '1', $company->id, $branchId) === '1';
         $this->report_show_note = Configuration::getFor('report_show_note', '1', $company->id, $branchId) === '1';
         $this->report_group_by_dept = Configuration::getFor('report_group_by_dept', '0', $company->id, $branchId) === '1';
 
@@ -871,6 +874,7 @@ class SettingsManager extends Component
         Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('allow_result_entry_interpretation_edit', $this->allow_result_entry_interpretation_edit ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_note', $this->report_show_note ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_group_by_dept', $this->report_group_by_dept ? '1' : '0', $companyId, $branchId);
 
