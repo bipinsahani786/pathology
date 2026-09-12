@@ -264,7 +264,29 @@
                         </li>
                     @endif
 
-
+                    {{-- Home Collection (SuperAdmin Plan Gated) --}}
+                    @php
+                        $hasHomeCollection = auth()->user()->company?->plan?->features['home_collection'] ?? false;
+                    @endphp
+                    @if($hasHomeCollection && (auth()->user()->can('view phlebotomists') || auth()->user()->can('view home_collections')) && \App\Models\Configuration::getFor('module_home_collection', '1') === '1')
+                        <li class="nxl-item nxl-caption"><label>Home Collection</label></li>
+                        @can('view phlebotomists')
+                            <li class="nxl-item {{ request()->routeIs('lab.phlebotomists') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.phlebotomists') }}" wire:navigate>
+                                    <span class="nxl-micon"><i class="feather-user-check"></i></span>
+                                    <span class="nxl-mtext">Phlebotomists</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('view home_collections')
+                            <li class="nxl-item {{ request()->routeIs('lab.home.visits') ? 'active' : '' }}">
+                                <a class="nxl-link" href="{{ route('lab.home.visits') }}" wire:navigate>
+                                    <span class="nxl-micon"><i class="feather-map-pin"></i></span>
+                                    <span class="nxl-mtext">Home Visits</span>
+                                </a>
+                            </li>
+                        @endcan
+                    @endif
 
                     <li class="nxl-item nxl-caption"><label>Finance & Marketing</label></li>
                     @if(\App\Models\Configuration::getFor('module_settlements', '1') === '1')

@@ -161,6 +161,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the phlebotomist profile associated with the user.
+     */
+    public function phlebotomistProfile()
+    {
+        return $this->hasOne(PhlebotomistProfile::class);
+    }
+
+    /**
+     * Home collections assigned to this phlebotomist.
+     */
+    public function homeCollectionsAsPhlebotomist()
+    {
+        return $this->hasMany(HomeCollection::class, 'phlebotomist_id');
+    }
+
+    /**
      * Get the collection center associated with the user.
      */
     public function collectionCenter()

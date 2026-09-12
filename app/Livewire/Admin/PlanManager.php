@@ -37,6 +37,10 @@ class PlanManager extends Component
 
     public $enable_outsourcing = false;
 
+    public $has_home_collection = false;
+
+    public $max_phlebotomists = 2;
+
     public $isModalOpen = false;
 
     /**
@@ -64,6 +68,8 @@ class PlanManager extends Component
         $this->has_custom_invoice = false;
         $this->has_whatsapp_custom = false;
         $this->enable_outsourcing = false;
+        $this->has_home_collection = false;
+        $this->max_phlebotomists = 2;
     }
 
     public function resetFields()
@@ -91,10 +97,12 @@ class PlanManager extends Component
             'max_doctors' => 'required|integer',
             'max_agents' => 'required|integer',
             'max_collection_centers' => 'required|integer',
-            'has_inventory' => 'boolean',
-            'has_custom_invoice' => 'boolean',
+            'has_inventory'       => 'boolean',
+            'has_custom_invoice'  => 'boolean',
             'has_whatsapp_custom' => 'boolean',
-            'enable_outsourcing' => 'boolean',
+            'enable_outsourcing'  => 'boolean',
+            'has_home_collection' => 'boolean',
+            'max_phlebotomists'   => 'required|integer|min:0',
         ]);
 
         // Pack fixed features into the JSON format for the service
@@ -104,10 +112,12 @@ class PlanManager extends Component
             ['key' => 'doctors', 'value' => $this->max_doctors],
             ['key' => 'agents', 'value' => $this->max_agents],
             ['key' => 'collection_centers', 'value' => $this->max_collection_centers],
-            ['key' => 'inventory', 'value' => $this->has_inventory],
-            ['key' => 'custom_invoice', 'value' => $this->has_custom_invoice],
-            ['key' => 'whatsapp_custom', 'value' => $this->has_whatsapp_custom],
+            ['key' => 'inventory',         'value' => $this->has_inventory],
+            ['key' => 'custom_invoice',     'value' => $this->has_custom_invoice],
+            ['key' => 'whatsapp_custom',    'value' => $this->has_whatsapp_custom],
             ['key' => 'enable_outsourcing', 'value' => $this->enable_outsourcing],
+            ['key' => 'home_collection',    'value' => $this->has_home_collection],
+            ['key' => 'max_phlebotomists',  'value' => $this->max_phlebotomists],
         ];
 
         // Use the service to handle the business logic
@@ -134,10 +144,12 @@ class PlanManager extends Component
         $this->max_doctors = $f['doctors'] ?? 5;
         $this->max_agents = $f['agents'] ?? 2;
         $this->max_collection_centers = $f['collection_centers'] ?? 1;
-        $this->has_inventory = $f['inventory'] ?? false;
-        $this->has_custom_invoice = $f['custom_invoice'] ?? false;
-        $this->has_whatsapp_custom = $f['whatsapp_custom'] ?? false;
-        $this->enable_outsourcing = $f['enable_outsourcing'] ?? false;
+        $this->has_inventory       = $f['inventory']          ?? false;
+        $this->has_custom_invoice  = $f['custom_invoice']     ?? false;
+        $this->has_whatsapp_custom = $f['whatsapp_custom']    ?? false;
+        $this->enable_outsourcing  = $f['enable_outsourcing'] ?? false;
+        $this->has_home_collection = $f['home_collection']    ?? false;
+        $this->max_phlebotomists   = $f['max_phlebotomists']  ?? 2;
 
         $this->isModalOpen = true;
     }

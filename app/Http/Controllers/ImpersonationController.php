@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class ImpersonationController extends Controller
 {
@@ -17,14 +18,14 @@ class ImpersonationController extends Controller
             abort(403, 'Impersonation feature is disabled by the administrator.');
         }
 
-        // 1. Security Check: Only admins can impersonate
+        // 1. Security Check: Only admins / managers can impersonate
         $originalUser = auth()->user();
-        if (! $originalUser->hasAnyRole(['super_admin', 'lab_admin'])) {
+        if (! $originalUser->hasAnyRole(['super_admin', 'lab_admin', 'branch_admin']) && ! $originalUser->can('edit phlebotomists')) {
             abort(403, 'Unauthorized action.');
         }
 
-        // 2. Prevent infinite loop/impersonating other admins (optional, but safer)
-        if ($user->hasAnyRole(['super_admin', 'lab_admin'])) {
+        // 2. Prevent infinite loop/impersonating other admins
+        if ($user->hasAnyRole(['super_admin', 'lab_admin', 'branch_admin'])) {
             return back()->with('error', 'Cannot impersonate another administrator.');
         }
 
@@ -35,6 +36,10 @@ class ImpersonationController extends Controller
         Auth::login($user);
 
         // 5. Redirect based on role
+        if ($user->hasRole('phlebotomist')) {
+            return redirect()->route('phlebotomist.dashboard');
+        }
+
         if ($user->hasRole('collection_center') || $user->hasAnyRole(['doctor', 'agent'])) {
             return redirect()->route('partner.dashboard');
         }
@@ -51,6 +56,10 @@ class ImpersonationController extends Controller
 
         if ($originalId) {
             Auth::loginUsingId($originalId);
+
+            if (Route::has('lab.phlebotomists') && auth()->user()->can('view phlebotomists')) {
+                return redirect()->route('lab.phlebotomists')->with('message', 'Returned to Admin session.');
+            }
 
             return redirect()->route('lab.dashboard')->with('message', 'Back to Admin session.');
         }

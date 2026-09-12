@@ -1066,7 +1066,7 @@
                                             @endif
                                         </td>
                                         <td
-                                            class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'flag-abnormal')) : 'result-bold' }}">
+                                            class="{{ $isAbnormal ? ($flag === 'H' ? 'flag-H' : ($flag === 'L' ? 'flag-L' : 'flag-abnormal')) : '' }}">
                                             {{ $r->result_value }}
                                         </td>
                                         <td
@@ -1126,12 +1126,19 @@
                     </p>
                 @endif
 
-                {{-- ── Default Interpretation (from LabTest master — stored as HTML) ── --}}
-                @if($showTestInterp && $labTest->interpretation)
+                @php
+                    // Use specific/edited interpretation from Result Entry if available, otherwise fallback to master default
+                    $testInterp = !empty(trim(strip_tags($testData['remark'] ?? '', '<img>')))
+                        ? $testData['remark']
+                        : ($labTest->interpretation ?? null);
+                @endphp
+
+                {{-- ── Clinical Interpretation (from Result Entry or Master Default — stored as HTML) ── --}}
+                @if($showTestInterp && !empty(trim(strip_tags($testInterp ?? '', '<img>'))))
                     <div class="interp-block" style="page-break-inside: avoid;">
                         <div class="interp-label">Interpretation:</div>
                         <div class="interp-content">
-                            {!! $labTest->interpretation !!}
+                            {!! $testInterp !!}
                         </div>
                     </div>
                 @endif
@@ -1142,16 +1149,6 @@
                         <div class="interp-label" style="color:#333;">Note:</div>
                         <div class="interp-content">
                             {!! nl2br(e($labTest->description)) !!}
-                        </div>
-                    </div>
-                @endif
-
-                {{-- ── Result Entry Remarks (Granular per test) ── --}}
-                @if(!empty($testData['remark']))
-                    <div class="remarks-block" style="page-break-inside: avoid;">
-                        <div class="interp-label">Remarks:</div>
-                        <div class="interp-content">
-                            {!! $testData['remark'] !!}
                         </div>
                     </div>
                 @endif

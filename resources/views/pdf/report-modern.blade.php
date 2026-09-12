@@ -631,7 +631,7 @@
                                         <span class="bg-abnormal" style="color: {{ $flagColor }}; font-weight: bold;">{{ $r->result_value }}</span>
                                         <span style="color: {{ $flagColor }}; font-weight: bold; font-size: 9px; margin-left: 2px;">{{ $flagText }}</span>
                                     @else
-                                        <span style="font-weight:bold;">{{ $r->result_value }}</span>
+                                        <span>{{ $r->result_value }}</span>
                                     @endif
                                 </td>
                                 <td>{{ $r->unit }}</td>
@@ -647,19 +647,16 @@
                             </td>
                         </tr>
                     @endif
-                    @if(($settings['report_show_interpretation'] ?? true) && $labTest->interpretation)
+                    @php
+                        $testInterp = !empty(trim(strip_tags($remark ?? '', '<img>')))
+                            ? $remark
+                            : ($labTest->interpretation ?? null);
+                    @endphp
+                    @if(($settings['report_show_interpretation'] ?? true) && !empty(trim(strip_tags($testInterp ?? '', '<img>'))))
                         <tr style="page-break-inside: avoid;">
                             <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333;">
                                 <strong>Interpretation:</strong> <br>
-                                {!! $labTest->interpretation !!}
-                            </td>
-                        </tr>
-                    @endif
-                    @if(!empty($remark))
-                        <tr style="page-break-inside: avoid;">
-                            <td colspan="4" class="interpretation-block" style="padding-left: 15px; padding-top: 5px; padding-bottom: 15px; font-size: 11px; color: #333; background: #fafafa; border: 1px dotted #ccc;">
-                                <strong>Feedback / Remarks:</strong> <br>
-                                {!! $remark !!}
+                                {!! $testInterp !!}
                             </td>
                         </tr>
                     @endif

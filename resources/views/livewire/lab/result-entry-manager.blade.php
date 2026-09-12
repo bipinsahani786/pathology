@@ -618,6 +618,7 @@
                                          @endforeach
 
                                         {{-- Granular Remark Editor (Inside Test Loop) --}}
+                                        @if($showInterpretationEditor)
                                         <tr wire:key="remark-{{ $itemId }}-{{ $labTestId }}">
                                             <td colspan="5" class="bg-light p-3 border-bottom" wire:ignore>
                                                 <label class="form-label fw-bold fs-11 text-muted text-uppercase mb-1">
@@ -630,14 +631,15 @@
                                                                 toolbar: ['bold', 'italic', 'bulletedList', 'numberedList', 'undo', 'redo']
                                                             })
                                                             .then(editor => {
+                                                                editor.setData(@js($testComments[$itemId . '_' . $labTestId] ?? ''));
                                                                 editor.model.document.on('change:data', () => {
                                                                     @this.set('testComments.{{ $itemId }}_{{ $labTestId }}', editor.getData());
                                                                 });
-                                                                editor.setData(@js($testComments[$itemId . '_' . $labTestId] ?? ''));
                                                             })
                                                     " placeholder="Add specific interpretation for {{ $testName }}..."></textarea>
                                             </td>
                                         </tr>
+                                        @endif
                                     @endforeach
                             </tbody>
                         @endforeach

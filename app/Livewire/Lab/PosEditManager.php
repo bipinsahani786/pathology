@@ -59,6 +59,18 @@ class PosEditManager extends Component
 
     public $expected_report_time;
 
+    // Home Collection Logistics
+    public $phlebotomist_id = null;
+    public $home_collection_fee = 0;
+    public $collection_address = '';
+    public $collection_landmark = '';
+    public $collection_lat = null;
+    public $collection_lng = null;
+    public $scheduled_date = '';
+    public $scheduled_slot_start = '';
+    public $scheduled_slot_end = '';
+    public $collection_notes = '';
+
     // Cart & Pricing
     public $testSearch = '';
 
@@ -256,6 +268,13 @@ class PosEditManager extends Component
                 continue;
             }
 
+            // Special case: If this is Home Collection Charges line item, extract fee
+            if (is_null($item->lab_test_id) && str_starts_with($item->test_name, 'Home Collection Charges')) {
+                $this->home_collection_fee = (float) $item->price;
+
+                continue;
+            }
+
             $test = LabTest::find($item->lab_test_id);
             $cartItem = [
                 'invoice_item_id' => $item->id,
@@ -287,10 +306,31 @@ class PosEditManager extends Component
         }
 
         // Manual discount
+        $this->manual_discount_input = $invoice->discount_amount > 0 ? (float) $invoice->discount_amount : null;
         $this->manual_discount_amt = (float) $invoice->discount_amount;
-        $this->manual_discount_input = $this->manual_discount_amt;
-        $this->manual_discount_type = 'flat';
         $this->discount_remarks = $invoice->discount_remarks ?? '';
+
+        // Load Home Collection details
+        $hc = \App\Models\HomeCollection::where('invoice_id', $invoice->id)->first();
+        if ($hc) {
+            $this->phlebotomist_id = $hc->phlebotomist_id;
+            $this->collection_address = $hc->collection_address;
+            $this->collection_landmark = $hc->collection_landmark;
+            $this->collection_lat = $hc->collection_lat;
+            $this->collection_lng = $hc->collection_lng;
+            $this->scheduled_date = $hc->scheduled_date ? $hc->scheduled_date->format('Y-m-d') : '';
+            $this->scheduled_slot_start = $hc->scheduled_slot_start ? date('H:i', strtotime($hc->scheduled_slot_start)) : '';
+            $this->scheduled_slot_end = $hc->scheduled_slot_end ? date('H:i', strtotime($hc->scheduled_slot_end)) : '';
+            $this->collection_notes = $hc->notes;
+        } else {
+            $this->phlebotomist_id = $invoice->phlebotomist_id;
+            $this->collection_address = $invoice->home_collection_address ?? '';
+            $this->collection_lat = $invoice->home_collection_lat;
+            $this->collection_lng = $invoice->home_collection_lng;
+            $this->scheduled_date = $invoice->home_scheduled_date ? $invoice->home_scheduled_date->format('Y-m-d') : '';
+            $this->scheduled_slot_start = $invoice->home_scheduled_slot_start ? date('H:i', strtotime($invoice->home_scheduled_slot_start)) : '';
+            $this->scheduled_slot_end = $invoice->home_scheduled_slot_end ? date('H:i', strtotime($invoice->home_scheduled_slot_end)) : '';
+        }
 
         // Load payments
         foreach ($invoice->payments as $pmt) {
@@ -365,6 +405,35 @@ class PosEditManager extends Component
                 $this->branch_id = $cc->branch_id;
             }
         }
+    }
+
+    public function updatedCollectionType($value)
+    {
+        if ($value === 'Home Collection') {
+            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
+            if (!$hasFeature) {
+                $this->collection_type = 'Center';
+                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
+                return;
+            }
+            if (!$this->home_collection_fee) {
+                $this->home_collection_fee = (float) Configuration::getFor('home_collection_default_fee', 0);
+            }
+            if (!$this->scheduled_date) {
+                $this->scheduled_date = now()->format('Y-m-d');
+            }
+            if (!$this->collection_address && !empty($this->selectedPatient['address'])) {
+                $this->collection_address = $this->selectedPatient['address'];
+            }
+        } else {
+            $this->home_collection_fee = 0;
+        }
+        $this->calculateTotals();
+    }
+
+    public function updatedHomeCollectionFee()
+    {
+        $this->calculateTotals();
     }
 
     // ==========================================
@@ -641,6 +710,9 @@ class PosEditManager extends Component
 
         // 7. Net Payable
         $this->net_payable = max($running, 0) + $this->membership_fee;
+        if ($this->collection_type === 'Home Collection') {
+            $this->net_payable += (float) $this->home_collection_fee;
+        }
 
         // 8. Total Savings shown in UI (Implicit + Explicit)
         $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
@@ -1074,6 +1146,22 @@ class PosEditManager extends Component
             'collection_center_id.exists' => 'The selected Collection Center is invalid.',
         ]);
 
+        if ($this->collection_type === 'Home Collection') {
+            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
+            if (!$hasFeature) {
+                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
+                return;
+            }
+            $this->validate([
+                'collection_address' => 'required|string|max:500',
+                'scheduled_date' => 'required|date',
+                'phlebotomist_id' => 'nullable|exists:users,id',
+            ], [
+                'collection_address.required' => 'Please enter patient collection address for Home Collection.',
+                'scheduled_date.required' => 'Please select a scheduled date for Home Collection.',
+            ]);
+        }
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
@@ -1213,6 +1301,13 @@ class PosEditManager extends Component
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
+                'phlebotomist_id' => $this->collection_type === 'Home Collection' ? ($this->phlebotomist_id ?: null) : null,
+                'home_collection_address' => $this->collection_type === 'Home Collection' ? $this->collection_address : null,
+                'home_collection_lat' => $this->collection_type === 'Home Collection' ? $this->collection_lat : null,
+                'home_collection_lng' => $this->collection_type === 'Home Collection' ? $this->collection_lng : null,
+                'home_scheduled_date' => $this->collection_type === 'Home Collection' ? $this->scheduled_date : null,
+                'home_scheduled_slot_start' => $this->collection_type === 'Home Collection' ? ($this->scheduled_slot_start ?: null) : null,
+                'home_scheduled_slot_end' => $this->collection_type === 'Home Collection' ? ($this->scheduled_slot_end ?: null) : null,
                 'invoice_date' => $this->invoice_date ? \Carbon\Carbon::parse($this->invoice_date) : $invoice->invoice_date,
                 'sample_received_at' => $this->sample_received_at,
                 'referred_by_doctor_id' => $doctorId,
@@ -1291,7 +1386,6 @@ class PosEditManager extends Component
                 ->first();
 
             if ($this->membership_fee > 0 && $this->active_membership) {
-                // If the invoice is already linked to a patient membership, just update the invoice item if it exists
                 if ($invoice->patient_membership_id) {
                     if ($existingMembershipItem) {
                         $existingMembershipItem->update([
@@ -1312,7 +1406,6 @@ class PosEditManager extends Component
                         $keptItemIds[] = $newItem->id;
                     }
                 } else {
-                    // Create new membership record
                     $newMembership = PatientMembership::create([
                         'company_id' => $companyId,
                         'patient_id' => $this->selectedPatient['id'],
@@ -1322,10 +1415,7 @@ class PosEditManager extends Component
                         'valid_until' => now()->addDays($this->active_membership['validity_days'] ?? 365)->toDateString(),
                         'is_active' => true,
                     ]);
-
-                    // Update invoice
                     $invoice->update(['patient_membership_id' => $newMembership->id]);
-
                     $newItem = InvoiceItem::create([
                         'invoice_id' => $invoice->id,
                         'lab_test_id' => null,
@@ -1338,13 +1428,113 @@ class PosEditManager extends Component
                     $keptItemIds[] = $newItem->id;
                 }
             } else {
-                // Clear patient membership link if it was removed
                 if ($invoice->patient_membership_id) {
                     $invoice->update(['patient_membership_id' => null]);
                 }
             }
 
-            // Delete invoice items that are not in keptItemIds
+            // Handle Home Collection fee line item
+            $existingHcItem = InvoiceItem::where('invoice_id', $invoice->id)
+                ->whereNull('lab_test_id')
+                ->where('test_name', 'Home Collection Charges')
+                ->first();
+
+            if ($this->collection_type === 'Home Collection' && (float) $this->home_collection_fee > 0) {
+                if ($existingHcItem) {
+                    $existingHcItem->update([
+                        'mrp' => (float) $this->home_collection_fee,
+                        'price' => (float) $this->home_collection_fee,
+                    ]);
+                    $keptItemIds[] = $existingHcItem->id;
+                } else {
+                    $newItem = InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'lab_test_id' => null,
+                        'test_name' => 'Home Collection Charges',
+                        'is_package' => false,
+                        'mrp' => (float) $this->home_collection_fee,
+                        'price' => (float) $this->home_collection_fee,
+                        'b2b_price' => 0,
+                    ]);
+                    $keptItemIds[] = $newItem->id;
+                }
+            } elseif ($existingHcItem) {
+                $existingHcItem->delete();
+            }
+
+            // Sync Home Collection record
+            if ($this->collection_type === 'Home Collection') {
+                $hc = \App\Models\HomeCollection::where('invoice_id', $invoice->id)->first();
+                $status = $this->phlebotomist_id ? 'Assigned' : 'Pending';
+
+                if ($hc) {
+                    $wasAssigned = (bool) $hc->phlebotomist_id;
+                    $hc->update([
+                        'branch_id' => $this->branch_id,
+                        'phlebotomist_id' => $this->phlebotomist_id ?: null,
+                        'assigned_by' => $this->phlebotomist_id ? ($hc->assigned_by ?: auth()->id()) : null,
+                        'assigned_at' => $this->phlebotomist_id ? ($hc->assigned_at ?: now()) : null,
+                        'collection_address' => $this->collection_address,
+                        'collection_landmark' => $this->collection_landmark ?: null,
+                        'scheduled_date' => $this->scheduled_date,
+                        'scheduled_slot_start' => $this->scheduled_slot_start ?: null,
+                        'scheduled_slot_end' => $this->scheduled_slot_end ?: null,
+                        'notes' => $this->collection_notes ?: null,
+                    ]);
+
+                    if (!$wasAssigned && $this->phlebotomist_id) {
+                        \App\Models\VisitStatusLog::create([
+                            'home_collection_id' => $hc->id,
+                            'from_status' => $hc->status,
+                            'to_status' => 'Assigned',
+                            'changed_by' => auth()->id(),
+                            'notes' => 'Assigned via POS Edit',
+                        ]);
+                        app(\App\Services\NotificationService::class)->notifyPatientAssigned($hc);
+                    }
+                } else {
+                    $newHc = \App\Models\HomeCollection::create([
+                        'company_id' => $companyId,
+                        'branch_id' => $this->branch_id,
+                        'invoice_id' => $invoice->id,
+                        'patient_id' => $this->selectedPatient['id'],
+                        'phlebotomist_id' => $this->phlebotomist_id ?: null,
+                        'assigned_by' => $this->phlebotomist_id ? auth()->id() : null,
+                        'assigned_at' => $this->phlebotomist_id ? now() : null,
+                        'collection_address' => $this->collection_address,
+                        'collection_landmark' => $this->collection_landmark ?: null,
+                        'scheduled_date' => $this->scheduled_date,
+                        'scheduled_slot_start' => $this->scheduled_slot_start ?: null,
+                        'scheduled_slot_end' => $this->scheduled_slot_end ?: null,
+                        'status' => $status,
+                        'notes' => $this->collection_notes ?: null,
+                    ]);
+
+                    \App\Models\VisitStatusLog::create([
+                        'home_collection_id' => $newHc->id,
+                        'from_status' => null,
+                        'to_status' => $status,
+                        'changed_by' => auth()->id(),
+                        'notes' => 'Created via POS Edit',
+                    ]);
+
+                    if ($this->phlebotomist_id) {
+                        app(\App\Services\NotificationService::class)->notifyPatientAssigned($newHc);
+                    }
+                }
+            } else {
+                $existingHc = \App\Models\HomeCollection::where('invoice_id', $invoice->id)->first();
+                if ($existingHc && in_array($existingHc->status, ['Pending', 'Assigned'])) {
+                    $existingHc->update(['status' => 'Cancelled', 'cancellation_reason' => 'Changed to '.$this->collection_type.' in POS Edit']);
+                }
+            }
+
+            // Remove any items that were deleted in the UI (except membership or HC items)
+            InvoiceItem::where('invoice_id', $invoice->id)
+                ->whereNotIn('id', $keptItemIds)
+                ->whereNotNull('lab_test_id')
+                ->delete();
+
             $itemsToDeleteQuery = InvoiceItem::where('invoice_id', $invoice->id)
                 ->whereNotIn('id', $keptItemIds);
 
@@ -1548,6 +1738,11 @@ class PosEditManager extends Component
             $tests = $query->orderBy('id', 'desc')->take(15)->get();
         }
 
+        $hasHomeCollection = auth()->user()->company->plan?->features['home_collection'] ?? false;
+        $phlebotomists = $hasHomeCollection
+            ? User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get()
+            : collect();
+
         return view('livewire.lab.pos-edit-manager', [
             'doctors' => $doctors,
             'agents' => $agents,
@@ -1557,6 +1752,8 @@ class PosEditManager extends Component
             'centers' => $this->cachedCenters,
             'branches' => $this->cachedBranches,
             'memberships' => $this->cachedMemberships,
+            'phlebotomists' => $phlebotomists,
+            'hasHomeCollection' => $hasHomeCollection,
         ])->layout('layouts.app', ['title' => 'Edit Invoice #'.($this->invoice->invoice_number ?? '')]);
     }
 }

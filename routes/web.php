@@ -26,6 +26,9 @@ use App\Livewire\Lab\ResultEntryManager;
 use App\Livewire\Lab\SettingsManager;
 use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Lab\MachineManager;
+use App\Livewire\Lab\PhlebotomistManager;
+use App\Livewire\Lab\HomeVisitManager;
+use App\Livewire\Phlebotomist\PhlebotomistDashboard;
 use App\Livewire\Partner\PartnerDashboard;
 use App\Livewire\Partner\PartnerProfile;
 use Illuminate\Support\Facades\Route;
@@ -217,6 +220,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/agents', AgentManager::class)->name('agents');
             Route::get('/agents/{partner_id}/commissions', PartnerCommissionManager::class)->name('agent.commissions');
 
+            // Phlebotomists & Home Visits
+            Route::get('/phlebotomists', PhlebotomistManager::class)->name('phlebotomists');
+            Route::get('/home-visits', HomeVisitManager::class)->name('home.visits');
+
             // Settlements (Partner Commissions)
             Route::get('/settlements', SettlementManager::class)->name('settlements');
 
@@ -349,13 +356,29 @@ Route::middleware(['auth'])->group(function () {
             }
         });
 
+    // ----------------------------------------------------
+    // PHLEBOTOMIST MOBILE PORTAL
+    // ----------------------------------------------------
+    Route::middleware(['auth', \App\Http\Middleware\CheckTenantSubscription::class])
+        ->prefix('phlebotomist')
+        ->name('phlebotomist.')
+        ->group(function () {
+            Route::get('/dashboard', PhlebotomistDashboard::class)->name('dashboard');
+            Route::get('/invoice/{id}/barcode-stickers', [\App\Http\Controllers\BarcodeController::class, 'printStickers'])->name('invoice.barcode.stickers');
+        });
+
 });
 
 // Global dashboard alias for tests/middleware
 Route::get('/dashboard', function () {
-    if (auth()->check() && auth()->user()->company_id && !auth()->user()->hasRole('super_admin') && !auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) && !auth()->user()->collection_center_id) {
-        $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
-        return redirect()->route($defaultPage);
+    if (auth()->check()) {
+        if (auth()->user()->hasRole('phlebotomist')) {
+            return redirect()->route('phlebotomist.dashboard');
+        }
+        if (auth()->user()->company_id && !auth()->user()->hasRole('super_admin') && !auth()->user()->hasAnyRole(['doctor', 'agent', 'collection_center']) && !auth()->user()->collection_center_id) {
+            $defaultPage = \App\Models\Configuration::getFor('default_login_page', 'lab.dashboard');
+            return redirect()->route($defaultPage);
+        }
     }
     return redirect()->route('lab.dashboard');
 })->middleware(['auth'])->name('dashboard');

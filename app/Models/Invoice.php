@@ -89,6 +89,22 @@ class Invoice extends Model
     }
 
     /**
+     * The home collection record for this invoice (if collection_type = Home Collection).
+     */
+    public function homeCollection()
+    {
+        return $this->hasOne(HomeCollection::class);
+    }
+
+    /**
+     * The phlebotomist assigned to collect sample for this invoice.
+     */
+    public function phlebotomist()
+    {
+        return $this->belongsTo(User::class, 'phlebotomist_id');
+    }
+
+    /**
      * Settlement relationships
      */
     public function doctorSettlement()

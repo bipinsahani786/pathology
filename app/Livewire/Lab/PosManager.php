@@ -60,6 +60,20 @@ class PosManager extends Component
     public $expected_report_time;
 
     // ==========================================
+    // 2.1 HOME COLLECTION LOGISTICS
+    // ==========================================
+    public $phlebotomist_id = null;
+    public $home_collection_fee = 0;
+    public $collection_address = '';
+    public $collection_landmark = '';
+    public $collection_lat = null;
+    public $collection_lng = null;
+    public $scheduled_date = '';
+    public $scheduled_slot_start = '';
+    public $scheduled_slot_end = '';
+    public $collection_notes = '';
+
+    // ==========================================
     // 3. CART & PRICING
     // ==========================================
     public $testSearch = '';
@@ -307,6 +321,40 @@ class PosManager extends Component
 
         $this->membership_fee = 0;
         $this->purchasedMembershipRecordId = null;
+
+        if ($this->collection_type === 'Home Collection' && empty($this->collection_address)) {
+            $this->collection_address = data_get($this->patientProfileData, 'address', '') ?: data_get($user, 'address', '');
+        }
+
+        $this->calculateTotals();
+    }
+
+    public function updatedCollectionType($value)
+    {
+        if ($value === 'Home Collection') {
+            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
+            if (!$hasFeature) {
+                $this->collection_type = 'Center';
+                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
+                return;
+            }
+            if (!$this->home_collection_fee) {
+                $this->home_collection_fee = (float) Configuration::getFor('home_collection_default_fee', 0);
+            }
+            if (!$this->scheduled_date) {
+                $this->scheduled_date = now()->format('Y-m-d');
+            }
+            if (!$this->collection_address && !empty($this->patientProfileData['address'])) {
+                $this->collection_address = $this->patientProfileData['address'];
+            }
+        } else {
+            $this->home_collection_fee = 0;
+        }
+        $this->calculateTotals();
+    }
+
+    public function updatedHomeCollectionFee()
+    {
         $this->calculateTotals();
     }
 
@@ -621,6 +669,9 @@ class PosManager extends Component
 
         // 7. Net Payable
         $this->net_payable = max($running, 0) + $this->membership_fee;
+        if ($this->collection_type === 'Home Collection') {
+            $this->net_payable += (float) $this->home_collection_fee;
+        }
 
         // 8. Total Savings shown in UI (Implicit + Explicit)
         $this->total_discount = $itemDiscount + $this->membership_discount_amt + $this->voucher_discount_amt + $this->manual_discount_amt;
@@ -1067,6 +1118,22 @@ class PosManager extends Component
             'collection_center_id.exists' => 'The selected Collection Center is invalid.',
         ]);
 
+        if ($this->collection_type === 'Home Collection') {
+            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
+            if (!$hasFeature) {
+                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
+                return;
+            }
+            $this->validate([
+                'collection_address' => 'required|string|max:500',
+                'scheduled_date' => 'required|date',
+                'phlebotomist_id' => 'nullable|exists:users,id',
+            ], [
+                'collection_address.required' => 'Please enter patient collection address for Home Collection.',
+                'scheduled_date.required' => 'Please select a scheduled date for Home Collection.',
+            ]);
+        }
+
         DB::beginTransaction();
         try {
             $companyId = auth()->user()->company_id;
@@ -1266,6 +1333,13 @@ class PosManager extends Component
                 'collection_center_id' => $this->collection_center_id,
                 'branch_id' => $this->branch_id,
                 'collection_type' => $this->collection_type,
+                'phlebotomist_id' => $this->collection_type === 'Home Collection' ? ($this->phlebotomist_id ?: null) : null,
+                'home_collection_address' => $this->collection_type === 'Home Collection' ? $this->collection_address : null,
+                'home_collection_lat' => $this->collection_type === 'Home Collection' ? $this->collection_lat : null,
+                'home_collection_lng' => $this->collection_type === 'Home Collection' ? $this->collection_lng : null,
+                'home_scheduled_date' => $this->collection_type === 'Home Collection' ? $this->scheduled_date : null,
+                'home_scheduled_slot_start' => $this->collection_type === 'Home Collection' ? ($this->scheduled_slot_start ?: null) : null,
+                'home_scheduled_slot_end' => $this->collection_type === 'Home Collection' ? ($this->scheduled_slot_end ?: null) : null,
                 'patient_id' => data_get($this->selectedPatient, 'id'),
                 'membership_id' => $this->active_membership['id'] ?? null,
                 'patient_membership_id' => $this->patient_membership_id,
@@ -1307,6 +1381,56 @@ class PosManager extends Component
                     'price' => $this->membership_fee,
                     'b2b_price' => 0, // Membership fee belongs entirely to the lab
                 ]);
+            }
+
+            // Add Home Collection fee as a line item if applicable
+            if ($this->collection_type === 'Home Collection' && (float) $this->home_collection_fee > 0) {
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'lab_test_id' => null,
+                    'test_name' => 'Home Collection Charges',
+                    'is_package' => false,
+                    'mrp' => (float) $this->home_collection_fee,
+                    'price' => (float) $this->home_collection_fee,
+                    'b2b_price' => 0,
+                ]);
+            }
+
+            // Create Home Collection Record
+            if ($this->collection_type === 'Home Collection') {
+                $status = $this->phlebotomist_id ? 'Assigned' : 'Pending';
+                $homeCollection = \App\Models\HomeCollection::create([
+                    'company_id' => $companyId,
+                    'branch_id' => $this->branch_id,
+                    'invoice_id' => $invoice->id,
+                    'patient_id' => data_get($this->selectedPatient, 'id'),
+                    'phlebotomist_id' => $this->phlebotomist_id ?: null,
+                    'assigned_by' => $this->phlebotomist_id ? auth()->id() : null,
+                    'assigned_at' => $this->phlebotomist_id ? now() : null,
+                    'collection_address' => $this->collection_address,
+                    'collection_landmark' => $this->collection_landmark ?: null,
+                    'collection_lat' => $this->collection_lat ?: null,
+                    'collection_lng' => $this->collection_lng ?: null,
+                    'scheduled_date' => $this->scheduled_date,
+                    'scheduled_slot_start' => $this->scheduled_slot_start ?: null,
+                    'scheduled_slot_end' => $this->scheduled_slot_end ?: null,
+                    'status' => $status,
+                    'notes' => $this->collection_notes ?: null,
+                ]);
+
+                \App\Models\VisitStatusLog::create([
+                    'home_collection_id' => $homeCollection->id,
+                    'from_status' => null,
+                    'to_status' => $status,
+                    'changed_by' => auth()->id(),
+                    'latitude' => $this->collection_lat ?: null,
+                    'longitude' => $this->collection_lng ?: null,
+                    'notes' => 'Created via POS' . ($this->phlebotomist_id ? ' and assigned to phlebotomist' : ''),
+                ]);
+
+                if ($this->phlebotomist_id) {
+                    app(\App\Services\NotificationService::class)->notifyPatientAssigned($homeCollection);
+                }
             }
 
             $cartTestIds = collect($this->cart)->pluck('id')->filter()->unique()->toArray();
@@ -1520,6 +1644,10 @@ class PosManager extends Component
         }
 
         $enableOutsourcing = auth()->user()->company->plan->features['enable_outsourcing'] ?? false;
+        $hasHomeCollection = auth()->user()->company->plan?->features['home_collection'] ?? false;
+        $phlebotomists = $hasHomeCollection
+            ? User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get()
+            : collect();
 
         return view('livewire.lab.pos-manager', [
             'patients' => $patients,
@@ -1530,6 +1658,8 @@ class PosManager extends Component
             'centers' => $centers,
             'branches' => $branches,
             'memberships' => $memberships,
+            'phlebotomists' => $phlebotomists,
+            'hasHomeCollection' => $hasHomeCollection,
         ])->layout('layouts.app', ['title' => 'Billing POS']);
     }
 }

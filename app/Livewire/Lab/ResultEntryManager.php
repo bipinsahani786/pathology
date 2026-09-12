@@ -43,6 +43,8 @@ class ResultEntryManager extends Component
 
     public $manualOverrides = []; // Track calculated fields that were manually edited
 
+    public $showInterpretationEditor = true;
+
     // ─────────────────────────────────────────
     // Machine Integration
     // ─────────────────────────────────────────
@@ -137,6 +139,13 @@ class ResultEntryManager extends Component
             $this->report_time = now()->format('H:i');
         }
 
+        $this->showInterpretationEditor = \App\Models\Configuration::getFor(
+            'allow_result_entry_interpretation_edit',
+            '1',
+            $this->invoice->company_id,
+            $this->invoice->branch_id
+        ) === '1';
+
         $this->initializeResultsData();
     }
 
@@ -214,13 +223,21 @@ class ResultEntryManager extends Component
             }
 
             foreach ($testsToProcess as $test) {
-                // Load specific comment for this test in this invoice item
+                // Load specific interpretation/comment for this test in this invoice item
                 $commentKey = $item->id.'_'.$test->id;
+                $savedComment = null;
                 if ($isJson) {
-                    $this->testComments[$commentKey] = $decodedComments[$test->id] ?? '';
+                    $savedComment = $decodedComments[$test->id] ?? null;
                 } else {
                     // Legacy fallback: show the same comment for all tests in the item if it's not JSON
-                    $this->testComments[$commentKey] = $rawComments;
+                    $savedComment = $rawComments;
+                }
+
+                // If saved comment exists and is not empty, use it. Otherwise, pre-fill with test's default master interpretation.
+                if (!empty(trim(strip_tags($savedComment ?? '', '<img>')))) {
+                    $this->testComments[$commentKey] = $savedComment;
+                } else {
+                    $this->testComments[$commentKey] = $test->interpretation ?? '';
                 }
 
                 $savedOpt = $decodedOptions[$test->id] ?? null;
@@ -889,7 +906,7 @@ class ResultEntryManager extends Component
 
             if ($hasGranular) {
                 // If it's a single test (not package) AND only one comment exists, store as plain text for backward compatibility
-                if (! $item->labTest->is_package && count($itemComments) === 1) {
+                if ($item->labTest && ! $item->labTest->is_package && count($itemComments) === 1) {
                     $item->update(['report_comments' => reset($itemComments)]);
                 } else {
                     // Store as JSON for packages or multiple entries
