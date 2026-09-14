@@ -482,7 +482,121 @@
                         <div class="dept-header">{{ strtoupper($deptName) }}</div>
                     @endif
                 </div>
-            
+
+            @php
+                $isWidalSlide = ($labTest->test_code === 'WIDAL_SLIDE')
+                    || (stripos($testName, 'widal') !== false && stripos($testName, 'slide') !== false)
+                    || ($results->contains(function ($r) {
+                        return is_array($r->culture_data) && ($r->culture_data['type'] ?? '') === 'widal_slide';
+                    }));
+            @endphp
+
+            @if($isWidalSlide)
+                @php
+                    $dilCols = ['1/20', '1/40', '1/80', '1/160', '1/320', '1/640'];
+                    $dilRanks = ['1:20' => 0, '1:40' => 1, '1:80' => 2, '1:160' => 3, '1:320' => 4, '1:640' => 5];
+                    $overallResult = null;
+
+                    $orderMap = ['TO' => 1, 'TH' => 2, 'AH' => 3, 'AO' => 3, 'BH' => 4];
+                    $sortedWidalResults = $results->sortBy(function ($r) use ($orderMap) {
+                        $code = strtoupper($r->short_code ?? '');
+                        if (empty($code)) {
+                            if (stripos($r->parameter_name, 'typhi-o') !== false || stripos($r->parameter_name, 'typhi o') !== false) $code = 'TO';
+                            elseif (stripos($r->parameter_name, 'typhi-h') !== false || stripos($r->parameter_name, 'typhi h') !== false) $code = 'TH';
+                            elseif (stripos($r->parameter_name, 'paratyphi-ah') !== false || stripos($r->parameter_name, 'paratyphi ah') !== false || stripos($r->parameter_name, 'paratyphi a') !== false) $code = 'AH';
+                            elseif (stripos($r->parameter_name, 'paratyphi-bh') !== false || stripos($r->parameter_name, 'paratyphi bh') !== false || stripos($r->parameter_name, 'paratyphi b') !== false) $code = 'BH';
+                        }
+                        return $orderMap[$code] ?? 99;
+                    });
+                @endphp
+
+                <div style="margin: 15px 0 15px 0;">
+                    <div style="font-weight: bold; font-size: 13px; margin-bottom: 12px; color: #000;">
+                        {{ strtoupper($testName) }}
+                    </div>
+
+                    <table style="width: 88%; margin: 0 auto; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%; border: none; padding: 6px 2px;"></th>
+                                <th style="width: 3%; border: none; padding: 6px 0;"></th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/20,</th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/40,</th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/80,</th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/160,</th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/320,</th>
+                                <th style="width: 12%; text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px;">1/640</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sortedWidalResults as $r)
+                                @php
+                                    $cData = is_array($r->culture_data) ? $r->culture_data : [];
+                                    if (!$overallResult && !empty($cData['overall_result'])) {
+                                        $overallResult = $cData['overall_result'];
+                                    }
+
+                                    $pName = $r->parameter_name;
+                                    if (stripos($pName, 'typhi-o') !== false || stripos($pName, 'typhi o') !== false) $displayName = 'S.Typhi-O';
+                                    elseif (stripos($pName, 'typhi-h') !== false || stripos($pName, 'typhi h') !== false) $displayName = 'S.Typhi-H';
+                                    elseif (stripos($pName, 'paratyphi-ah') !== false || stripos($pName, 'paratyphi ah') !== false || stripos($pName, 'paratyphi a') !== false) $displayName = 'S.Paratyphi-AH';
+                                    elseif (stripos($pName, 'paratyphi-bh') !== false || stripos($pName, 'paratyphi bh') !== false || stripos($pName, 'paratyphi b') !== false) $displayName = 'S.Paratyphi-BH';
+                                    else $displayName = $pName;
+
+                                    $val = $r->result_value ?? 'Negative';
+                                    $rank = $dilRanks[$val] ?? -1;
+                                    $dilutions = $cData['dilutions'] ?? null;
+                                @endphp
+                                <tr>
+                                    <td style="text-align: left; font-size: 11px; font-weight: bold; border: none; padding: 6px 2px; white-space: nowrap;">
+                                        {{ $displayName }}
+                                    </td>
+                                    <td style="text-align: center; font-size: 11px; font-weight: bold; border: none; padding: 6px 0;">:</td>
+                                    @foreach($dilCols as $idx => $dil)
+                                        @php
+                                            if (is_array($dilutions) && isset($dilutions[$dil])) {
+                                                $sign = $dilutions[$dil];
+                                            } else {
+                                                $sign = ($rank >= 0 && $idx <= $rank) ? '+' : '-';
+                                            }
+                                        @endphp
+                                        <td style="text-align: center; font-size: 14px; font-weight: bold; border: none; padding: 6px 2px; font-family: monospace;">
+                                            {{ $sign }}
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    @php
+                        if (!$overallResult) {
+                            if (stripos($remark ?? '', 'positive') !== false) {
+                                $overallResult = 'POSITIVE';
+                            } elseif (stripos($remark ?? '', 'negative') !== false) {
+                                $overallResult = 'NEGATIVE';
+                            } else {
+                                $isPos = $sortedWidalResults->contains(function ($r) {
+                                    $val = $r->result_value ?? '';
+                                    return in_array($val, ['1:80', '1:160', '1:320', '1:640']);
+                                });
+                                $overallResult = $isPos ? 'POSITIVE' : 'NEGATIVE';
+                            }
+                        }
+                    @endphp
+
+                    <div style="text-align: center; margin-top: 20px; margin-bottom: 20px; font-size: 14px; font-weight: bold; letter-spacing: 1.5px;">
+                        RESULT &nbsp; : &nbsp; <span>{{ strtoupper($overallResult) }}</span>
+                    </div>
+
+                    @if(($settings['report_show_note'] ?? true) && $labTest->description)
+                        <div style="padding: 5px 15px; font-size: 10px; color: #555; border-top: 0.5px solid #eee; margin-top: 10px;">
+                            <strong>Note:</strong> <br>
+                            {!! nl2br(e($labTest->description)) !!}
+                        </div>
+                    @endif
+                </div>
+            @else
             <table class="results-table">
                 @php
                     $isCultureOnly = $results->every(function ($r) {
@@ -662,6 +776,7 @@
                     @endif
                 </tbody>
             </table>
+            @endif
             </div>
             @php $testIndex++; @endphp
         @endforeach
