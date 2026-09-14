@@ -13,13 +13,20 @@ class HomeCollection extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'scheduled_date'  => 'date',
-        'assigned_at'     => 'datetime',
-        'en_route_at'     => 'datetime',
-        'arrived_at'      => 'datetime',
-        'collected_at'    => 'datetime',
-        'dispatched_at'   => 'datetime',
-        'received_at'     => 'datetime',
+        'scheduled_date'        => 'date',
+        'assigned_at'           => 'datetime',
+        'en_route_at'           => 'datetime',
+        'arrived_at'            => 'datetime',
+        'collected_at'          => 'datetime',
+        'dispatched_at'         => 'datetime',
+        'received_at'           => 'datetime',
+        'is_commission_settled' => 'boolean',
+        'commission_amount'     => 'decimal:2',
+        'commission_settled_at' => 'datetime',
+        'collection_lat'        => 'decimal:7',
+        'collection_lng'        => 'decimal:7',
+        'collected_lat'         => 'decimal:7',
+        'collected_lng'         => 'decimal:7',
     ];
 
     // ==========================================
@@ -111,6 +118,60 @@ class HomeCollection extends Model
         return $this->scheduled_date?->format('d M Y') . ' ' . $start . ($end ? ' - ' . $end : '');
     }
 
+    /**
+     * Bootstrap badge color theme based on visit status.
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'Pending'    => 'warning',
+            'Assigned'   => 'primary',
+            'En Route'   => 'info',
+            'Arrived'    => 'warning',
+            'Collected'  => 'success',
+            'Dispatched' => 'teal',
+            'Received'   => 'success',
+            'Cancelled'  => 'danger',
+            default      => 'secondary',
+        };
+    }
+
+    /**
+     * Icon associated with current visit status.
+     */
+    public function getStatusBadgeIconAttribute(): string
+    {
+        return match ($this->status) {
+            'Pending'    => 'feather-clock',
+            'Assigned'   => 'feather-user-check',
+            'En Route'   => 'feather-navigation',
+            'Arrived'    => 'feather-map-pin',
+            'Collected'  => 'feather-check-circle',
+            'Dispatched' => 'feather-send',
+            'Received'   => 'feather-package',
+            'Cancelled'  => 'feather-x-circle',
+            default      => 'feather-activity',
+        };
+    }
+
+    /**
+     * Patient-friendly headline for current status.
+     */
+    public function getPatientStatusHeadlineAttribute(): string
+    {
+        return match ($this->status) {
+            'Pending'    => 'Order Placed — Phlebotomist Assignment in Progress',
+            'Assigned'   => 'Phlebotomist Assigned — Scheduled for Your Visit',
+            'En Route'   => 'Phlebotomist is On The Way to Your Address',
+            'Arrived'    => 'Phlebotomist Has Arrived at Your Doorstep',
+            'Collected'  => 'Sample Collected Successfully — Transferring to Lab',
+            'Dispatched' => 'Sample Dispatched to Laboratory',
+            'Received'   => 'Sample Received at Testing Lab — Processing Underway',
+            'Cancelled'  => 'Home Collection Request Cancelled',
+            default      => 'Home Collection Status: ' . $this->status,
+        };
+    }
+
     // ==========================================
     // BUSINESS LOGIC
     // ==========================================
@@ -165,9 +226,10 @@ class HomeCollection extends Model
             'latitude'           => $lat,
             'longitude'          => $lng,
             'notes'              => $notes,
+            'created_at'         => now(),
         ]);
 
-        // Sync invoice sample_status
+        // Sync invoice sample_status & preserve timestamps
         $sampleStatusMap = [
             'Collected'  => 'Sample Collected',
             'Dispatched' => 'Dispatched',
@@ -175,10 +237,19 @@ class HomeCollection extends Model
         ];
 
         if (isset($sampleStatusMap[$newStatus])) {
-            $this->invoice()->update([
-                'sample_status'      => $sampleStatusMap[$newStatus],
-                'sample_collected_at'=> $newStatus === 'Collected' ? now() : null,
-            ]);
+            $invoiceUpdate = [
+                'sample_status' => $sampleStatusMap[$newStatus],
+            ];
+
+            if ($newStatus === 'Collected' && ! $this->invoice?->sample_collected_at) {
+                $invoiceUpdate['sample_collected_at'] = now();
+            }
+
+            if ($newStatus === 'Received' && ! $this->invoice?->sample_received_at) {
+                $invoiceUpdate['sample_received_at'] = now();
+            }
+
+            $this->invoice()->update($invoiceUpdate);
         }
     }
 }

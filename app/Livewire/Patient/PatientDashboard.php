@@ -28,6 +28,12 @@ class PatientDashboard extends Component
 
     public $siteSetting;
 
+    public $activeHomeVisits;
+
+    public $selectedVisit = null;
+
+    public $showTrackingModal = false;
+
     public function mount()
     {
         $this->patient = Auth::user();
@@ -44,6 +50,9 @@ class PatientDashboard extends Component
         $this->branch = $this->patient->branch;
         $this->siteSetting = SiteSetting::first();
 
+        // Recent / Active Home Collections for this patient
+        $this->loadHomeVisits();
+
         // Random medical greeting
         $greetings = [
             'Wishing you a speedy and full recovery!',
@@ -54,6 +63,53 @@ class PatientDashboard extends Component
             'Hope you feel better with each passing day!',
         ];
         $this->greeting = $greetings[array_rand($greetings)];
+    }
+
+    public function loadHomeVisits()
+    {
+        $this->activeHomeVisits = \App\Models\HomeCollection::where('patient_id', $this->patient->id)
+            ->with([
+                'phlebotomist.phlebotomistProfile',
+                'invoice.items.labTest',
+                'statusLogs.changedBy',
+            ])
+            ->orderByRaw("
+                CASE status
+                    WHEN 'En Route' THEN 1
+                    WHEN 'Arrived' THEN 2
+                    WHEN 'Assigned' THEN 3
+                    WHEN 'Pending' THEN 4
+                    WHEN 'Collected' THEN 5
+                    WHEN 'Dispatched' THEN 6
+                    WHEN 'Received' THEN 7
+                    WHEN 'Cancelled' THEN 8
+                    ELSE 9
+                END
+            ")
+            ->latest('id')
+            ->take(5)
+            ->get();
+    }
+
+    public function viewTracking($visitId)
+    {
+        $this->selectedVisit = \App\Models\HomeCollection::where('patient_id', $this->patient->id)
+            ->with([
+                'phlebotomist.phlebotomistProfile',
+                'invoice.items.labTest',
+                'statusLogs.changedBy',
+            ])
+            ->find($visitId);
+
+        if ($this->selectedVisit) {
+            $this->showTrackingModal = true;
+        }
+    }
+
+    public function closeTrackingModal()
+    {
+        $this->showTrackingModal = false;
+        $this->selectedVisit = null;
     }
 
     public function logout()

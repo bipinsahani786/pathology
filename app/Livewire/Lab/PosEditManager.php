@@ -410,12 +410,6 @@ class PosEditManager extends Component
     public function updatedCollectionType($value)
     {
         if ($value === 'Home Collection') {
-            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
-            if (!$hasFeature) {
-                $this->collection_type = 'Center';
-                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
-                return;
-            }
             if (!$this->home_collection_fee) {
                 $this->home_collection_fee = (float) Configuration::getFor('home_collection_default_fee', 0);
             }
@@ -1147,11 +1141,6 @@ class PosEditManager extends Component
         ]);
 
         if ($this->collection_type === 'Home Collection') {
-            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
-            if (!$hasFeature) {
-                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
-                return;
-            }
             $this->validate([
                 'collection_address' => 'required|string|max:500',
                 'scheduled_date' => 'required|date',
@@ -1489,6 +1478,7 @@ class PosEditManager extends Component
                             'to_status' => 'Assigned',
                             'changed_by' => auth()->id(),
                             'notes' => 'Assigned via POS Edit',
+                            'created_at' => now(),
                         ]);
                         app(\App\Services\NotificationService::class)->notifyPatientAssigned($hc);
                     }
@@ -1516,6 +1506,7 @@ class PosEditManager extends Component
                         'to_status' => $status,
                         'changed_by' => auth()->id(),
                         'notes' => 'Created via POS Edit',
+                        'created_at' => now(),
                     ]);
 
                     if ($this->phlebotomist_id) {
@@ -1739,9 +1730,7 @@ class PosEditManager extends Component
         }
 
         $hasHomeCollection = auth()->user()->company->plan?->features['home_collection'] ?? false;
-        $phlebotomists = $hasHomeCollection
-            ? User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get()
-            : collect();
+        $phlebotomists = User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get();
 
         return view('livewire.lab.pos-edit-manager', [
             'doctors' => $doctors,

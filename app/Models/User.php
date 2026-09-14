@@ -177,6 +177,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Home collections booked for this patient.
+     */
+    public function homeCollections()
+    {
+        return $this->hasMany(HomeCollection::class, 'patient_id');
+    }
+
+    /**
      * Get the collection center associated with the user.
      */
     public function collectionCenter()

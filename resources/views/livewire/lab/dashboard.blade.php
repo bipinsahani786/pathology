@@ -313,6 +313,128 @@
     </style>
 
     <div class="db-container">
+        {{-- SUPERADMIN SYSTEM ANNOUNCEMENTS --}}
+        @if($announcements && $announcements->count() > 0)
+            <div class="announcements-container mb-4 mx-2 mx-md-3">
+                @foreach($announcements as $announcement)
+                    @php
+                        $style = match($announcement->type) {
+                            'warning' => [
+                                'bg'          => 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                                'border'      => '#f59e0b',
+                                'borderColor' => '#fde68a',
+                                'iconBg'      => 'bg-warning text-white',
+                                'btnClass'    => 'btn-warning text-white',
+                                'badgeBg'     => '#d97706',
+                                'badgeColor'  => '#ffffff',
+                                'badgeText'   => 'Important Alert',
+                            ],
+                            'danger' => [
+                                'bg'          => 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                                'border'      => '#ef4444',
+                                'borderColor' => '#fecaca',
+                                'iconBg'      => 'bg-danger text-white',
+                                'btnClass'    => 'btn-danger text-white',
+                                'badgeBg'     => '#dc2626',
+                                'badgeColor'  => '#ffffff',
+                                'badgeText'   => 'Urgent Notice',
+                            ],
+                            'success' => [
+                                'bg'          => 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                'border'      => '#10b981',
+                                'borderColor' => '#bbf7d0',
+                                'iconBg'      => 'bg-success text-white',
+                                'btnClass' => 'btn-success text-white',
+                                'badgeBg'     => '#059669',
+                                'badgeColor'  => '#ffffff',
+                                'badgeText'   => 'Update',
+                            ],
+                            default => [
+                                'bg'          => 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                                'border'      => '#3b82f6',
+                                'borderColor' => '#bfdbfe',
+                                'iconBg'      => 'bg-primary text-white',
+                                'btnClass'    => 'btn-primary text-white',
+                                'badgeBg'     => '#2563eb',
+                                'badgeColor'  => '#ffffff',
+                                'badgeText'   => 'Notice',
+                            ],
+                        };
+                    @endphp
+                    <div class="alert border shadow-sm rounded-4 p-3 p-md-4 mb-3 d-flex flex-column flex-md-row align-items-start align-items-md-center position-relative"
+                         wire:key="announcement-{{ $announcement->id }}"
+                         style="background: {{ $style['bg'] }}; border-color: {{ $style['borderColor'] }} !important; border-left: 6px solid {{ $style['border'] }} !important; box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.06) !important;">
+                        <div class="icon-box {{ $style['iconBg'] }} me-3 mb-2 mb-md-0 d-flex align-items-center justify-content-center shadow-sm"
+                             style="width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;">
+                            <i class="{{ $announcement->resolved_icon }} fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 pe-md-3">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill fw-bold text-uppercase shadow-sm"
+                                      style="background-color: {{ $style['badgeBg'] }} !important; color: {{ $style['badgeColor'] }} !important; font-size: 11px; padding: 4px 12px; letter-spacing: 0.5px; border: 1px solid rgba(255, 255, 255, 0.35);">
+                                    {{ $style['badgeText'] }}
+                                </span>
+                                <h6 class="fw-bold text-dark mb-0 fs-15">{{ $announcement->title }}</h6>
+                                <span class="text-muted fs-11 ms-auto d-none d-md-inline">
+                                    <i class="feather-clock me-1"></i>{{ $announcement->created_at->diffForHumans() }}
+                                </span>
+                            </div>
+                            <div class="text-secondary fs-13 mb-0 mt-1" style="white-space: pre-line; line-height: 1.55;">
+                                {{ $announcement->message }}
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-3 mt-md-0 ms-md-auto flex-shrink-0">
+                            @if($announcement->action_url)
+                                <a href="{{ $announcement->action_url }}" target="_blank" class="btn btn-sm {{ $style['btnClass'] }} fw-bold px-3 py-2 rounded-3 shadow-sm text-nowrap">
+                                    {{ $announcement->action_label ?: 'View Details' }} <i class="feather-arrow-right ms-1"></i>
+                                </a>
+                            @endif
+                            @if($announcement->is_dismissible)
+                                <button type="button" 
+                                        wire:click="dismissAnnouncement({{ $announcement->id }})" 
+                                        class="btn btn-sm btn-light border bg-white rounded-circle shadow-none p-2 d-flex align-items-center justify-content-center" 
+                                        style="width: 32px; height: 32px;" 
+                                        title="Hide announcement">
+                                    <i class="feather-x fs-12 text-muted"></i>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- Dismissed announcements notification drawer/pill --}}
+        @if($dismissedCount > 0)
+            <div class="d-flex justify-content-end mb-3">
+                <button wire:click="toggleHiddenAnnouncements" class="btn btn-sm btn-light border bg-white text-muted rounded-pill px-3 py-1 fs-11 shadow-sm d-flex align-items-center gap-1">
+                    <i class="feather-{{ $showHiddenAnnouncements ? 'chevron-up' : 'eye' }}"></i>
+                    <span>{{ $showHiddenAnnouncements ? 'Hide Notice History' : 'Hidden Announcements (' . $dismissedCount . ')' }}</span>
+                </button>
+            </div>
+
+            @if($showHiddenAnnouncements && $hiddenAnnouncements->count() > 0)
+                <div class="card border border-dashed rounded-4 p-3 mb-4 bg-light bg-opacity-50">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fs-12 fw-bold text-muted text-uppercase"><i class="feather-archive me-1"></i>Previously Hidden Announcements</span>
+                        <span class="fs-11 text-muted">Click "Show Again" to restore on dashboard</span>
+                    </div>
+                    @foreach($hiddenAnnouncements as $hItem)
+                        <div class="p-2 bg-white rounded-3 border d-flex align-items-center justify-content-between mb-2" wire:key="hidden-{{ $hItem->id }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="{{ $hItem->resolved_icon }} text-muted fs-14"></i>
+                                <span class="fs-12 fw-semibold text-dark">{{ $hItem->title }}</span>
+                                <span class="badge bg-light text-muted fs-10">{{ ucfirst($hItem->type) }}</span>
+                            </div>
+                            <button wire:click="restoreAnnouncement({{ $hItem->id }})" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-1 fs-10 fw-bold">
+                                <i class="feather-rotate-ccw me-1"></i>Show Again
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        @endif
+
         {{-- Subscription Warning Banner --}}
         @if(auth()->user()->hasRole('lab_admin') && $daysLeft >= 0 && $daysLeft <= 15)
         <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 d-flex align-items-center animate__animated animate__fadeInDown" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b !important;">
