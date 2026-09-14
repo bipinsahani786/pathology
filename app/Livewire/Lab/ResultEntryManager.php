@@ -25,6 +25,8 @@ class ResultEntryManager extends Component
 
     public $cultureResults = [];
 
+    public $widalResults = [];
+
     public $highlights = [];
 
     public $flags = [];
@@ -320,6 +322,69 @@ class ResultEntryManager extends Component
                                     'growth_status' => 'Growth',
                                     'antibiotics' => $abList,
                                 ];
+                            }
+                        }
+
+                        if (is_array($param) && ($param['input_type'] ?? 'numeric') === 'widal_slide') {
+                            $widalKey = $item->id . '_' . $test->id;
+                            if (!isset($this->widalResults[$widalKey])) {
+                                $this->widalResults[$widalKey] = [
+                                    'item_id' => $item->id,
+                                    'lab_test_id' => $test->id,
+                                    'overall_result' => 'NEGATIVE',
+                                    'antigens' => [],
+                                ];
+                            }
+
+                            $code = strtoupper($param['short_code'] ?? '');
+                            if (empty($code)) {
+                                if (stripos($paramName, 'typhi-o') !== false || stripos($paramName, 'typhi o') !== false) $code = 'TO';
+                                elseif (stripos($paramName, 'typhi-h') !== false || stripos($paramName, 'typhi h') !== false) $code = 'TH';
+                                elseif (stripos($paramName, 'paratyphi-ah') !== false || stripos($paramName, 'paratyphi ah') !== false || stripos($paramName, 'paratyphi a') !== false) $code = 'AH';
+                                elseif (stripos($paramName, 'paratyphi-bh') !== false || stripos($paramName, 'paratyphi bh') !== false || stripos($paramName, 'paratyphi b') !== false) $code = 'BH';
+                                else $code = 'P' . count($this->widalResults[$widalKey]['antigens']);
+                            }
+
+                            $existingRes = $existingResultsMap[$key] ?? null;
+                            $existingData = $existingRes?->culture_data;
+                            $val = $existingRes ? $existingRes->result_value : '';
+
+                            $dilutions = [
+                                '1/20' => '-',
+                                '1/40' => '-',
+                                '1/80' => '-',
+                                '1/160' => '-',
+                                '1/320' => '-',
+                                '1/640' => '-',
+                            ];
+
+                            if (is_array($existingData) && !empty($existingData['dilutions'])) {
+                                $dilutions = array_merge($dilutions, $existingData['dilutions']);
+                                $titer = $existingData['titer'] ?? ($val ?: 'Negative');
+                            } elseif (!empty($val) && $val !== 'Negative') {
+                                $titer = $val;
+                                $dilRanks = ['1:20' => 0, '1:40' => 1, '1:80' => 2, '1:160' => 3, '1:320' => 4, '1:640' => 5];
+                                $dilKeys = ['1/20', '1/40', '1/80', '1/160', '1/320', '1/640'];
+                                $targetRank = $dilRanks[$val] ?? -1;
+                                foreach ($dilKeys as $idx => $dk) {
+                                    $dilutions[$dk] = ($targetRank >= 0 && $idx <= $targetRank) ? '+' : '-';
+                                }
+                            } else {
+                                $titer = 'Negative';
+                            }
+
+                            $this->results[$key] = $titer;
+
+                            $this->widalResults[$widalKey]['antigens'][$code] = [
+                                'param_key' => $key,
+                                'name' => $paramName,
+                                'code' => $code,
+                                'titer' => $titer,
+                                'dilutions' => $dilutions,
+                            ];
+
+                            if (is_array($existingData) && !empty($existingData['overall_result'])) {
+                                $this->widalResults[$widalKey]['overall_result'] = $existingData['overall_result'];
                             }
                         }
 
@@ -680,6 +745,11 @@ class ResultEntryManager extends Component
                     }
                 }
 
+                // Check widal slide results
+                if ($inputType === 'widal_slide') {
+                    $isFilled = true;
+                }
+
                 if ($isFilled) {
                     $testsData[$testId]['hasResult'] = true;
                 } else {
@@ -786,6 +856,12 @@ class ResultEntryManager extends Component
                             }
                         }
                     }
+
+                    // Also check if it's a widal slide test with a valid result
+                    if (isset($this->parametersList[$key]) && ($this->parametersList[$key]['input_type'] ?? '') === 'widal_slide') {
+                        $hasAnyResult = true;
+                        break;
+                    }
                 }
 
                 if (! $hasAnyResult) {
@@ -867,6 +943,32 @@ class ResultEntryManager extends Component
                             }));
                         }
                     }
+                }
+            }
+
+            if (($details['input_type'] ?? 'numeric') === 'widal_slide') {
+                $wKey = $details['invoice_item_id'] . '_' . $details['lab_test_id'];
+                $overall = $this->widalResults[$wKey]['overall_result'] ?? 'NEGATIVE';
+                $antigenData = null;
+
+                if (isset($this->widalResults[$wKey]['antigens'])) {
+                    foreach ($this->widalResults[$wKey]['antigens'] as $c => $ag) {
+                        if (($ag['param_key'] ?? '') === $key) {
+                            $antigenData = $ag;
+                            break;
+                        }
+                    }
+                }
+
+                if ($antigenData) {
+                    $val = $antigenData['titer'] ?? $val;
+                    $cultureData = [
+                        'type' => 'widal_slide',
+                        'code' => $antigenData['code'] ?? '',
+                        'titer' => $val,
+                        'dilutions' => $antigenData['dilutions'] ?? [],
+                        'overall_result' => $overall,
+                    ];
                 }
             }
 
@@ -1224,6 +1326,104 @@ class ResultEntryManager extends Component
             
             $this->invoice->load('items');
         }
+    }
+
+    public function setWidalTiter($widalKey, $code, $titer)
+    {
+        if (!isset($this->widalResults[$widalKey]['antigens'][$code])) return;
+
+        $dilRanks = ['Negative' => -1, '1:20' => 0, '1:40' => 1, '1:80' => 2, '1:160' => 3, '1:320' => 4, '1:640' => 5];
+        $dilKeys = ['1/20', '1/40', '1/80', '1/160', '1/320', '1/640'];
+        $rank = $dilRanks[$titer] ?? -1;
+
+        $dilutions = [];
+        foreach ($dilKeys as $idx => $dk) {
+            $dilutions[$dk] = ($rank >= 0 && $idx <= $rank) ? '+' : '-';
+        }
+
+        $this->widalResults[$widalKey]['antigens'][$code]['titer'] = $titer;
+        $this->widalResults[$widalKey]['antigens'][$code]['dilutions'] = $dilutions;
+
+        $paramKey = $this->widalResults[$widalKey]['antigens'][$code]['param_key'] ?? null;
+        if ($paramKey) {
+            $this->results[$paramKey] = $titer;
+            if (in_array($titer, ['1:80', '1:160', '1:320', '1:640'])) {
+                $this->highlights[$paramKey] = true;
+                $this->flags[$paramKey] = 'Abn';
+            } else {
+                $this->highlights[$paramKey] = false;
+                $this->flags[$paramKey] = '';
+            }
+        }
+
+        $this->recalculateWidalOverall($widalKey);
+    }
+
+    public function toggleWidalDilution($widalKey, $code, $dilution)
+    {
+        if (!isset($this->widalResults[$widalKey]['antigens'][$code])) return;
+
+        $current = $this->widalResults[$widalKey]['antigens'][$code]['dilutions'][$dilution] ?? '-';
+        $new = ($current === '+') ? '-' : '+';
+        $this->widalResults[$widalKey]['antigens'][$code]['dilutions'][$dilution] = $new;
+
+        // Recompute highest positive titer
+        $dilutionMap = ['1/640' => '1:640', '1/320' => '1:320', '1/160' => '1:160', '1/80' => '1:80', '1/40' => '1:40', '1/20' => '1:20'];
+        $highestTiter = 'Negative';
+        foreach ($dilutionMap as $dKey => $tVal) {
+            if (($this->widalResults[$widalKey]['antigens'][$code]['dilutions'][$dKey] ?? '-') === '+') {
+                $highestTiter = $tVal;
+                break;
+            }
+        }
+
+        $this->widalResults[$widalKey]['antigens'][$code]['titer'] = $highestTiter;
+        $paramKey = $this->widalResults[$widalKey]['antigens'][$code]['param_key'] ?? null;
+        if ($paramKey) {
+            $this->results[$paramKey] = $highestTiter;
+            if (in_array($highestTiter, ['1:80', '1:160', '1:320', '1:640'])) {
+                $this->highlights[$paramKey] = true;
+                $this->flags[$paramKey] = 'Abn';
+            } else {
+                $this->highlights[$paramKey] = false;
+                $this->flags[$paramKey] = '';
+            }
+        }
+
+        $this->recalculateWidalOverall($widalKey);
+    }
+
+    public function recalculateWidalOverall($widalKey)
+    {
+        if (!isset($this->widalResults[$widalKey])) return;
+
+        $hasSignificant = false;
+        foreach ($this->widalResults[$widalKey]['antigens'] as $antigen) {
+            $titer = $antigen['titer'] ?? 'Negative';
+            if (in_array($titer, ['1:80', '1:160', '1:320', '1:640'])) {
+                $hasSignificant = true;
+                break;
+            }
+        }
+
+        $this->widalResults[$widalKey]['overall_result'] = $hasSignificant ? 'POSITIVE' : 'NEGATIVE';
+    }
+
+    public function setWidalOverallResult($widalKey, $status)
+    {
+        if (isset($this->widalResults[$widalKey])) {
+            $this->widalResults[$widalKey]['overall_result'] = strtoupper($status);
+        }
+    }
+
+    public function setWidalAllNegative($widalKey)
+    {
+        if (!isset($this->widalResults[$widalKey])) return;
+
+        foreach ($this->widalResults[$widalKey]['antigens'] as $code => $antigen) {
+            $this->setWidalTiter($widalKey, $code, 'Negative');
+        }
+        $this->widalResults[$widalKey]['overall_result'] = 'NEGATIVE';
     }
 
     public function render()

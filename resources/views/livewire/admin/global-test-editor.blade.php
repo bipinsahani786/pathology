@@ -146,6 +146,7 @@
                                                         <option value="selection">Dropdown List</option>
                                                         <option value="calculated">Formula</option>
                                                         <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                        <option value="widal_slide">Widal Slide Agglutination</option>
                                                     </select>
                                                 </td>
                                                 <td>
@@ -194,6 +195,7 @@
                                                         <option value="selection">Dropdown</option>
                                                         <option value="calculated">Formula</option>
                                                         <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                        <option value="widal_slide">Widal Slide Agglutination</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -270,8 +272,9 @@
                                     <option value="text">Free Text / Qualitative</option>
                                     <option value="selection">Dropdown Options</option>
                                     <option value="calculated">Calculated Formula</option>
-                                    <option value="culture_sensitivity">Culture Sensitivity Susceptibility Grid</option>
-                                </select>
+                                     <option value="culture_sensitivity">Culture Sensitivity Susceptibility Grid</option>
+                                     <option value="widal_slide">Widal Slide Agglutination Grid</option>
+                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fs-11 fw-bold text-muted text-uppercase">Parameter Unit</label>

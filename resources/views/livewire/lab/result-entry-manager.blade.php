@@ -408,214 +408,318 @@
                                             </tr>
                                         @endif
 
-                                        @foreach($params as $p)
-                                             @php
-                                                 $paramKey = $p['key'];
-                                                 $isHigh = $highlights[$paramKey] ?? false;
-                                             @endphp
-                                             @if(($p['input_type'] ?? 'numeric') === 'culture_sensitivity')
-                                                 <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
-                                                     <td colspan="5" class="bg-soft-light p-3 border-bottom">
-                                                         <div class="card border border-primary border-opacity-25 shadow-sm rounded-3 mb-2">
-                                                             <div class="card-header bg-soft-primary py-2 d-flex justify-content-between align-items-center">
-                                                                 <span class="fw-bold text-primary fs-12"><i class="feather-activity me-1"></i>Microbiology Culture & Sensitivity: {{ $p['name'] }}</span>
-                                                                 <div class="form-check form-switch">
-                                                                     <label class="form-check-label fs-11 text-muted me-1" for="hl-{{ $paramKey }}">Highlight Report Row</label>
-                                                                     <input class="form-check-input" type="checkbox" id="hl-{{ $paramKey }}" wire:model.live="highlights.{{ $paramKey }}">
-                                                                 </div>
-                                                             </div>
-                                                             <div class="card-body p-3 fs-12">
-                                                                 <div class="row g-3">
-                                                                     <div class="col-md-4">
-                                                                         <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Growth Status</label>
-                                                                         <select class="form-select form-select-sm" wire:model.live="cultureResults.{{ $paramKey }}.growth_status">
-                                                                             <option value="Growth">Significant Growth</option>
-                                                                             <option value="No Growth">No Growth / Sterile</option>
-                                                                             <option value="Contamination">Mixed Growth (Contaminant)</option>
-                                                                         </select>
+                                        @php $wKey = $itemId . '_' . $labTestId; @endphp
+                                        @if(isset($widalResults[$wKey]) && !empty($widalResults[$wKey]['antigens']))
+                                            {{-- ── Dedicated Widal Slide Method Agglutination Grid ── --}}
+                                            <tr wire:key="widal-card-{{ $wKey }}">
+                                                <td colspan="5" class="bg-soft-light p-3 border-bottom">
+                                                    <div class="card border border-primary border-opacity-25 shadow-sm rounded-3 mb-2">
+                                                        <div class="card-header bg-soft-primary py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="fw-bold text-primary fs-13">
+                                                                    <i class="feather-grid me-1"></i>Widal Slide Agglutination Titers
+                                                                </span>
+                                                                <span class="badge bg-soft-info text-info fs-11">Slide Method</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <button type="button" 
+                                                                        wire:click="setWidalAllNegative('{{ $wKey }}')" 
+                                                                        class="btn btn-xs btn-outline-secondary py-1 px-2" 
+                                                                        title="Reset all antigens to Negative">
+                                                                    <i class="feather-rotate-ccw me-1"></i>All Negative
+                                                                </button>
+                                                                <div class="btn-group btn-group-sm" role="group">
+                                                                    <button type="button" 
+                                                                            wire:click="setWidalOverallResult('{{ $wKey }}', 'POSITIVE')" 
+                                                                            class="btn btn-xs {{ ($widalResults[$wKey]['overall_result'] ?? '') === 'POSITIVE' ? 'btn-danger fw-bold' : 'btn-outline-danger' }} py-1 px-3">
+                                                                        POSITIVE
+                                                                    </button>
+                                                                    <button type="button" 
+                                                                            wire:click="setWidalOverallResult('{{ $wKey }}', 'NEGATIVE')" 
+                                                                            class="btn btn-xs {{ ($widalResults[$wKey]['overall_result'] ?? '') === 'NEGATIVE' ? 'btn-success fw-bold' : 'btn-outline-success' }} py-1 px-3">
+                                                                        NEGATIVE
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body p-3">
+                                                            <div class="table-responsive">
+                                                                <table class="table table-bordered table-sm text-center align-middle mb-2" style="background:#fff;">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th style="width: 25%; text-align: left;" class="ps-3">Antigen</th>
+                                                                            <th style="width: 10%;">1/20</th>
+                                                                            <th style="width: 10%;">1/40</th>
+                                                                            <th style="width: 10%;">1/80</th>
+                                                                            <th style="width: 10%;">1/160</th>
+                                                                            <th style="width: 10%;">1/320</th>
+                                                                            <th style="width: 10%;">1/640</th>
+                                                                            <th style="width: 15%;">Titer Selection</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach($widalResults[$wKey]['antigens'] as $aCode => $aData)
+                                                                            <tr>
+                                                                                <td class="text-start ps-3 fw-bold text-dark">
+                                                                                    {{ $aData['name'] }}
+                                                                                    <span class="badge bg-soft-primary text-primary ms-1 fs-10">{{ $aCode }}</span>
+                                                                                </td>
+                                                                                @foreach(['1/20', '1/40', '1/80', '1/160', '1/320', '1/640'] as $dil)
+                                                                                    @php
+                                                                                        $isReactive = ($aData['dilutions'][$dil] ?? '-') === '+';
+                                                                                    @endphp
+                                                                                    <td class="p-1">
+                                                                                        <button type="button" 
+                                                                                                wire:click="toggleWidalDilution('{{ $wKey }}', '{{ $aCode }}', '{{ $dil }}')"
+                                                                                                class="btn btn-sm w-100 py-1 fw-bold fs-13 {{ $isReactive ? 'btn-danger text-white shadow-xs' : 'btn-light text-muted' }}"
+                                                                                                style="min-height: 32px; font-family: monospace; border: 1px solid {{ $isReactive ? '#dc3545' : '#dee2e6' }};">
+                                                                                            {{ $isReactive ? '+' : '-' }}
+                                                                                        </button>
+                                                                                    </td>
+                                                                                @endforeach
+                                                                                <td class="p-1">
+                                                                                    <select class="form-select form-select-sm fw-bold {{ in_array($aData['titer'], ['1:80', '1:160', '1:320', '1:640']) ? 'text-danger border-danger' : 'text-dark' }}"
+                                                                                            wire:change="setWidalTiter('{{ $wKey }}', '{{ $aCode }}', $event.target.value)">
+                                                                                        @foreach(['Negative', '1:20', '1:40', '1:80', '1:160', '1:320', '1:640'] as $opt)
+                                                                                            <option value="{{ $opt }}" {{ $aData['titer'] === $opt ? 'selected' : '' }}>
+                                                                                                {{ $opt }}
+                                                                                            </option>
+                                                                                        @endforeach
+                                                                                    </select>
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+                                                            {{-- Result & Interpretation summary row --}}
+                                                            <div class="d-flex flex-wrap justify-content-between align-items-center bg-light p-2 rounded border mt-2">
+                                                                <div class="fs-12 text-muted">
+                                                                    <i class="feather-info text-info me-1"></i>
+                                                                    <span>Click any dilution cell to toggle <strong class="text-danger">+</strong> / <strong class="text-muted">-</strong>, or choose titer from dropdown. Titer &ge; 1:80 is significant for infection.</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="fs-12 fw-bold text-uppercase text-secondary">Interpretation Result:</span>
+                                                                    <span class="badge {{ ($widalResults[$wKey]['overall_result'] ?? '') === 'POSITIVE' ? 'bg-danger' : 'bg-success' }} fs-12 px-3 py-2">
+                                                                        RESULT : {{ $widalResults[$wKey]['overall_result'] ?? 'NEGATIVE' }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @else
+                                            @foreach($params as $p)
+                                                 @php
+                                                     $paramKey = $p['key'];
+                                                     $isHigh = $highlights[$paramKey] ?? false;
+                                                 @endphp
+                                                 @if(($p['input_type'] ?? 'numeric') === 'culture_sensitivity')
+                                                     <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
+                                                         <td colspan="5" class="bg-soft-light p-3 border-bottom">
+                                                             <div class="card border border-primary border-opacity-25 shadow-sm rounded-3 mb-2">
+                                                                 <div class="card-header bg-soft-primary py-2 d-flex justify-content-between align-items-center">
+                                                                     <span class="fw-bold text-primary fs-12"><i class="feather-activity me-1"></i>Microbiology Culture & Sensitivity: {{ $p['name'] }}</span>
+                                                                     <div class="form-check form-switch">
+                                                                         <label class="form-check-label fs-11 text-muted me-1" for="hl-{{ $paramKey }}">Highlight Report Row</label>
+                                                                         <input class="form-check-input" type="checkbox" id="hl-{{ $paramKey }}" wire:model.live="highlights.{{ $paramKey }}">
                                                                      </div>
-                                                                     @if(($cultureResults[$paramKey]['growth_status'] ?? 'Growth') !== 'No Growth')
+                                                                 </div>
+                                                                 <div class="card-body p-3 fs-12">
+                                                                     <div class="row g-3">
                                                                          <div class="col-md-4">
-                                                                             <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Organism Isolated</label>
-                                                                             <input type="text" class="form-control form-control-sm" 
-                                                                                    wire:model.live="cultureResults.{{ $paramKey }}.organism_name"
-                                                                                    placeholder="e.g. Escherichia coli"
-                                                                                    list="common-organisms">
+                                                                             <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Growth Status</label>
+                                                                             <select class="form-select form-select-sm" wire:model.live="cultureResults.{{ $paramKey }}.growth_status">
+                                                                                 <option value="Growth">Significant Growth</option>
+                                                                                 <option value="No Growth">No Growth / Sterile</option>
+                                                                                 <option value="Contamination">Mixed Growth (Contaminant)</option>
+                                                                             </select>
                                                                          </div>
-                                                                         <div class="col-md-4">
-                                                                             <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Colony Count</label>
-                                                                             <input type="text" class="form-control form-control-sm" 
-                                                                                    wire:model.live="cultureResults.{{ $paramKey }}.colony_count"
-                                                                                    placeholder="e.g. 10^5 CFU/mL"
-                                                                                    list="colony-counts">
+                                                                         @if(($cultureResults[$paramKey]['growth_status'] ?? 'Growth') !== 'No Growth')
+                                                                             <div class="col-md-4">
+                                                                                 <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Organism Isolated</label>
+                                                                                 <input type="text" class="form-control form-control-sm" 
+                                                                                        wire:model.live="cultureResults.{{ $paramKey }}.organism_name"
+                                                                                        placeholder="e.g. Escherichia coli"
+                                                                                        list="common-organisms">
+                                                                             </div>
+                                                                             <div class="col-md-4">
+                                                                                 <label class="form-label fw-bold text-muted text-uppercase mb-1 fs-10">Colony Count</label>
+                                                                                 <input type="text" class="form-control form-control-sm" 
+                                                                                        wire:model.live="cultureResults.{{ $paramKey }}.colony_count"
+                                                                                        placeholder="e.g. 10^5 CFU/mL"
+                                                                                        list="colony-counts">
+                                                                             </div>
+                                                                         @endif
+                                                                     </div>
+                                                                     
+                                                                     @if(($cultureResults[$paramKey]['growth_status'] ?? 'Growth') !== 'No Growth')
+                                                                         <div class="mt-4">
+                                                                             <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                                 <label class="form-label fw-bold text-muted text-uppercase mb-0 fs-10"><i class="feather-shield-alert me-1"></i>Antibiotic Susceptibility Grid</label>
+                                                                                 <button type="button" class="btn btn-xs btn-primary rounded-pill py-1 px-2 fs-10" wire:click="addAntibioticRow('{{ $paramKey }}')">
+                                                                                     <i class="feather-plus me-1"></i>Add Antibiotic
+                                                                                 </button>
+                                                                             </div>
+                                                                             <div class="table-responsive border rounded-3 bg-white p-1">
+                                                                                 <table class="table table-sm align-middle mb-0" style="min-width: 500px;">
+                                                                                     <thead class="bg-light">
+                                                                                         <tr class="fs-10 text-muted text-uppercase fw-bold">
+                                                                                             <th style="width: 45%;">Antibiotic Name</th>
+                                                                                             <th class="text-center" style="width: 35%;">Susceptibility</th>
+                                                                                             <th style="width: 15%;">MIC Value</th>
+                                                                                             <th class="text-end pe-2" style="width: 5%;"></th>
+                                                                                         </tr>
+                                                                                     </thead>
+                                                                                     <tbody>
+                                                                                         @if(isset($cultureResults[$paramKey]['antibiotics']) && count($cultureResults[$paramKey]['antibiotics']) > 0)
+                                                                                             @foreach($cultureResults[$paramKey]['antibiotics'] as $aIdx => $antibiotic)
+                                                                                                 <tr wire:key="cs-ab-{{ $paramKey }}-{{ $aIdx }}">
+                                                                                                     <td>
+                                                                                                         <input type="text" class="form-control form-control-sm" 
+                                                                                                                wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.name"
+                                                                                                                placeholder="e.g. Amikacin"
+                                                                                                                list="common-antibiotics">
+                                                                                                     </td>
+                                                                                                     <td>
+                                                                                                         <div class="d-flex justify-content-around">
+                                                                                                             <div class="form-check form-check-inline mb-0">
+                                                                                                                 <input class="form-check-input" type="radio" 
+                                                                                                                        id="rad-s-{{ $paramKey }}-{{ $aIdx }}"
+                                                                                                                        value="S" 
+                                                                                                                        wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
+                                                                                                                 <label class="form-check-label text-success fw-bold fs-11" for="rad-s-{{ $paramKey }}-{{ $aIdx }}">S</label>
+                                                                                                             </div>
+                                                                                                             <div class="form-check form-check-inline mb-0">
+                                                                                                                 <input class="form-check-input" type="radio" 
+                                                                                                                        id="rad-i-{{ $paramKey }}-{{ $aIdx }}"
+                                                                                                                        value="I" 
+                                                                                                                        wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
+                                                                                                                 <label class="form-check-label text-warning fw-bold fs-11" for="rad-i-{{ $paramKey }}-{{ $aIdx }}">I</label>
+                                                                                                             </div>
+                                                                                                             <div class="form-check form-check-inline mb-0">
+                                                                                                                 <input class="form-check-input" type="radio" 
+                                                                                                                        id="rad-r-{{ $paramKey }}-{{ $aIdx }}"
+                                                                                                                        value="R" 
+                                                                                                                        wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
+                                                                                                                 <label class="form-check-label text-danger fw-bold fs-11" for="rad-r-{{ $paramKey }}-{{ $aIdx }}">R</label>
+                                                                                                             </div>
+                                                                                                         </div>
+                                                                                                     </td>
+                                                                                                     <td>
+                                                                                                         <input type="text" class="form-control form-control-sm text-center" 
+                                                                                                                wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.mic"
+                                                                                                                placeholder="e.g. <= 2">
+                                                                                                     </td>
+                                                                                                     <td class="text-end pe-2">
+                                                                                                         <button type="button" class="btn btn-icon btn-soft-secondary btn-xs border-0 me-1"
+                                                                                                                 wire:click="clearAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Clear selection">
+                                                                                                             <i class="feather-x fs-12"></i>
+                                                                                                         </button>
+                                                                                                         <button type="button" class="btn btn-icon btn-soft-danger btn-xs border-0"
+                                                                                                                 wire:click="removeAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Remove row">
+                                                                                                             <i class="feather-trash-2 fs-12"></i>
+                                                                                                         </button>
+                                                                                                     </td>
+                                                                                                 </tr>
+                                                                                             @endforeach
+                                                                                         @else
+                                                                                             <tr>
+                                                                                                 <td colspan="4" class="text-center text-muted py-3 fs-11">
+                                                                                                     No antibiotics added yet. Click "Add Antibiotic" to begin susceptibility testing.
+                                                                                                 </td>
+                                                                                             </tr>
+                                                                                         @endif
+                                                                                     </tbody>
+                                                                                 </table>
+                                                                             </div>
                                                                          </div>
                                                                      @endif
                                                                  </div>
-                                                                 
-                                                                 @if(($cultureResults[$paramKey]['growth_status'] ?? 'Growth') !== 'No Growth')
-                                                                     <div class="mt-4">
-                                                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                             <label class="form-label fw-bold text-muted text-uppercase mb-0 fs-10"><i class="feather-shield-alert me-1"></i>Antibiotic Susceptibility Grid</label>
-                                                                             <button type="button" class="btn btn-xs btn-primary rounded-pill py-1 px-2 fs-10" wire:click="addAntibioticRow('{{ $paramKey }}')">
-                                                                                 <i class="feather-plus me-1"></i>Add Antibiotic
-                                                                             </button>
-                                                                         </div>
-                                                                         <div class="table-responsive border rounded-3 bg-white p-1">
-                                                                             <table class="table table-sm align-middle mb-0" style="min-width: 500px;">
-                                                                                 <thead class="bg-light">
-                                                                                     <tr class="fs-10 text-muted text-uppercase fw-bold">
-                                                                                         <th style="width: 45%;">Antibiotic Name</th>
-                                                                                         <th class="text-center" style="width: 35%;">Susceptibility</th>
-                                                                                         <th style="width: 15%;">MIC Value</th>
-                                                                                         <th class="text-end pe-2" style="width: 5%;"></th>
-                                                                                     </tr>
-                                                                                 </thead>
-                                                                                 <tbody>
-                                                                                     @if(isset($cultureResults[$paramKey]['antibiotics']) && count($cultureResults[$paramKey]['antibiotics']) > 0)
-                                                                                         @foreach($cultureResults[$paramKey]['antibiotics'] as $aIdx => $antibiotic)
-                                                                                             <tr wire:key="cs-ab-{{ $paramKey }}-{{ $aIdx }}">
-                                                                                                 <td>
-                                                                                                     <input type="text" class="form-control form-control-sm" 
-                                                                                                            wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.name"
-                                                                                                            placeholder="e.g. Amikacin"
-                                                                                                            list="common-antibiotics">
-                                                                                                 </td>
-                                                                                                 <td>
-                                                                                                     <div class="d-flex justify-content-around">
-                                                                                                         <div class="form-check form-check-inline mb-0">
-                                                                                                             <input class="form-check-input" type="radio" 
-                                                                                                                    id="rad-s-{{ $paramKey }}-{{ $aIdx }}"
-                                                                                                                    value="S" 
-                                                                                                                    wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
-                                                                                                             <label class="form-check-label text-success fw-bold fs-11" for="rad-s-{{ $paramKey }}-{{ $aIdx }}">S</label>
-                                                                                                         </div>
-                                                                                                         <div class="form-check form-check-inline mb-0">
-                                                                                                             <input class="form-check-input" type="radio" 
-                                                                                                                    id="rad-i-{{ $paramKey }}-{{ $aIdx }}"
-                                                                                                                    value="I" 
-                                                                                                                    wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
-                                                                                                             <label class="form-check-label text-warning fw-bold fs-11" for="rad-i-{{ $paramKey }}-{{ $aIdx }}">I</label>
-                                                                                                         </div>
-                                                                                                         <div class="form-check form-check-inline mb-0">
-                                                                                                             <input class="form-check-input" type="radio" 
-                                                                                                                    id="rad-r-{{ $paramKey }}-{{ $aIdx }}"
-                                                                                                                    value="R" 
-                                                                                                                    wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.sensitivity">
-                                                                                                             <label class="form-check-label text-danger fw-bold fs-11" for="rad-r-{{ $paramKey }}-{{ $aIdx }}">R</label>
-                                                                                                         </div>
-                                                                                                     </div>
-                                                                                                 </td>
-                                                                                                 <td>
-                                                                                                     <input type="text" class="form-control form-control-sm text-center" 
-                                                                                                            wire:model.live="cultureResults.{{ $paramKey }}.antibiotics.{{ $aIdx }}.mic"
-                                                                                                            placeholder="e.g. <= 2">
-                                                                                                 </td>
-                                                                                                 <td class="text-end pe-2">
-                                                                                                     <button type="button" class="btn btn-icon btn-soft-secondary btn-xs border-0 me-1"
-                                                                                                             wire:click="clearAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Clear selection">
-                                                                                                         <i class="feather-x fs-12"></i>
-                                                                                                     </button>
-                                                                                                     <button type="button" class="btn btn-icon btn-soft-danger btn-xs border-0"
-                                                                                                             wire:click="removeAntibioticRow('{{ $paramKey }}', {{ $aIdx }})" title="Remove row">
-                                                                                                         <i class="feather-trash-2 fs-12"></i>
-                                                                                                     </button>
-                                                                                                 </td>
-                                                                                             </tr>
-                                                                                         @endforeach
-                                                                                     @else
-                                                                                         <tr>
-                                                                                             <td colspan="4" class="text-center text-muted py-3 fs-11">
-                                                                                                 No antibiotics added yet. Click "Add Antibiotic" to begin susceptibility testing.
-                                                                                             </td>
-                                                                                         </tr>
-                                                                                     @endif
-                                                                                 </tbody>
-                                                                             </table>
-                                                                         </div>
-                                                                     </div>
-                                                                 @endif
                                                              </div>
-                                                         </div>
-                                                     </td>
-                                                 </tr>
-                                             @elseif(($p['input_type'] ?? 'numeric') === 'heading')
-                                                 @if(trim($p['name']) === '')
-                                                     {{-- ── Group End Row ── --}}
-                                                     @php $inGroup = false; @endphp
-                                                     <tr wire:key="param-{{ $paramKey }}" class="table-borderless">
-                                                         <td colspan="5" class="text-center py-2 text-muted fs-11" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #ffffff 10px, #ffffff 20px); border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
-                                                             <i class="feather-corner-down-left me-1"></i> <i>Group Closed</i>
                                                          </td>
                                                      </tr>
+                                                 @elseif(($p['input_type'] ?? 'numeric') === 'heading')
+                                                     @if(trim($p['name']) === '')
+                                                         {{-- ── Group End Row ── --}}
+                                                         @php $inGroup = false; @endphp
+                                                         <tr wire:key="param-{{ $paramKey }}" class="table-borderless">
+                                                             <td colspan="5" class="text-center py-2 text-muted fs-11" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #ffffff 10px, #ffffff 20px); border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
+                                                                 <i class="feather-corner-down-left me-1"></i> <i>Group Closed</i>
+                                                             </td>
+                                                         </tr>
+                                                     @else
+                                                         {{-- ── Group Heading / Section Separator Row ── --}}
+                                                         @php $inGroup = true; @endphp
+                                                         <tr wire:key="param-{{ $paramKey }}" class="table-secondary">
+                                                             <td colspan="5" class="fw-bold fs-12 ps-3 py-2" 
+                                                                 style="background: #e8eeff; border-top: 2px solid #b0bfff; border-bottom: 1px solid #b0bfff; letter-spacing: 0.03em;">
+                                                                 <i class="feather-layers me-2 text-primary" style="font-size: 12px;"></i>
+                                                                 <span class="text-dark">{{ strtoupper($p['name']) }}</span>
+                                                             </td>
+                                                         </tr>
+                                                     @endif
                                                  @else
-                                                     {{-- ── Group Heading / Section Separator Row ── --}}
-                                                     @php $inGroup = true; @endphp
-                                                     <tr wire:key="param-{{ $paramKey }}" class="table-secondary">
-                                                         <td colspan="5" class="fw-bold fs-12 ps-3 py-2" 
-                                                             style="background: #e8eeff; border-top: 2px solid #b0bfff; border-bottom: 1px solid #b0bfff; letter-spacing: 0.03em;">
-                                                             <i class="feather-layers me-2 text-primary" style="font-size: 12px;"></i>
-                                                             <span class="text-dark">{{ strtoupper($p['name']) }}</span>
+                                                     <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
+                                                         <td class="fw-bold fs-12 {{ isset($inGroup) && $inGroup ? 'ps-5' : 'ps-3' }}">
+                                                             <div class="d-flex align-items-center">
+                                                                 {{ $p['name'] }}
+                                                                 @if($isHigh)
+                                                                     @php $f = $flags[$paramKey] ?? 'Abn'; @endphp
+                                                                     <span class="ms-2 badge {{ in_array($f, ['H', 'Abn']) ? 'bg-danger' : 'bg-warning text-dark' }} px-2" style="font-size: 10px;">
+                                                                         {{ $f === 'H' ? 'High' : ($f === 'L' ? 'Low' : 'Abnormal') }}
+                                                                     </span>
+                                                                 @endif
+                                                             </div>
+                                                             @if(!empty($p['short_code']))
+                                                                 <div class="fs-10 text-muted">Code: {{ $p['short_code'] }}</div>
+                                                             @endif
+                                                         </td>
+                                                         <td>
+                                                             <div class="input-group input-group-sm w-100">
+                                                                 @if(($p['input_type'] ?? 'numeric') === 'selection')
+                                                                     <select class="form-select {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
+                                                                             wire:model.live="results.{{ $paramKey }}">
+                                                                         <option value="">Select Result</option>
+                                                                         @foreach($p['options'] ?? [] as $opt)
+                                                                             <option value="{{ $opt }}">{{ $opt }}</option>
+                                                                         @endforeach
+                                                                     </select>
+                                                                 @elseif(($p['input_type'] ?? 'numeric') === 'calculated')
+                                                                     <input type="text" class="form-control {{ isset($manualOverrides[$paramKey]) ? 'border-warning fw-bold text-warning' : 'bg-light fw-bold text-primary border-primary border-opacity-25' }}" 
+                                                                            wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
+                                                                            title="Auto-Calculated. Edit to override. Clear to restore formula.">
+                                                                     <span class="input-group-text {{ isset($manualOverrides[$paramKey]) ? 'bg-soft-warning' : 'bg-soft-primary' }}">
+                                                                         <i class="feather-cpu" style="font-size: 10px;"></i>
+                                                                     </span>
+                                                                 @else
+                                                                     <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
+                                                                            wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
+                                                                            placeholder="-">
+                                                                 @endif
+
+                                                                 @if($isHigh && isset($flags[$paramKey]) && !in_array($p['input_type'] ?? '', ['selection', 'calculated']))
+                                                                     <span class="input-group-text bg-danger text-white border-danger fw-bold fs-11 px-2">
+                                                                         {{ $flags[$paramKey] }}
+                                                                     </span>
+                                                                 @endif
+                                                             </div>
+                                                         </td>
+                                                         <td class="fs-12 text-muted">{{ $p['unit'] }}</td>
+                                                         <td class="fs-12 fw-medium text-dark">{!! nl2br(e($p['ref_range'] ?: '-')) !!}</td>
+                                                         <td class="text-center">
+                                                             <div class="form-check form-switch d-flex justify-content-center">
+                                                                 <input class="form-check-input" type="checkbox" 
+                                                                        wire:model.live="highlights.{{ $paramKey }}" 
+                                                                        style="width: 2.5em; height: 1.25em;">
+                                                             </div>
                                                          </td>
                                                      </tr>
                                                  @endif
-                                             @else
-                                                 <tr class="{{ $isHigh ? 'table-danger' : '' }}" wire:key="param-{{ $paramKey }}">
-                                                     <td class="fw-bold fs-12 {{ isset($inGroup) && $inGroup ? 'ps-5' : 'ps-3' }}">
-                                                         <div class="d-flex align-items-center">
-                                                             {{ $p['name'] }}
-                                                             @if($isHigh)
-                                                                 @php $f = $flags[$paramKey] ?? 'Abn'; @endphp
-                                                                 <span class="ms-2 badge {{ in_array($f, ['H', 'Abn']) ? 'bg-danger' : 'bg-warning text-dark' }} px-2" style="font-size: 10px;">
-                                                                     {{ $f === 'H' ? 'High' : ($f === 'L' ? 'Low' : 'Abnormal') }}
-                                                                 </span>
-                                                             @endif
-                                                         </div>
-                                                         @if(!empty($p['short_code']))
-                                                             <div class="fs-10 text-muted">Code: {{ $p['short_code'] }}</div>
-                                                         @endif
-                                                     </td>
-                                                     <td>
-                                                         <div class="input-group input-group-sm w-100">
-                                                             @if(($p['input_type'] ?? 'numeric') === 'selection')
-                                                                 <select class="form-select {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                                         wire:model.live="results.{{ $paramKey }}">
-                                                                     <option value="">Select Result</option>
-                                                                     @foreach($p['options'] ?? [] as $opt)
-                                                                         <option value="{{ $opt }}">{{ $opt }}</option>
-                                                                     @endforeach
-                                                                 </select>
-                                                             @elseif(($p['input_type'] ?? 'numeric') === 'calculated')
-                                                                 <input type="text" class="form-control {{ isset($manualOverrides[$paramKey]) ? 'border-warning fw-bold text-warning' : 'bg-light fw-bold text-primary border-primary border-opacity-25' }}" 
-                                                                        wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
-                                                                        title="Auto-Calculated. Edit to override. Clear to restore formula.">
-                                                                 <span class="input-group-text {{ isset($manualOverrides[$paramKey]) ? 'bg-soft-warning' : 'bg-soft-primary' }}">
-                                                                     <i class="feather-cpu" style="font-size: 10px;"></i>
-                                                                 </span>
-                                                             @else
-                                                                 <input type="text" class="form-control {{ $isHigh ? 'border-danger text-danger fw-bold' : '' }}" 
-                                                                        wire:model.live.debounce.500ms="results.{{ $paramKey }}" 
-                                                                        placeholder="-">
-                                                             @endif
-
-                                                             @if($isHigh && isset($flags[$paramKey]) && !in_array($p['input_type'] ?? '', ['selection', 'calculated']))
-                                                                 <span class="input-group-text bg-danger text-white border-danger fw-bold fs-11 px-2">
-                                                                     {{ $flags[$paramKey] }}
-                                                                 </span>
-                                                             @endif
-                                                         </div>
-                                                     </td>
-                                                     <td class="fs-12 text-muted">{{ $p['unit'] }}</td>
-                                                     <td class="fs-12 fw-medium text-dark">{!! nl2br(e($p['ref_range'] ?: '-')) !!}</td>
-                                                     <td class="text-center">
-                                                         <div class="form-check form-switch d-flex justify-content-center">
-                                                             <input class="form-check-input" type="checkbox" 
-                                                                    wire:model.live="highlights.{{ $paramKey }}" 
-                                                                    style="width: 2.5em; height: 1.25em;">
-                                                         </div>
-                                                     </td>
-                                                 </tr>
-                                             @endif
-                                         @endforeach
+                                             @endforeach
+                                        @endif
 
                                         {{-- Granular Remark Editor (Inside Test Loop) --}}
                                         @if($showInterpretationEditor)
