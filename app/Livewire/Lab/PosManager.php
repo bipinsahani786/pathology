@@ -332,12 +332,6 @@ class PosManager extends Component
     public function updatedCollectionType($value)
     {
         if ($value === 'Home Collection') {
-            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
-            if (!$hasFeature) {
-                $this->collection_type = 'Center';
-                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
-                return;
-            }
             if (!$this->home_collection_fee) {
                 $this->home_collection_fee = (float) Configuration::getFor('home_collection_default_fee', 0);
             }
@@ -1119,11 +1113,6 @@ class PosManager extends Component
         ]);
 
         if ($this->collection_type === 'Home Collection') {
-            $hasFeature = auth()->user()->company->plan?->features['home_collection'] ?? false;
-            if (!$hasFeature) {
-                session()->flash('error', 'Home Collection feature is not enabled for your plan.');
-                return;
-            }
             $this->validate([
                 'collection_address' => 'required|string|max:500',
                 'scheduled_date' => 'required|date',
@@ -1426,6 +1415,7 @@ class PosManager extends Component
                     'latitude' => $this->collection_lat ?: null,
                     'longitude' => $this->collection_lng ?: null,
                     'notes' => 'Created via POS' . ($this->phlebotomist_id ? ' and assigned to phlebotomist' : ''),
+                    'created_at' => now(),
                 ]);
 
                 if ($this->phlebotomist_id) {
@@ -1645,9 +1635,7 @@ class PosManager extends Component
 
         $enableOutsourcing = auth()->user()->company->plan->features['enable_outsourcing'] ?? false;
         $hasHomeCollection = auth()->user()->company->plan?->features['home_collection'] ?? false;
-        $phlebotomists = $hasHomeCollection
-            ? User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get()
-            : collect();
+        $phlebotomists = User::role('phlebotomist')->where('company_id', $companyId)->where('is_active', true)->get();
 
         return view('livewire.lab.pos-manager', [
             'patients' => $patients,

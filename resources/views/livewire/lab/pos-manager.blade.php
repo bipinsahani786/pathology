@@ -347,9 +347,7 @@
                                 <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Collected At</label>
                                 <select class="form-select form-select-sm" wire:model.live="collection_type">
                                     <option value="Center">🏥 Center</option>
-                                    @if($hasHomeCollection)
-                                        <option value="Home Collection">🏠 Home Collection</option>
-                                    @endif
+                                    <option value="Home Collection">🏠 Home Collection</option>
                                     <option value="Hospital">🏨 Hospital</option>
                                 </select>
                             </div>
@@ -371,10 +369,11 @@
                                         rows="2" placeholder="Full pickup address with house/flat no., street..." wire:model="collection_address"></textarea>
                                     @error('collection_address') <div class="invalid-feedback fs-10">{{ $message }}</div> @enderror
                                 </div>
-                                <div class="col-md-6 col-12">
+                                <div class="{{ ($hasHomeCollection || $phlebotomists->isNotEmpty()) ? 'col-md-6' : 'col-12' }} col-12">
                                     <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Landmark</label>
                                     <input type="text" class="form-control form-control-sm" placeholder="e.g. Near City Hospital, 2nd Floor" wire:model="collection_landmark">
                                 </div>
+                                @if($hasHomeCollection || $phlebotomists->isNotEmpty())
                                 <div class="col-md-6 col-12">
                                     <label class="form-label fw-bold fs-10 text-muted text-uppercase mb-1">Assign Phlebotomist</label>
                                     <select class="form-select form-select-sm" wire:model="phlebotomist_id">
@@ -384,6 +383,7 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                @endif
                             </div>
                             <div class="row g-2 mb-2">
                                 <div class="col-md-4 col-12">

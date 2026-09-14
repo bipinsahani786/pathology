@@ -147,6 +147,12 @@
                         <span class="nxl-mtext">Maintenance</span>
                     </a>
                 </li>
+                <li class="nxl-item {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
+                    <a href="{{ route('admin.announcements') }}" wire:navigate class="nxl-link">
+                        <span class="nxl-micon"><i class="feather-bell"></i></span>
+                        <span class="nxl-mtext">Announcements</span>
+                    </a>
+                </li>
                 @if(config('features.support_tickets', true))
                     <li class="nxl-item {{ request()->routeIs('admin.support') ? 'active' : '' }}">
                         <a href="{{ route('admin.support') }}" wire:navigate class="nxl-link">

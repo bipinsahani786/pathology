@@ -161,6 +161,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/audit-logs', \App\Livewire\Admin\AuditLogManager::class)->name('audit-logs');
         Route::get('/system-logs', \App\Livewire\Admin\LogViewer::class)->name('system-logs');
         Route::get('/maintenance', \App\Livewire\Admin\MaintenanceManager::class)->name('maintenance');
+        Route::get('/announcements', \App\Livewire\Admin\AnnouncementManager::class)->name('announcements');
         if (config('features.support_tickets', true)) {
             Route::get('/support', \App\Livewire\Admin\SupportManager::class)->name('support');
         }

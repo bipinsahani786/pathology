@@ -238,7 +238,7 @@
                                         <i class="feather-clock me-1"></i>
                                         {{ $visit->scheduled_date?->format('d M') }}
                                         @if($visit->scheduled_slot_start)
-                                        {{ date('h:i A', strtotime($visit->scheduled_slot_start)) }}
+                                        {{ date('h:i A', strtotime($visit->scheduled_slot_start)) }}@if($visit->scheduled_slot_end) – {{ date('h:i A', strtotime($visit->scheduled_slot_end)) }}@endif
                                         @endif
                                     </div>
                                     @if($visit->collection_lat && $visit->collection_lng)
@@ -655,6 +655,7 @@
                             <h5 class="modal-title fw-bold text-dark mb-0 fs-16">Live Tracking & GPS Audit Trail</h5>
                             <div class="text-muted fs-12">
                                 Visit #{{ $trackingVisit->invoice?->invoice_number ?? $trackingVisit->invoice_id }} • Patient: <strong>{{ $trackingVisit->invoice?->patient?->name ?? '—' }}</strong>
+                                • Scheduled: <span class="text-primary fw-semibold"><i class="feather-calendar me-1"></i>{{ $trackingVisit->scheduled_date?->format('d M Y') }}@if($trackingVisit->scheduled_slot_start) ({{ date('h:i A', strtotime($trackingVisit->scheduled_slot_start)) }}@if($trackingVisit->scheduled_slot_end) – {{ date('h:i A', strtotime($trackingVisit->scheduled_slot_end)) }}@endif)@endif</span>
                             </div>
                         </div>
                     </div>
@@ -704,6 +705,12 @@
                     {{-- Lifecycle Stepper --}}
                     @php
                         $steps = ['Assigned', 'En Route', 'Arrived', 'Collected'];
+                        $stepTimestamps = [
+                            'Assigned'  => $trackingVisit->assigned_at,
+                            'En Route'  => $trackingVisit->en_route_at,
+                            'Arrived'   => $trackingVisit->arrived_at,
+                            'Collected' => $trackingVisit->collected_at,
+                        ];
                         $curIdx = array_search($trackingVisit->status, $steps);
                         if ($curIdx === false) {
                             if (in_array($trackingVisit->status, ['Dispatched', 'Received'])) $curIdx = 4;
@@ -720,6 +727,7 @@
                             @php
                                 $isPassed = ($curIdx >= $idx);
                                 $isCurrent = ($trackingVisit->status === $st);
+                                $stepTime = $stepTimestamps[$st] ?? null;
                             @endphp
                             <div class="d-flex flex-column align-items-center position-relative" style="z-index: 2;">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-12 {{ $isPassed ? 'bg-success text-white' : 'bg-light text-muted border' }}"
@@ -731,6 +739,9 @@
                                     @endif
                                 </div>
                                 <div class="fs-11 mt-1 text-center {{ $isCurrent ? 'fw-bold text-success' : 'text-muted' }}">{{ $st }}</div>
+                                @if($stepTime)
+                                <div class="fs-10 text-muted mt-0 text-center">{{ $stepTime->format('h:i A') }}</div>
+                                @endif
                             </div>
                             @endforeach
                         </div>

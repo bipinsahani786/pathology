@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Lab;
 
+use App\Models\Announcement;
+use App\Models\AnnouncementDismissal;
 use App\Models\CollectionCenter;
 use App\Models\Configuration;
 use App\Models\DoctorProfile;
@@ -20,6 +22,8 @@ class Dashboard extends Component
 
     public $toDate;
 
+    public $showHiddenAnnouncements = false;
+
     public function mount()
     {
         // Default to today
@@ -33,6 +37,39 @@ class Dashboard extends Component
     public function updateFilter()
     {
         $this->dispatch('refreshCharts');
+    }
+
+    /**
+     * Dismiss/hide an announcement for the current user.
+     */
+    public function dismissAnnouncement($announcementId)
+    {
+        $announcement = Announcement::find($announcementId);
+        if ($announcement && $announcement->is_dismissible) {
+            AnnouncementDismissal::firstOrCreate([
+                'announcement_id' => $announcementId,
+                'user_id'         => auth()->id(),
+                'company_id'      => auth()->user()->company_id,
+            ]);
+        }
+    }
+
+    /**
+     * Restore/unhide a previously dismissed announcement.
+     */
+    public function restoreAnnouncement($announcementId)
+    {
+        AnnouncementDismissal::where('announcement_id', $announcementId)
+            ->where('user_id', auth()->id())
+            ->delete();
+    }
+
+    /**
+     * Toggle viewing hidden/dismissed announcements drawer.
+     */
+    public function toggleHiddenAnnouncements()
+    {
+        $this->showHiddenAnnouncements = ! $this->showHiddenAnnouncements;
     }
 
     /**
@@ -304,7 +341,37 @@ class Dashboard extends Component
         $paymentData = $data['paymentData'];
         $channelData = $data['channelData'];
 
+        // Announcements System for Lab Staff
+        $userId = auth()->id();
+        $announcements = Announcement::query()
+            ->active()
+            ->forUser($userId)
+            ->orderByDesc('priority')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $dismissedCount = Announcement::query()
+            ->active()
+            ->whereHas('dismissals', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->count();
+
+        $hiddenAnnouncements = $this->showHiddenAnnouncements
+            ? Announcement::query()
+                ->active()
+                ->whereHas('dismissals', function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                })
+                ->orderByDesc('priority')
+                ->orderByDesc('created_at')
+                ->get()
+            : collect();
+
         return view('livewire.lab.dashboard', [
+            'announcements' => $announcements,
+            'dismissedCount' => $dismissedCount,
+            'hiddenAnnouncements' => $hiddenAnnouncements,
             'showStats' => $showStats,
             'daysLeft' => $daysLeft,
             'stats' => $data['stats'],

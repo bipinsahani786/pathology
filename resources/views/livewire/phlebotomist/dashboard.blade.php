@@ -558,7 +558,7 @@
                             <span class="badge bg-success text-white rounded-pill px-3 py-1 fs-12 fw-bold">
                                 ✓ Paid (+₹{{ number_format($commissionPerVisit, 2) }})
                             </span>
-                            <div class="fs-10 text-success mt-1">Paid on {{ $cVisit->commission_settled_at?->format('d M') }} via {{ $cVisit->commissionSettlement?->payment_mode ?? 'Cash' }}</div>
+                            <div class="fs-10 text-success mt-1">Paid on {{ $cVisit->commission_settled_at ? \Carbon\Carbon::parse($cVisit->commission_settled_at)->format('d M') : 'Settled' }} via {{ $cVisit->commissionSettlement?->payment_mode ?? 'Cash' }}</div>
                             @else
                             <span class="badge bg-soft-warning text-warning rounded-pill px-3 py-1 fs-12 fw-bold">
                                 ⏳ Unpaid (+₹{{ number_format($commissionPerVisit, 2) }})
@@ -605,7 +605,7 @@
                     <div>
                         <div class="fw-bold text-dark fs-12">Paid via {{ $payout->payment_mode }}</div>
                         <div class="text-muted fs-10">
-                            {{ $payout->payment_date?->format('d M Y, h:i A') }}
+                            {{ $payout->payment_date ? \Carbon\Carbon::parse($payout->payment_date)->format('d M Y, h:i A') : 'Date N/A' }}
                             @if($payout->reference_no) • Ref: {{ $payout->reference_no }} @endif
                             @if($payout->settledBy) • By {{ $payout->settledBy->name }} @endif
                         </div>

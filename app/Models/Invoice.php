@@ -89,7 +89,7 @@ class Invoice extends Model
     }
 
     /**
-     * The home collection record for this invoice (if collection_type = Home Collection).
+     * The home collection record associated with this invoice (if collection_type = Home Collection).
      */
     public function homeCollection()
     {
