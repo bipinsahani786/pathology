@@ -75,7 +75,22 @@ class CompanyRegistrationService
                 'phone' => $data['phone'],
             ]);
 
-            // 6. Import Default Global Tests
+            // 6. Create Default Main Collection Center
+            $mainCenter = \App\Models\CollectionCenter::create([
+                'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'user_id' => $user->id,
+                'name' => 'Main Collection Center',
+                'center_code' => 'CC-MAIN',
+                'address' => $data['address'] ?? null,
+                'is_main_lab' => true,
+                'is_active' => true,
+            ]);
+
+            // Link collection center to user
+            $user->update(['collection_center_id' => $mainCenter->id]);
+
+            // 7. Import Default Global Tests
             $defaultGlobalTests = \App\Models\GlobalTest::where('is_active', true)
                 ->where('is_default', true)
                 ->get();

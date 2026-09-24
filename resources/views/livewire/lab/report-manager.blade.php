@@ -257,24 +257,35 @@
                                         </div>
                                     </td>
                                     <td style="padding: 8px 8px;">
-                                        <div class="d-flex flex-column gap-1">
-                                            @php
-                                                $displayTests = collect();
-                                                foreach($invoice->items as $item) {
-                                                    if($item->labTest) {
-                                                        if($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
-                                                            $innerTests = $item->labTest->getLinkedTests();
-                                                            foreach($innerTests as $inner) {
-                                                                $displayTests->push(['item' => $item, 'inner' => $inner, 'is_package' => true]);
-                                                            }
-                                                        } else {
-                                                            $displayTests->push(['item' => $item, 'inner' => null, 'is_package' => false]);
+                                        @php
+                                            $displayTests = collect();
+                                            foreach($invoice->items as $item) {
+                                                if($item->labTest) {
+                                                    if($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                                                        $innerTests = $item->labTest->getLinkedTests();
+                                                        foreach($innerTests as $inner) {
+                                                            $displayTests->push(['item' => $item, 'inner' => $inner, 'is_package' => true]);
                                                         }
+                                                    } else {
+                                                        $displayTests->push(['item' => $item, 'inner' => null, 'is_package' => false]);
                                                     }
                                                 }
-                                            @endphp
-                                            
-                                            @foreach($displayTests->take(4) as $dt)
+                                            }
+                                        @endphp
+                                        
+                                        @if($displayTests->count() > 1)
+                                            <div class="mb-1 d-flex justify-content-between align-items-center">
+                                                <button type="button" 
+                                                    wire:click="selectAllInvoiceTests({{ $invoice->id }})" 
+                                                    class="btn btn-link p-0 text-primary fw-bold text-decoration-none" 
+                                                    style="font-size: 10px;">
+                                                    <i class="feather-check-square me-1"></i>Select / Deselect All
+                                                </button>
+                                            </div>
+                                        @endif
+
+                                        <div class="d-flex flex-column gap-1" style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                                            @foreach($displayTests as $dt)
                                                 @php
                                                     $item = $dt['item'];
                                                     if ($dt['is_package']) {
@@ -291,7 +302,7 @@
                                                         $testName = $inner->name;
                                                     } else {
                                                         $isComplete = $item->status === 'Completed' || !$item->hasParameters();
-                                                        $checkboxValue = $item->id;
+                                                        $checkboxValue = (string) $item->id;
                                                         $testName = $item->labTest->name;
                                                     }
                                                 @endphp
@@ -314,12 +325,6 @@
                                                     </div>
                                                 </div>
                                             @endforeach
-                                            
-                                            @if($displayTests->count() > 4)
-                                                <div style="font-size: 11px; color: #6c757d; font-weight: 600; padding-left: 18px;">
-                                                    +{{ $displayTests->count() - 4 }} more
-                                                </div>
-                                            @endif
                                         </div>
                                     </td>
                                     <td>

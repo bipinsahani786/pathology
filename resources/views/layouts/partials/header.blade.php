@@ -63,7 +63,7 @@
                             <span class="fs-9 fw-bold text-uppercase {{ $isExpiringSoon ? 'text-danger pulse-once' : 'text-success' }} ls-1 d-block mb-0" style="font-size: 8px !important;">
                                 {{ $daysLeftInt > 0 ? $daysLeftInt . ' Days Left' : 'Expired' }}
                             </span>
-                            <span class="fs-11 fw-medium text-muted" style="font-size: 10px !important;">Active Trial</span>
+                            <span class="fs-11 fw-medium text-muted" style="font-size: 10px !important;">{{ $daysLeftInt > 0 ? 'Active' : 'Expired' }}</span>
                         </div>
                     </div>
                 @endif

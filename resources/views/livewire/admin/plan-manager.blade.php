@@ -268,6 +268,17 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light border-success border-opacity-25">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-12"><i class="feather-globe text-success me-1"></i> Website API & Online Bookings</div>
+                                            <div class="text-muted fs-10">Connect external lab website, live catalog sync, bookings & report tracking</div>
+                                        </div>
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" wire:model="has_website_api">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

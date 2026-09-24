@@ -23,11 +23,15 @@ class Company extends Model
         'website',
         'gst_number',
         'tagline',
+        'api_key',
+        'api_allowed_origin',
+        'api_enabled',
     ];
 
     protected $casts = [
         'settings' => 'array', // Automatically cast JSON to array
         'trial_ends_at' => 'datetime',
+        'api_enabled' => 'boolean',
     ];
 
     public function plan()
@@ -38,5 +42,15 @@ class Company extends Model
     public function salesAgent()
     {
         return $this->belongsTo(SalesAgent::class);
+    }
+
+    public function hasWebsiteApiFeature(): bool
+    {
+        return (bool) ($this->plan?->features['website_api'] ?? false);
+    }
+
+    public function webBookings()
+    {
+        return $this->hasMany(WebBooking::class);
     }
 }

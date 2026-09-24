@@ -25,6 +25,19 @@
     </div>
 
     <div class="main-content mt-4">
+        @if ($errors->any())
+            <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 p-3 d-flex align-items-start">
+                <i class="feather-alert-circle fs-4 me-3 text-danger mt-1"></i>
+                <div>
+                    <h6 class="fw-bold mb-1 text-danger">Please fix the following issues before saving:</h6>
+                    <ul class="mb-0 ps-3 fs-12">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
         <form wire:submit.prevent="save">
             <div class="row g-4">
                 <!-- Main Details Card -->
@@ -194,6 +207,7 @@
                                                             <option value="selection">Dropdown List</option>
                                                             <option value="calculated">Formula</option>
                                                             <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                            <option value="widal_slide">Widal Slide Agglutination</option>
                                                         </select>
                                                     </td>
                                                     <td>
@@ -293,6 +307,7 @@
                                                             <option value="selection">Dropdown</option>
                                                             <option value="calculated">Formula</option>
                                                             <option value="culture_sensitivity">Culture Sensitivity</option>
+                                                            <option value="widal_slide">Widal Slide Agglutination</option>
                                                         </select>
                                                     </div>
                                                     <div class="col-3">
@@ -484,6 +499,7 @@
                                     <option value="selection">Dropdown Options (e.g. Widal Titers)</option>
                                     <option value="calculated">Calculated Formula</option>
                                     <option value="culture_sensitivity">Culture Sensitivity Susceptibility Grid</option>
+                                    <option value="widal_slide">Widal Slide Agglutination Grid</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -502,8 +518,8 @@
                             </div>
                         @endif
 
-                        <!-- Options Section for Selection -->
-                        @if($parameters[$editingParamIndex]['input_type'] === 'selection')
+                        <!-- Options Section for Selection & Widal Slide Titers -->
+                        @if(in_array($parameters[$editingParamIndex]['input_type'] ?? '', ['selection', 'widal_slide']))
                             <div class="mb-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="form-label fs-11 fw-bold text-muted text-uppercase mb-0">Dropdown Options</label>

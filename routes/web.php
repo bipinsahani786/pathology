@@ -28,6 +28,7 @@ use App\Livewire\Lab\SettlementManager;
 use App\Livewire\Lab\MachineManager;
 use App\Livewire\Lab\PhlebotomistManager;
 use App\Livewire\Lab\HomeVisitManager;
+use App\Livewire\Lab\WebBookingManager;
 use App\Livewire\Phlebotomist\PhlebotomistDashboard;
 use App\Livewire\Partner\PartnerDashboard;
 use App\Livewire\Partner\PartnerProfile;
@@ -232,6 +233,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/settlements/commission-report/pdf', [\App\Http\Controllers\CommissionReportController::class, 'downloadPdf'])->name('settlements.commission.pdf');
             Route::get('/settlements/commission-report/excel', [\App\Http\Controllers\CommissionReportController::class, 'downloadExcel'])->name('settlements.commission.excel');
 
+            // Online Web Bookings
+            Route::get('/web-bookings', WebBookingManager::class)->name('web-bookings');
+
             // Point of Sale (Billing & Invoicing)
             Route::get('/pos', PosManager::class)->name('pos');
             Route::get('/pos/{invoice}/summary', PosSummary::class)->name('pos.summary');
@@ -390,6 +394,10 @@ Route::get('/dashboard', function () {
 Route::prefix('portal')->name('portal.')->group(function () {
     // Guest route for login (No Auth Middleware needed)
     Route::get('/login', \App\Livewire\Patient\PatientLogin::class)->name('login');
+
+    // External Website SSO Sign-in (Cryptographically Signed URL)
+    Route::get('/auth/sso/{user}', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'ssoLogin'])->name('sso');
+    Route::post('/auth/direct-login', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'directFormLogin'])->name('direct-login');
 
     // Protected routes (Only protected by our custom session middleware)
     Route::middleware(['auth', 'patient_portal_access'])->group(function () {

@@ -356,9 +356,20 @@ class SettingsManager extends Component
 
     public $dept_sig_3_path;
 
-    public $new_dept_sig_3;
-
     public $signaturesSaved = false;
+
+    // ==========================================
+    // WEBSITE API SETTINGS
+    // ==========================================
+    public $api_key;
+
+    public $api_allowed_origin;
+
+    public $api_enabled = false;
+
+    public $apiSaved = false;
+
+    public $showApiKey = false;
 
     public function mount()
     {
@@ -488,6 +499,11 @@ class SettingsManager extends Component
             $this->lab_logo = $company->logo;
             $this->lab_favicon = Configuration::getFor('lab_favicon', null, $company->id, 'global');
         }
+
+        // Load Website API settings
+        $this->api_key = $company->api_key;
+        $this->api_allowed_origin = $company->api_allowed_origin;
+        $this->api_enabled = (bool) $company->api_enabled;
 
         // Load invoice settings from configurations table
         $this->invoice_prefix = Configuration::getFor('invoice_prefix', 'INV', $company->id, $branchId);
@@ -1194,6 +1210,59 @@ class SettingsManager extends Component
         $branchId = $this->selectedBranchId;
         $this->pdf_letterhead_image = null;
         Configuration::setFor('pdf_letterhead_image', null, $companyId, $branchId);
+    }
+
+    // ==========================================
+    // WEBSITE API MANAGEMENT
+    // ==========================================
+    public function toggleShowApiKey()
+    {
+        $this->showApiKey = ! $this->showApiKey;
+    }
+
+    public function generateApiKey()
+    {
+        $this->authorize('edit settings');
+        $company = Company::find(auth()->user()->company_id);
+        if (! $company || ! $company->hasWebsiteApiFeature()) {
+            session()->flash('error', 'Website API feature is not enabled in your subscription plan.');
+            return;
+        }
+
+        $key = 'lab_' . bin2hex(random_bytes(20));
+        $company->update(['api_key' => $key]);
+        $this->api_key = $key;
+        $this->showApiKey = true;
+        $this->apiSaved = true;
+        session()->flash('api_message', 'New API Key generated successfully!');
+    }
+
+    public function saveApiSettings()
+    {
+        $this->authorize('edit settings');
+        $company = Company::find(auth()->user()->company_id);
+        if (! $company || ! $company->hasWebsiteApiFeature()) {
+            session()->flash('error', 'Website API feature is not enabled in your subscription plan.');
+            return;
+        }
+
+        $this->validate([
+            'api_allowed_origin' => 'nullable|string|max:255',
+            'api_enabled'        => 'boolean',
+        ]);
+
+        if ($this->api_enabled && empty($this->api_key)) {
+            $this->api_key = 'lab_' . bin2hex(random_bytes(20));
+        }
+
+        $company->update([
+            'api_key'            => $this->api_key,
+            'api_allowed_origin' => $this->api_allowed_origin ? trim($this->api_allowed_origin) : null,
+            'api_enabled'        => (bool) $this->api_enabled,
+        ]);
+
+        $this->apiSaved = true;
+        session()->flash('api_message', 'Website API settings updated successfully.');
     }
 
     /**
