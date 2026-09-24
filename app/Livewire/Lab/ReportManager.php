@@ -173,6 +173,46 @@ class ReportManager extends Component
         $this->resetPage();
     }
 
+    public function selectAllInvoiceTests($invoiceId)
+    {
+        $invoice = Invoice::with(['items.labTest'])->find($invoiceId);
+        if (! $invoice) {
+            return;
+        }
+
+        $toSelect = [];
+        foreach ($invoice->items as $item) {
+            if ($item->labTest && $item->labTest->is_package && ! empty($item->labTest->linked_test_ids)) {
+                $innerTests = $item->labTest->getLinkedTests();
+                foreach ($innerTests as $inner) {
+                    $hasInnerParams = $inner ? $inner->hasParameters() : false;
+                    $isComplete = ! $hasInnerParams || \App\Models\ReportResult::where('invoice_item_id', $item->id)
+                        ->where('lab_test_id', $inner->id)
+                        ->where(function ($q) {
+                            $q->whereNotNull('result_value')->where('result_value', '!=', '');
+                        })
+                        ->exists();
+                    if ($isComplete) {
+                        $toSelect[] = $item->id.'_'.$inner->id;
+                    }
+                }
+            } else {
+                $isComplete = $item->status === 'Completed' || ! $item->hasParameters();
+                if ($isComplete) {
+                    $toSelect[] = (string) $item->id;
+                }
+            }
+        }
+
+        // Toggle: if all are already selected, deselect them. Otherwise, select all.
+        $allAlreadySelected = ! empty($toSelect) && empty(array_diff($toSelect, $this->selectedTests));
+        if ($allAlreadySelected) {
+            $this->selectedTests = array_values(array_diff($this->selectedTests, $toSelect));
+        } else {
+            $this->selectedTests = array_values(array_unique(array_merge($this->selectedTests, $toSelect)));
+        }
+    }
+
     public function printSelected($invoiceId, $withHeader = 1)
     {
         if (empty($this->selectedTests)) {

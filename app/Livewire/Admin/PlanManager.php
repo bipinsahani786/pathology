@@ -39,6 +39,8 @@ class PlanManager extends Component
 
     public $has_home_collection = false;
 
+    public $has_website_api = false;
+
     public $max_phlebotomists = 2;
 
     public $isModalOpen = false;
@@ -69,6 +71,7 @@ class PlanManager extends Component
         $this->has_whatsapp_custom = false;
         $this->enable_outsourcing = false;
         $this->has_home_collection = false;
+        $this->has_website_api = false;
         $this->max_phlebotomists = 2;
     }
 
@@ -102,6 +105,7 @@ class PlanManager extends Component
             'has_whatsapp_custom' => 'boolean',
             'enable_outsourcing'  => 'boolean',
             'has_home_collection' => 'boolean',
+            'has_website_api'     => 'boolean',
             'max_phlebotomists'   => 'required|integer|min:0',
         ]);
 
@@ -117,6 +121,7 @@ class PlanManager extends Component
             ['key' => 'whatsapp_custom',    'value' => $this->has_whatsapp_custom],
             ['key' => 'enable_outsourcing', 'value' => $this->enable_outsourcing],
             ['key' => 'home_collection',    'value' => $this->has_home_collection],
+            ['key' => 'website_api',        'value' => $this->has_website_api],
             ['key' => 'max_phlebotomists',  'value' => $this->max_phlebotomists],
         ];
 
@@ -149,6 +154,7 @@ class PlanManager extends Component
         $this->has_whatsapp_custom = $f['whatsapp_custom']    ?? false;
         $this->enable_outsourcing  = $f['enable_outsourcing'] ?? false;
         $this->has_home_collection = $f['home_collection']    ?? false;
+        $this->has_website_api     = $f['website_api']        ?? false;
         $this->max_phlebotomists   = $f['max_phlebotomists']  ?? 2;
 
         $this->isModalOpen = true;

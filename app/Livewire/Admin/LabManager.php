@@ -209,7 +209,22 @@ class LabManager extends Component
             $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'lab_admin']);
             $user->assignRole($role);
 
-            // 4. Import Default Global Tests
+            // 4. Create Default Main Collection Center
+            $mainCenter = \App\Models\CollectionCenter::create([
+                'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'user_id' => $user->id,
+                'name' => 'Main Collection Center',
+                'center_code' => 'CC-MAIN',
+                'address' => $this->labAddress,
+                'is_main_lab' => true,
+                'is_active' => true,
+            ]);
+
+            // Link collection center to user
+            $user->update(['collection_center_id' => $mainCenter->id]);
+
+            // 5. Import Default Global Tests
             $defaultGlobalTests = \App\Models\GlobalTest::where('is_active', true)
                 ->where('is_default', true)
                 ->get();
@@ -371,7 +386,7 @@ class LabManager extends Component
                 $admin = \App\Models\User::create([
                     'name' => $company->name.' Admin',
                     'email' => $email,
-                    'phone' => $company->phone ?: '9999999999',
+                    'phone' => $company->phone ?: '7991132695',
                     'password' => \Illuminate\Support\Facades\Hash::make('password123'),
                     'company_id' => $company->id,
                     'branch_id' => $branch->id,
@@ -441,6 +456,25 @@ class LabManager extends Component
                 }
 
                 session()->flash('success', "Lab Admin restored! Relinked all historical Invoices/Reports. Name: {$admin->name} | Email: {$admin->email}");
+            }
+
+            // Ensure main collection center exists
+            $cc = \App\Models\CollectionCenter::where('company_id', $company->id)->where('is_main_lab', true)->first();
+            if (! $cc) {
+                $cc = \App\Models\CollectionCenter::firstOrCreate(
+                    ['company_id' => $company->id, 'name' => 'Main Collection Center'],
+                    [
+                        'branch_id' => $branch->id,
+                        'user_id' => $admin->id,
+                        'center_code' => 'CC-MAIN',
+                        'address' => $company->address ?? 'Main Center Address',
+                        'is_main_lab' => true,
+                        'is_active' => true,
+                    ]
+                );
+            }
+            if ($admin && ! $admin->collection_center_id && $cc) {
+                $admin->update(['collection_center_id' => $cc->id]);
             }
         });
     }

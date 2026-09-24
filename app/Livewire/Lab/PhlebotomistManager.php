@@ -78,9 +78,9 @@ class PhlebotomistManager extends Component
             $this->vehicle_number        = $p->vehicle_number;
             $this->vehicle_type          = $p->vehicle_type;
             $this->commission_per_visit  = $p->commission_per_visit;
-            $this->working_hours_start   = $p->working_hours_start ?? '08:00';
-            $this->working_hours_end     = $p->working_hours_end   ?? '18:00';
-            $this->is_available          = $p->is_available;
+            $this->working_hours_start   = !empty($p->working_hours_start) ? substr($p->working_hours_start, 0, 5) : '08:00';
+            $this->working_hours_end     = !empty($p->working_hours_end)   ? substr($p->working_hours_end, 0, 5)   : '18:00';
+            $this->is_available          = (bool) $p->is_available;
         }
 
         $this->isModalOpen = true;
@@ -88,6 +88,20 @@ class PhlebotomistManager extends Component
 
     public function store()
     {
+        // Normalize time formats (trim to H:i)
+        if ($this->working_hours_start) {
+            $this->working_hours_start = substr(trim($this->working_hours_start), 0, 5);
+        }
+        if ($this->working_hours_end) {
+            $this->working_hours_end = substr(trim($this->working_hours_end), 0, 5);
+        }
+        if ($this->phone) {
+            $this->phone = preg_replace('/[^0-9]/', '', $this->phone);
+            if (strlen($this->phone) > 10) {
+                $this->phone = substr($this->phone, -10);
+            }
+        }
+
         $this->validate([
             'name'                => 'required|string|max:255',
             'phone'               => ['nullable', 'numeric', 'digits:10'],
@@ -111,21 +125,25 @@ class PhlebotomistManager extends Component
                 $updateData = [
                     'name'  => $this->name,
                     'phone' => $this->phone,
-                    'email' => $this->email,
+                    'email' => $this->email ?: null,
                 ];
                 if ($this->password) {
                     $updateData['password'] = Hash::make($this->password);
                 }
                 $user->update($updateData);
 
-                PhlebotomistProfile::where('user_id', $this->user_id)->update([
-                    'vehicle_number'       => $this->vehicle_number,
-                    'vehicle_type'         => $this->vehicle_type,
-                    'commission_per_visit' => $this->commission_per_visit,
-                    'working_hours_start'  => $this->working_hours_start,
-                    'working_hours_end'    => $this->working_hours_end,
-                    'is_available'         => $this->is_available,
-                ]);
+                PhlebotomistProfile::updateOrCreate(
+                    ['user_id' => $this->user_id],
+                    [
+                        'company_id'           => $companyId,
+                        'vehicle_number'       => $this->vehicle_number,
+                        'vehicle_type'         => $this->vehicle_type,
+                        'commission_per_visit' => $this->commission_per_visit,
+                        'working_hours_start'  => $this->working_hours_start,
+                        'working_hours_end'    => $this->working_hours_end,
+                        'is_available'         => (bool) $this->is_available,
+                    ]
+                );
 
                 session()->flash('message', 'Phlebotomist updated successfully.');
             } else {
@@ -193,7 +211,7 @@ class PhlebotomistManager extends Component
             ->exists();
 
         if ($hasActiveVisits) {
-            session()->flash('error', 'Cannot delete — phlebotomist has active visits assigned.');
+            session()->flash('error', 'Cannot delete - phlebotomist has active visits assigned.');
             return;
         }
 

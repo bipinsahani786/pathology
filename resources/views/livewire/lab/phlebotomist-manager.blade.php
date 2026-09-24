@@ -165,6 +165,21 @@
                     <button wire:click="closeModal" class="btn-close"></button>
                 </div>
                 <div class="modal-body px-4">
+                    @if(session()->has('error'))
+                    <div class="alert alert-danger py-2 px-3 fs-13 rounded-3 mb-3 d-flex align-items-center">
+                        <i class="feather-alert-circle me-2"></i>
+                        <span>{{ session('error') }}</span>
+                    </div>
+                    @endif
+                    @if($errors->any())
+                    <div class="alert alert-danger py-2 px-3 fs-12 rounded-3 mb-3">
+                        <ul class="mb-0 ps-3">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
@@ -206,11 +221,13 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Work Start Time</label>
-                            <input wire:model="working_hours_start" type="time" class="form-control">
+                            <input wire:model="working_hours_start" type="time" class="form-control @error('working_hours_start') is-invalid @enderror">
+                            @error('working_hours_start') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Work End Time</label>
-                            <input wire:model="working_hours_end" type="time" class="form-control">
+                            <input wire:model="working_hours_end" type="time" class="form-control @error('working_hours_end') is-invalid @enderror">
+                            @error('working_hours_end') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         @if($user_id)
                         <div class="col-12">

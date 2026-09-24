@@ -183,6 +183,14 @@
                         </button>
                     </li>
                 @endif
+                @if(auth()->user()->company->plan?->features['website_api'] ?? false)
+                    <li class="nav-item">
+                        <button wire:click="$set('activeTab', 'website_api')"
+                            class="nav-link {{ $activeTab === 'website_api' ? 'active' : '' }}">
+                            <i class="feather-globe me-1"></i> Website API
+                        </button>
+                    </li>
+                @endif
             @endcan
 
             @can('view staff_roles')
@@ -2489,6 +2497,129 @@
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-4 fw-bold">
                                 <i class="feather-save me-2"></i> Save Home Collection Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+
+            {{-- TAB: WEBSITE API & INTEGRATIONS --}}
+            @if($activeTab === 'website_api' && (auth()->user()->company->plan?->features['website_api'] ?? false))
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-1">
+                                <i class="feather-globe text-primary me-2"></i>External Website & Mobile App API
+                            </h5>
+                            <p class="text-muted fs-12 mb-0">Connect your WordPress, React, Next.js website or mobile apps for live test catalogs, bookings, and report tracking.</p>
+                        </div>
+                        <span class="badge bg-soft-success text-success px-3 py-2 fw-semibold">
+                            <i class="feather-check-circle me-1"></i> Plan Activated
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    @if (session()->has('api_message'))
+                        <div class="alert alert-success alert-dismissible fade show fs-12" role="alert">
+                            <i class="feather-check-circle me-2"></i>{{ session('api_message') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    <form wire:submit.prevent="saveApiSettings">
+                        {{-- API Status & Toggle --}}
+                        <div class="p-3 border rounded-3 bg-light mb-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Enable Website REST API</h6>
+                                    <div class="text-muted fs-11">When enabled, your website can securely query tests, submit bookings, and download reports.</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" wire:model="api_enabled" id="api_enabled_switch" style="width: 2.75rem; height: 1.4rem;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- API Credentials --}}
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-7">
+                                <div class="p-3 border rounded-3 h-100 bg-white">
+                                    <label class="form-label fw-bold text-dark fs-12 mb-1">Lab API Key (Secret)</label>
+                                    <div class="text-muted fs-11 mb-2">Send this key in HTTP header: <code>X-Lab-Api-Key: {your_key}</code></div>
+                                    
+                                    <div class="input-group mb-2">
+                                        <input type="{{ $showApiKey ? 'text' : 'password' }}" class="form-control font-monospace fs-12 bg-light" value="{{ $api_key }}" readonly placeholder="No API key generated yet.">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" wire:click="toggleShowApiKey">
+                                            <i class="feather-{{ $showApiKey ? 'eye-off' : 'eye' }}"></i>
+                                        </button>
+                                        @if($api_key)
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="navigator.clipboard.writeText('{{ $api_key }}'); alert('API Key copied to clipboard!');">
+                                                <i class="feather-copy me-1"></i> Copy
+                                            </button>
+                                        @endif
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 mt-3">
+                                        <button type="button" wire:click="generateApiKey" wire:confirm="Generating a new API key will invalidate the old one. Are you sure?" class="btn btn-outline-danger btn-sm">
+                                            <i class="feather-refresh-cw me-1"></i> {{ $api_key ? 'Regenerate API Key' : 'Generate New API Key' }}
+                                        </button>
+                                        <span class="fs-10 text-muted">Keep this key confidential. Do not expose it in public client git repositories.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div class="p-3 border rounded-3 h-100 bg-white">
+                                    <label class="form-label fw-bold text-dark fs-12 mb-1">Allowed Website Domain (CORS)</label>
+                                    <div class="text-muted fs-11 mb-2">Optional: Restrict API calls to your specific domain (e.g. <code>https://mycitylab.com</code>). Leave empty or <code>*</code> to allow any origin.</div>
+                                    <input type="text" class="form-control fs-12" wire:model="api_allowed_origin" placeholder="https://example.com or *">
+                                    @error('api_allowed_origin') <span class="text-danger fs-11">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Quick Documentation & Endpoints --}}
+                        <div class="p-3 border rounded-3 bg-soft-primary border-primary border-opacity-10 mb-4">
+                            <h6 class="fw-bold text-primary fs-12 mb-2"><i class="feather-code me-2"></i>Live Integration Endpoints (REST API v1)</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless fs-11 mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="fw-bold" style="width: 80px;"><span class="badge bg-primary">GET</span></td>
+                                            <td><code>{{ url('/api/v1/tests') }}</code></td>
+                                            <td class="text-muted">Live test catalog, pricing, sample type, tat & fasting info</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-primary">GET</span></td>
+                                            <td><code>{{ url('/api/v1/packages') }}</code></td>
+                                            <td class="text-muted">Health packages list with total test and parameter counts</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-primary">GET</span></td>
+                                            <td><code>{{ url('/api/v1/branches') }}</code></td>
+                                            <td class="text-muted">Active branches and sample collection centers</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-success">POST</span></td>
+                                            <td><code>{{ url('/api/v1/bookings') }}</code></td>
+                                            <td class="text-muted">Accept patient online appointments (Home collection & Lab visit)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-success">POST</span></td>
+                                            <td><code>{{ url('/api/v1/reports/track') }}</code></td>
+                                            <td class="text-muted">Track status with Bill No + Phone and obtain PDF download URL</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">
+                                <i class="feather-save me-2"></i> Save Website API Settings
                             </button>
                         </div>
                     </form>

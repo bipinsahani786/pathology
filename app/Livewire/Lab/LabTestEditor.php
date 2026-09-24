@@ -234,10 +234,12 @@ class LabTestEditor extends Component
                     }
                 },
             ],
-            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity,heading',
+            'parameters.*.input_type' => 'required|in:numeric,text,calculated,selection,culture_sensitivity,heading,widal_slide',
             'parameters.*.method' => 'nullable|string|max:100',
         ], [
             'parameters.*.name.required' => 'Parameter name is required.',
+            'parameters.*.input_type.required' => 'Parameter input type is required.',
+            'parameters.*.input_type.in' => 'Selected parameter input type is invalid.',
         ]);
 
         try {

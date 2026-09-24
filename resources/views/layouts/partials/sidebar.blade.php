@@ -182,6 +182,14 @@
                             </a>
                         </li>
                     @endif
+                    @if(auth()->user()->company?->plan?->features['website_api'] ?? false)
+                        <li class="nxl-item {{ request()->routeIs('lab.web-bookings') ? 'active' : '' }}">
+                            <a class="nxl-link" href="{{ route('lab.web-bookings') }}" wire:navigate>
+                                <span class="nxl-micon"><i class="feather-globe"></i></span>
+                                <span class="nxl-mtext">Web Bookings</span>
+                            </a>
+                        </li>
+                    @endif
                     @if(\App\Models\Configuration::getFor('module_invoices', '1') === '1')
                         <li
                             class="nxl-item {{ request()->routeIs('lab.invoices') || request()->routeIs('lab.invoice.edit') ? 'active' : '' }}">
