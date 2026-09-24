@@ -34,16 +34,35 @@ class LabTest extends Model
     }
 
     /**
+     * Get linked single tests for this package in preserved order.
+     */
+    public function getLinkedTests()
+    {
+        if (! $this->is_package || empty($this->linked_test_ids)) {
+            return collect();
+        }
+
+        $ids = is_array($this->linked_test_ids) ? $this->linked_test_ids : json_decode($this->linked_test_ids, true);
+        if (empty($ids) || ! is_array($ids)) {
+            return collect();
+        }
+
+        $tests = static::with('dept')->whereIn('id', $ids)->get();
+
+        return $tests->sortBy(function ($t) use ($ids) {
+            $pos = array_search($t->id, $ids);
+            return $pos === false ? 999999 : $pos;
+        })->values();
+    }
+
+    /**
      * Check if the test has at least one valid parameter (excluding headings).
      * For packages, checks if any linked test has parameters.
      */
     public function hasParameters(): bool
     {
         if ($this->is_package) {
-            if (empty($this->linked_test_ids) || !is_array($this->linked_test_ids)) {
-                return false;
-            }
-            $linked = static::whereIn('id', $this->linked_test_ids)->get();
+            $linked = $this->getLinkedTests();
             foreach ($linked as $lt) {
                 if ($lt->hasParameters()) {
                     return true;

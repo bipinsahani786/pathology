@@ -211,7 +211,7 @@
                 // Resolve tests (either the test itself, or inner tests if it's a package)
                 $testsToProcess = [];
                 if ($labTest->is_package && !empty($labTest->linked_test_ids)) {
-                    $testsToProcess = \App\Models\LabTest::whereIn('id', is_array($labTest->linked_test_ids) ? $labTest->linked_test_ids : json_decode($labTest->linked_test_ids, true))->get();
+                    $testsToProcess = $labTest->getLinkedTests();
                 } else {
                     $testsToProcess = [$labTest];
                 }

@@ -51,7 +51,7 @@
                                     <div class="position-absolute w-100 mt-2 bg-white border border-light rounded-4 shadow-xl overflow-hidden z-3" style="max-height: 300px; overflow-y: auto;">
                                         <div class="list-group list-group-flush">
                                             @forelse($searchResultTests as $srt)
-                                                @if(!isset($selectedTests[$srt->id]))
+                                                @if(!in_array($srt->id, $selectedTestIds))
                                                     <div wire:click="addTestToPackage({{ $srt->id }}, '{{ addslashes($srt->name) }}', '{{ addslashes($srt->department) }}', {{ $srt->mrp ?? 0 }})" 
                                                         class="list-group-item list-group-item-action py-3 px-4 border-bottom d-flex justify-content-between align-items-center hover-bg-light transition-all cursor-pointer">
                                                         <div class="text-start">
@@ -79,23 +79,75 @@
 
                             <!-- Selected Tests List -->
                             <div class="selected-tests-container" style="min-height: 200px;">
-                                <h6 class="fs-11 fw-bold text-muted text-uppercase mb-3">Included Tests ({{ count($selectedTests) }})</h6>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fs-11 fw-bold text-muted text-uppercase mb-0">Included Tests ({{ count($selectedTests) }})</h6>
+                                    @if(count($selectedTests) > 1)
+                                        <span class="fs-11 text-muted"><i class="feather-move me-1"></i>Drag <i class="feather-grid mx-1 text-muted"></i> or use <i class="feather-chevron-up"></i><i class="feather-chevron-down"></i> to reorder</span>
+                                    @endif
+                                </div>
+
                                 @if(count($selectedTests) > 0)
-                                    <div class="list-group border border-light rounded-3 overflow-hidden shadow-xs">
-                                        @foreach($selectedTests as $testId => $sTest)
-                                            <div wire:key="sel-test-{{ $testId }}" class="list-group-item d-flex justify-content-between align-items-center py-3 px-4 border-bottom border-light bg-white hover-bg-light transition-all">
+                                    <div class="list-group border border-light rounded-3 overflow-hidden shadow-xs"
+                                         id="package-tests-sortable"
+                                         x-data="{}"
+                                         x-init="
+                                             const initSort = () => {
+                                                 if (typeof Sortable !== 'undefined') {
+                                                     new Sortable($el, {
+                                                         handle: '.drag-handle',
+                                                         animation: 150,
+                                                         ghostClass: 'bg-soft-primary',
+                                                         onEnd: (evt) => {
+                                                             let order = Array.from($el.querySelectorAll('[data-id]')).map(item => item.getAttribute('data-id')).filter(Boolean);
+                                                             $wire.reorderTests(order);
+                                                         }
+                                                     });
+                                                 } else {
+                                                     setTimeout(initSort, 100);
+                                                 }
+                                             };
+                                             initSort();
+                                         ">
+                                        @foreach($selectedTests as $index => $sTest)
+                                            <div wire:key="sel-test-{{ $sTest['id'] }}" 
+                                                 data-id="{{ $sTest['id'] }}" 
+                                                 class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-bottom border-light bg-white hover-bg-light transition-all">
                                                 <div class="d-flex align-items-center gap-3">
-                                                    <div class="bg-soft-success text-success rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 28px; height: 28px;">
-                                                        <i class="feather-check fs-12 fw-bold"></i>
+                                                    {{-- Drag handle --}}
+                                                    <div class="drag-handle text-muted cursor-move p-1 d-flex align-items-center justify-content-center" style="cursor: grab;" title="Drag to reorder">
+                                                        <i class="feather-grid fs-5"></i>
                                                     </div>
+
+                                                    {{-- Sequence / Order Badge --}}
+                                                    <span class="badge bg-soft-primary text-primary rounded-pill px-2 py-1 fs-11 fw-bold">#{{ $loop->iteration }}</span>
+
                                                     <div>
                                                         <div class="fw-bold text-dark fs-14">{{ $sTest['name'] }}</div>
                                                         <div class="fs-10 text-muted text-uppercase fw-bold opacity-75">{{ $sTest['department'] }}</div>
                                                     </div>
                                                 </div>
-                                                <div class="d-flex align-items-center gap-4">
+
+                                                <div class="d-flex align-items-center gap-3">
                                                     <span class="fw-bold text-dark fs-14">₹{{ number_format($sTest['mrp'], 2) }}</span>
-                                                    <button type="button" wire:click="removeTestFromPackage({{ $testId }})" class="btn btn-icon btn-soft-danger btn-sm border-0 rounded-circle" title="Remove">
+
+                                                    {{-- Move Up / Move Down controls --}}
+                                                    <div class="btn-group btn-group-sm border rounded-2 overflow-hidden shadow-2xs">
+                                                        <button type="button" wire:click="moveTestUp({{ $index }})" 
+                                                                class="btn btn-light btn-sm px-2 py-1 border-0" 
+                                                                @if($loop->first) disabled style="opacity: 0.35;" @endif 
+                                                                title="Move Up">
+                                                            <i class="feather-chevron-up fs-13"></i>
+                                                        </button>
+                                                        <button type="button" wire:click="moveTestDown({{ $index }})" 
+                                                                class="btn btn-light btn-sm px-2 py-1 border-0" 
+                                                                @if($loop->last) disabled style="opacity: 0.35;" @endif 
+                                                                title="Move Down">
+                                                            <i class="feather-chevron-down fs-13"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- Remove button --}}
+                                                    <button type="button" wire:click="removeTestFromPackage({{ $sTest['id'] }})" class="btn btn-icon btn-soft-danger btn-sm border-0 rounded-circle" title="Remove">
                                                         <i class="feather-x"></i>
                                                     </button>
                                                 </div>
@@ -207,6 +259,8 @@
         </form>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <style>
         .fs-10 { font-size: 10px; }
         .fs-11 { font-size: 11px; }
@@ -218,5 +272,8 @@
         .hover-bg-light:hover { background-color: #f8fafc !important; }
         .transition-all { transition: all 0.2s ease-in-out; }
         .cursor-pointer { cursor: pointer; }
+        .cursor-move { cursor: grab !important; }
+        .cursor-move:active { cursor: grabbing !important; }
+        .shadow-2xs { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
     </style>
 </div>

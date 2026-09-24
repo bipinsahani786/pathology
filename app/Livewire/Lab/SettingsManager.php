@@ -19,6 +19,8 @@ class SettingsManager extends Component
 
     public $selectedBranchId = 'global';
 
+    public array $branchesWithCustomSettings = [];
+
     // ==========================================
     // LAB PROFILE
     // ==========================================
@@ -361,12 +363,36 @@ class SettingsManager extends Component
     public function mount()
     {
         $this->authorize('view settings');
-        $this->branches = \App\Models\Branch::where('company_id', auth()->user()->company_id)->get();
+        $companyId = auth()->user()->company_id;
+        $this->branches = \App\Models\Branch::where('company_id', $companyId)->get();
+
+        $this->refreshCustomBranchesList();
 
         if (auth()->user()->hasRole('branch_admin')) {
             $this->selectedBranchId = auth()->user()->branch_id;
         } else {
-            $this->selectedBranchId = session('settings_branch_id', 'global');
+            // Determine active branch (from top navbar Branch Switcher or user assignment)
+            $activeBranchId = session('active_branch_id') ?: auth()->user()->branch_id;
+            if ($activeBranchId === 'all') {
+                $activeBranchId = null;
+            }
+
+            // 1. If active branch is set and has custom branch-specific settings:
+            if ($activeBranchId && in_array((int) $activeBranchId, $this->branchesWithCustomSettings)) {
+                $this->selectedBranchId = (int) $activeBranchId;
+            }
+            // 2. If active branch is set in session / user profile and valid in company:
+            elseif ($activeBranchId && $this->branches->contains('id', (int) $activeBranchId)) {
+                $this->selectedBranchId = (int) $activeBranchId;
+            }
+            // 3. If any branch has custom settings configured (so company-wide settings are overridden/not working for it):
+            elseif (! empty($this->branchesWithCustomSettings)) {
+                $this->selectedBranchId = $this->branchesWithCustomSettings[0];
+            }
+            // 4. Otherwise, all branches are purely using company-wide defaults:
+            else {
+                $this->selectedBranchId = session('settings_branch_id', 'global');
+            }
         }
 
         $this->loadSettings();
@@ -377,14 +403,55 @@ class SettingsManager extends Component
         }
     }
 
+    public function refreshCustomBranchesList()
+    {
+        $this->branchesWithCustomSettings = Configuration::where('company_id', auth()->user()->company_id)
+            ->whereNotNull('branch_id')
+            ->distinct()
+            ->pluck('branch_id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+    }
+
     public function updatedSelectedBranchId($value)
     {
+        $this->selectedBranchId = $value;
         session(['settings_branch_id' => $value]);
+        $this->refreshCustomBranchesList();
         $this->loadSettings();
+    }
+
+    public function resetBranchToGlobal($branchId)
+    {
+        $this->authorize('edit settings');
+
+        $companyId = auth()->user()->company_id;
+        $branchId = (int) $branchId;
+
+        // Fetch all customized config keys for this branch to clear their cache
+        $deletedKeys = Configuration::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->pluck('config_key')
+            ->toArray();
+
+        Configuration::where('company_id', $companyId)
+            ->where('branch_id', $branchId)
+            ->delete();
+
+        foreach ($deletedKeys as $k) {
+            \Illuminate\Support\Facades\Cache::forget("config_{$companyId}_{$branchId}_{$k}");
+        }
+
+        $this->refreshCustomBranchesList();
+        $this->loadSettings();
+
+        session()->flash('message', 'Branch settings have been reset to Company Wide defaults successfully! Company Wide settings will now apply to this branch.');
     }
 
     public function loadSettings()
     {
+        $this->refreshCustomBranchesList();
+
         $company = Company::find(auth()->user()->company_id);
         if (!$company) {
             return;

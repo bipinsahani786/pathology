@@ -16,6 +16,16 @@
     {{-- ======================== MAIN CONTENT ======================== --}}
     <div class="main-content">
 
+        @if (session('message'))
+            <div class="alert alert-success alert-dismissible fade show py-2 px-3 mb-4 rounded-3 border-0 shadow-sm d-flex align-items-center justify-content-between" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="feather-check-circle text-success fs-5"></i>
+                    <span>{{ session('message') }}</span>
+                </div>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         {{-- Branch Context Selector --}}
         @if(!auth()->user()->hasRole('branch_admin') && count($branches) > 0)
             <div class="card mb-4 border-primary" style="background: rgba(59, 113, 202, 0.03);">
@@ -29,29 +39,64 @@
                             <div class="fs-11 text-muted">Choose whether to customize settings for the entire company or a specific branch.</div>
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="form-group mb-0" style="min-width: 250px;">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="form-group mb-0" style="min-width: 290px;">
                             <select wire:model.live="selectedBranchId" class="form-select form-select-sm fw-semibold">
                                 <option value="global">🏢 Company Wide (Global Default)</option>
                                 @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}">📍 Branch: {{ $branch->name }}</option>
+                                    @php $hasCustom = in_array((int)$branch->id, $branchesWithCustomSettings); @endphp
+                                    <option value="{{ $branch->id }}">
+                                        📍 Branch: {{ $branch->name }} {{ $hasCustom ? '⚡ (Custom Active)' : '(Inheriting Global)' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             @if($selectedBranchId === 'global')
                                 <span class="badge bg-soft-primary text-primary fw-bold py-2 px-3 border border-primary-subtle fs-11">
-                                    Editing Global Defaults
+                                    <i class="feather-globe me-1"></i>Editing Global Defaults
                                 </span>
                             @else
-                                <span class="badge bg-soft-success text-success fw-bold py-2 px-3 border border-success-subtle fs-11">
-                                    Editing Branch Settings
-                                </span>
+                                @php $isSelectedCustom = in_array((int)$selectedBranchId, $branchesWithCustomSettings); @endphp
+                                @if($isSelectedCustom)
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-soft-warning text-warning fw-bold py-2 px-3 border border-warning-subtle fs-11" title="This branch has customized settings that override Company Wide defaults">
+                                            <i class="feather-alert-circle me-1"></i>Custom Branch Settings Active
+                                        </span>
+                                        <button type="button" 
+                                                wire:click="resetBranchToGlobal({{ $selectedBranchId }})" 
+                                                wire:confirm="Are you sure you want to reset this branch's settings to Company Wide defaults? All branch-specific customizations will be removed and Company Wide settings will start applying to this branch again."
+                                                class="btn btn-sm btn-outline-danger py-1 px-2 fs-11 fw-semibold shadow-none" 
+                                                title="Remove branch overrides and revert to company wide defaults">
+                                            <i class="feather-rotate-ccw me-1"></i>Reset to Company Defaults
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="badge bg-soft-success text-success fw-bold py-2 px-3 border border-success-subtle fs-11">
+                                        <i class="feather-check-circle me-1"></i>Inheriting Company Defaults
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
+
+            @if($selectedBranchId === 'global' && count($branchesWithCustomSettings) > 0)
+                <div class="alert alert-warning py-2 px-3 mb-4 rounded-3 border-0 shadow-sm d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2 fs-12 text-dark">
+                        <i class="feather-alert-triangle text-warning fs-5"></i>
+                        <div>
+                            <strong>Notice:</strong> 
+                            @php
+                                $customBranchNames = $branches->whereIn('id', $branchesWithCustomSettings)->pluck('name')->implode(', ');
+                            @endphp
+                            Custom branch-specific settings are currently active for <u>{{ $customBranchNames }}</u>. 
+                            Any changes made here to <em>Company Wide</em> will <strong>NOT</strong> apply to those branches. Select the branch in the dropdown above to edit its settings directly, or reset it to company defaults.
+                        </div>
+                    </div>
+                </div>
+            @endif
         @elseif(auth()->user()->hasRole('branch_admin'))
             <div class="card mb-4 border-success" style="background: rgba(40, 167, 69, 0.03);">
                 <div class="card-body py-3 d-flex align-items-center justify-content-between">
