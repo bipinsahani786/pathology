@@ -203,6 +203,15 @@ class LabTestService
      */
     public function getTestsByIds(array $ids)
     {
-        return LabTest::with('dept')->whereIn('id', $ids)->get(['id', 'name', 'test_code', 'department_id', 'mrp']);
+        if (empty($ids)) {
+            return collect();
+        }
+
+        $tests = LabTest::with('dept')->whereIn('id', $ids)->get(['id', 'name', 'test_code', 'department_id', 'department', 'mrp']);
+
+        return $tests->sortBy(function ($t) use ($ids) {
+            $pos = array_search($t->id, $ids);
+            return $pos === false ? 999999 : $pos;
+        })->values();
     }
 }

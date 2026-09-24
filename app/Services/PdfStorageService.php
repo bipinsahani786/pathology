@@ -63,11 +63,19 @@ class PdfStorageService
         $activeItemIds = $report->invoice->items->pluck('id')->values()->toArray();
         $results = $results->whereIn('invoice_item_id', $activeItemIds);
 
-        // Sort results to exactly match the sequence of test selection (invoice_item_id order)
-        // and preserve the parameter order (result ID).
-        $results = $results->sortBy(function ($result) use ($activeItemIds) {
+        // Sort results to exactly match the sequence of test selection (invoice_item_id order),
+        // the sequence of tests within a package (linked_test_ids order), and preserve parameter order (result ID).
+        $itemMap = $report->invoice->items->keyBy('id');
+        $results = $results->sortBy(function ($result) use ($activeItemIds, $itemMap) {
             $itemOrder = array_search($result->invoice_item_id, $activeItemIds);
-            return sprintf('%05d', $itemOrder === false ? 99999 : $itemOrder) . '_' . sprintf('%010d', $result->id);
+            $pkgOrder = 0;
+            $item = $itemMap->get($result->invoice_item_id);
+            if ($item && $item->labTest && $item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                $linkedIds = is_array($item->labTest->linked_test_ids) ? $item->labTest->linked_test_ids : json_decode($item->labTest->linked_test_ids, true);
+                $pos = array_search($result->lab_test_id, $linkedIds ?? []);
+                $pkgOrder = $pos === false ? 9999 : $pos;
+            }
+            return sprintf('%05d', $itemOrder === false ? 99999 : $itemOrder) . '_' . sprintf('%04d', $pkgOrder) . '_' . sprintf('%010d', $result->id);
         })->values(); // values() resets keys so foreach iterates in sorted order
 
         // ── Build grouped results based on setting ────────────────────────────
@@ -86,9 +94,23 @@ class PdfStorageService
             });
         } else {
             $groupedResults = $results->groupBy('invoice_item_id')->map(function ($itemGroup) use ($report) {
+                $itemId = $itemGroup->first()?->invoice_item_id;
+                $item = $report->invoice->items->firstWhere('id', $itemId);
+                $testGroups = $itemGroup->groupBy('lab_test_id');
+
+                if ($item && $item->labTest && $item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                    $linkedIds = is_array($item->labTest->linked_test_ids) ? $item->labTest->linked_test_ids : json_decode($item->labTest->linked_test_ids, true);
+                    if (!empty($linkedIds)) {
+                        $testGroups = $testGroups->sortBy(function ($tg, $labTestId) use ($linkedIds) {
+                            $pos = array_search($labTestId, $linkedIds);
+                            return $pos === false ? 999999 : $pos;
+                        });
+                    }
+                }
+
                 return [
                     'department' => $itemGroup->first()?->labTest?->dept ?? null,
-                    'tests' => $itemGroup->groupBy('lab_test_id')->map(fn($tg) => $this->buildTestGroupData($tg, $report)),
+                    'tests' => $testGroups->map(fn($tg) => $this->buildTestGroupData($tg, $report)),
                 ];
             });
         }

@@ -291,7 +291,7 @@ class PosEditManager extends Component
             ];
 
             if ($item->is_package && $test && ! empty($test->linked_test_ids)) {
-                $linkedTests = LabTest::whereIn('id', $test->linked_test_ids)->get();
+                $linkedTests = $test->getLinkedTests();
                 $cartItem['linked_tests'] = $linkedTests->map(fn ($lt) => [
                     'id' => $lt->id,
                     'name' => $lt->name,
@@ -535,7 +535,7 @@ class PosEditManager extends Component
             ];
 
             if ($test->is_package && ! empty($test->linked_test_ids)) {
-                $linkedTests = LabTest::whereIn('id', $test->linked_test_ids)->get();
+                $linkedTests = $test->getLinkedTests();
                 $cartItem['linked_tests'] = $linkedTests->map(fn ($lt) => [
                     'id' => $lt->id,
                     'name' => $lt->name,

@@ -53,10 +53,10 @@ class PackageEditor extends Component
             if (! empty($package->linked_test_ids)) {
                 $tests = $labTestService->getTestsByIds($package->linked_test_ids);
                 foreach ($tests as $t) {
-                    $this->selectedTests[$t->id] = [
+                    $this->selectedTests[] = [
                         'id' => (int) $t->id,
                         'name' => (string) $t->name,
-                        'department' => (string) $t->department,
+                        'department' => (string) ($t->dept?->name ?? $t->department ?? ''),
                         'mrp' => (float) $t->mrp,
                     ];
                 }
@@ -66,18 +66,72 @@ class PackageEditor extends Component
 
     public function addTestToPackage($testId, $testName, $testDept, $testMrp)
     {
-        $this->selectedTests[$testId] = [
-            'id' => (int) $testId,
-            'name' => (string) $testName,
-            'department' => (string) $testDept,
-            'mrp' => (float) $testMrp,
-        ];
+        $testId = (int) $testId;
+        $existingIds = array_map('intval', array_column($this->selectedTests, 'id'));
+        if (! in_array($testId, $existingIds)) {
+            $this->selectedTests[] = [
+                'id' => $testId,
+                'name' => (string) $testName,
+                'department' => (string) $testDept,
+                'mrp' => (float) $testMrp,
+            ];
+        }
         $this->testSearchTerm = '';
     }
 
     public function removeTestFromPackage($testId)
     {
-        unset($this->selectedTests[$testId]);
+        $testId = (int) $testId;
+        $this->selectedTests = array_values(array_filter(
+            $this->selectedTests,
+            fn ($t) => (int) $t['id'] !== $testId
+        ));
+    }
+
+    public function moveTestUp($index)
+    {
+        $index = (int) $index;
+        if ($index > 0 && isset($this->selectedTests[$index])) {
+            $prev = $index - 1;
+            $temp = $this->selectedTests[$prev];
+            $this->selectedTests[$prev] = $this->selectedTests[$index];
+            $this->selectedTests[$index] = $temp;
+            $this->selectedTests = array_values($this->selectedTests);
+        }
+    }
+
+    public function moveTestDown($index)
+    {
+        $index = (int) $index;
+        if ($index < count($this->selectedTests) - 1 && isset($this->selectedTests[$index])) {
+            $next = $index + 1;
+            $temp = $this->selectedTests[$next];
+            $this->selectedTests[$next] = $this->selectedTests[$index];
+            $this->selectedTests[$index] = $temp;
+            $this->selectedTests = array_values($this->selectedTests);
+        }
+    }
+
+    public function reorderTests($orderedIds)
+    {
+        $lookup = [];
+        foreach ($this->selectedTests as $test) {
+            $lookup[(int) $test['id']] = $test;
+        }
+
+        $reordered = [];
+        foreach ($orderedIds as $id) {
+            $id = (int) $id;
+            if (isset($lookup[$id])) {
+                $reordered[] = $lookup[$id];
+                unset($lookup[$id]);
+            }
+        }
+        foreach ($lookup as $test) {
+            $reordered[] = $test;
+        }
+
+        $this->selectedTests = array_values($reordered);
     }
 
     public function save()
@@ -92,7 +146,7 @@ class PackageEditor extends Component
         ]);
 
         try {
-            $linked_ids = array_values(array_map('intval', array_keys($this->selectedTests)));
+            $linked_ids = array_values(array_map('intval', array_column($this->selectedTests, 'id')));
 
             LabTest::updateOrCreate(
                 ['id' => $this->package_id],
@@ -126,9 +180,11 @@ class PackageEditor extends Component
     {
         $labTestService = new LabTestService;
         $searchResultTests = $labTestService->searchSingleTestsForPackage($this->testSearchTerm, 10);
+        $selectedTestIds = array_map('intval', array_column($this->selectedTests, 'id'));
 
         return view('livewire.lab.package-editor', [
             'searchResultTests' => $searchResultTests,
+            'selectedTestIds'   => $selectedTestIds,
         ])->layout('layouts.app', ['title' => $this->package_id ? 'Edit Package' : 'New Package']);
     }
 }

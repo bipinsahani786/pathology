@@ -218,7 +218,7 @@ class ResultEntryManager extends Component
             $testsToProcess = [];
             if ($item->labTest) {
                 if ($item->labTest->is_package && ! empty($item->labTest->linked_test_ids)) {
-                    $testsToProcess = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
+                    $testsToProcess = $item->labTest->getLinkedTests();
                 } else {
                     $testsToProcess = collect([$item->labTest]);
                 }
@@ -1437,8 +1437,19 @@ class ResultEntryManager extends Component
             return $idx === false ? 99999 : $idx;
         });
 
-        $groupedParams = $sortedParams->groupBy('invoice_item_id')->map(function ($testGroup) {
-            return collect($testGroup)->groupBy('lab_test_id');
+        $groupedParams = $sortedParams->groupBy('invoice_item_id')->map(function ($testGroup, $itemId) {
+            $byTest = collect($testGroup)->groupBy('lab_test_id');
+            $item = $this->invoice->items->firstWhere('id', $itemId);
+            if ($item && $item->labTest && $item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
+                $linkedIds = is_array($item->labTest->linked_test_ids) ? $item->labTest->linked_test_ids : json_decode($item->labTest->linked_test_ids, true);
+                if (!empty($linkedIds)) {
+                    $byTest = $byTest->sortBy(function ($g, $ltId) use ($linkedIds) {
+                        $pos = array_search($ltId, $linkedIds);
+                        return $pos === false ? 999999 : $pos;
+                    });
+                }
+            }
+            return $byTest;
         });
 
         // Available machines for simulator (on this company)

@@ -114,7 +114,7 @@ class ResultImporter
 
             $testsToProcess = collect();
             if ($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
-                $testsToProcess = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
+                $testsToProcess = $item->labTest->getLinkedTests();
             } else {
                 $testsToProcess = collect([$item->labTest]);
             }

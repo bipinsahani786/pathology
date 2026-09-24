@@ -263,7 +263,7 @@
                                                 foreach($invoice->items as $item) {
                                                     if($item->labTest) {
                                                         if($item->labTest->is_package && !empty($item->labTest->linked_test_ids)) {
-                                                            $innerTests = \App\Models\LabTest::whereIn('id', $item->labTest->linked_test_ids)->get();
+                                                            $innerTests = $item->labTest->getLinkedTests();
                                                             foreach($innerTests as $inner) {
                                                                 $displayTests->push(['item' => $item, 'inner' => $inner, 'is_package' => true]);
                                                             }
