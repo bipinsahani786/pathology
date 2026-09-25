@@ -17,13 +17,32 @@ class BranchApiController extends BaseApiController
         $company = $this->getCompany($request);
 
         $branches = Branch::where('company_id', $company->id)
-            ->select('id', 'name', 'address', 'phone')
-            ->get();
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id'             => $b->id,
+                    'name'           => $b->name,
+                    'address'        => $b->address,
+                    'phone'          => $b->contact_number,
+                    'contact_number' => $b->contact_number,
+                    'type'           => $b->type ?? 'main_lab',
+                ];
+            });
 
         $collectionCenters = CollectionCenter::where('company_id', $company->id)
             ->where('is_active', true)
-            ->select('id', 'branch_id', 'name', 'center_code', 'address')
-            ->get();
+            ->get()
+            ->map(function ($cc) {
+                return [
+                    'id'          => $cc->id,
+                    'branch_id'   => $cc->branch_id,
+                    'name'        => $cc->name,
+                    'center_code' => $cc->center_code,
+                    'address'     => $cc->address,
+                    'is_main_lab' => (bool) $cc->is_main_lab,
+                ];
+            });
 
         return $this->success([
             'branches' => $branches,
