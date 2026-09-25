@@ -11,9 +11,16 @@ class Branch extends Model
     protected $fillable = [
         'company_id',
         'name',
+        'type',
+        'contact_number',
         'address',
-        'phone',
+        'is_active',
     ];
+
+    public function getPhoneAttribute()
+    {
+        return $this->contact_number;
+    }
 
     public function company()
     {
