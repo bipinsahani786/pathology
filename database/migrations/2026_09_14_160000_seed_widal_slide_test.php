@@ -15,7 +15,7 @@ return new class extends Migration
     {
         $dept = Department::where('name', 'Serology & Immunology')->first() 
             ?? Department::where('name', 'like', '%Serology%')->first();
-        $deptId = $dept ? $dept->id : 3;
+        $deptId = $dept ? $dept->id : (Department::first()?->id ?? null);
 
         $parameters = [
             [

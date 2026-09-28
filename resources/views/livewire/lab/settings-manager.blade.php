@@ -2612,8 +2612,53 @@
                                             <td><code>{{ url('/api/v1/reports/track') }}</code></td>
                                             <td class="text-muted">Track status with Bill No + Phone and obtain PDF download URL</td>
                                         </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-success">POST</span></td>
+                                            <td><code>{{ url('/api/v1/patient/login') }}</code></td>
+                                            <td class="text-muted"><strong>Patient SSO:</strong> Authenticate patient with Mobile + Bill/Patient ID and receive one-time auto-login dashboard redirect URL</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold"><span class="badge bg-success">POST</span></td>
+                                            <td><code>{{ url('/api/v1/staff/login') }}</code></td>
+                                            <td class="text-muted"><strong>Staff & Doctor SSO:</strong> Authenticate lab staff/doctor with Email/Phone + Password and auto-login to software dashboard</td>
+                                        </tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        {{-- White-Label Website Form Integration Examples --}}
+                        <div class="p-3 border rounded-3 bg-light mb-4">
+                            <h6 class="fw-bold text-dark fs-12 mb-2"><i class="feather-external-link me-2 text-primary"></i>Direct Website Login Form Actions (Zero-Code Embed)</h6>
+                            <div class="row g-2 fs-11">
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded bg-white">
+                                        <div class="fw-bold text-primary mb-1">1. Patient Portal Login Form</div>
+                                        <div class="text-muted mb-1">Embed this in your lab website's patient report/login section:</div>
+                                        <code class="d-block p-1 bg-light rounded text-dark fs-10" style="word-break: break-all;">
+                                            &lt;form method="POST" action="{{ url('/portal/auth/direct-login') }}"&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="hidden" name="api_key" value="{{ $api_key ?: 'YOUR_API_KEY' }}"&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="text" name="patient_id" placeholder="Bill No or Patient ID" required&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="tel" name="phone" placeholder="Registered Mobile" required&gt;<br>
+                                            &nbsp;&nbsp;&lt;button type="submit"&gt;View Report / Dashboard&lt;/button&gt;<br>
+                                            &lt;/form&gt;
+                                        </code>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded bg-white">
+                                        <div class="fw-bold text-primary mb-1">2. Staff / Doctor Login Form</div>
+                                        <div class="text-muted mb-1">Embed this in your lab website's staff/doctor login section:</div>
+                                        <code class="d-block p-1 bg-light rounded text-dark fs-10" style="word-break: break-all;">
+                                            &lt;form method="POST" action="{{ url('/auth/direct-login') }}"&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="hidden" name="api_key" value="{{ $api_key ?: 'YOUR_API_KEY' }}"&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="text" name="login" placeholder="Email or Mobile" required&gt;<br>
+                                            &nbsp;&nbsp;&lt;input type="password" name="password" placeholder="Password" required&gt;<br>
+                                            &nbsp;&nbsp;&lt;button type="submit"&gt;Staff Login&lt;/button&gt;<br>
+                                            &lt;/form&gt;
+                                        </code>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

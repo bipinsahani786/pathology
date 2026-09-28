@@ -16,20 +16,25 @@ class ValidateLabApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Extract API key from header or query param
-        $apiKey = $request->header('X-Lab-Api-Key');
-
-        if (!$apiKey) {
-            $bearer = $request->bearerToken();
-            if ($bearer) {
-                $apiKey = $bearer;
-            }
+        // 0. Handle CORS Preflight OPTIONS requests for external web clients
+        if ($request->isMethod('OPTIONS')) {
+            $origin = $request->header('Origin', '*');
+            return response('', 204)
+                ->header('Access-Control-Allow-Origin', $origin ?: '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, X-Lab-Api-Key, Authorization, X-Requested-With, api_key')
+                ->header('Access-Control-Max-Age', '86400');
         }
+
+        // 1. Extract API key from header, bearer token, query param, or request body
+        $apiKey = $request->header('X-Lab-Api-Key')
+            ?: $request->bearerToken()
+            ?: $request->input('api_key');
 
         if (!$apiKey) {
             return response()->json([
                 'success' => false,
-                'message' => 'API key is missing. Please provide your API key in the X-Lab-Api-Key header.',
+                'message' => 'API key is missing. Please provide your API key in the X-Lab-Api-Key header or api_key parameter.',
             ], 401);
         }
 

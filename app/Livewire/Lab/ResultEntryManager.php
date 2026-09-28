@@ -410,6 +410,7 @@ class ResultEntryManager extends Component
         }
 
         $this->detectManualOverrides();
+        $this->autoEvaluateRanges();
     }
 
     private function findMatchingRange($param, $patientGender, $days, $months, $years)
@@ -469,7 +470,8 @@ class ResultEntryManager extends Component
             $localCodeMap = [];
             foreach ($params as $k => $p) {
                 if (! empty($p['short_code'])) {
-                    $localCodeMap[strtoupper($p['short_code'])] = (float) ($tempResults[$k] ?: 0);
+                    $cleanVal = str_replace(',', '', trim((string) ($tempResults[$k] ?? '')));
+                    $localCodeMap[strtoupper($p['short_code'])] = is_numeric($cleanVal) ? (float) $cleanVal : 0;
                 }
             }
 
@@ -483,7 +485,8 @@ class ResultEntryManager extends Component
                             $result = $expressionLanguage->evaluate($formula, $localCodeMap);
                             if ($result !== false && is_numeric($result) && ! is_infinite($result) && ! is_nan($result)) {
                                 $calcValue = round($result, 2);
-                                $actualValue = isset($this->results[$k]) && $this->results[$k] !== '' ? (float) $this->results[$k] : null;
+                                $actualClean = isset($this->results[$k]) && $this->results[$k] !== '' ? str_replace(',', '', trim((string) $this->results[$k])) : null;
+                                $actualValue = ($actualClean !== null && is_numeric($actualClean)) ? (float) $actualClean : null;
 
                                 // If the DB value doesn't match what the formula says it should be, it was manually overridden
                                 if ($actualValue !== null && $actualValue !== (float) $calcValue) {
@@ -548,7 +551,8 @@ class ResultEntryManager extends Component
             $localCodeMap = [];
             foreach ($params as $k => $p) {
                 if (! empty($p['short_code'])) {
-                    $localCodeMap[strtoupper($p['short_code'])] = (float) ($this->results[$k] ?: 0);
+                    $cleanVal = str_replace(',', '', trim((string) ($this->results[$k] ?? '')));
+                    $localCodeMap[strtoupper($p['short_code'])] = is_numeric($cleanVal) ? (float) $cleanVal : 0;
                 }
             }
 
@@ -629,7 +633,8 @@ class ResultEntryManager extends Component
                 $testName = $p['test_name'] ?? 'CBC';
                 if (in_array($code, $dlcCodes)) {
                     $hasDlc = true;
-                    $sum += (float) ($this->results[$k] ?: 0);
+                    $cleanVal = str_replace(',', '', trim((string) ($this->results[$k] ?? '')));
+                    $sum += is_numeric($cleanVal) ? (float) $cleanVal : 0;
                 }
             }
 
@@ -666,17 +671,33 @@ class ResultEntryManager extends Component
             $flag = '';
 
             if ($inputType === 'numeric' || $inputType === 'calculated') {
-                $numVal = (float) $val;
-                $min = $range['min_val'] ?? null;
-                $max = $range['max_val'] ?? null;
+                $cleanVal = str_replace(',', '', trim((string) $val));
+                if (is_numeric($cleanVal)) {
+                    $numVal = (float) $cleanVal;
+                    $min = (isset($range['min_val']) && $range['min_val'] !== '') ? str_replace(',', '', (string) $range['min_val']) : null;
+                    $max = (isset($range['max_val']) && $range['max_val'] !== '') ? str_replace(',', '', (string) $range['max_val']) : null;
 
-                if ($range && (is_numeric($min) || is_numeric($max))) {
-                    if (is_numeric($min) && $numVal < (float) $min) {
-                        $isAbnormal = true;
-                        $flag = 'L';
-                    } elseif (is_numeric($max) && $numVal > (float) $max) {
-                        $isAbnormal = true;
-                        $flag = 'H';
+                    // Fallback to ref_range text parsing if min/max not numeric
+                    if ((!is_numeric($min) && !is_numeric($max)) && !empty($param['ref_range'])) {
+                        $refText = trim((string) $param['ref_range']);
+                        if (preg_match('/^\s*([0-9,.]+)\s*-\s*([0-9,.]+)\s*$/', $refText, $m)) {
+                            $min = str_replace(',', '', $m[1]);
+                            $max = str_replace(',', '', $m[2]);
+                        } elseif (preg_match('/^<\s*([0-9,.]+)\s*$/', $refText, $m)) {
+                            $max = str_replace(',', '', $m[1]);
+                        } elseif (preg_match('/^>\s*([0-9,.]+)\s*$/', $refText, $m)) {
+                            $min = str_replace(',', '', $m[1]);
+                        }
+                    }
+
+                    if (is_numeric($min) || is_numeric($max)) {
+                        if (is_numeric($min) && $numVal < (float) $min) {
+                            $isAbnormal = true;
+                            $flag = 'L';
+                        } elseif (is_numeric($max) && $numVal > (float) $max) {
+                            $isAbnormal = true;
+                            $flag = 'H';
+                        }
                     }
                 }
             } elseif ($inputType === 'text' || $inputType === 'selection') {
@@ -759,7 +780,8 @@ class ResultEntryManager extends Component
                 $code = strtoupper($p['short_code'] ?? '');
                 if (in_array($code, $dlcCodes)) {
                     $testsData[$testId]['hasDlc'] = true;
-                    $testsData[$testId]['dlcSum'] += (float) ($val ?: 0);
+                    $cleanVal = str_replace(',', '', trim((string) ($val ?: 0)));
+                    $testsData[$testId]['dlcSum'] += is_numeric($cleanVal) ? (float) $cleanVal : 0;
                 }
             }
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\DepartmentApiController;
 use App\Http\Controllers\Api\V1\PackageApiController;
 use App\Http\Controllers\Api\V1\PatientAuthApiController;
 use App\Http\Controllers\Api\V1\ReportTrackApiController;
+use App\Http\Controllers\Api\V1\StaffAuthApiController;
 use App\Http\Controllers\Api\V1\TestApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +38,9 @@ Route::prefix('v1')->middleware(['lab_api_key'])->group(function () {
 
     // 7. Patient Portal Login (External Website SSO)
     Route::post('/patient/login', [PatientAuthApiController::class, 'login']);
+
+    // 8. Staff / Doctor / Admin Portal Login (External Website SSO)
+    Route::post('/staff/login', [StaffAuthApiController::class, 'login']);
+    Route::post('/auth/login', [StaffAuthApiController::class, 'login']);
 });
+

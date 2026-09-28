@@ -43,6 +43,7 @@
         $sz8 = round(8 * $scale, 1) . 'px';
         $sz8_5 = round(8.5 * $scale, 1) . 'px';
         $sz9 = round(9 * $scale, 1) . 'px';
+        $sz9_5 = round(9.5 * $scale, 1) . 'px';
         $sz10 = round(10 * $scale, 1) . 'px';
         $sz10_5 = round(10.5 * $scale, 1) . 'px';
         $sz11 = round(11 * $scale, 1) . 'px';
@@ -307,8 +308,8 @@
            SECTION TITLES
            ══════════════════════════════════════════════ */
         .test-header-group {
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
+            page-break-inside: avoid;
+            page-break-after: avoid;
         }
 
         .keep-together {
@@ -325,8 +326,8 @@
             text-transform: uppercase;
             margin: {{ $deptTitleMarginTop }}px 0 {{ $deptTitleMarginBottom }}px;
             color: #1a1a1a;
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
+            page-break-inside: avoid;
+            page-break-after: avoid;
         }
 
         .test-title {
@@ -338,8 +339,8 @@
             text-transform: uppercase;
             margin-bottom: {{ $testTitleMarginBottom }}px;
             color: #1a1a1a;
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
+            page-break-inside: avoid;
+            page-break-after: avoid;
         }
 
         .method-line {
@@ -350,8 +351,18 @@
             color: #555;
             font-style: italic;
             margin-bottom: {{ $methodLineMarginBottom }}px;
-            page-break-inside: avoid !important;
-            page-break-after: avoid !important;
+            page-break-inside: avoid;
+            page-break-after: avoid;
+        }
+
+        .culture-row {
+            page-break-inside: auto !important;
+        }
+
+        .culture-row td {
+            border-left: none !important;
+            border-right: none !important;
+            padding: 4px 0 !important;
         }
 
         /* ── Barcode Area ── */
@@ -749,9 +760,9 @@
                         $centerSig = null;
                         $rightSig = null;
 
-                        if ($settings['sig_1_enabled'] ?? true) {
+                        if (($settings['sig_1_enabled'] ?? true) && !empty($settings['global_sig_1_name'])) {
                             $pos = $settings['sig_1_position'] ?? 'right';
-                            $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $sigImgSrc];
+                            $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'] ?? '', 'img' => $sigImgSrc];
                             if ($pos === 'left')
                                 $leftSig = $sigData;
                             elseif ($pos === 'center')
@@ -759,9 +770,9 @@
                             else
                                 $rightSig = $sigData;
                         }
-                        if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
+                        if (($settings['sig_2_enabled'] ?? true) && !empty($settings['global_sig_2_name'])) {
                             $pos = $settings['sig_2_position'] ?? 'left';
-                            $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
+                            $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'] ?? '', 'img' => $settings['global_sig_2_path'] ?? null];
                             if ($pos === 'left')
                                 $leftSig = $sigData;
                             elseif ($pos === 'center')
@@ -769,9 +780,9 @@
                             else
                                 $rightSig = $sigData;
                         }
-                        if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
+                        if (($settings['sig_3_enabled'] ?? true) && !empty($settings['global_sig_3_name'])) {
                             $pos = $settings['sig_3_position'] ?? 'center';
-                            $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
+                            $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'] ?? '', 'img' => $settings['global_sig_3_path'] ?? null];
                             if ($pos === 'left')
                                 $leftSig = $sigData;
                             elseif ($pos === 'center')
@@ -903,6 +914,12 @@
                     @endif
                 </div>
 
+                @php
+                    $isCultureOnly = $results->isNotEmpty() && $results->every(function ($r) {
+                        return !empty($r->culture_data) && (($r->culture_data['type'] ?? '') !== 'widal_slide');
+                    });
+                @endphp
+
                 @if($isWidalSlide)
                     @php
                         $dilCols = ['1/20', '1/40', '1/80', '1/160', '1/320', '1/640'];
@@ -999,24 +1016,37 @@
                             RESULT &nbsp; : &nbsp; <span>{{ strtoupper($overallResult) }}</span>
                         </div>
                     </div>
+                @elseif($isCultureOnly)
+                    {{-- ── Dedicated Culture & Sensitivity View (2-Column Left/Right Box) ── --}}
+                    @foreach($results as $r)
+                        @if(!empty($r->culture_data))
+                            @include('pdf.culture-sensitivity-block', [
+                                'r' => $r,
+                                'testName' => $testName,
+                                'labTest' => $labTest,
+                                'fontFamily' => $fontFamily,
+                                'sz8' => $sz8,
+                                'sz8_5' => $sz8_5,
+                                'sz9' => $sz9,
+                                'sz9_5' => $sz9_5,
+                                'sz10' => $sz10,
+                                'sz10_5' => $sz10_5,
+                                'sz11' => $sz11,
+                                'sz12' => $sz12,
+                            ])
+                        @endif
+                    @endforeach
                 @else
                     <table class="result-table">
-                        @php
-                            $isCultureOnly = $results->every(function ($r) {
-                                return !empty($r->culture_data);
-                            });
-                        @endphp
-                        @if(!$isCultureOnly)
-                            <thead>
-                                <tr>
-                                    <th style="width:40%">Test Description</th>
-                                    <th style="width:15%">Result</th>
-                                    <th style="width:8%">Flag</th>
-                                    <th style="width:22%">Ref. Range</th>
-                                    <th style="width:15%">Unit</th>
-                                </tr>
-                            </thead>
-                        @endif
+                        <thead>
+                            <tr>
+                                <th style="width:40%">Test Description</th>
+                                <th style="width:15%">Result</th>
+                                <th style="width:8%">Flag</th>
+                                <th style="width:22%">Ref. Range</th>
+                                <th style="width:15%">Unit</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             @php 
                                 $inGroup = false; 
@@ -1059,101 +1089,22 @@
                                 @else
                                     @if(!empty($r->culture_data))
                                         {{-- ── Culture & Sensitivity Spanned Row ── --}}
-                                        <tr>
-                                            <td colspan="5" style="padding: 12px 6px; border-bottom: 1px solid #333;">
-                                                <div style="font-family: {{ $fontFamily }};">
-                                                    <div
-                                                        style="font-weight: bold; font-size: {{ $sz11 }}; color: #000; margin-bottom: 8px; text-transform: uppercase;">
-                                                        {{ $r->parameter_name }}
-                                                    </div>
-                                                    <table
-                                                        style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: {{ $sz10 }};">
-                                                        <tr>
-                                                            <td
-                                                                style="width: 30%; font-weight: bold; border: none; padding: 3px 0; color: #333;">
-                                                                Growth Status:</td>
-                                                            <td
-                                                                style="width: 70%; border: none; padding: 3px 0; color: #000; font-weight: bold;">
-                                                                @if(($r->culture_data['growth_status'] ?? '') === 'No Growth')
-                                                                    No Growth Isolated
-                                                                @elseif(($r->culture_data['growth_status'] ?? '') === 'Contamination')
-                                                                    Mixed Growth (Contamination)
-                                                                @else
-                                                                    Significant Growth Isolated
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                        @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth')
-                                                            <tr>
-                                                                <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Organism
-                                                                    Isolated:</td>
-                                                                <td
-                                                                    style="color: #000; font-weight: bold; font-style: italic; border: none; padding: 3px 0;">
-                                                                    {{ $r->culture_data['organism_name'] ?? 'Not Specified' }}
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td style="font-weight: bold; border: none; padding: 3px 0; color: #333;">Colony
-                                                                    Count:</td>
-                                                                <td style="border: none; padding: 3px 0; color: #000;">
-                                                                    {{ $r->culture_data['colony_count'] ?? 'Not Specified' }}
-                                                                </td>
-                                                            </tr>
-                                                        @endif
-                                                    </table>
-
-                                                    @if(($r->culture_data['growth_status'] ?? 'Growth') !== 'No Growth' && !empty($r->culture_data['antibiotics']))
-                                                        <div style="margin-top: 15px;">
-                                                            <div
-                                                                style="font-weight: bold; font-size: {{ $sz10_5 }}; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; color: #000;">
-                                                                Antibiotic Susceptibility Profile
-                                                            </div>
-                                                            <table
-                                                                style="width: 100%; border-collapse: collapse; font-size: {{ $sz10 }}; text-align: left;">
-                                                                <thead>
-                                                                    <tr style="border-bottom: 1.5px solid #000; font-weight: bold; color: #000;">
-                                                                        <th style="padding: 6px 4px; width: 45%; border: none;">Antibiotic Name</th>
-                                                                        <th style="padding: 6px 4px; width: 35%; text-align: center; border: none;">
-                                                                            Susceptibility</th>
-                                                                        <th style="padding: 6px 4px; width: 20%; text-align: center; border: none;">
-                                                                            MIC Value</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @php
-                                                                        $filledAntibiotics = collect($r->culture_data['antibiotics'] ?? [])->filter(function ($ab) {
-                                                                            return !empty($ab['sensitivity']) || !empty($ab['mic']);
-                                                                        });
-                                                                    @endphp
-                                                                    @foreach($filledAntibiotics as $ab)
-                                                                        @php
-                                                                            $sens = strtoupper($ab['sensitivity'] ?? 'S');
-                                                                            $text = 'Sensitive';
-                                                                            if ($sens === 'R') {
-                                                                                $text = 'Resistant';
-                                                                            } elseif ($sens === 'I') {
-                                                                                $text = 'Intermediate';
-                                                                            }
-                                                                        @endphp
-                                                                        <tr style="border-bottom: 0.5px solid #eee;">
-                                                                            <td style="padding: 6px 4px; font-weight: bold; border: none; color: #000;">
-                                                                                {{ $ab['name'] }}
-                                                                            </td>
-                                                                            <td
-                                                                                style="padding: 6px 4px; text-align: center; font-weight: bold; border: none; color: #000;">
-                                                                                {{ $text }}
-                                                                            </td>
-                                                                            <td
-                                                                                style="padding: 6px 4px; text-align: center; font-family: monospace; border: none; color: #000;">
-                                                                                {{ $ab['mic'] ?: '--' }}
-                                                                            </td>
-                                                                        </tr>
-                                                                    @endforeach
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    @endif
-                                                </div>
+                                        <tr class="culture-row">
+                                            <td colspan="5" style="padding: 4px 0; border-bottom: 1px solid #333;">
+                                                @include('pdf.culture-sensitivity-block', [
+                                                    'r' => $r,
+                                                    'testName' => $testName,
+                                                    'labTest' => $labTest,
+                                                    'fontFamily' => $fontFamily,
+                                                    'sz8' => $sz8,
+                                                    'sz8_5' => $sz8_5,
+                                                    'sz9' => $sz9,
+                                                    'sz9_5' => $sz9_5,
+                                                    'sz10' => $sz10,
+                                                    'sz10_5' => $sz10_5,
+                                                    'sz11' => $sz11,
+                                                    'sz12' => $sz12,
+                                                ])
                                             </td>
                                         </tr>
                                     @else
@@ -1260,7 +1211,7 @@
                 @endif
 
                 {{-- ── Per-Department Signatures (if mode is per_department) ── --}}
-                @if($settings['report_signature_mode'] === 'per_department' && $dept)
+                @if(($settings['report_signature_mode'] ?? 'global_bottom') === 'per_department' && $dept)
                     @if(isset($dept->sig_1_path) && $dept->sig_1_path)
                         <table class="multi-sig-table" style="margin-top:12px;">
                             <tr>
@@ -1335,9 +1286,9 @@
                 $centerSig = null;
                 $rightSig = null;
 
-                if ($settings['sig_1_enabled'] ?? true) {
+                if (($settings['sig_1_enabled'] ?? true) && !empty($settings['global_sig_1_name'])) {
                     $pos = $settings['sig_1_position'] ?? 'right';
-                    $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'], 'img' => $sigImgSrc];
+                    $sigData = ['name' => $settings['global_sig_1_name'], 'desig' => $settings['global_sig_1_desig'] ?? '', 'img' => $sigImgSrc];
                     if ($pos === 'left')
                         $leftSig = $sigData;
                     elseif ($pos === 'center')
@@ -1345,9 +1296,9 @@
                     else
                         $rightSig = $sigData;
                 }
-                if (($settings['sig_2_enabled'] ?? true) && $settings['global_sig_2_name']) {
+                if (($settings['sig_2_enabled'] ?? true) && !empty($settings['global_sig_2_name'])) {
                     $pos = $settings['sig_2_position'] ?? 'left';
-                    $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'], 'img' => $settings['global_sig_2_path']];
+                    $sigData = ['name' => $settings['global_sig_2_name'], 'desig' => $settings['global_sig_2_desig'] ?? '', 'img' => $settings['global_sig_2_path'] ?? null];
                     if ($pos === 'left')
                         $leftSig = $sigData;
                     elseif ($pos === 'center')
@@ -1355,9 +1306,9 @@
                     else
                         $rightSig = $sigData;
                 }
-                if (($settings['sig_3_enabled'] ?? true) && $settings['global_sig_3_name']) {
+                if (($settings['sig_3_enabled'] ?? true) && !empty($settings['global_sig_3_name'])) {
                     $pos = $settings['sig_3_position'] ?? 'center';
-                    $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'], 'img' => $settings['global_sig_3_path']];
+                    $sigData = ['name' => $settings['global_sig_3_name'], 'desig' => $settings['global_sig_3_desig'] ?? '', 'img' => $settings['global_sig_3_path'] ?? null];
                     if ($pos === 'left')
                         $leftSig = $sigData;
                     elseif ($pos === 'center')
