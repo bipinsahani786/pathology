@@ -8,8 +8,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class PatientAuthApiController extends BaseApiController
 {
@@ -32,7 +35,7 @@ class PatientAuthApiController extends BaseApiController
         }
 
         $rawPhone = $request->input('phone') ?: $request->input('mobile');
-        $identifier = trim($request->input('patient_id') ?: $request->input('bill_number') ?: '');
+        $identifier = trim(ltrim(trim($request->input('patient_id') ?: $request->input('bill_number') ?: ''), '#'));
 
         if (empty($rawPhone)) {
             return $this->error('Phone / Mobile number is required.', 422);
@@ -49,10 +52,11 @@ class PatientAuthApiController extends BaseApiController
         // Extract numeric portion if alphanumeric
         $numericId = (int) preg_replace('/[^0-9]/', '', $identifier);
 
-        // Check if identifier matches an invoice / bill number
+        // Check if identifier matches an invoice / bill number (case-insensitive)
         $invoicePatientId = \App\Models\Invoice::where('company_id', $company->id)
             ->where(function ($inv) use ($identifier) {
-                $inv->where('invoice_number', $identifier)
+                $inv->whereRaw('LOWER(invoice_number) = ?', [strtolower($identifier)])
+                    ->orWhere('invoice_number', $identifier)
                     ->orWhere('barcode', $identifier);
             })->value('patient_id');
 
@@ -65,14 +69,20 @@ class PatientAuthApiController extends BaseApiController
             ->where(function ($query) use ($identifier, $numericId, $invoicePatientId) {
                 if ($invoicePatientId) {
                     $query->where('id', $invoicePatientId);
-                } elseif ($numericId > 0) {
-                    $query->where('id', $numericId);
+                } else {
+                    $query->where(function ($sub) use ($identifier, $numericId) {
+                        if ($numericId > 0) {
+                            $sub->where('id', $numericId);
+                        }
+                        $sub->orWhereHas('patientProfile', function ($p) use ($identifier, $numericId) {
+                            $p->whereRaw('LOWER(patient_id_string) = ?', [strtolower($identifier)])
+                              ->orWhere('patient_id_string', 'like', "%{$identifier}%");
+                            if ($numericId > 0) {
+                                $p->orWhere('patient_id_string', 'like', "%{$numericId}%");
+                            }
+                        });
+                    });
                 }
-
-                // Check PatientProfile ID string (e.g. PAT-0012)
-                $query->orWhereHas('patientProfile', function ($p) use ($identifier) {
-                    $p->where('patient_id_string', 'like', "%{$identifier}%");
-                });
             })
             ->with('patientProfile')
             ->first();
@@ -81,12 +91,16 @@ class PatientAuthApiController extends BaseApiController
             return $this->error('Patient details not found. Please verify your Patient ID / Bill Number and Registered Mobile Number.', 404);
         }
 
-        // Generate tamper-proof temporary signed SSO login URL (valid for 15 minutes)
-        $ssoUrl = URL::temporarySignedRoute(
-            'portal.sso',
-            now()->addMinutes(15),
-            ['user' => $user->id]
-        );
+        // Generate tamper-proof single-use token (valid for 15 minutes)
+        // Works reliably across domains, reverse proxies, and ports
+        $token = Str::random(64);
+        Cache::put("sso_patient_{$token}", [
+            'user_id'    => $user->id,
+            'company_id' => $company->id,
+            'created_at' => now()->timestamp,
+        ], now()->addMinutes(15));
+
+        $ssoUrl = route('portal.sso.consume', ['token' => $token]);
 
         $patientIdString = $user->patientProfile->patient_id_string ?? ('PAT-' . str_pad($user->id, 4, '0', STR_PAD_LEFT));
 
@@ -100,10 +114,47 @@ class PatientAuthApiController extends BaseApiController
     }
 
     /**
-     * Web Route: Handle the signed SSO redirect and log the patient into their portal session.
+     * Web Route: Handle single-use token SSO redirect and log the patient into their portal session.
      */
-    public function ssoLogin(Request $request, $userId): RedirectResponse
+    public function consumeSso(Request $request): RedirectResponse
     {
+        $token = $request->query('token');
+
+        if (!$token) {
+            return redirect()->route('portal.login')->with('error', 'SSO token is missing. Please log in again.');
+        }
+
+        $data = Cache::pull("sso_patient_{$token}");
+
+        if (!$data || empty($data['user_id'])) {
+            return redirect()->route('portal.login')->with('error', 'Login session link has expired or has already been used. Please log in again.');
+        }
+
+        $user = User::with(['patientProfile', 'company'])->find($data['user_id']);
+
+        if (!$user || !$user->patientProfile) {
+            return redirect()->route('portal.login')->with('error', 'Invalid patient account.');
+        }
+
+        Auth::login($user, true);
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+        Session::forget('patient_id');
+
+        return redirect()->route('portal.dashboard');
+    }
+
+    /**
+     * Web Route: Handle legacy signed SSO redirect for backward compatibility.
+     */
+    public function ssoLogin(Request $request, $userId = null): RedirectResponse
+    {
+        // If passed as token query parameter
+        if ($request->has('token')) {
+            return $this->consumeSso($request);
+        }
+
         // 1. Verify cryptographic URL signature and expiration
         if (!$request->hasValidSignature()) {
             return redirect()->route('portal.login')->with('error', 'Login session link has expired or is invalid. Please log in again.');
@@ -121,6 +172,7 @@ class PatientAuthApiController extends BaseApiController
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }
+        Session::forget('patient_id');
 
         // 4. Redirect straight to their Patient Portal Dashboard
         return redirect()->route('portal.dashboard');
@@ -139,7 +191,7 @@ class PatientAuthApiController extends BaseApiController
         }
 
         $rawPhone = $request->input('phone') ?: $request->input('mobile');
-        $identifier = trim($request->input('patient_id') ?: $request->input('bill_number') ?: '');
+        $identifier = trim(ltrim(trim($request->input('patient_id') ?: $request->input('bill_number') ?: ''), '#'));
 
         if (empty($rawPhone) || empty($identifier)) {
             return redirect()->back()->with('error', 'Please provide both Patient ID/Bill Number and Mobile Number.');
@@ -151,7 +203,8 @@ class PatientAuthApiController extends BaseApiController
 
         $invoicePatientId = \App\Models\Invoice::where('company_id', $company->id)
             ->where(function ($inv) use ($identifier) {
-                $inv->where('invoice_number', $identifier)
+                $inv->whereRaw('LOWER(invoice_number) = ?', [strtolower($identifier)])
+                    ->orWhere('invoice_number', $identifier)
                     ->orWhere('barcode', $identifier);
             })->value('patient_id');
 
@@ -163,12 +216,20 @@ class PatientAuthApiController extends BaseApiController
             ->where(function ($query) use ($identifier, $numericId, $invoicePatientId) {
                 if ($invoicePatientId) {
                     $query->where('id', $invoicePatientId);
-                } elseif ($numericId > 0) {
-                    $query->where('id', $numericId);
+                } else {
+                    $query->where(function ($sub) use ($identifier, $numericId) {
+                        if ($numericId > 0) {
+                            $sub->where('id', $numericId);
+                        }
+                        $sub->orWhereHas('patientProfile', function ($p) use ($identifier, $numericId) {
+                            $p->whereRaw('LOWER(patient_id_string) = ?', [strtolower($identifier)])
+                              ->orWhere('patient_id_string', 'like', "%{$identifier}%");
+                            if ($numericId > 0) {
+                                $p->orWhere('patient_id_string', 'like', "%{$numericId}%");
+                            }
+                        });
+                    });
                 }
-                $query->orWhereHas('patientProfile', function ($p) use ($identifier) {
-                    $p->where('patient_id_string', 'like', "%{$identifier}%");
-                });
             })
             ->first();
 
@@ -180,6 +241,7 @@ class PatientAuthApiController extends BaseApiController
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }
+        Session::forget('patient_id');
 
         return redirect()->route('portal.dashboard');
     }

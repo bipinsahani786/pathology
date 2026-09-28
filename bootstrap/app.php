@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'portal/auth/direct-login',
+            'auth/direct-login',
         ]);
 
         $middleware->alias([

@@ -388,6 +388,10 @@ Route::get('/dashboard', function () {
     return redirect()->route('lab.dashboard');
 })->middleware(['auth'])->name('dashboard');
 
+// External Website Staff & Admin SSO Sign-in
+Route::get('/auth/sso/consume', [\App\Http\Controllers\Api\V1\StaffAuthApiController::class, 'consumeSso'])->name('auth.sso.consume');
+Route::post('/auth/direct-login', [\App\Http\Controllers\Api\V1\StaffAuthApiController::class, 'directFormLogin'])->name('auth.direct-login');
+
 // ----------------------------------------------------
 // 4. PATIENT PORTAL ROUTES (External / Public Access)
 // ----------------------------------------------------
@@ -395,8 +399,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
     // Guest route for login (No Auth Middleware needed)
     Route::get('/login', \App\Livewire\Patient\PatientLogin::class)->name('login');
 
-    // External Website SSO Sign-in (Cryptographically Signed URL)
-    Route::get('/auth/sso/{user}', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'ssoLogin'])->name('sso');
+    // External Website SSO Sign-in (Single-Use Token & Signed URL fallback)
+    Route::get('/auth/sso/consume', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'consumeSso'])->name('sso.consume');
+    Route::get('/auth/sso/{user?}', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'ssoLogin'])->name('sso');
     Route::post('/auth/direct-login', [\App\Http\Controllers\Api\V1\PatientAuthApiController::class, 'directFormLogin'])->name('direct-login');
 
     // Protected routes (Only protected by our custom session middleware)
