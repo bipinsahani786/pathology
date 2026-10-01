@@ -907,9 +907,27 @@
                         $needsBreak = true;
                     }
                 }
+
+                // Apply keep-together only for clearly small tests (< 70% of page capacity).
+                // Large tests (near page capacity) must NOT get keep-together — that causes blank pages
+                // because DomPDF abandons the remaining space on the current page and jumps to the next.
+                $marginTop    = (int) ($settings['pdf_margin_top']    ?? 310);
+                $marginBottom = (int) ($settings['pdf_margin_bottom'] ?? 255);
+                $pageCapacity = max(320, 1122 - $marginTop - $marginBottom - 50);
+                $safeThreshold = (int) ($pageCapacity * 0.70);
+
+                // Use pre-computed height from optimizer if available, else estimate from row count
+                if (isset($testData['estimated_height'])) {
+                    $estHeight = (int) $testData['estimated_height'];
+                } else {
+                    // Quick row-count estimate: base 114px + 26px per result row
+                    $estHeight = 114 + ($results->count() * 26);
+                    if (!empty($labTest?->method)) $estHeight += 18;
+                }
+                $isSafelySmall = ($estHeight <= $safeThreshold);
             @endphp
 
-            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}">
+            <div class="test-block-wrapper {{ $isSafelySmall ? 'keep-together' : '' }}" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}{{ $isSafelySmall ? ' page-break-inside: avoid;' : '' }}">
                 <div class="test-header-group">
                     {{-- ── Department & Test Title ── --}}
                     @php
