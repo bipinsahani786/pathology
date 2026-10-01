@@ -862,9 +862,11 @@
     @endif
 
     {{-- END OF REPORT --}}
-    <div class="end-of-report">
-        *** End Of Report ***
-    </div>
+    @if($settings['report_show_end_of_report'] ?? true)
+        <div class="end-of-report">
+            *** End Of Report ***
+        </div>
+    @endif
 
     @if($settings['pdf_show_page_number'] ?? true)
         <div style="position: fixed; bottom: -70px; right: 30px; font-size: 10px; color: #333; font-family: sans-serif; font-weight: bold; z-index: 10000; background-color: {{ $settings['pdf_page_number_bg_color'] ?? 'rgba(255, 255, 255, 0.85)' }}; padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">

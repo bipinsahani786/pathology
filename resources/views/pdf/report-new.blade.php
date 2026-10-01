@@ -1376,7 +1376,7 @@
     @endif
 
     {{-- ── End of Report ── --}}
-    @if(!isset($outsourcedImages) || count($outsourcedImages) == 0)
+    @if(($settings['report_show_end_of_report'] ?? true) && (!isset($outsourcedImages) || count($outsourcedImages) == 0))
         <div class="end-of-report">*** End of Report ***</div>
     @endif
 </body>

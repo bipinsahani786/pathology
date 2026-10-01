@@ -259,6 +259,7 @@ class PdfStorageService
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId, $branchId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId, $branchId) === '1',
             'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId, $branchId) === '1',
+            'report_show_end_of_report' => Configuration::getFor('report_show_end_of_report', '1', $companyId, $branchId) !== '0',
             'report_group_by_dept' => Configuration::getFor('report_group_by_dept', '0', $companyId, $branchId) === '1',
         ];
     }

@@ -352,66 +352,154 @@
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold fs-13"><i class="feather-log-in me-1"></i> Default Login
-                                    Page</label>
+                            <div class="col-md-6 col-lg-5">
+                                <label class="form-label fw-bold fs-13"><i class="feather-log-in me-1 text-primary"></i> Default Login Page</label>
                                 <select class="form-select" wire:model="default_login_page">
                                     <option value="lab.dashboard">Dashboard</option>
                                     <option value="lab.pos">New Bill (POS)</option>
                                     <option value="lab.invoices">All Invoices</option>
+                                    <option value="lab.reports">Test Reports</option>
+                                    @if(auth()->user()->company?->plan?->features['website_api'] ?? false)
+                                        <option value="lab.web-bookings">Web Bookings</option>
+                                    @endif
+                                    <option value="lab.patients">Patients</option>
                                 </select>
-                                <div class="form-text fs-11">Select which page should open immediately after a successful
-                                    login.</div>
+                                <div class="form-text fs-11">Select which page should open immediately after a successful login.</div>
                             </div>
                         </div>
 
-                        <div class="row g-4">
-                            @php
-                                $modulesList = [
-                                    ['key' => 'show_dashboard_stats', 'label' => 'Dashboard Stats & Charts', 'icon' => 'feather-pie-chart'],
-                                    ['key' => 'module_pos', 'label' => 'New Bill (POS)', 'icon' => 'feather-plus-circle'],
-                                    ['key' => 'module_invoices', 'label' => 'All Invoices', 'icon' => 'feather-file-text'],
-                                    ['key' => 'module_departments', 'label' => 'Departments', 'icon' => 'feather-grid'],
-                                    ['key' => 'module_tests', 'label' => 'Test Catalog', 'icon' => 'feather-activity'],
-                                    ['key' => 'module_packages', 'label' => 'Test Packages', 'icon' => 'feather-package'],
-                                    ['key' => 'module_branches', 'label' => 'Branches', 'icon' => 'feather-home'],
-                                    ['key' => 'module_collection_centers', 'label' => 'Collection Centers', 'icon' => 'feather-map'],
-                                    ['key' => 'module_patients', 'label' => 'Patients', 'icon' => 'feather-user'],
-                                    ['key' => 'module_doctors', 'label' => 'Referring Doctors', 'icon' => 'feather-user-check'],
-                                    ['key' => 'module_agents', 'label' => 'Referral Agents', 'icon' => 'feather-briefcase'],
-                                    ['key' => 'module_settlements', 'label' => 'Settlements', 'icon' => 'feather-dollar-sign'],
-                                    ['key' => 'module_marketing', 'label' => 'Marketing & Vouchers', 'icon' => 'feather-award'],
-                                ];
-                                if (config('features.inventory', true)) {
-                                    $modulesList[] = ['key' => 'module_inventory', 'label' => 'Inventory System', 'icon' => 'feather-box'];
-                                }
-                            @endphp
+                        @php
+                            $hasWebsiteApi = (bool)(auth()->user()->company?->plan?->features['website_api'] ?? false);
+                            $hasHomeCollection = (bool)(auth()->user()->company?->plan?->features['home_collection'] ?? false);
 
-                            @foreach($modulesList as $mod)
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light">
-                                        <div>
-                                            <div class="fw-bold fs-13"><i
-                                                    class="{{ $mod['icon'] }} me-2 text-muted"></i>{{ $mod['label'] }}</div>
-                                        </div>
-                                        <div class="form-check form-switch mb-0">
-                                            <input class="form-check-input" type="checkbox" id="{{ $mod['key'] }}"
-                                                wire:model="{{ $mod['key'] }}">
-                                        </div>
+                            $moduleGroups = [
+                                [
+                                    'title' => 'Sales & Operations',
+                                    'icon' => 'feather-shopping-bag',
+                                    'modules' => array_filter([
+                                        ['key' => 'module_pos', 'label' => 'New Bill (POS)', 'icon' => 'feather-plus-circle', 'desc' => 'Fast counter billing interface for tests and packages.'],
+                                        $hasWebsiteApi ? ['key' => 'module_web_bookings', 'label' => 'Web Bookings', 'icon' => 'feather-globe', 'desc' => 'Online test bookings and appointments from website API.'] : null,
+                                        ['key' => 'module_invoices', 'label' => 'All Invoices', 'icon' => 'feather-file-text', 'desc' => 'List of all billed invoices, receipts, and payments.'],
+                                        ['key' => 'module_reports', 'label' => 'Test Reports', 'icon' => 'feather-clipboard', 'desc' => 'Lab diagnostic test entry, validation, and PDF printing.'],
+                                    ])
+                                ],
+                                [
+                                    'title' => 'Relationships & Partners',
+                                    'icon' => 'feather-users',
+                                    'modules' => [
+                                        ['key' => 'module_patients', 'label' => 'Patients', 'icon' => 'feather-user', 'desc' => 'Patient records, demographics, and billing history.'],
+                                        ['key' => 'module_doctors', 'label' => 'Referring Doctors', 'icon' => 'feather-user-check', 'desc' => 'Doctor directory, referral tracking & commissions.'],
+                                        ['key' => 'module_agents', 'label' => 'Referral Agents', 'icon' => 'feather-briefcase', 'desc' => 'External brokers, field agents, and referral commissions.'],
+                                    ]
+                                ],
+                                [
+                                    'title' => 'Lab Management',
+                                    'icon' => 'feather-layers',
+                                    'modules' => [
+                                        ['key' => 'module_departments', 'label' => 'Departments', 'icon' => 'feather-grid', 'desc' => 'Lab testing departments (Biochemistry, Hematology, etc.).'],
+                                        ['key' => 'module_tests', 'label' => 'Test Catalog', 'icon' => 'feather-activity', 'desc' => 'Master test library, parameter formulas, and reference ranges.'],
+                                        ['key' => 'module_packages', 'label' => 'Test Packages', 'icon' => 'feather-package', 'desc' => 'Pre-packaged test bundles and health checkup profiles.'],
+                                        ['key' => 'module_branches', 'label' => 'Main Branches', 'icon' => 'feather-home', 'desc' => 'Manage laboratory branch branches and setups.'],
+                                        ['key' => 'module_collection_centers', 'label' => 'Collection Centers', 'icon' => 'feather-map', 'desc' => 'Franchise and off-site sample collection centers.'],
+                                    ]
+                                ],
+                            ];
+
+                            if ($hasHomeCollection) {
+                                $moduleGroups[] = [
+                                    'title' => 'Home Collection',
+                                    'icon' => 'feather-map-pin',
+                                    'modules' => [
+                                        ['key' => 'module_home_collection', 'label' => 'Home Collection (Master Switch)', 'icon' => 'feather-map-pin', 'desc' => 'Overall toggle for Home Collection section in sidebar.'],
+                                        ['key' => 'module_phlebotomists', 'label' => 'Phlebotomists', 'icon' => 'feather-user-check', 'desc' => 'Phlebotomist team profiles, assignments, and commission.'],
+                                        ['key' => 'module_home_visits', 'label' => 'Home Visits', 'icon' => 'feather-navigation', 'desc' => 'Doorstep sample visit booking & status dispatch.'],
+                                    ]
+                                ];
+                            }
+
+                            $finMarketing = [
+                                ['key' => 'module_settlements', 'label' => 'Settlements', 'icon' => 'feather-dollar-sign', 'desc' => 'Partner and doctor commission calculation and payout ledger.'],
+                                ['key' => 'module_marketing', 'label' => 'Marketing & Vouchers', 'icon' => 'feather-award', 'desc' => 'Promotional coupon codes, discount campaigns, and vouchers.'],
+                            ];
+                            $moduleGroups[] = [
+                                'title' => 'Finance & Marketing',
+                                'icon' => 'feather-trending-up',
+                                'modules' => $finMarketing
+                            ];
+
+                            if (config('features.inventory', true)) {
+                                $moduleGroups[] = [
+                                    'title' => 'Inventory System',
+                                    'icon' => 'feather-box',
+                                    'modules' => [
+                                        ['key' => 'module_inventory', 'label' => 'Inventory System', 'icon' => 'feather-box', 'desc' => 'Stock tracking, purchase GRN, suppliers, and consumable issuance.'],
+                                    ]
+                                ];
+                            }
+
+                            $systemSettings = [
+                                ['key' => 'show_dashboard_stats', 'label' => 'Dashboard Stats & Charts', 'icon' => 'feather-pie-chart', 'desc' => 'Show revenue, patient volume, and overview analytics cards.'],
+                                ['key' => 'module_payment_modes', 'label' => 'Payment Modes', 'icon' => 'feather-credit-card', 'desc' => 'Configure Cash, UPI, Card, and NetBanking modes.'],
+                                ['key' => 'module_audit_logs', 'label' => 'Audit Logs', 'icon' => 'feather-shield', 'desc' => 'Track user logins, activity logs, and changes.'],
+                            ];
+                            if (config('features.support_tickets', true)) {
+                                $systemSettings[] = ['key' => 'module_support', 'label' => 'Help & Support', 'icon' => 'feather-life-buoy', 'desc' => 'Support tickets and technical assistance portal.'];
+                            }
+                            $moduleGroups[] = [
+                                'title' => 'System & Settings',
+                                'icon' => 'feather-settings',
+                                'modules' => $systemSettings
+                            ];
+                        @endphp
+
+                        @foreach($moduleGroups as $group)
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-text avatar-xs bg-soft-primary text-primary rounded me-2">
+                                        <i class="{{ $group['icon'] }}"></i>
                                     </div>
+                                    <h6 class="fw-bold text-dark mb-0 fs-13 text-uppercase letter-spacing-1">{{ $group['title'] }}</h6>
                                 </div>
-                            @endforeach
-                        </div>
+                                <div class="row g-3">
+                                    @foreach($group['modules'] as $mod)
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="border rounded-3 p-3 bg-white h-100 d-flex flex-column justify-content-between shadow-2xs hover-shadow-sm transition-all">
+                                                <div class="d-flex align-items-start justify-content-between mb-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <div class="avatar-text avatar-xs bg-light text-primary rounded">
+                                                            <i class="{{ $mod['icon'] }}"></i>
+                                                        </div>
+                                                        <span class="fw-bold fs-13 text-dark">{{ $mod['label'] }}</span>
+                                                    </div>
+                                                    <div class="form-check form-switch mb-0">
+                                                        <input class="form-check-input" type="checkbox" id="{{ $mod['key'] }}"
+                                                            wire:model="{{ $mod['key'] }}">
+                                                    </div>
+                                                </div>
+                                                @if(!empty($mod['desc']))
+                                                    <div class="text-muted fs-11 mt-1">{{ $mod['desc'] }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
 
                         {{-- Inventory Settings (always visible in modules tab) --}}
                         <hr class="my-4">
-                        <h6 class="fw-bold text-dark mb-3"><i class="feather-box text-primary me-2"></i>Inventory Settings</h6>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar-text avatar-xs bg-soft-warning text-warning rounded me-2">
+                                <i class="feather-box"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-0 fs-13 text-uppercase letter-spacing-1">Inventory Rules</h6>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light">
-                                    <div>
-                                        <div class="fw-bold fs-13"><i class="feather-alert-triangle me-2 text-warning"></i>Allow Negative Stock</div>
-                                        <div class="fs-11 text-muted">Report approve hone pe agar stock kam hai toh negative me jaane de. OFF karne pe sirf warning dikhega aur available stock hi deduct hoga.</div>
+                                <div class="d-flex align-items-center justify-content-between border rounded-3 p-3 bg-white shadow-2xs">
+                                    <div class="me-3">
+                                        <div class="fw-bold fs-13 text-dark"><i class="feather-alert-triangle me-2 text-warning"></i>Allow Negative Stock</div>
+                                        <div class="fs-11 text-muted mt-1">Report approve hone pe agar stock kam hai toh negative me jaane de. OFF karne pe sirf warning dikhega aur available stock hi deduct hoga.</div>
                                     </div>
                                     <div class="form-check form-switch mb-0">
                                         <input class="form-check-input" type="checkbox" id="inventory_allow_negative_stock"
@@ -419,20 +507,6 @@
                                     </div>
                                 </div>
                             </div>
-                            @if(auth()->user()->company->plan?->features['home_collection'] ?? false)
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-center justify-content-between border rounded p-3 bg-light border-primary border-opacity-25">
-                                    <div>
-                                        <div class="fw-bold fs-13"><i class="feather-home me-2 text-primary"></i>Home Collection & Phlebotomists</div>
-                                        <div class="fs-11 text-muted">Enable or disable Home Visit scheduling and phlebotomists in lab side.</div>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" id="module_home_collection"
-                                            wire:model="module_home_collection">
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
                         </div>
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-end">
@@ -1321,6 +1395,14 @@
                                                 style="width:2.5em;height:1.25em;">
                                         </div>
                                         <div class="fs-10 text-muted mt-1">OFF = Selection order &nbsp;|&nbsp; ON = Department grouped</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-11">Show 'End of Report'</label>
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox" wire:model="report_show_end_of_report"
+                                                style="width:2.5em;height:1.25em;">
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Print '*** End of Report ***' line</div>
                                     </div>
                                 </div>
 
