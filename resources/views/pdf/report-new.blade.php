@@ -896,21 +896,20 @@
             @endphp
 
             {{-- Page break logic --}}
-            @if($testIndex > 0)
-                @if($style === 'test_per_page')
-                    <div style="page-break-after: always;"></div>
-                @elseif($style === 'department_per_page' && $isFirstInDept)
-                    <div style="page-break-after: always;"></div>
-                @elseif(!empty($testData['page_break_before']))
-                    <div style="page-break-after: always;"></div>
-                @endif
-            @endif
-
             @php
-                $canFitSinglePage = $testData['can_fit_single_page'] ?? ($results->count() <= 14);
+                $needsBreak = false;
+                if ($testIndex > 0) {
+                    if ($style === 'test_per_page') {
+                        $needsBreak = true;
+                    } elseif ($style === 'department_per_page' && $isFirstInDept) {
+                        $needsBreak = true;
+                    } elseif (!empty($testData['page_break_before'])) {
+                        $needsBreak = true;
+                    }
+                }
             @endphp
 
-            <div class="test-block-wrapper {{ $canFitSinglePage ? 'keep-together' : '' }}" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; {{ $canFitSinglePage ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
+            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}">
                 <div class="test-header-group">
                     {{-- ── Department & Test Title ── --}}
                     @php
@@ -1264,13 +1263,10 @@
             @php
                 $labName = $data['lab_name'];
                 $images = $data['images'];
-                // Always start outsourced report on a new page if not the first item
-                if ($testIndex > 0) {
-                    echo '<div style="page-break-after: always;"></div>';
-                }
+                $outsourcedBreak = ($testIndex > 0);
             @endphp
 
-            <div class="test-block-wrapper" style="clear: both; margin: 0; padding: 0;">
+            <div class="test-block-wrapper" style="clear: both; margin: 0; padding: 0; {{ $outsourcedBreak ? 'page-break-before: always;' : '' }}">
                 @foreach($images as $img)
                     <div
                         style="text-align: center; width: 100%; margin: 0; padding: 0; page-break-inside: avoid; {{ !$loop->last ? 'page-break-after: always;' : '' }}">

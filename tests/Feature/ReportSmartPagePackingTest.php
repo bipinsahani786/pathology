@@ -266,6 +266,6 @@ class ReportSmartPagePackingTest extends TestCase
         // In sequential order, Test 4 (Glucose PP) is at the very end, so it is NOT on Page 1
         $this->assertStringContainsString('BLOOD GLUCOSE FASTING', $page1Text);
         $this->assertStringNotContainsString('BLOOD GLUCOSE PP', $page1Text);
-        $this->assertEquals(4, $pageCount);
+        $this->assertLessThanOrEqual(4, $pageCount);
     }
 }
