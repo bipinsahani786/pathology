@@ -1261,10 +1261,20 @@
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold fs-11">Page Break Style</label>
                                         <select class="form-select form-select-sm" wire:model="report_page_break_style">
-                                            <option value="continuous">Continuous</option>
+                                            <option value="continuous">Continuous (Sequential Order)</option>
+                                            <option value="continuous_optimized">Continuous (Smart Best-Fit Packing)</option>
                                             <option value="test_per_page">Test Per Page</option>
                                             <option value="department_per_page">Department Per Page</option>
                                         </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold fs-11">Smart Page Saver (Best Fit)</label>
+                                        <div class="form-check form-switch mt-1">
+                                            <input class="form-check-input" type="checkbox"
+                                                wire:model="report_smart_page_packing"
+                                                style="width:2.5em;height:1.25em;">
+                                        </div>
+                                        <div class="fs-10 text-muted mt-1">Combine small tests across report to minimize pages</div>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label fw-bold fs-11">Outsourced PDF Mode</label>

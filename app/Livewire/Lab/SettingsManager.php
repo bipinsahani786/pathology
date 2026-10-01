@@ -189,6 +189,7 @@ class SettingsManager extends Component
     public $outsourced_pdf_mode = 'crop_to_image';
 
     public $report_page_break_style = 'continuous';
+    public $report_smart_page_packing = false;
 
     public $report_show_dept_header_always = true;
 
@@ -564,6 +565,7 @@ class SettingsManager extends Component
         $this->outsourced_pdf_mode = Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $company->id, $branchId);
 
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
+        $this->report_smart_page_packing = Configuration::getFor('report_smart_page_packing', '0', $company->id, $branchId) === '1';
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1', $company->id, $branchId) === '1';
         $this->allow_result_entry_interpretation_edit = Configuration::getFor('allow_result_entry_interpretation_edit', '1', $company->id, $branchId) === '1';
@@ -955,6 +957,7 @@ class SettingsManager extends Component
         Configuration::setFor('outsourced_pdf_mode', $this->outsourced_pdf_mode, $companyId, $branchId);
 
         Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
+        Configuration::setFor('report_smart_page_packing', $this->report_smart_page_packing ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('allow_result_entry_interpretation_edit', $this->allow_result_entry_interpretation_edit ? '1' : '0', $companyId, $branchId);

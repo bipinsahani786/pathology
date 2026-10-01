@@ -147,8 +147,13 @@
             page-break-after: avoid;
         }
 
-        .keep-together {
+        .test-block-wrapper {
             page-break-inside: auto;
+        }
+
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
 
         .culture-row {
@@ -478,21 +483,23 @@
                     <div style="page-break-after: always;"></div>
                 @elseif($style === 'department_per_page' && $isFirstTestInDept)
                     <div style="page-break-after: always;"></div>
+                @elseif(!empty($testData['page_break_before']))
+                    <div style="page-break-after: always;"></div>
                 @endif
             @endif
 
             @php
-                $testParamCount = $results->count();
-                $hasCultureData = $results->contains(function ($r) {
-                    return !empty($r->culture_data);
-                });
-                $keepEntireTestTogether = $testParamCount <= 15 && !$hasCultureData;
+                $canFitSinglePage = $testData['can_fit_single_page'] ?? ($results->count() <= 14);
             @endphp
 
-            <div class="test-block-wrapper {{ $keepEntireTestTogether ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $keepEntireTestTogether ? 'page-break-inside: avoid !important;' : '' }}">
+            <div class="test-block-wrapper {{ $canFitSinglePage ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $canFitSinglePage ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
                 <div class="test-header-group">
+                    @php
+                        $currentDept = $testData['dept'] ?? $labTest?->dept ?? $dept;
+                        $currentDeptName = $currentDept ? $currentDept->name : ($deptName ?? 'General');
+                    @endphp
                     @if($showDeptAlways || $isFirstTestInDept)
-                        <div class="dept-header">{{ strtoupper($deptName) }}</div>
+                        <div class="dept-header">{{ strtoupper($currentDeptName) }}</div>
                     @endif
                 </div>
 

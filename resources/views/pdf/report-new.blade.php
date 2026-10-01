@@ -312,8 +312,13 @@
             page-break-after: avoid;
         }
 
-        .keep-together {
+        .test-block-wrapper {
             page-break-inside: auto;
+        }
+
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
 
         .dept-title {
@@ -896,14 +901,24 @@
                     <div style="page-break-after: always;"></div>
                 @elseif($style === 'department_per_page' && $isFirstInDept)
                     <div style="page-break-after: always;"></div>
+                @elseif(!empty($testData['page_break_before']))
+                    <div style="page-break-after: always;"></div>
                 @endif
             @endif
 
-            <div class="test-block-wrapper" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both;">
+            @php
+                $canFitSinglePage = $testData['can_fit_single_page'] ?? ($results->count() <= 14);
+            @endphp
+
+            <div class="test-block-wrapper {{ $canFitSinglePage ? 'keep-together' : '' }}" style="margin-bottom: {{ $testBlockMarginBottom }}px; clear: both; {{ $canFitSinglePage ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
                 <div class="test-header-group">
                     {{-- ── Department & Test Title ── --}}
+                    @php
+                        $currentDept = $testData['dept'] ?? $labTest?->dept ?? $dept;
+                        $currentDeptName = $currentDept ? $currentDept->name : ($deptName ?? 'General');
+                    @endphp
                     @if($showDeptAlways || !$deptHeaderShown)
-                        <div class="dept-title">{{ strtoupper($deptName) }}</div>
+                        <div class="dept-title">{{ strtoupper($currentDeptName) }}</div>
                         @php $deptHeaderShown = true; @endphp
                     @endif
                     <div class="test-title" style="margin-bottom: {{ $testTitleMarginBottom }}px; font-size: {{ $sz11_5 }};">{{ strtoupper($testName) }}</div>

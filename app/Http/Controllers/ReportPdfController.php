@@ -211,6 +211,7 @@ class ReportPdfController extends Controller
             'pdf_page_number_bg_color' => Configuration::getFor('pdf_page_number_bg_color', 'rgba(255, 255, 255, 0.85)', $companyId, $branchId),
 
             'report_page_break_style' => Configuration::getFor('report_page_break_style', 'continuous', $companyId, $branchId),
+            'report_smart_page_packing' => Configuration::getFor('report_smart_page_packing', '0', $companyId, $branchId) === '1',
             'report_show_dept_header_always' => Configuration::getFor('report_show_dept_header_always', '1', $companyId, $branchId) === '1',
             'report_show_interpretation' => Configuration::getFor('report_show_interpretation', '1', $companyId, $branchId) === '1',
             'report_show_note' => Configuration::getFor('report_show_note', '1', $companyId, $branchId) === '1',
@@ -326,6 +327,9 @@ class ReportPdfController extends Controller
                 ];
             });
         }
+
+        // Apply smart page optimization if enabled
+        $groupedResults = \App\Services\ReportLayoutOptimizer::optimizeGroupedResults($groupedResults, $settings);
 
         // ── Process Outsourced Report ────────────────────────────────────────
         $outsourcedImages = [];
