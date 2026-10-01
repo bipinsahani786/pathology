@@ -478,21 +478,20 @@
                 $isFirstTestInDept = $loop->first;
             @endphp
 
-            @if($testIndex > 0)
-                @if($style === 'test_per_page')
-                    <div style="page-break-after: always;"></div>
-                @elseif($style === 'department_per_page' && $isFirstTestInDept)
-                    <div style="page-break-after: always;"></div>
-                @elseif(!empty($testData['page_break_before']))
-                    <div style="page-break-after: always;"></div>
-                @endif
-            @endif
-
             @php
-                $canFitSinglePage = $testData['can_fit_single_page'] ?? ($results->count() <= 14);
+                $needsBreak = false;
+                if ($testIndex > 0) {
+                    if ($style === 'test_per_page') {
+                        $needsBreak = true;
+                    } elseif ($style === 'department_per_page' && $isFirstTestInDept) {
+                        $needsBreak = true;
+                    } elseif (!empty($testData['page_break_before'])) {
+                        $needsBreak = true;
+                    }
+                }
             @endphp
 
-            <div class="test-block-wrapper {{ $canFitSinglePage ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $canFitSinglePage ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
+            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}">
                 <div class="test-header-group">
                     @php
                         $currentDept = $testData['dept'] ?? $labTest?->dept ?? $dept;
