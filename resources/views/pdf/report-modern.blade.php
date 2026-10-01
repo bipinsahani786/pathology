@@ -489,9 +489,23 @@
                         $needsBreak = true;
                     }
                 }
+
+                // Keep-together only for safely small tests (< 70% of page capacity)
+                $marginTop    = (int) ($settings['pdf_margin_top']    ?? 310);
+                $marginBottom = (int) ($settings['pdf_margin_bottom'] ?? 255);
+                $pageCapacity = max(320, 1122 - $marginTop - $marginBottom - 50);
+                $safeThreshold = (int) ($pageCapacity * 0.70);
+
+                if (isset($testData['estimated_height'])) {
+                    $estHeight = (int) $testData['estimated_height'];
+                } else {
+                    $estHeight = 114 + ($results->count() * 26);
+                    if (!empty($labTest?->method)) $estHeight += 18;
+                }
+                $isSafelySmall = ($estHeight <= $safeThreshold);
             @endphp
 
-            <div class="test-block-wrapper" style="margin-bottom: 30px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}">
+            <div class="test-block-wrapper {{ $isSafelySmall ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; page-break-inside: auto; {{ $needsBreak ? 'page-break-before: always;' : '' }}{{ $isSafelySmall ? ' page-break-inside: avoid;' : '' }}">
                 <div class="test-header-group">
                     @php
                         $currentDept = $testData['dept'] ?? $labTest?->dept ?? $dept;
