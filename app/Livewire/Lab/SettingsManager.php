@@ -189,6 +189,7 @@ class SettingsManager extends Component
     public $outsourced_pdf_mode = 'crop_to_image';
 
     public $report_page_break_style = 'continuous';
+    public $report_smart_page_packing = false;
 
     public $report_show_dept_header_always = true;
 
@@ -197,6 +198,7 @@ class SettingsManager extends Component
     public $allow_result_entry_interpretation_edit = true;
 
     public $report_show_note = true;
+    public $report_show_end_of_report = true;
 
     public $report_group_by_dept = false; // false = selection order, true = department grouped
 
@@ -234,7 +236,11 @@ class SettingsManager extends Component
 
     public $module_pos = true;
 
+    public $module_web_bookings = true;
+
     public $module_invoices = true;
+
+    public $module_reports = true;
 
     public $module_departments = true;
 
@@ -260,13 +266,23 @@ class SettingsManager extends Component
 
     public $inventory_allow_negative_stock = false;
 
+    public $module_home_collection = true;
+
+    public $module_phlebotomists = true;
+
+    public $module_home_visits = true;
+
+    public $module_payment_modes = true;
+
+    public $module_audit_logs = true;
+
+    public $module_support = true;
+
     public $modulesSaved = false;
 
     // ==========================================
     // HOME COLLECTION SETTINGS
     // ==========================================
-    public $module_home_collection = true;
-
     public $home_collection_default_fee = 0;
 
     public $phlebotomist_default_commission = 0;
@@ -564,10 +580,12 @@ class SettingsManager extends Component
         $this->outsourced_pdf_mode = Configuration::getFor('outsourced_pdf_mode', 'crop_to_image', $company->id, $branchId);
 
         $this->report_page_break_style = Configuration::getFor('report_page_break_style', 'continuous', $company->id, $branchId);
+        $this->report_smart_page_packing = Configuration::getFor('report_smart_page_packing', '0', $company->id, $branchId) === '1';
         $this->report_show_dept_header_always = Configuration::getFor('report_show_dept_header_always', '1', $company->id, $branchId) === '1';
         $this->report_show_interpretation = Configuration::getFor('report_show_interpretation', '1', $company->id, $branchId) === '1';
         $this->allow_result_entry_interpretation_edit = Configuration::getFor('allow_result_entry_interpretation_edit', '1', $company->id, $branchId) === '1';
         $this->report_show_note = Configuration::getFor('report_show_note', '1', $company->id, $branchId) === '1';
+        $this->report_show_end_of_report = Configuration::getFor('report_show_end_of_report', '1', $company->id, $branchId) !== '0';
         $this->report_group_by_dept = Configuration::getFor('report_group_by_dept', '0', $company->id, $branchId) === '1';
 
         $this->report_flag_high_color = Configuration::getFor('report_flag_high_color', '#cc0000', $company->id, $branchId);
@@ -614,7 +632,9 @@ class SettingsManager extends Component
         $this->default_login_page = Configuration::getFor('default_login_page', 'lab.dashboard', $company->id, 'global');
         $this->show_dashboard_stats = Configuration::getFor('show_dashboard_stats', '1', $company->id, 'global') === '1';
         $this->module_pos = Configuration::getFor('module_pos', '1', $company->id, 'global') === '1';
+        $this->module_web_bookings = Configuration::getFor('module_web_bookings', '1', $company->id, 'global') === '1';
         $this->module_invoices = Configuration::getFor('module_invoices', '1', $company->id, 'global') === '1';
+        $this->module_reports = Configuration::getFor('module_reports', '1', $company->id, 'global') === '1';
         $this->module_departments = Configuration::getFor('module_departments', '1', $company->id, 'global') === '1';
         $this->module_tests = Configuration::getFor('module_tests', '1', $company->id, 'global') === '1';
         $this->module_packages = Configuration::getFor('module_packages', '1', $company->id, 'global') === '1';
@@ -628,6 +648,11 @@ class SettingsManager extends Component
         $this->module_inventory = Configuration::getFor('module_inventory', '1', $company->id, 'global') === '1';
         $this->inventory_allow_negative_stock = Configuration::getFor('inventory_allow_negative_stock', '0', $company->id, 'global') === '1';
         $this->module_home_collection = Configuration::getFor('module_home_collection', '1', $company->id, 'global') === '1';
+        $this->module_phlebotomists = Configuration::getFor('module_phlebotomists', '1', $company->id, 'global') === '1';
+        $this->module_home_visits = Configuration::getFor('module_home_visits', '1', $company->id, 'global') === '1';
+        $this->module_payment_modes = Configuration::getFor('module_payment_modes', '1', $company->id, 'global') === '1';
+        $this->module_audit_logs = Configuration::getFor('module_audit_logs', '1', $company->id, 'global') === '1';
+        $this->module_support = Configuration::getFor('module_support', '1', $company->id, 'global') === '1';
         $this->home_collection_default_fee = (float) Configuration::getFor('home_collection_default_fee', '0', $company->id, $branchId);
         $this->phlebotomist_default_commission = (float) Configuration::getFor('phlebotomist_default_commission', '0', $company->id, $branchId);
         $this->hc_notify_whatsapp = Configuration::getFor('hc_notify_whatsapp', '0', $company->id, 'global') === '1';
@@ -955,10 +980,12 @@ class SettingsManager extends Component
         Configuration::setFor('outsourced_pdf_mode', $this->outsourced_pdf_mode, $companyId, $branchId);
 
         Configuration::setFor('report_page_break_style', $this->report_page_break_style, $companyId, $branchId);
+        Configuration::setFor('report_smart_page_packing', $this->report_smart_page_packing ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_dept_header_always', $this->report_show_dept_header_always ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_interpretation', $this->report_show_interpretation ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('allow_result_entry_interpretation_edit', $this->allow_result_entry_interpretation_edit ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_show_note', $this->report_show_note ? '1' : '0', $companyId, $branchId);
+        Configuration::setFor('report_show_end_of_report', $this->report_show_end_of_report ? '1' : '0', $companyId, $branchId);
         Configuration::setFor('report_group_by_dept', $this->report_group_by_dept ? '1' : '0', $companyId, $branchId);
 
         Configuration::setFor('report_flag_high_color', $this->report_flag_high_color, $companyId, $branchId);
@@ -1089,7 +1116,9 @@ class SettingsManager extends Component
         Configuration::setFor('default_login_page', $this->default_login_page, $companyId, 'global');
         Configuration::setFor('show_dashboard_stats', $this->show_dashboard_stats ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_pos', $this->module_pos ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_web_bookings', $this->module_web_bookings ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_invoices', $this->module_invoices ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_reports', $this->module_reports ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_departments', $this->module_departments ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_tests', $this->module_tests ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_packages', $this->module_packages ? '1' : '0', $companyId, 'global');
@@ -1103,6 +1132,11 @@ class SettingsManager extends Component
         Configuration::setFor('module_inventory', $this->module_inventory ? '1' : '0', $companyId, 'global');
         Configuration::setFor('inventory_allow_negative_stock', $this->inventory_allow_negative_stock ? '1' : '0', $companyId, 'global');
         Configuration::setFor('module_home_collection', $this->module_home_collection ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_phlebotomists', $this->module_phlebotomists ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_home_visits', $this->module_home_visits ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_payment_modes', $this->module_payment_modes ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_audit_logs', $this->module_audit_logs ? '1' : '0', $companyId, 'global');
+        Configuration::setFor('module_support', $this->module_support ? '1' : '0', $companyId, 'global');
 
         $this->modulesSaved = true;
     }

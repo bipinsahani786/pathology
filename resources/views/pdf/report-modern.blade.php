@@ -147,8 +147,13 @@
             page-break-after: avoid;
         }
 
-        .keep-together {
+        .test-block-wrapper {
             page-break-inside: auto;
+        }
+
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
 
         .culture-row {
@@ -478,21 +483,23 @@
                     <div style="page-break-after: always;"></div>
                 @elseif($style === 'department_per_page' && $isFirstTestInDept)
                     <div style="page-break-after: always;"></div>
+                @elseif(!empty($testData['page_break_before']))
+                    <div style="page-break-after: always;"></div>
                 @endif
             @endif
 
             @php
-                $testParamCount = $results->count();
-                $hasCultureData = $results->contains(function ($r) {
-                    return !empty($r->culture_data);
-                });
-                $keepEntireTestTogether = $testParamCount <= 15 && !$hasCultureData;
+                $canFitSinglePage = $testData['can_fit_single_page'] ?? ($results->count() <= 14);
             @endphp
 
-            <div class="test-block-wrapper {{ $keepEntireTestTogether ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $keepEntireTestTogether ? 'page-break-inside: avoid !important;' : '' }}">
+            <div class="test-block-wrapper {{ $canFitSinglePage ? 'keep-together' : '' }}" style="margin-bottom: 30px; clear: both; {{ $canFitSinglePage ? 'page-break-inside: avoid !important; break-inside: avoid !important;' : '' }}">
                 <div class="test-header-group">
+                    @php
+                        $currentDept = $testData['dept'] ?? $labTest?->dept ?? $dept;
+                        $currentDeptName = $currentDept ? $currentDept->name : ($deptName ?? 'General');
+                    @endphp
                     @if($showDeptAlways || $isFirstTestInDept)
-                        <div class="dept-header">{{ strtoupper($deptName) }}</div>
+                        <div class="dept-header">{{ strtoupper($currentDeptName) }}</div>
                     @endif
                 </div>
 
@@ -855,9 +862,11 @@
     @endif
 
     {{-- END OF REPORT --}}
-    <div class="end-of-report">
-        *** End Of Report ***
-    </div>
+    @if($settings['report_show_end_of_report'] ?? true)
+        <div class="end-of-report">
+            *** End Of Report ***
+        </div>
+    @endif
 
     @if($settings['pdf_show_page_number'] ?? true)
         <div style="position: fixed; bottom: -70px; right: 30px; font-size: 10px; color: #333; font-family: sans-serif; font-weight: bold; z-index: 10000; background-color: {{ $settings['pdf_page_number_bg_color'] ?? 'rgba(255, 255, 255, 0.85)' }}; padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
