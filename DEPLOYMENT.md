@@ -15,7 +15,7 @@ Ensure your server meets the following requirements:
 
 The production setup runs on the following containers:
 
-- **App (`app`)**: Runs PHP 8.2 FPM. This image is built in multi-stage, containing only production dependencies (Composer & NPM build artifacts).
+- **App (`app`)**: Runs PHP 8.5.12 FPM. This image is built in multi-stage, containing only production dependencies (Composer & NPM build artifacts).
 - **Web (`web`)**: Runs Nginx Alpine to serve static assets and proxy PHP requests to the `app` container.
 - **Database (`dbpostgres`)**: Runs PostgreSQL 15.
 - **Cache (`redis`)**: Runs Redis 7 for caching and session management.
