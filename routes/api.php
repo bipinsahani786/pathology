@@ -32,6 +32,8 @@ Route::prefix('v1')->middleware(['lab_api_key'])->group(function () {
 
     // 5. Online Booking / Appointments
     Route::post('/bookings', [BookingApiController::class, 'store']);
+    Route::get('/bookings/{reference}', [BookingApiController::class, 'show']);
+    Route::get('/bookings/{reference}/status', [BookingApiController::class, 'show']);
 
     // 6. Patient Report Tracking & PDF Download
     Route::post('/reports/track', [ReportTrackApiController::class, 'track']);
@@ -43,4 +45,3 @@ Route::prefix('v1')->middleware(['lab_api_key'])->group(function () {
     Route::post('/staff/login', [StaffAuthApiController::class, 'login']);
     Route::post('/auth/login', [StaffAuthApiController::class, 'login']);
 });
-

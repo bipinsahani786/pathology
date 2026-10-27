@@ -15,6 +15,7 @@ class WebBooking extends Model
         'company_id',
         'branch_id',
         'booking_reference',
+        'external_booking_reference',
         'patient_name',
         'patient_phone',
         'patient_email',
@@ -29,6 +30,13 @@ class WebBooking extends Model
         'subtotal',
         'discount',
         'total_amount',
+        'payment_method',
+        'payment_status',
+        'paid_amount',
+        'transaction_id',
+        'assigned_collector_name',
+        'assigned_collector_phone',
+        'assigned_collector_id',
         'status',
         'notes',
         'invoice_id',
@@ -41,6 +49,7 @@ class WebBooking extends Model
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
     ];
 
     public function company()
