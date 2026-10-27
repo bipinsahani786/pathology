@@ -16,6 +16,7 @@ class WebBooking extends Model
         'branch_id',
         'booking_reference',
         'external_booking_reference',
+        'webhook_url',
         'patient_name',
         'patient_phone',
         'patient_email',

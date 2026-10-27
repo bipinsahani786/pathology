@@ -381,6 +381,8 @@ class SettingsManager extends Component
 
     public $api_allowed_origin;
 
+    public $api_webhook_url;
+
     public $api_enabled = false;
 
     public $apiSaved = false;
@@ -519,6 +521,7 @@ class SettingsManager extends Component
         // Load Website API settings
         $this->api_key = $company->api_key;
         $this->api_allowed_origin = $company->api_allowed_origin;
+        $this->api_webhook_url = Configuration::getFor('api_webhook_url', '', $company->id, 'global');
         $this->api_enabled = (bool) $company->api_enabled;
 
         // Load invoice settings from configurations table
@@ -1282,6 +1285,7 @@ class SettingsManager extends Component
 
         $this->validate([
             'api_allowed_origin' => 'nullable|string|max:255',
+            'api_webhook_url'    => 'nullable|url|max:500',
             'api_enabled'        => 'boolean',
         ]);
 
@@ -1295,8 +1299,10 @@ class SettingsManager extends Component
             'api_enabled'        => (bool) $this->api_enabled,
         ]);
 
+        Configuration::setFor('api_webhook_url', $this->api_webhook_url ? trim($this->api_webhook_url) : '', $company->id, 'global');
+
         $this->apiSaved = true;
-        session()->flash('api_message', 'Website API settings updated successfully.');
+        session()->flash('api_message', 'Website API & Webhook settings updated successfully.');
     }
 
     /**

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class HomeCollection extends Model
 {
@@ -251,6 +253,74 @@ class HomeCollection extends Model
 
             $this->invoice()->update($invoiceUpdate);
         }
+
+        // Trigger real-time external synchronization webhook
+        if (in_array($newStatus, ['Collected', 'Dispatched', 'Received'])) {
+            $this->syncExternalWebhook($newStatus);
+        }
+    }
+
+    /**
+     * Trigger external sync webhook to OutsourceLab or integrated booking portal
+     * whenever phlebotomist transitions status (e.g. Collected, Dispatched, Received).
+     */
+    public function syncExternalWebhook(string $newStatus): void
+    {
+        try {
+            $webBooking = WebBooking::where('invoice_id', $this->invoice_id)->first();
+            if (! $webBooking) {
+                return;
+            }
+
+            $targetUrl = $webBooking->webhook_url;
+            if (empty($targetUrl)) {
+                $targetUrl = Configuration::getFor('api_webhook_url', '', $this->company_id, 'global');
+            }
+            if (empty($targetUrl)) {
+                $targetUrl = env('OUTSOURCELAB_WEBHOOK_URL');
+            }
+
+            if (empty($targetUrl)) {
+                return;
+            }
+
+            $stage = match ($newStatus) {
+                'Dispatched', 'Received' => 'Dispatched',
+                'Collected'  => 'Collected',
+                default      => $newStatus,
+            };
+
+            $event = match ($newStatus) {
+                'Dispatched' => 'sample.dispatched',
+                'Collected'  => 'sample.collected',
+                'Received'   => 'sample.dispatched',
+                default      => 'status.updated',
+            };
+
+            $sampleStatus = match ($newStatus) {
+                'Dispatched', 'Received' => 'Delivered to Lab',
+                'Collected'  => 'Sample Collected',
+                default      => $newStatus,
+            };
+
+            $payload = [
+                'event'                      => $event,
+                'stage'                      => $stage,
+                'status'                     => in_array($stage, ['Dispatched', 'Received']) ? 'In Process' : ($stage === 'Collected' ? 'Sample Collected' : $newStatus),
+                'sample_status'              => $sampleStatus,
+                'home_collection_status'     => $newStatus,
+                'external_booking_reference' => $webBooking->external_booking_reference,
+                'booking_reference'          => $webBooking->booking_reference,
+                'invoice_number'             => $this->invoice?->invoice_number,
+                'dispatched_at'              => $this->dispatched_at?->toIso8601String() ?? now()->toIso8601String(),
+                'collected_at'               => $this->collected_at?->toIso8601String(),
+                'collector_name'             => $this->phlebotomist?->name,
+                'collector_phone'            => $this->phlebotomist?->phone ?? $this->phlebotomist?->mobile,
+            ];
+
+            Http::timeout(3)->post($targetUrl, $payload);
+        } catch (\Throwable $e) {
+            Log::warning('HomeCollection webhook dispatch error: '.$e->getMessage());
+        }
     }
 }
-
