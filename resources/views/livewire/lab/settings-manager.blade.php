@@ -2673,6 +2673,28 @@
                             </div>
                         </div>
 
+                        {{-- OutsourceLab / External Sync Webhook URL --}}
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-12">
+                                <div class="p-3 border rounded-3 bg-white">
+                                    <label class="form-label fw-bold text-dark fs-12 mb-1">
+                                        <i class="feather-radio text-primary me-1"></i> OutsourceLab / Consumer Portal Webhook URL
+                                    </label>
+                                    <div class="text-muted fs-11 mb-2">
+                                        Jab phlebotomist visit ko <strong>Sample Collected</strong> ya <strong>Dispatched</strong> mark karega, Ojaselab automatically iss webhook URL par real-time status update bhejega taaki customer portal par status update ho sake. (Jaise: <code>https://your-outsourcelab.com/api/v1/pathology/webhook</code>)
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted fs-12 font-monospace fw-bold">POST</span>
+                                        <input type="url" class="form-control fs-12 font-monospace" wire:model="api_webhook_url" placeholder="https://your-outsourcelab.com/api/v1/pathology/webhook">
+                                    </div>
+                                    @error('api_webhook_url') <span class="text-danger fs-11">{{ $message }}</span> @enderror
+                                    <div class="form-text fs-10 text-muted mt-1">
+                                        <i class="feather-info me-1"></i> Note: Agar booking online place hoti hai toh OutsourceLab booking ke sath apna webhook URL automatically bhi bhej deta hai. Ye global fallback ke roop me kaam karta hai.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Quick Documentation & Endpoints --}}
                         <div class="p-3 border rounded-3 bg-soft-primary border-primary border-opacity-10 mb-4">
                             <h6 class="fw-bold text-primary fs-12 mb-2"><i class="feather-code me-2"></i>Live Integration Endpoints (REST API v1)</h6>

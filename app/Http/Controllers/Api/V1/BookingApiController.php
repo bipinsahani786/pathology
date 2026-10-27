@@ -37,6 +37,7 @@ class BookingApiController extends BaseApiController
             'assigned_collector_name'     => 'nullable|string|max:255',
             'assigned_collector_phone'    => 'nullable|string|max:20',
             'assigned_collector_id'       => 'nullable|integer',
+            'webhook_url'                 => 'nullable|string|max:500',
             'notes'                       => 'nullable|string|max:1000',
             'items'                       => 'required|array|min:1',
             'items.*.type'                => 'nullable|string|in:test,package',
@@ -149,6 +150,7 @@ class BookingApiController extends BaseApiController
             'branch_id'                  => $validated['branch_id'] ?? null,
             'booking_reference'          => $bookingRef,
             'external_booking_reference' => $extRef,
+            'webhook_url'                => $validated['webhook_url'] ?? null,
             'patient_name'               => trim($validated['patient_name']),
             'patient_phone'              => trim($validated['patient_phone']),
             'patient_email'              => $validated['patient_email'] ?? null,
@@ -226,6 +228,32 @@ class BookingApiController extends BaseApiController
             $downloadUrl = route('public.report.download', ['hash' => base64_encode($invoice->id)]);
         }
 
+        $homeVisit = $invoice ? \App\Models\HomeCollection::where('invoice_id', $invoice->id)->with('phlebotomist')->first() : null;
+        $hvStatus = $homeVisit?->status;
+        $isDispatched = (bool) (
+            $homeVisit?->dispatched_at
+            || $hvStatus === 'Dispatched'
+            || $hvStatus === 'Received'
+            || in_array($invoice?->sample_status, ['Dispatched', 'Received', 'In Process', 'Processing'])
+        );
+        $isCollected = (bool) (
+            $homeVisit?->collected_at
+            || $hvStatus === 'Collected'
+            || $invoice?->sample_status === 'Sample Collected'
+        );
+
+        $resolvedSampleStatus = 'Pending';
+        if ($isDispatched) {
+            $resolvedSampleStatus = 'Dispatched';
+        } elseif ($isCollected) {
+            $resolvedSampleStatus = 'Sample Collected';
+        } elseif (!empty($invoice?->sample_status)) {
+            $resolvedSampleStatus = $invoice->sample_status;
+        }
+
+        $collectorName = $homeVisit?->phlebotomist?->name ?? $booking->assigned_collector_name;
+        $collectorPhone = $homeVisit?->phlebotomist?->phone ?? $homeVisit?->phlebotomist?->mobile ?? $booking->assigned_collector_phone;
+
         $tests = [];
         if ($invoice && $invoice->items) {
             foreach ($invoice->items as $it) {
@@ -264,12 +292,16 @@ class BookingApiController extends BaseApiController
             'payment_status'             => $invoice ? $invoice->payment_status : $booking->payment_status,
             'paid_amount'                => (float) ($invoice ? $invoice->paid_amount : $booking->paid_amount),
             'due_amount'                 => (float) ($invoice ? $invoice->due_amount : max(0, $booking->total_amount - $booking->paid_amount)),
-            'sample_status'              => $invoice?->sample_status ?? 'Pending',
+            'sample_status'              => $resolvedSampleStatus,
+            'home_collection_status'     => $hvStatus,
+            'is_dispatched'              => $isDispatched,
+            'dispatched_at'              => $homeVisit?->dispatched_at?->toIso8601String(),
+            'collected_at'               => $homeVisit?->collected_at?->toIso8601String(),
             'report_status'              => $report?->status ?? 'pending',
             'is_report_ready'            => $isReady,
             'report_download_url'        => $downloadUrl,
-            'assigned_collector_name'    => $booking->assigned_collector_name,
-            'assigned_collector_phone'   => $booking->assigned_collector_phone,
+            'assigned_collector_name'    => $collectorName,
+            'assigned_collector_phone'   => $collectorPhone,
             'tests'                      => $tests,
             'created_at'                 => $booking->created_at->toIso8601String(),
             'updated_at'                 => $booking->updated_at->toIso8601String(),
