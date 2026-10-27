@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Invoice;
+use App\Models\WebBooking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class ReportTrackApiController extends BaseApiController
 {
     /**
-     * Track invoice report status and obtain PDF download link.
+     * Track invoice / booking report status and obtain PDF download link.
      */
     public function track(Request $request): JsonResponse
     {
@@ -30,7 +31,7 @@ class ReportTrackApiController extends BaseApiController
         $inputPhone10 = substr($cleanInputPhone, -10);
 
         try {
-            // Find invoice for this company matching invoice_number or barcode (case-insensitive)
+            // 1. Direct Invoice lookup matching invoice_number or barcode (case-insensitive)
             $invoice = Invoice::where('company_id', $company->id)
                 ->where(function ($q) use ($billNumber) {
                     $q->where('invoice_number', 'ilike', $billNumber)
@@ -39,16 +40,66 @@ class ReportTrackApiController extends BaseApiController
                 ->with(['patient', 'items', 'testReport'])
                 ->first();
 
+            // 2. If not found by invoice number, check WebBookings by booking_reference or external_booking_reference
+            $webBooking = null;
             if (!$invoice) {
-                return $this->error('No invoice found for the provided Bill Number.', 404);
+                $webBooking = WebBooking::where('company_id', $company->id)
+                    ->where(function ($q) use ($billNumber) {
+                        $q->where('booking_reference', 'ilike', $billNumber)
+                          ->orWhere('external_booking_reference', 'ilike', $billNumber);
+                    })
+                    ->first();
+
+                if ($webBooking && $webBooking->invoice_id) {
+                    $invoice = Invoice::where('company_id', $company->id)
+                        ->where('id', $webBooking->invoice_id)
+                        ->with(['patient', 'items', 'testReport'])
+                        ->first();
+                }
+            }
+
+            // If neither invoice nor web booking found
+            if (!$invoice && !$webBooking) {
+                return $this->error('No record found for the provided Reference / Bill Number.', 404);
             }
 
             // Verify patient phone number (compare last 10 digits for safety)
-            $patientPhone = preg_replace('/[^0-9]/', '', $invoice->patient?->phone ?? '');
-            $patientPhone10 = substr($patientPhone, -10);
+            $patientPhone = $invoice
+                ? ($invoice->patient?->phone ?? '')
+                : ($webBooking->patient_phone ?? '');
 
-            if (empty($patientPhone10) || $inputPhone10 !== $patientPhone10) {
-                return $this->error('Provided phone number does not match our records for this bill.', 403);
+            $cleanRecordPhone = preg_replace('/[^0-9]/', '', $patientPhone);
+            $recordPhone10 = substr($cleanRecordPhone, -10);
+
+            if (empty($recordPhone10) || $inputPhone10 !== $recordPhone10) {
+                return $this->error('Provided phone number does not match our records for this booking/bill.', 403);
+            }
+
+            // If booking exists but not yet converted to an invoice in lab
+            if (!$invoice && $webBooking) {
+                $items = is_array($webBooking->items) ? $webBooking->items : json_decode($webBooking->items, true) ?? [];
+                $tests = array_map(function ($it) {
+                    return [
+                        'name'   => $it['name'] ?? 'Test',
+                        'status' => 'Pending Review',
+                    ];
+                }, $items);
+
+                $statusStage = ($webBooking->status === 'confirmed')
+                    ? 'Appointment Confirmed - Phlebotomist Assigned'
+                    : 'Booking Received - Awaiting Lab Acceptance';
+
+                return $this->success([
+                    'bill_number'          => $webBooking->booking_reference,
+                    'barcode'              => null,
+                    'patient_name'         => $webBooking->patient_name,
+                    'invoice_date'         => $webBooking->preferred_date ? $webBooking->preferred_date->format('Y-m-d') : $webBooking->created_at->format('Y-m-d'),
+                    'expected_report_time' => null,
+                    'current_stage'        => $statusStage,
+                    'is_ready'             => false,
+                    'download_url'         => null,
+                    'tests'                => $tests,
+                ], 'Appointment booking is received and in progress.');
             }
 
             $report = $invoice->testReport;

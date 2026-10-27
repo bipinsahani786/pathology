@@ -4,10 +4,13 @@ namespace App\Livewire\Lab;
 
 use App\Models\Branch;
 use App\Models\Configuration;
+use App\Models\HomeCollection;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\LabTest;
 use App\Models\PatientProfile;
+use App\Models\Payment;
+use App\Models\PaymentMode;
 use App\Models\User;
 use App\Models\WebBooking;
 use Illuminate\Support\Facades\DB;
@@ -120,33 +123,61 @@ class WebBookingManager extends Component
             DB::beginTransaction();
 
             // 1. Locate or create Patient User & PatientProfile
-            $cleanPhone = preg_replace('/[^0-9]/', '', $booking->patient_phone);
+            $cleanPhone = preg_replace('/[^0-9]/', '', (string) $booking->patient_phone);
+            $phone10 = (strlen($cleanPhone) >= 10) ? substr($cleanPhone, -10) : $cleanPhone;
+            $inputEmail = !empty($booking->patient_email) ? trim(strtolower($booking->patient_email)) : null;
+
+            // 1a. Try finding user in this company by phone OR email
             $user = User::where('company_id', $companyId)
-                ->where(function ($q) use ($cleanPhone, $booking) {
-                    $q->where('phone', $cleanPhone)
-                      ->orWhere('phone', $booking->patient_phone);
-                })
-                ->whereHas('roles', function ($q) {
-                    $q->where('name', 'patient');
+                ->where(function ($q) use ($cleanPhone, $phone10, $inputEmail) {
+                    if (!empty($phone10)) {
+                        $q->where('phone', 'like', "%{$phone10}%");
+                    }
+                    if (!empty($inputEmail)) {
+                        $q->orWhereRaw('LOWER(email) = ?', [$inputEmail]);
+                    }
                 })
                 ->first();
 
+            // 1b. If not found in this company, check if user exists globally by email
+            if (!$user && $inputEmail) {
+                $userWithEmail = User::whereRaw('LOWER(email) = ?', [$inputEmail])->first();
+                if ($userWithEmail && $userWithEmail->company_id == $companyId) {
+                    $user = $userWithEmail;
+                }
+            }
+
+            // 1c. If still not found, create new User safely handling unique email
             if (!$user) {
-                // Generate safe email if not provided
-                $email = $booking->patient_email ?: ('patient_' . $cleanPhone . '_' . uniqid() . '@pathology.local');
+                $emailToUse = null;
+                if ($inputEmail && !User::whereRaw('LOWER(email) = ?', [$inputEmail])->exists()) {
+                    $emailToUse = $inputEmail;
+                } else {
+                    $emailToUse = 'patient_' . ($phone10 ?: uniqid()) . '_' . substr(uniqid(), -4) . '@pathology.local';
+                }
 
                 $user = User::create([
                     'company_id' => $companyId,
                     'name'       => $booking->patient_name,
-                    'email'      => $email,
-                    'phone'      => $cleanPhone,
+                    'email'      => $emailToUse,
+                    'phone'      => $cleanPhone ?: $booking->patient_phone,
                     'password'   => bcrypt(uniqid()),
                     'address'    => $booking->collection_address,
                 ]);
+            }
 
-                // Assign role
-                $user->assignRole('patient');
+            // Ensure patient role is attached
+            if (method_exists($user, 'hasRole') && !$user->hasRole('patient')) {
+                try {
+                    $user->assignRole('patient');
+                } catch (\Throwable $rErr) {
+                    // Role already exists
+                }
+            }
 
+            // 1d. Locate or create PatientProfile (handles case where user existed previously without profile)
+            $profile = PatientProfile::where('company_id', $companyId)->where('user_id', $user->id)->first();
+            if (!$profile) {
                 // Generate Patient ID
                 $pPrefix = Configuration::getFor('patient_id_prefix', 'PAT', $companyId);
                 $pDigits = (int) Configuration::getFor('patient_id_digits', 4, $companyId);
@@ -159,14 +190,30 @@ class WebBookingManager extends Component
                     $patientIdString = $pPrefix . str_pad($nextPId, $pDigits, '0', STR_PAD_LEFT);
                 }
 
-                PatientProfile::create([
+                // Strictly enforce Postgres CHECK constraint values: 'Years', 'Months', 'Days'
+                $rawAgeUnit = strtolower((string) ($booking->patient_age_unit ?: 'years'));
+                $ageType = match (true) {
+                    str_contains($rawAgeUnit, 'month') => 'Months',
+                    str_contains($rawAgeUnit, 'day')   => 'Days',
+                    default                            => 'Years',
+                };
+
+                // Strictly enforce Postgres CHECK constraint values: 'Male', 'Female', 'Other'
+                $rawGender = strtolower((string) ($booking->patient_gender ?: 'other'));
+                $gender = match (true) {
+                    str_starts_with($rawGender, 'm') => 'Male',
+                    str_starts_with($rawGender, 'f') => 'Female',
+                    default                          => 'Other',
+                };
+
+                $profile = PatientProfile::create([
                     'company_id'             => $companyId,
                     'user_id'                => $user->id,
                     'patient_id_string'      => $patientIdString,
                     'company_patient_number' => $nextPId,
-                    'age'                    => $booking->patient_age,
-                    'age_type'               => $booking->patient_age_unit ?: 'years',
-                    'gender'                 => $booking->patient_gender ?: 'other',
+                    'age'                    => (int) ($booking->patient_age ?: 30),
+                    'age_type'               => $ageType,
+                    'gender'                 => $gender,
                     'address'                => $booking->collection_address,
                 ]);
             }
@@ -208,11 +255,16 @@ class WebBookingManager extends Component
                 }
             } while ($exists);
 
-            // 3. Create Invoice
+            // 3. Calculate Payment Status from WebBooking
             $collectionTypeFormatted = ($booking->collection_type === 'home_collection') ? 'Home Collection' : 'Lab Visit';
             $ccId = auth()->user()->collection_center_id 
                 ?? \App\Models\CollectionCenter::where('company_id', $companyId)->where('is_main_lab', true)->value('id')
                 ?? \App\Models\CollectionCenter::where('company_id', $companyId)->value('id');
+
+            $isPaidOnline = (strtolower((string) $booking->payment_status) === 'paid');
+            $paidAmt = $isPaidOnline ? (float) ($booking->paid_amount ?: $booking->total_amount) : 0.00;
+            $dueAmt = max(0.00, (float) $booking->total_amount - $paidAmt);
+            $paymentStatus = $isPaidOnline ? ($dueAmt == 0 ? 'Paid' : 'Partial') : 'Unpaid';
 
             $invoice = Invoice::create([
                 'company_id'              => $companyId,
@@ -228,21 +280,82 @@ class WebBookingManager extends Component
                 'subtotal'                => $booking->subtotal,
                 'discount_amount'         => $booking->discount,
                 'total_amount'            => $booking->total_amount,
-                'paid_amount'             => 0,
-                'due_amount'              => $booking->total_amount,
-                'payment_status'          => 'Unpaid',
+                'paid_amount'             => $paidAmt,
+                'due_amount'              => $dueAmt,
+                'payment_status'          => $paymentStatus,
                 'sample_status'           => 'Pending',
                 'status'                  => 'Pending',
             ]);
 
-            // 4. Create Invoice Items
+            // 4. Create Payment ledger entry if already paid online
+            if ($isPaidOnline && $paidAmt > 0) {
+                $onlineModeId = PaymentMode::where('company_id', $companyId)
+                    ->where(function ($q) {
+                        $q->where('name', 'ilike', '%online%')
+                          ->orWhere('name', 'ilike', '%upi%')
+                          ->orWhere('name', 'ilike', '%razorpay%');
+                    })->value('id') ?? PaymentMode::where('company_id', $companyId)->value('id');
+
+                Payment::create([
+                    'company_id'      => $companyId,
+                    'invoice_id'      => $invoice->id,
+                    'patient_id'      => $user->id,
+                    'payment_mode_id' => $onlineModeId,
+                    'amount'          => $paidAmt,
+                    'collected_by'    => auth()->id(),
+                    'transaction_id'  => $booking->transaction_id,
+                    'remarks'         => "Online payment synced from OutsourceLab (#" . ($booking->external_booking_reference ?: $booking->booking_reference) . ")",
+                ]);
+            }
+
+            // 5. Create HomeCollection entry if home collection
+            if ($booking->collection_type === 'home_collection') {
+                $phleboUserId = null;
+                if ($booking->assigned_collector_id) {
+                    $phleboUserId = User::where('company_id', $companyId)
+                        ->where('id', $booking->assigned_collector_id)
+                        ->whereHas('roles', fn($q) => $q->where('name', 'phlebotomist'))
+                        ->value('id');
+                }
+                if (!$phleboUserId && $booking->assigned_collector_phone) {
+                    $phleboUserId = User::where('company_id', $companyId)
+                        ->where('phone', preg_replace('/[^0-9]/', '', $booking->assigned_collector_phone))
+                        ->whereHas('roles', fn($q) => $q->where('name', 'phlebotomist'))
+                        ->value('id');
+                }
+
+                HomeCollection::create([
+                    'company_id'         => $companyId,
+                    'branch_id'          => $branchId,
+                    'invoice_id'         => $invoice->id,
+                    'patient_id'         => $user->id,
+                    'phlebotomist_id'    => $phleboUserId,
+                    'assigned_by'        => $phleboUserId ? auth()->id() : null,
+                    'assigned_at'        => $phleboUserId ? now() : null,
+                    'collection_address' => $booking->collection_address,
+                    'scheduled_date'     => $booking->preferred_date ? $booking->preferred_date->format('Y-m-d') : now()->format('Y-m-d'),
+                    'status'             => $phleboUserId ? 'Assigned' : 'Pending',
+                    'notes'              => "Web Booking #{$booking->booking_reference}" . ($booking->external_booking_reference ? " (OutsourceLab: #{$booking->external_booking_reference})" : "") . ($booking->notes ? " - {$booking->notes}" : ""),
+                ]);
+            }
+
+            // 6. Create Invoice Items
             $items = is_array($booking->items) ? $booking->items : json_decode($booking->items, true) ?? [];
             $sortOrder = 1;
 
             foreach ($items as $item) {
+                $labTestId = null;
+                $rawId = $item['id'] ?? null;
+                if (!empty($rawId) && is_numeric($rawId) && $rawId > 0) {
+                    $exists = LabTest::where('company_id', $companyId)->where('id', (int) $rawId)->exists();
+                    if ($exists) {
+                        $labTestId = (int) $rawId;
+                    }
+                }
+
                 InvoiceItem::create([
                     'invoice_id'  => $invoice->id,
-                    'lab_test_id' => $item['id'] ?? null,
+                    'lab_test_id' => $labTestId,
                     'test_name'   => $item['name'] ?? 'Test',
                     'is_package'  => ($item['type'] ?? '') === 'package',
                     'mrp'         => (float) ($item['price'] ?? 0),
@@ -252,7 +365,7 @@ class WebBookingManager extends Component
                 ]);
             }
 
-            // 5. Link WebBooking to Invoice
+            // 7. Link WebBooking to Invoice
             $booking->update([
                 'invoice_id' => $invoice->id,
                 'status'     => 'converted_to_invoice',
@@ -290,7 +403,8 @@ class WebBookingManager extends Component
             $query->where(function ($q) use ($term) {
                 $q->where('patient_name', 'like', "%{$term}%")
                   ->orWhere('patient_phone', 'like', "%{$term}%")
-                  ->orWhere('booking_reference', 'like', "%{$term}%");
+                  ->orWhere('booking_reference', 'like', "%{$term}%")
+                  ->orWhere('external_booking_reference', 'like', "%{$term}%");
             });
         }
 

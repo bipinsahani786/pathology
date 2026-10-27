@@ -152,7 +152,7 @@
                                 <th style="min-width: 180px;">Patient Details</th>
                                 <th style="min-width: 150px;">Visit Type</th>
                                 <th style="min-width: 220px;">Selected Tests</th>
-                                <th style="min-width: 110px;">Amount</th>
+                                <th style="min-width: 120px;">Amount & Payment</th>
                                 <th class="text-center" style="min-width: 110px;">Status</th>
                                 <th class="pe-3 text-end" style="min-width: 170px;">Action</th>
                             </tr>
@@ -162,7 +162,12 @@
                                 <tr>
                                     <td class="ps-3">
                                         <div class="fw-bold text-dark font-monospace fs-12">{{ $booking->booking_reference }}</div>
-                                        <div class="text-muted fs-11">
+                                        @if($booking->external_booking_reference)
+                                            <span class="badge bg-soft-info text-info border fs-10 mt-1" title="OutsourceLab Reference">
+                                                <i class="feather-external-link me-1"></i>{{ $booking->external_booking_reference }}
+                                            </span>
+                                        @endif
+                                        <div class="text-muted fs-11 mt-1">
                                             <i class="feather-calendar me-1"></i>{{ $booking->created_at->format('d M Y, h:i A') }}
                                         </div>
                                     </td>
@@ -178,6 +183,14 @@
                                                 </span>
                                             @endif
                                         </div>
+                                        @if($booking->assigned_collector_name)
+                                            <div class="text-primary fs-11 mt-1">
+                                                <i class="feather-user me-1"></i><span class="fw-semibold">Phlebo:</span> {{ $booking->assigned_collector_name }}
+                                                @if($booking->assigned_collector_phone)
+                                                    <span class="text-muted">({{ $booking->assigned_collector_phone }})</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($booking->collection_type === 'home_collection')
@@ -216,6 +229,15 @@
                                     </td>
                                     <td>
                                         <div class="fw-bold text-dark fs-13">₹{{ number_format($booking->total_amount, 2) }}</div>
+                                        @if(strtolower((string)$booking->payment_status) === 'paid')
+                                            <span class="badge bg-soft-success text-success fs-10 mt-1 d-inline-block">
+                                                <i class="feather-check-circle me-1"></i>Paid Online ({{ strtoupper($booking->payment_method ?? 'UPI') }})
+                                            </span>
+                                        @else
+                                            <span class="badge bg-soft-warning text-warning fs-10 mt-1 d-inline-block">
+                                                <i class="feather-clock me-1"></i>{{ ucfirst($booking->payment_method ?? 'Cash') }} / Unpaid
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         @if($booking->status === 'pending')
@@ -255,8 +277,8 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="text-center py-5">
-                                        <div class="avatar-text avatar-xl bg-soft-primary text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                                            <i class="feather-globe fs-28"></i>
+                                        <div class="avatar-text avatar-xl bg-soft-primary text-primary mx-auto mb-3 rounded-circle">
+                                            <i class="feather-inbox fs-2"></i>
                                         </div>
                                         <h5 class="fw-bold text-dark mb-1">No Web Bookings Found</h5>
                                         <p class="text-muted fs-12 mb-3" style="max-width: 420px; margin: 0 auto;">
@@ -291,6 +313,9 @@
                         <div>
                             <h5 class="modal-title fw-bold text-dark">
                                 <i class="feather-calendar text-primary me-2"></i>Booking #{{ $selectedBooking['booking_reference'] }}
+                                @if(!empty($selectedBooking['external_booking_reference']))
+                                    <span class="badge bg-soft-info text-info border fs-11 ms-2">Ref: {{ $selectedBooking['external_booking_reference'] }}</span>
+                                @endif
                             </h5>
                             <span class="fs-11 text-muted">Received on {{ \Carbon\Carbon::parse($selectedBooking['created_at'])->format('d M Y, h:i A') }}</span>
                         </div>
@@ -338,16 +363,37 @@
                             <div class="col-md-6">
                                 <div class="p-3 border rounded-3 bg-light h-100">
                                     <h6 class="fw-bold text-dark fs-12 mb-3 text-uppercase border-bottom pb-2">
-                                        <i class="feather-map-pin text-primary me-2"></i>Visit Logistics
+                                        <i class="feather-map-pin text-primary me-2"></i>Visit Logistics & Payment
                                     </h6>
-                                    <div class="mb-2">
-                                        <span class="text-muted fs-11 d-block">Collection Type</span>
-                                        @if($selectedBooking['collection_type'] === 'home_collection')
-                                            <span class="badge bg-primary px-2 py-1 fs-11"><i class="feather-home me-1"></i> Home Collection</span>
-                                        @else
-                                            <span class="badge bg-secondary px-2 py-1 fs-11"><i class="feather-map-pin me-1"></i> Lab Visit</span>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div>
+                                            <span class="text-muted fs-11 d-block">Collection Type</span>
+                                            @if($selectedBooking['collection_type'] === 'home_collection')
+                                                <span class="badge bg-primary px-2 py-1 fs-11"><i class="feather-home me-1"></i> Home Collection</span>
+                                            @else
+                                                <span class="badge bg-secondary px-2 py-1 fs-11"><i class="feather-map-pin me-1"></i> Lab Visit</span>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <span class="text-muted fs-11 d-block">Payment Status</span>
+                                            @if(strtolower((string)($selectedBooking['payment_status'] ?? '')) === 'paid')
+                                                <span class="badge bg-success px-2 py-1 fs-11"><i class="feather-check-circle me-1"></i> Paid Online</span>
+                                            @else
+                                                <span class="badge bg-warning px-2 py-1 fs-11 text-dark"><i class="feather-clock me-1"></i> Cash / Unpaid</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    @if(!empty($selectedBooking['assigned_collector_name']))
+                                    <div class="mb-2 p-2 rounded bg-white border">
+                                        <span class="text-muted fs-11 d-block"><i class="feather-user-check me-1 text-primary"></i>Assigned Phlebotomist</span>
+                                        <span class="fw-bold text-dark fs-12">{{ $selectedBooking['assigned_collector_name'] }}</span>
+                                        @if(!empty($selectedBooking['assigned_collector_phone']))
+                                            <span class="text-muted fs-11">({{ $selectedBooking['assigned_collector_phone'] }})</span>
                                         @endif
                                     </div>
+                                    @endif
+
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             <span class="text-muted fs-11 d-block">Preferred Date</span>
