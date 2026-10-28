@@ -35,11 +35,24 @@ class TestApiController extends BaseApiController
             $query->where('department_id', $deptId);
         }
 
-        $perPage = min((int) $request->get('per_page', 50), 100);
+        $perPage = min((int) $request->get('per_page', 50), 1000);
         $tests = $query->orderBy('name')->paginate($perPage);
 
         // Map tests for clean public consumption
         $items = collect($tests->items())->map(function ($test) {
+                        $rawParams = is_array($test->parameters) ? $test->parameters : json_decode($test->parameters, true) ?? [];
+            $paramList = [];
+            foreach ($rawParams as $p) {
+                if (($p['type'] ?? '') === 'heading') {
+                    continue;
+                }
+                $paramList[] = [
+                    'name'      => $p['name'] ?? '',
+                    'unit'      => $p['unit'] ?? '',
+                    'ref_range' => $p['ref_range'] ?? $p['reference_range'] ?? '',
+                ];
+            }
+
             $descLower = strtolower($test->description ?? '');
             $fastingRequired = str_contains($descLower, 'fasting') || str_contains(strtolower($test->name), 'fasting');
 
@@ -54,6 +67,7 @@ class TestApiController extends BaseApiController
                 'tat_hours'        => $test->tat_hours ? (int) $test->tat_hours : null,
                 'fasting_required' => $fastingRequired,
                 'description'      => $test->description,
+                'parameters'       => $paramList,
             ];
         });
 
