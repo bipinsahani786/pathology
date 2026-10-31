@@ -39,8 +39,8 @@ services:
       POSTGRES_DB: ${DB_DATABASE:-pathology_saas}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "127.0.0.1:5432:5432" # Removed public exposure (only accessible internally via docker network)
     volumes:
       - db-data:/var/lib/postgresql/data
     networks:
@@ -50,8 +50,8 @@ services:
     image: redis:7-alpine
     container_name: pathology_redis_prod
     restart: always
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "127.0.0.1:6379:6379" # Removed public exposure (only accessible internally via docker network)
     volumes:
       - redis-data:/data
     networks:
